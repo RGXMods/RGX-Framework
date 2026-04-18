@@ -1,0 +1,34 @@
+# RGX-Framework Package Metadata
+# Used by BigWigs Packager
+
+package-as: RGX-Framework
+
+# License file
+license:
+  - LICENSE.txt
+
+# Font sources to download (manual - see scripts/download-fonts.*)
+# Fonts must be downloaded before packaging:
+#   PowerShell: .\scripts\download-fonts.ps1
+#   Bash: ./scripts/download-fonts.sh
+
+# Files to ignore
+ignore:
+  - scripts/
+  - .git/
+  - .github/
+  - .gitignore
+  - README.md
+  - ROADMAP.md
+  - docs/
+
+# External repositories (if any)
+externals:
+  # None - we package fonts directly
+
+# Move files (if needed)
+move-folders:
+
+# Changelog
+changelog:
+  - CHANGES.md

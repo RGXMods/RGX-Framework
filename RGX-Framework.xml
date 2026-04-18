@@ -1,0 +1,21 @@
+<!-- RGX-Framework Library Loader -->
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+
+<!-- Core -->
+<Script file="core/core.lua"/>
+<Script file="core/systems/config.lua"/>
+<Script file="core/systems/database.lua"/>
+<Script file="core/systems/utils.lua"/>
+
+<!-- Modules -->
+<Script file="modules/fonts/fonts.lua"/>
+<Script file="modules/colors/colors.lua"/>
+<Script file="modules/textures/textures.lua"/>
+
+<!-- Commands -->
+<Script file="core/commands.lua"/>
+
+<!-- Init -->
+<Script file="core/initialization.lua"/>
+
+</Ui>

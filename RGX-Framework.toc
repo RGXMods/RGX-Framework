@@ -1,0 +1,10 @@
+## Interface: 120000,120001
+## Version: 1.0.0
+## Title: RGX-Framework
+## Notes: Modular library for WoW addon development - Fonts, Colors, Textures
+## Author: RGX
+## SavedVariables: RGXFrameworkDB
+## X-Category: Library
+## X-License: MIT
+
+RGX-Framework.xml
