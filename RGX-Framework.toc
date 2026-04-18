@@ -6,5 +6,7 @@
 ## SavedVariables: RGXFrameworkDB
 ## X-Category: Library
 ## X-License: MIT
+## X-Curse-Project-ID: 1516939
+## X-Website: https://github.com/DonnieDice/RGX-Framework
 
 RGX-Framework.xml
