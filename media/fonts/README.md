@@ -1,6 +1,7 @@
 # Fonts for RGX-Framework
 
-This folder contains open-source fonts packaged with RGX-Framework.
+This folder contains bundled open-source fonts packaged with RGX-Framework.
+The goal is to ship a curated, popular font pack for addon authors instead of relying on system fonts.
 
 ## Included Fonts
 
@@ -34,6 +35,48 @@ This folder contains open-source fonts packaged with RGX-Framework.
 - **License:** Open Font License 1.1
 - **Type:** Monospace
 
+### JetBrains Mono (OFL 1.1)
+- **Files:** JetBrainsMono-Regular.ttf, JetBrainsMono-Bold.ttf
+- **Source:** https://www.jetbrains.com/lp/mono/
+- **License:** Open Font License 1.1
+- **Type:** Monospace
+
+### Poppins (OFL 1.1)
+- **Files:** Poppins-Regular.ttf, Poppins-Bold.ttf
+- **Source:** https://fonts.google.com/specimen/Poppins
+- **License:** Open Font License 1.1
+- **Type:** Sans-serif
+
+### Montserrat (OFL 1.1)
+- **Files:** Montserrat-Regular.ttf, Montserrat-Bold.ttf
+- **Source:** https://fonts.google.com/specimen/Montserrat
+- **License:** Open Font License 1.1
+- **Type:** Sans-serif
+
+### Lato (OFL 1.1)
+- **Files:** Lato-Regular.ttf, Lato-Bold.ttf
+- **Source:** https://fonts.google.com/specimen/Lato
+- **License:** Open Font License 1.1
+- **Type:** Sans-serif
+
+### Rajdhani (OFL 1.1)
+- **Files:** Rajdhani-Regular.ttf, Rajdhani-Bold.ttf
+- **Source:** https://fonts.google.com/specimen/Rajdhani
+- **License:** Open Font License 1.1
+- **Type:** Sans-serif
+
+### Merriweather (OFL 1.1)
+- **Files:** Merriweather-Regular.ttf, Merriweather-Bold.ttf
+- **Source:** https://fonts.google.com/specimen/Merriweather
+- **License:** Open Font License 1.1
+- **Type:** Serif
+
+### Playfair Display (OFL 1.1)
+- **Files:** PlayfairDisplay-Regular.ttf, PlayfairDisplay-Bold.ttf
+- **Source:** https://fonts.google.com/specimen/Playfair+Display
+- **License:** Open Font License 1.1
+- **Type:** Serif
+
 ### Bebas Neue (OFL 1.1)
 - **Files:** BebasNeue-Regular.ttf
 - **Source:** https://fonts.google.com/specimen/Bebas+Neue
@@ -52,6 +95,30 @@ This folder contains open-source fonts packaged with RGX-Framework.
 - **License:** Open Font License 1.1
 - **Type:** Display
 
+### Oswald (OFL 1.1)
+- **Files:** Oswald-Regular.ttf
+- **Source:** https://fonts.google.com/specimen/Oswald
+- **License:** Open Font License 1.1
+- **Type:** Display
+
+### Orbitron (OFL 1.1)
+- **Files:** Orbitron-Regular.ttf
+- **Source:** https://fonts.google.com/specimen/Orbitron
+- **License:** Open Font License 1.1
+- **Type:** Display
+
+### Audiowide (OFL 1.1)
+- **Files:** Audiowide-Regular.ttf
+- **Source:** https://fonts.google.com/specimen/Audiowide
+- **License:** Open Font License 1.1
+- **Type:** Display
+
+### Anton (OFL 1.1)
+- **Files:** Anton-Regular.ttf
+- **Source:** https://fonts.google.com/specimen/Anton
+- **License:** Open Font License 1.1
+- **Type:** Display
+
 ### Silkscreen (OFL 1.1)
 - **Files:** Silkscreen-Regular.ttf
 - **Source:** https://fonts.google.com/specimen/Silkscreen
@@ -61,6 +128,12 @@ This folder contains open-source fonts packaged with RGX-Framework.
 ### Uncial Antiqua (OFL 1.1)
 - **Files:** UncialAntiqua-Regular.ttf
 - **Source:** https://fonts.google.com/specimen/Uncial+Antiqua
+- **License:** Open Font License 1.1
+- **Type:** Fantasy
+
+### Cinzel (OFL 1.1)
+- **Files:** Cinzel-Regular.ttf
+- **Source:** https://fonts.google.com/specimen/Cinzel
 - **License:** Open Font License 1.1
 - **Type:** Fantasy
 

@@ -10,7 +10,9 @@
 <!-- Modules -->
 <Script file="modules/fonts/fonts.lua"/>
 <Script file="modules/colors/colors.lua"/>
+<Script file="modules/colors/colorpicker.lua"/>
 <Script file="modules/textures/textures.lua"/>
+<Script file="modules/ui/controls.lua"/>
 
 <!-- Commands -->
 <Script file="core/commands.lua"/>

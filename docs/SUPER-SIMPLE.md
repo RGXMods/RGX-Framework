@@ -17,6 +17,59 @@ myText:SetFont(path, 12, "OUTLINE")
 
 ## That's It!
 
+## Slightly Better: One Shared Style Table
+
+```lua
+local Fonts = _G.RGXFonts
+
+local style = Fonts:CreateStyle({
+    font = "Inter-Regular",
+    size = 14,
+    flags = "OUTLINE",
+})
+
+Fonts:ApplyTextStyle(myText, style)
+```
+
+## Easiest UI Integration
+
+### Full-Scope Easiest
+
+```lua
+_G.RGXFonts:AttachStyleSelector(parent, db, "titleText")
+_G.RGXFonts:ApplyTextStyle(myText, db.titleText)
+```
+
+That is the intended "one line to mount UI, one line to apply" path.
+
+```lua
+local Fonts = _G.RGXFonts
+
+local fontSelector = Fonts:CreateSimpleFontSelector(parent, {
+    label = "Font",
+    value = "Inter-Regular",
+    onChange = function(fontName)
+        saved.font = fontName
+        Fonts:ApplyTextStyle(myText, saved)
+    end,
+})
+
+local styleSelector = Fonts:CreateSimpleStyleSelector(parent, {
+    label = "Text Style",
+    value = saved,
+    onChange = function(style)
+        saved = style
+        Fonts:ApplyTextStyle(myText, saved)
+    end,
+})
+```
+
+### Font-Only Binding
+
+```lua
+_G.RGXFonts:AttachFontSelector(parent, db, "titleFont")
+```
+
 ## Complete Example
 
 ```lua
@@ -53,24 +106,20 @@ local path = _G.RGXFonts:GetPath(selectedFont)
 myText:SetFont(path, 12, "OUTLINE")
 ```
 
-## Available Fonts
+## What Addon Authors Should Actually Use
 
-- Inter-Regular
-- Inter-Bold
-- DejaVuSans
-- DejaVuSans-Bold
-- LiberationSans-Regular
-- LiberationSans-Bold
-- Ubuntu-Regular
-- Ubuntu-Bold
-- FRIZQT (WoW default)
-- ARIALN (WoW default)
-- And more...
+- `GetPath(fontName)` when you only need a path
+- `CreateStyle(styleTable)` when you want one normalized style object
+- `ApplyTextStyle(fontString, style)` when you want one-call application
+- `CreateSimpleFontSelector(parent, opts)` for a grouped nested font dropdown
+- `CreateSimpleStyleSelector(parent, opts)` for a reusable style widget
+- `AttachFontSelector(parent, db, key)` for one-line DB-bound font UI
+- `AttachStyleSelector(parent, db, key)` for one-line DB-bound style UI
 
 ## Why This Works
 
 1. `## RequiredDeps: RGX-Framework` ensures RGX loads first
 2. `_G.RGXFonts` is created by RGX-Framework
-3. Just call `:_G.RGXFonts:GetPath("fontname")` to get any font
+3. The simple path is just `_G.RGXFonts`, `CreateStyle`, `ApplyTextStyle`, and the selector helpers
 
-No bridges, no complex API, just `_G.RGXFonts` and `GetPath()`.
+No bridge layer, no per-addon font plumbing, and no need to rebuild dropdowns by hand.

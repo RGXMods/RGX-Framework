@@ -1,81 +1,74 @@
 # Font Sources for RGX-Framework
 
-Fonts must be downloaded manually and placed in `media/fonts/` before packaging.
+RGX-Framework now ships a curated bundle of downloaded open-source fonts chosen to give addon authors a stronger default selection across UI, serif, display, fantasy, pixel, and monospace styles.
 
-## Available Fonts
+## Important Limitation
 
-### Roboto (Apache 2.0)
-**Source:** https://github.com/google/fonts/tree/main/apache/roboto
+WoW addons cannot safely enumerate a player's operating system font folders, so RGX does not support true "system font" discovery.
 
-```bash
-# Download from GitHub
-curl -L -o Roboto-Regular.ttf \
-  "https://github.com/google/fonts/raw/main/apache/roboto/Roboto%5Bwdth,wght%5D.ttf"
-```
+The practical replacement is:
 
-Note: This is a variable font file containing all weights.
+- bundled fonts inside `RGX-Framework/media/fonts/`
+- companion add-on font packs that register more fonts through `RGXFonts:RegisterFontPack(...)`
+- per-addon packaged fonts registered through `RGXFonts:RegisterAddonFont(...)`
 
-### Open Sans (OFL 1.1)
-**Source:** https://github.com/google/fonts/tree/main/ofl/opensans
+## Current Bundled Families
 
-```bash
-curl -L -o OpenSans-Regular.ttf \
-  "https://github.com/google/fonts/raw/main/ofl/opensans/OpenSans%5Bwdth,wght%5D.ttf"
-```
+### Sans / UI
+- Inter — https://rsms.me/inter/
+- Ubuntu — https://design.ubuntu.com/font
+- Liberation Sans — https://github.com/liberationfonts/liberation-fonts
+- DejaVu Sans — https://dejavu-fonts.github.io/
+- Lato — https://fonts.google.com/specimen/Lato
+- Poppins — https://fonts.google.com/specimen/Poppins
+- Montserrat — https://fonts.google.com/specimen/Montserrat
+- Rajdhani — https://fonts.google.com/specimen/Rajdhani
 
-### Inter (OFL 1.1)
-**Source:** https://github.com/rsms/inter/releases
+### Serif
+- Crimson Text — https://fonts.google.com/specimen/Crimson+Text
+- Merriweather — https://fonts.google.com/specimen/Merriweather
+- Playfair Display — https://fonts.google.com/specimen/Playfair+Display
 
-```bash
-curl -L -o Inter-4.0.zip \
-  "https://github.com/rsms/inter/releases/download/v4.0/Inter-4.0.zip"
-# Extract OTF files from the zip
-```
+### Monospace
+- IBM Plex Mono — https://fonts.google.com/specimen/IBM+Plex+Mono
+- JetBrains Mono — https://www.jetbrains.com/lp/mono/
 
-### Fira Code (OFL 1.1)
-**Source:** https://github.com/tonsky/FiraCode/releases
+### Display
+- Bebas Neue — https://fonts.google.com/specimen/Bebas+Neue
+- Bangers — https://fonts.google.com/specimen/Bangers
+- Creepster — https://fonts.google.com/specimen/Creepster
+- Oswald — https://fonts.google.com/specimen/Oswald
+- Orbitron — https://fonts.google.com/specimen/Orbitron
+- Audiowide — https://fonts.google.com/specimen/Audiowide
+- Anton — https://fonts.google.com/specimen/Anton
 
-```bash
-curl -L -o Fira_Code_v6.2.zip \
-  "https://github.com/tonsky/FiraCode/releases/download/6.2/Fira_Code_v6.2.zip"
-# Extract TTF files from ttf/ folder
-```
+### Pixel
+- Press Start 2P — https://fonts.google.com/specimen/Press+Start+2P
+- Silkscreen — https://fonts.google.com/specimen/Silkscreen
+- VT323 — https://fonts.google.com/specimen/VT323
 
-### JetBrains Mono (OFL 1.1)
-**Source:** https://github.com/JetBrains/JetBrainsMono/releases
+### Fantasy / Themed
+- Uncial Antiqua — https://fonts.google.com/specimen/Uncial+Antiqua
+- Cinzel — https://fonts.google.com/specimen/Cinzel
 
-```bash
-curl -L -o JetBrainsMono-2.304.zip \
-  "https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip"
-# Extract TTF files from fonts/ttf/ folder
-```
+## Packaging Notes
 
-### Bebas Neue (OFL 1.1)
-**Source:** https://github.com/google/fonts/tree/main/ofl/bebasneue
+When adding another font family:
 
-```bash
-curl -L -o BebasNeue-Regular.ttf \
-  "https://github.com/google/fonts/raw/main/ofl/bebasneue/BebasNeue-Regular.ttf"
-```
-
-## Manual Download
-
-1. Download fonts from sources above
-2. Extract if needed
-3. Copy TTF/OTF files to `RGX-Framework/media/fonts/`
-4. Update `modules/fonts/fonts.lua` to match your file names
-
-## WoW Default Fonts (Always Available)
-
-These are built into WoW and always available:
-- `Fonts/FRIZQT__.TTF` - Friz Quadrata (default UI font)
-- `Fonts/ARIALN.TTF` - Arial Narrow
-- `Fonts/skurri.ttf` - Skurri
-- `Fonts/MORPHEUS.ttf` - Morpheus
+1. Download the font from its official source.
+2. Keep only the specific weights/styles RGX plans to expose.
+3. Place the files in `media/fonts/`.
+4. Register them in `modules/fonts/fonts.lua`.
+5. Update `media/fonts/README.md` and this file.
 
 ## License Notes
 
-- **Apache 2.0** - Roboto
-- **OFL 1.1** - Open Sans, Inter, Fira Code, JetBrains Mono, Bebas Neue
+The bundled fonts are limited to permissive redistribution-friendly licenses such as:
 
-All fonts are open source and free to redistribute.
+- OFL 1.1
+- Ubuntu Font License
+- Public Domain
+
+## WoW Defaults
+
+RGX still exposes Blizzard's built-in fallback fonts where useful, but the bundled RGX font pack is intended to be the primary source for addon font menus.

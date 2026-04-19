@@ -24,31 +24,27 @@ local fontPath = addon:FetchMedia("font", selectedFont)
 local RGX = _G.RGXFramework
 local Fonts = RGX:GetModule("fonts")
 
--- Get font path (automatically falls back to defaults if not available)
-local fontPath = Fonts:GetPath("Roboto-Regular")
+local style = Fonts:CreateStyle({
+    font = "Inter-Regular",
+    size = 14,
+    flags = "OUTLINE",
+})
 
--- Or get font with size/flags
-local path, size, flags = Fonts:Get("Roboto-Bold", 14, "OUTLINE")
-myText:SetFont(path, size, flags)
+Fonts:ApplyTextStyle(myText, style)
 ```
 
 ## Step 3: Font Dropdown
 
-**OLD:**
-```lua
-for _, font in ipairs(addon:ListMedia("font")) do
-    -- create dropdown item
-end
-```
-
 **NEW:**
 ```lua
 local Fonts = RGX:GetModule("fonts")
-for _, fontInfo in ipairs(Fonts:List()) do
-    local fontName = fontInfo.name
-    local isAvailable = fontInfo.available
-    -- create dropdown item
-end
+
+local styleSelector = Fonts:AttachStyleSelector(parent, db, "titleText", {
+    label = "Title Text",
+    onChange = function()
+        addon:RefreshFonts()
+    end,
+})
 ```
 
 ## Step 4: Apply Fonts
@@ -59,14 +55,9 @@ local Fonts = RGX:GetModule("fonts")
 
 -- Apply to PetBuddy2's font objects
 function addon:RefreshFonts()
-    local fontName = self.db.global.fontFace or Fonts:GetDefault()
-    local fontSize = self.db.global.fontSize or 10
-
-    local path = Fonts:GetPath(fontName)
-
-    PetBuddyFontTitle:SetFont(path, fontSize + 2, "OUTLINE")
-    PetBuddyFontNormal:SetFont(path, fontSize, "OUTLINE")
-    PetBuddyFontSmall:SetFont(path, math.max(8, fontSize - 1), "OUTLINE")
+    Fonts:ApplyTextStyle(PetBuddyFontTitle, self.db.global.titleText)
+    Fonts:ApplyTextStyle(PetBuddyFontNormal, self.db.global.normalText)
+    Fonts:ApplyTextStyle(PetBuddyFontSmall, self.db.global.smallText)
 end
 ```
 

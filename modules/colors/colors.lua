@@ -22,6 +22,8 @@
         Colors:Lighten(color, amt) - Lighten color
         Colors:OpenPicker(opts)    - Open Blizzard color picker popup
         Colors:CreateColorPicker(parent, opts) - Create a label + swatch widget
+        Colors:CreateColorSettingControl(parent, opts) - Create a bound color setting control with reset
+        Colors:ApplyStatusBar(bar, color) - Apply a color to a status bar
 --]]
 
 local _, Colors = ...
@@ -333,6 +335,14 @@ function Colors:ApplyTexture(texture, colorName)
     texture:SetVertexColor(color.r, color.g, color.b, color.a or 1)
 end
 
+--- Apply color to StatusBar
+function Colors:ApplyStatusBar(statusBar, colorName)
+    if not statusBar or not statusBar.SetStatusBarColor then return end
+    local color = self:Get(colorName) or self:CreatePickerColor(colorName)
+    if not color then return end
+    statusBar:SetStatusBarColor(color.r, color.g, color.b, color.a or 1)
+end
+
 --- Get gradient colors
 function Colors:Gradient(percent, lowColor, midColor, highColor)
     if percent < 0.5 then
@@ -557,6 +567,131 @@ function Colors:CreateColorPicker(parent, options)
             end,
         })
     end)
+
+    return frame
+end
+
+function Colors:CreateColorSettingControl(parent, options)
+    if type(options) ~= "table" then
+        options = {
+            label = tostring(options or "Color"),
+        }
+    end
+
+    local frame = CreateFrame("Frame", options.name, parent)
+    frame:SetSize(options.width or 210, options.height or 22)
+
+    local resetWidth = options.showReset == false and 0 or (options.resetWidth or 22)
+    local pickerWidth = (options.width or 210) - resetWidth - (resetWidth > 0 and 6 or 0)
+
+    local picker = self:CreateColorPicker(frame, {
+        label = options.label or "Color",
+        labelFont = options.labelFont or "GameFontNormal",
+        width = pickerWidth,
+        height = options.height or 22,
+        swatchWidth = options.swatchWidth or 22,
+        swatchHeight = options.swatchHeight or 22,
+        hasOpacity = options.hasOpacity,
+    })
+    picker:SetPoint("LEFT", frame, "LEFT", 0, 0)
+    frame.picker = picker
+
+    local reset = nil
+    if resetWidth > 0 then
+        reset = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+        reset:SetSize(resetWidth, options.resetHeight or 22)
+        reset:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
+        reset:SetText(options.resetText or "R")
+        frame.reset = reset
+    end
+
+    local storage = options.storage
+    local key = options.key
+    local defaultColor = self:CreatePickerColor(
+        options.defaultColor or options.default or options.color or options.name or options.hex,
+        options.defaultAlpha or options.alpha
+    )
+
+    local function StoreColor(color)
+        if storage and key then
+            storage[key] = Colors:Clone(color)
+        end
+    end
+
+    local function ResolveInitialColor()
+        if storage and key and storage[key] ~= nil then
+            return storage[key]
+        end
+        return options.color or options.name or options.hex or defaultColor
+    end
+
+    function frame:SetColor(color, alpha)
+        local normalized = Colors:CreatePickerColor(color, alpha)
+        self.color = normalized
+        picker:SetColor(normalized)
+        StoreColor(normalized)
+    end
+
+    function frame:GetColor()
+        return Colors:Clone(self.color)
+    end
+
+    function frame:GetDefaultColor()
+        return Colors:Clone(defaultColor)
+    end
+
+    function frame:SetEnabled(enabled)
+        local isEnabled = enabled ~= false
+        picker.swatch:SetEnabled(isEnabled)
+        picker.swatch:SetAlpha(isEnabled and 1 or 0.45)
+        picker.label:SetAlpha(isEnabled and 1 or 0.6)
+        if reset then
+            reset:SetEnabled(isEnabled)
+            reset:SetAlpha(isEnabled and 1 or 0.45)
+        end
+    end
+
+    function frame:Reset()
+        self:SetColor(defaultColor)
+        if type(options.onReset) == "function" then
+            options.onReset(self, self:GetColor())
+        end
+        if type(options.onChanged) == "function" then
+            local color = self:GetColor()
+            options.onChanged(self, color, color.r, color.g, color.b, color.a, false)
+        end
+    end
+
+    frame:SetColor(ResolveInitialColor(), options.alpha)
+
+    picker.swatch:SetScript("OnClick", function()
+        Colors:OpenPicker({
+            color = frame.color,
+            hasOpacity = options.hasOpacity,
+            onChanged = function(color, r, g, b, a, cancelled)
+                frame.color = Colors:CreatePickerColor(color)
+                picker:SetColor(frame.color)
+                StoreColor(frame.color)
+                if type(options.onChanged) == "function" then
+                    options.onChanged(frame, frame.color, r, g, b, a, cancelled)
+                end
+            end,
+            onCancel = function(color, r, g, b, a)
+                frame.color = Colors:CreatePickerColor(color)
+                picker:SetColor(frame.color)
+                StoreColor(frame.color)
+                if type(options.onCancel) == "function" then
+                    options.onCancel(frame, frame.color, r, g, b, a)
+                end
+            end,
+        })
+    end)
+
+    if reset then
+        reset:SetScript("OnClick", function()
+            frame:Reset()
+        end)
+    end
 
     return frame
 end
