@@ -1,15 +1,38 @@
 --[[
     RGX-Framework - Core Library
-    
-    A modular framework providing fonts, colors, and textures for WoW addons.
-    
-    Usage:
+
+    A modular framework providing fonts, colors, textures, events, timers,
+    and UI controls for WoW addons.
+
+    Quick start:
         ## RequiredDeps: RGX-Framework
-        
+
         local RGX = _G.RGXFramework
-        local Fonts = RGX:GetModule("fonts")
-        local Colors = RGX:GetModule("colors")
-        local Textures = RGX:GetModule("textures")
+
+        -- Module shortcuts
+        local Fonts    = RGX:GetFonts()
+        local Colors   = RGX:GetColors()
+        local Textures = RGX:GetTextures()
+        local Drops    = RGX:GetDropdowns()
+        local UI       = RGX:GetUI()
+
+        -- Generic getter (normalizes name)
+        local mod = RGX:GetModule("fonts")
+
+        -- Hard dependency (logs error if missing)
+        local mod = RGX:RequireModule("fonts")
+
+        -- Events / messages
+        RGX:RegisterEvent("PLAYER_LOGIN", myHandler)
+        RGX:SendMessage("MY_ADDON_READY", data)
+
+        -- Timers
+        RGX:After(1.0, function() print("one second later") end)
+        local ticker = RGX:Every(5.0, myCallback)
+        RGX:CancelTimer(ticker)
+
+        -- Slash commands
+        RGX:RegisterSlashCommand("mycommand", function(msg) end, "MYADDON")
 --]]
 
 local addonName, RGX = ...
@@ -97,8 +120,25 @@ function RGX:GetModule(name)
 end
 
 function RGX:RequireModule(name)
-    return self:GetModule(name)
+    local module = self:GetModule(name)
+    if not module then
+        local msg = string.format("[RGX] RequireModule: '%s' not loaded", tostring(name))
+        if type(_G.geterrorhandler) == "function" then
+            _G.geterrorhandler()(msg)
+        else
+            print("|cFFFF4444" .. msg .. "|r")
+        end
+    end
+    return module
 end
+
+-- Module shortcuts
+function RGX:GetFonts()       return self:GetModule("fonts")       end
+function RGX:GetColors()      return self:GetModule("colors")      end
+function RGX:GetTextures()    return self:GetModule("textures")    end
+function RGX:GetDropdowns()   return self:GetModule("dropdowns")   end
+function RGX:GetUI()          return self:GetModule("ui")          end
+function RGX:GetColorPicker() return self:GetModule("colorpicker") end
 
 function RGX:IsModuleLoaded(name)
     local normalizedName = NormalizeModuleName(name)
