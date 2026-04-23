@@ -12,33 +12,101 @@
         local Textures = RGX:GetModule("textures")
 --]]
 
-local _, RGX = ...
+local addonName, RGX = ...
 _G.RGXFramework = RGX
 
-RGX.version = "1.0.0"
+local function GetAddOnMetadataCompat(name, field)
+    if C_AddOns and type(C_AddOns.GetAddOnMetadata) == "function" then
+        return C_AddOns.GetAddOnMetadata(name, field)
+    end
+
+    if type(GetAddOnMetadata) == "function" then
+        return GetAddOnMetadata(name, field)
+    end
+
+    return nil
+end
+
+local function NormalizeModuleName(name)
+    if type(name) ~= "string" or name == "" then
+        return nil
+    end
+
+    return string.lower(name)
+end
+
+RGX.version = GetAddOnMetadataCompat(addonName, "Version") or "1.0.0"
 RGX.debugMode = false
 
 -- Module storage
 RGX.modules = {}
 RGX.loadedModules = {}
+RGX.moduleAliases = {
+    fonts = "RGXFonts",
+    colors = "RGXColors",
+    textures = "RGXTextures",
+    dropdowns = "RGXDropdowns",
+    ui = "RGXUI",
+    colorpicker = "RGXColorPicker",
+}
+
+local function ResolveModuleAlias(self, normalizedName)
+    local alias = self.moduleAliases and self.moduleAliases[normalizedName]
+    if type(alias) ~= "string" then
+        return nil
+    end
+
+    local module = rawget(_G, alias)
+    if type(module) ~= "table" then
+        return nil
+    end
+
+    self.modules[normalizedName] = module
+    self.loadedModules[normalizedName] = true
+    return module
+end
 
 -- Module management
-function RGX:RegisterModule(name, module)
-    if type(name) ~= "string" or name == "" then return false end
+function RGX:RegisterModule(name, module, opts)
+    local normalizedName = NormalizeModuleName(name)
+    if not normalizedName then return false end
     if type(module) ~= "table" then return false end
-    if self.modules[name] then return false end
+    if self.modules[normalizedName] and self.modules[normalizedName] ~= module then return false end
 
-    self.modules[name] = module
-    self.loadedModules[name] = true
+    module.name = module.name or normalizedName
+    module.framework = self
+
+    self.modules[normalizedName] = module
+    self.loadedModules[normalizedName] = true
+
+    local globalAlias = type(opts) == "table" and opts.global or self.moduleAliases[normalizedName]
+    if type(globalAlias) == "string" and rawget(_G, globalAlias) == nil then
+        _G[globalAlias] = module
+    end
+
     return true
 end
 
 function RGX:GetModule(name)
-    return self.modules[name]
+    local normalizedName = NormalizeModuleName(name)
+    if not normalizedName then
+        return nil
+    end
+
+    return self.modules[normalizedName] or ResolveModuleAlias(self, normalizedName)
+end
+
+function RGX:RequireModule(name)
+    return self:GetModule(name)
 end
 
 function RGX:IsModuleLoaded(name)
-    return self.loadedModules[name] == true
+    local normalizedName = NormalizeModuleName(name)
+    if not normalizedName then
+        return false
+    end
+
+    return self.loadedModules[normalizedName] == true or ResolveModuleAlias(self, normalizedName) ~= nil
 end
 
 function RGX:GetLoadedModules()
