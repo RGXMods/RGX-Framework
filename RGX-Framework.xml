@@ -5,9 +5,12 @@
 <Script file="core/core.lua"/>
 <Script file="core/systems/config.lua"/>
 <Script file="core/systems/database.lua"/>
+<Script file="core/systems/events.lua"/>
+<Script file="core/systems/runtime.lua"/>
 <Script file="core/systems/utils.lua"/>
 
 <!-- Modules -->
+<Script file="modules/dropdowns/dropdowns.lua"/>
 <Script file="modules/fonts/fonts.lua"/>
 <Script file="modules/colors/colors.lua"/>
 <Script file="modules/colors/colorpicker.lua"/>

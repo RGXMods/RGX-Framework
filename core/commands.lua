@@ -6,8 +6,7 @@
 
 local _, RGX = ...
 
-SLASH_RGX1 = "/rgx"
-SlashCmdList["RGX"] = function(msg)
+RGX:RegisterSlashCommand("rgx", function(msg)
 	local input = strtrim(msg or "")
 	local cmd, rest = input:match("^(%S+)%s*(.-)$")
 	cmd = (cmd or ""):lower()
@@ -45,4 +44,4 @@ SlashCmdList["RGX"] = function(msg)
 	else
 		print("|cFF00A2FF[RGX]|r Commands: modules, fonts, font, debug")
 	end
-end
+end, "RGX")

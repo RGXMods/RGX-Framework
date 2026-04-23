@@ -115,6 +115,19 @@ function UI:CreateFontDropdown(parent, options)
     return container
 end
 
+function UI:CreateStatusBarDropdown(parent, options)
+    options = options or {}
+
+    local Textures = RGX:GetModule("textures")
+    if not Textures or type(Textures.CreateBarSettingControl) ~= "function" then
+        return self:CreateLabel(parent, {text = "RGX Textures not loaded", color = "red"})
+    end
+
+    return Textures:CreateBarSettingControl(parent, options)
+end
+
+UI.CreateTextureDropdown = UI.CreateStatusBarDropdown
+
 function UI:OpenFontMenu(anchor, options)
     local Fonts = RGX:GetModule("fonts")
     if not Fonts then return end

@@ -2,7 +2,7 @@
 
 <div style="padding:14px 16px;background:linear-gradient(135deg,#1a1320 0%,#111827 100%);border:1px solid #3b2f46">
 <div style="font-size:26px;font-weight:800;letter-spacing:0.4px;color:#bc6fa8">RGX-Framework</div>
-<div style="margin-top:4px;color:#c7d0db;font-size:14px">Shared fonts, colors, textures, and UI helpers for WoW addon authors.</div>
+<div style="margin-top:4px;color:#c7d0db;font-size:14px">Shared media, UI helpers, and addon foundation primitives for WoW addon authors.</div>
 <div style="margin-top:10px">
 <span style="display:inline-block;background-color:#201827;border:1px solid #5a3b6d;color:#f3d3ff;padding:3px 8px;margin-right:6px"><strong>Version</strong> 1.0.0</span>
 <span style="display:inline-block;background-color:#13202a;border:1px solid #29566f;color:#b9ecff;padding:3px 8px;margin-right:6px">Retail</span>
@@ -15,10 +15,10 @@
 <div style="padding:12px 14px;background-color:#151a22;border:1px solid #30363d">
 <div style="font-size:18px;font-weight:700;color:#ffd166">Overview</div>
 <div style="margin-top:8px;color:#e6edf3;line-height:1.5">
-RGX-Framework is a Retail World of Warcraft shared media library built to give addon suites one coordinated resource layer for fonts, colors, textures, and lightweight UI helpers.
+RGX-Framework is a Retail World of Warcraft shared addon foundation built to give addon suites one coordinated resource layer for fonts, colors, textures, lightweight UI helpers, and reusable framework plumbing.
 </div>
 <div style="margin-top:8px;color:#c7d0db;line-height:1.5">
-It stays quiet for players and useful for authors. If another addon depends on RGX-Framework, install it and leave it enabled. If you are building addons yourself, use it to avoid shipping duplicate media folders and scattered visual constants in every project.
+It stays quiet for players and useful for authors. If another addon depends on RGX-Framework, install it and leave it enabled. If you are building addons yourself, use it to avoid shipping duplicate media folders, scattered visual constants, and repeated framework glue in every project.
 </div>
 </div>
 
@@ -32,6 +32,7 @@ It stays quiet for players and useful for authors. If another addon depends on R
 • <strong>RGXFonts</strong> for shared font lookup and fallback-safe font paths<br/>
 • <strong>RGXColors</strong> for reusable color helpers and a drop-in color-picker flow<br/>
 • <strong>RGXTextures</strong> for shared status bars, panel textures, and UI media<br/>
+• Native RGX event and message plumbing without depending on Ace-style library chains<br/>
 • Smaller addon packages through one shared media source<br/>
 • Consistent branding and visual language across RGX-based addons
 </div>

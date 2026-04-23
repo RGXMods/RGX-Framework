@@ -1,7 +1,4 @@
-# Changes
+# v1.0.1 - 2026-04-23
 
-## v1.0.0
-
-- Initial release
-- Modular library: Fonts, Colors, Textures
-- Interface: Midnight (12.0.0, 12.0.1)
+## Changes
+- TOC bump for interface 120005.
