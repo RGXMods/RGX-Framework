@@ -463,6 +463,10 @@ function Fonts:Exists(name)
     return self.registry[name] ~= nil
 end
 
+function Fonts:GetInfo(name)
+    return self.registry[name]
+end
+
 function Fonts:IsAvailable(name)
     local font = self.registry[name]
     if not font then return false end

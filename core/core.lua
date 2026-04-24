@@ -10,11 +10,18 @@
         local RGX = _G.RGXFramework
 
         -- Module shortcuts
-        local Fonts    = RGX:GetFonts()
-        local Colors   = RGX:GetColors()
-        local Textures = RGX:GetTextures()
-        local Drops    = RGX:GetDropdowns()
-        local UI       = RGX:GetUI()
+        local Fonts      = RGX:GetFonts()
+        local Colors     = RGX:GetColors()
+        local Textures   = RGX:GetTextures()
+        local Drops      = RGX:GetDropdowns()
+        local UI         = RGX:GetUI()
+        local PetBattles = RGX:GetPetBattles()
+
+        -- Pet battle callbacks
+        PetBattles:OnLevelUp(function(petID, petSlot, newLevel, oldLevel) end)
+        PetBattles:OnCapture(function(petID, petSlot) end)
+        PetBattles:OnBattleStart(function() end)
+        PetBattles:OnBattleEnd(function() end)
 
         -- Generic getter (normalizes name)
         local mod = RGX:GetModule("fonts")
@@ -71,6 +78,13 @@ RGX.moduleAliases = {
     dropdowns = "RGXDropdowns",
     ui = "RGXUI",
     colorpicker = "RGXColorPicker",
+    minimap     = "RGXMinimap",
+    petbattles  = "RGXPetBattles",
+    sharedmedia = "RGXSharedMedia",
+    design      = "RGXDesign",
+    combat      = "RGXCombat",
+    reputation  = "RGXReputation",
+    databroker  = "RGXDataBroker",
 }
 
 local function ResolveModuleAlias(self, normalizedName)
@@ -139,6 +153,24 @@ function RGX:GetTextures()    return self:GetModule("textures")    end
 function RGX:GetDropdowns()   return self:GetModule("dropdowns")   end
 function RGX:GetUI()          return self:GetModule("ui")          end
 function RGX:GetColorPicker() return self:GetModule("colorpicker") end
+function RGX:GetMinimap()      return self:GetModule("minimap")      end
+function RGX:GetPetBattles()   return self:GetModule("petbattles")   end
+function RGX:GetSharedMedia()  return self:GetModule("sharedmedia")  end
+function RGX:GetDesign()       return self:GetModule("design")       end
+function RGX:GetCombat()       return self:GetModule("combat")       end
+function RGX:GetReputation()   return self:GetModule("reputation")   end
+function RGX:GetDataBroker()   return self:GetModule("databroker")   end
+
+-- One-call sound playback: looks up path from RGXSharedMedia and plays it.
+-- RGX:PlaySound("mysoundpack:Kill Shot")
+-- RGX:PlaySound("mysoundpack:Kill Shot", "SFX")
+function RGX:PlaySound(id, channel)
+    local SM = self:GetModule("sharedmedia")
+    if not SM then return false end
+    local path = SM:GetPath("sound", id)
+    if not path then return false end
+    return PlaySoundFile(path, channel or "Master")
+end
 
 function RGX:IsModuleLoaded(name)
     local normalizedName = NormalizeModuleName(name)

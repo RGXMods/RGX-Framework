@@ -1,7 +1,7 @@
 ## Interface: 120005
-## Version: 1.0.2
+## Version: 1.2.0
 ## Title: RGX-Framework
-## Notes: Modular library for WoW addon development - Fonts, Colors, Textures
+## Notes: Modular library for WoW addon development - Fonts, Colors, Textures, Dropdowns, UI Controls, Pet Battles
 ## Author: RGX
 ## SavedVariables: RGXFrameworkDB
 ## X-Category: Library
