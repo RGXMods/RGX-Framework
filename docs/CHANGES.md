@@ -1,10 +1,8 @@
-# v1.3.0 - 2026-04-24
+# v1.4.0 - 2026-04-25
 
-## Core
-- Added `RGX:OnReady(fn)` — queue a callback to fire once the framework finishes its `ADDON_LOADED` init; fires immediately if already ready.
-- Added `RGX:IsReady()` — returns `true` after framework initialization completes.
-- Added `RGX:Print(...)`, `RGX:Warn(...)`, `RGX:Error(...)` — standard output helpers with colored `[RGX]` prefix (green / yellow / red).
-- Added `RGX:Mixin(target, ...)` — copy all fields from one or more source tables into `target`; returns `target`.
+## Core — Lifecycle Shortcuts
+- Added `RGX:OnLogin(fn)` — run a callback when the player logs in. Addon authors no longer need to know that `PLAYER_LOGIN` exists.
+- Added `RGX:OnLoad(addonName, fn)` — run a callback when a specific addon finishes loading. Hides `ADDON_LOADED`.
+- Added `RGX:Minimap(config)` — one-call minimap button creation; shortcut for `RGX:GetMinimap():Create(config)`.
 
-## Dropdowns
-- `ForceWidth` internal timer migrated from `C_Timer.After(0)` to `RGX:After(0)` — framework is now fully self-contained with no external timer dependencies.
+These three methods are the primary entry point for new addon authors. The result is a working addon in ~10 lines with no WoW event names, no frame creation, and no compat boilerplate. `RegisterEvent`, timers, and the full module APIs remain for advanced use.

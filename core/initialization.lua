@@ -24,6 +24,26 @@ function RGX:OnReady(fn)
     end
 end
 
+-- Lifecycle shortcuts — addon authors shouldn't need to know WoW event names.
+
+-- Run fn when the player logs in and the UI is ready.
+function RGX:OnLogin(fn)
+    self:RegisterEvent("PLAYER_LOGIN", fn)
+end
+
+-- Run fn when a specific addon finishes loading.
+function RGX:OnLoad(addonName, fn)
+    self:RegisterEvent("ADDON_LOADED", function(name)
+        if name == addonName then fn() end
+    end)
+end
+
+-- Create a minimap button.  Shortcut for RGX:GetMinimap():Create(config).
+function RGX:Minimap(config)
+    local MM = self:GetMinimap()
+    if MM then return MM:Create(config) end
+end
+
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(_, event, addon)
