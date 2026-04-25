@@ -107,7 +107,7 @@ end
     ForceWidth(level, minWidth, leftInset, opts)
 
     Auto-size a UIDropDownMenu list frame + buttons after WoW renders them.
-    Runs deferred via C_Timer.After(0) so it fires after UIDropDownMenu_AddButton.
+    Runs deferred via RGX:After(0) so it fires after UIDropDownMenu_AddButton.
 
     opts:
         inlineKeys  (table of strings) — button field names for inline widgets
@@ -124,7 +124,7 @@ function Dropdowns:ForceWidth(level, minWidth, leftInset, opts)
     local countKey       = opts.countKey
     local self_ref       = self
 
-    C_Timer.After(0, function()
+    RGX:After(0, function()
         local listFrame = self_ref:GetListFrame(level)
         if not listFrame or not listFrame:IsShown() then return end
 

@@ -189,9 +189,10 @@ local function ShowTooltip(btn, opts)
         GameTooltip:AddLine(tt.description, 1, 1, 1, true)
     end
 
-    if type(tt.lines) == "table" and #tt.lines > 0 then
+    local lines = type(tt.getLines) == "function" and tt.getLines(btn) or tt.lines
+    if type(lines) == "table" and #lines > 0 then
         GameTooltip:AddLine(" ")
-        for _, line in ipairs(tt.lines) do
+        for _, line in ipairs(lines) do
             if line.left and line.right then
                 GameTooltip:AddDoubleLine(line.left, line.right, 1, 1, 1, 1, 1, 1)
             elseif line.text then

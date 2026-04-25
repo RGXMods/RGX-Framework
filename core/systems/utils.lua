@@ -89,6 +89,19 @@ function RGX:EndsWith(str, suffix)
     return str:sub(-#suffix) == suffix
 end
 
+-- Output helpers
+function RGX:Print(...)
+    print("|cff58be81[RGX]|r", ...)
+end
+
+function RGX:Warn(...)
+    print("|cffffcc00[RGX]|r", ...)
+end
+
+function RGX:Error(...)
+    print("|cffff4444[RGX]|r", ...)
+end
+
 -- WoW
 function RGX:GetWoWVersion()
     return select(4, GetBuildInfo())

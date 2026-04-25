@@ -2,17 +2,19 @@
 
 A modular WoW Retail addon foundation. Provides fonts, colors, textures, dropdowns, UI controls, minimap buttons, pet battle events, a native event/timer/hook runtime, and shared utilities — all in one required dependency so every addon in a suite shares the same plumbing instead of duplicating it.
 
-Current version: `1.2.0`
+Current version: `1.3.0`
 
 ***
 
 ## Overview
 
-RGX-Framework is designed for addon authors who want a single, consistent base instead of stitching together separate media packs, event libraries, and widget utilities in every project. It is not a player-facing addon — it loads silently and exposes an API.
+RGX-Framework is a modern, self-contained addon framework — an alternative to Ace3 covering events, timers, hooks, slash commands, minimap, options panels, database, and data broker, plus a full media stack (fonts, colors, textures, shared media), combat and reputation event libraries, and pet battle support. It is not a player-facing addon — it loads silently and exposes an API.
 
-**No LibStub. No Ace3.** RGX-Framework uses a native module registry and a small dispatcher. Because it is a single `RequiredDeps` entry (not an embedded library), versioning and loading order are deterministic. Modules register themselves into `_G.RGXFramework` at load time and are immediately available to any addon loaded after it.
+**One dependency. Everything you need.** Declare `RequiredDeps: RGX-Framework` once and every addon in your suite shares the same initialized instance — events, timers, hooks, minimap, fonts, UI controls, combat events, and more, loaded once, always up-to-date. No embedded libraries to juggle. No version arbitration. When the framework updates, every addon on the player's machine benefits automatically.
 
-The framework is used by `SimpleQuestPlates`, `petbuddy2`, and the upcoming `RGX-Mod` suite, and is designed to be usable by any addon author, not just first-party projects.
+**What it provides:** a lifecycle-aware event bus, a tick-based timer system, hook helpers, slash command registration, 30+ bundled fonts, a named color palette, statusbar textures, nested dropdowns with auto-width and inline buttons, reusable UI controls, an options panel builder, circular-drag minimap buttons, pet battle callbacks, a combat event library, reputation/renown tracking, a shared media registry, a color picker, and a data broker registry.
+
+The framework is used by `SimpleQuestPlates`, `petbuddy2`, and `RemoveNameplateDebuffs`, and is designed to be usable by any addon author, not just first-party projects.
 
 ***
 
@@ -23,16 +25,22 @@ The framework is used by `SimpleQuestPlates`, `petbuddy2`, and the upcoming `RGX
 ```
 
 ```lua
-local RGX = _G.RGXFramework
+local RGX = assert(_G.RGXFramework, "MyAddon: RGX-Framework not loaded")
 
-local Fonts    = RGX:GetFonts()
-local Colors   = RGX:GetColors()
-local Textures = RGX:GetTextures()
-local Drops    = RGX:GetDropdowns()
-local UI       = RGX:GetUI()
-local MM       = RGX:GetMinimap()
-local PB       = RGX:GetPetBattles()
+-- Optional: defer initialization until the framework is fully ready
+RGX:OnReady(function()
+    -- modules are guaranteed loaded here
+    local Fonts    = RGX:GetFonts()
+    local Colors   = RGX:GetColors()
+    local Textures = RGX:GetTextures()
+    local Drops    = RGX:GetDropdowns()
+    local UI       = RGX:GetUI()
+    local MM       = RGX:GetMinimap()
+    local PB       = RGX:GetPetBattles()
+end)
 ```
+
+For addons that only need the event/timer/slash surface (no modules), `_G.RGXFramework` is available immediately at load time — no `OnReady` needed.
 
 ***
 
@@ -113,13 +121,40 @@ local _, MyModule = ...
 
 ## API Reference
 
+### Lifecycle
+
+```lua
+RGX:IsReady()          -- true after ADDON_LOADED init completes
+RGX:OnReady(fn)        -- call fn now if ready, otherwise queue for when ready
+```
+
+Use `OnReady` when your addon file runs at load time and needs framework modules to be initialized:
+
+```lua
+RGX:OnReady(function()
+    local Fonts = RGX:GetFonts()
+    Fonts:Apply(myLabel, "Inter-Regular", 13)
+end)
+```
+
+***
+
 ### Core Utilities
 
 ```lua
 RGX.version                  -- string from TOC metadata
 RGX.debugMode                -- boolean; set true to enable RGX:Debug() output
 
+-- Output
+RGX:Print(...)               -- |cff58be81[RGX]|r ... (green prefix)
+RGX:Warn(...)                -- |cffffcc00[RGX]|r ... (yellow prefix)
+RGX:Error(...)               -- |cffff4444[RGX]|r ... (red prefix)
 RGX:Debug(...)               -- prints only when debugMode is true
+
+-- Object composition
+RGX:Mixin(target, ...)       -- copy all fields from source tables into target; returns target
+
+-- Deep copy / math
 RGX:CopyTable(orig)          -- deep copy including metatables
 RGX:Clamp(val, min, max)     -- number clamp
 RGX:Lerp(a, b, t)            -- linear interpolation, t clamped to [0,1]
@@ -527,7 +562,7 @@ local dd = Drops:CreateNestedDropdown(parent, {
 
 **Auto-sizing:**
 
-`ForceWidth` is deferred via `C_Timer.After(0)` — it runs two passes: first measuring all button label widths, then applying the resolved width to the list frame and all buttons. This handles WoW's constraint that list frames are sized before button content is rendered.
+`ForceWidth` is deferred via `RGX:After(0)` — it runs two passes: first measuring all button label widths, then applying the resolved width to the list frame and all buttons. This handles WoW's constraint that list frames are sized before button content is rendered.
 
 ```lua
 Drops:ForceWidth(level, minWidth, leftInset, opts)

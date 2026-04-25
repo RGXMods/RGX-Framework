@@ -190,6 +190,19 @@ function RGX:GetLoadedModules()
     return list
 end
 
+-- Object composition: copy all fields from source mixins into target
+function RGX:Mixin(target, ...)
+    for i = 1, select("#", ...) do
+        local source = select(i, ...)
+        if type(source) == "table" then
+            for k, v in pairs(source) do
+                target[k] = v
+            end
+        end
+    end
+    return target
+end
+
 -- Utilities
 function RGX:Debug(...)
     if not self.debugMode then return end

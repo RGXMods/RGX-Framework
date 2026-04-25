@@ -548,9 +548,15 @@ function Fonts:Apply(fontString, name, size, flags)
     if not fontString or not fontString.SetFont then
         return false
     end
-    
+
     local path, s, f = self:Get(name, size, flags)
-    fontString:SetFont(path, s, f)
+    if type(path) ~= "string" or path == "" then
+        path = "Fonts/FRIZQT__.TTF"
+    end
+    if not s or s <= 0 then
+        s = self.defaultSize or 12
+    end
+    fontString:SetFont(path, s, f or "")
     return true
 end
 
