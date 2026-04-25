@@ -158,6 +158,94 @@ local function CreateTabButton(parent, text, tabIndex, row, col, maxPerRow, pane
     return btn
 end
 
+-- ── Auto-layout helper (passed to tab content functions) ─────────────────────
+-- Widgets stack vertically so authors never need to call SetPoint.
+--
+-- Usage inside a tab content function:
+--   content = function(add)
+--       add:Toggle("Enable",  db, "enabled")
+--       add:Slider("Volume",  db, "volume",  0, 100)
+--       add:Color("Bar Color", db, "barColor")
+--   end
+
+local function CreateAddHelper(frame)
+    local UI = GetUI()
+    local add  = { _frame = frame }
+    local yOff = 0
+    local X    = 16
+    local Y0   = 16
+    local GAP  = 10
+
+    local function Place(w)
+        w:SetPoint("TOPLEFT", frame, "TOPLEFT", X, -(Y0 + yOff))
+        yOff = yOff + w:GetHeight() + GAP
+    end
+
+    -- add:Toggle("Label", storage, key [, default [, onChange]])
+    function add:Toggle(label, storage, key, default, onChange)
+        if not UI then return end
+        local w = UI:CreateToggle(frame, {
+            label    = label,
+            storage  = storage,
+            key      = key,
+            default  = default ~= false,
+            onChange = onChange,
+        })
+        Place(w)
+        return w
+    end
+
+    -- add:Slider("Label", storage, key, min, max [, default [, suffix]])
+    function add:Slider(label, storage, key, min, max, default, suffix)
+        if not UI then return end
+        local w = UI:CreateSlider(frame, {
+            label   = label,
+            storage = storage,
+            key     = key,
+            min     = min or 0,
+            max     = max or 100,
+            step    = 1,
+            default = default,
+            suffix  = suffix or "",
+        })
+        Place(w)
+        return w
+    end
+
+    -- add:Color("Label", storage, key [, default])
+    function add:Color(label, storage, key, default)
+        if not UI then return end
+        local w = UI:CreateColorPicker(frame, {
+            label   = label,
+            storage = storage,
+            key     = key,
+            default = default or { r = 1, g = 1, b = 1 },
+        })
+        Place(w)
+        return w
+    end
+
+    -- add:Section("Title") — accent label separator
+    function add:Section(title)
+        if not UI then return end
+        local w = UI:CreateLabel(frame, { text = title, size = "normal", color = "accent" })
+        w:SetPoint("TOPLEFT", frame, "TOPLEFT", X, -(Y0 + yOff))
+        yOff = yOff + 28 + GAP
+        return w
+    end
+
+    -- add:Text("Some text") — muted label
+    function add:Text(text)
+        if not UI then return end
+        local w = UI:CreateLabel(frame, { text = text, size = "small", color = "muted" })
+        w:SetPoint("TOPLEFT", frame, "TOPLEFT", X, -(Y0 + yOff))
+        yOff = yOff + 20 + GAP
+        return w
+    end
+
+    return add
+end
+
 -- ── Build the full content area ───────────────────────────────────────────────
 
 local function ClearContent(frame)
@@ -344,7 +432,7 @@ local function CreateOptionsPanel(UI, opts)
 
         -- Build initial content
         if type(tabInfo.content) == "function" then
-            local ok, err = pcall(tabInfo.content, content)
+            local ok, err = pcall(tabInfo.content, CreateAddHelper(content))
             if not ok then RGX:Debug("[RGXOptions] Tab build error '" .. tabInfo.text .. "': " .. tostring(err)) end
         end
 
@@ -367,7 +455,7 @@ local function CreateOptionsPanel(UI, opts)
                         content._dirty = nil
                         local tabInfo = self.tabs[i] and self.tabs[i]._tabInfo
                         if tabInfo and type(tabInfo.content) == "function" then
-                            local ok, err = pcall(tabInfo.content, content)
+                            local ok, err = pcall(tabInfo.content, CreateAddHelper(content))
                             if not ok then
                                 RGX:Debug("[RGXOptions] Tab rebuild error: " .. tostring(err))
                             end
@@ -409,7 +497,7 @@ local function CreateOptionsPanel(UI, opts)
                         ClearContent(content)
                         content._dirty = nil
                         if type(tabInfo.content) == "function" then
-                            pcall(tabInfo.content, content)
+                            pcall(tabInfo.content, CreateAddHelper(content))
                         end
                     end
                 elseif type(content.Refresh) == "function" then

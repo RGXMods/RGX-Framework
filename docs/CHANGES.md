@@ -1,14 +1,21 @@
-# v1.5.1 - 2026-04-25
+# v1.5.2 - 2026-04-25
 
-## UI — Options Panel Shortcuts
+## Options — Auto-Layout (add helper)
 
-Added top-level shortcuts so addon authors never need to call `RGX:GetUI()` manually:
+Tab content functions now receive an `add` helper instead of a raw frame. Widgets
+stack vertically automatically — no `SetPoint`, no `storage =`, no `key =` verbosity.
 
-- `RGX:Options(config)` — create a tabbed options panel registered with WoW Settings
-- `RGX:Toggle(parent, opts)` — checkbox + label
-- `RGX:Slider(parent, opts)` — labeled slider with value display
-- `RGX:ColorPicker(parent, opts)` — color swatch that opens the color picker
-- `RGX:Section(parent, opts)` — bordered section container with header
-- `RGX:Label(parent, opts)` — styled font string
+```lua
+{ text = "General", content = function(add)
+    add:Toggle("Enable",    db, "enabled")
+    add:Slider("Volume",    db, "volume",   0, 100)
+    add:Color("Bar Color",  db, "barColor")
+    add:Section("Advanced")
+    add:Text("Some note")
+end }
+```
 
-All of these are shortcuts for `RGX:GetUI():Create*()`. The underlying API is unchanged.
+The raw frame is still accessible as `add._frame` for advanced use.
+
+Methods: `Toggle(label, db, key)`, `Slider(label, db, key, min, max)`,
+`Color(label, db, key)`, `Section(title)`, `Text(text)`.
