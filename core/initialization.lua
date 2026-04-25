@@ -44,6 +44,21 @@ function RGX:Minimap(config)
     if MM then return MM:Create(config) end
 end
 
+-- Create a tabbed options panel registered with WoW Settings.
+--   local panel = RGX:Options({ title="MyAddon", tabs={{ text="General", content=fn }} })
+--   panel:Open()
+function RGX:Options(config)
+    local UI = self:GetUI()
+    if UI then return UI:CreateOptionsPanel(config) end
+end
+
+-- Options panel widget shortcuts — call inside a tab content function.
+function RGX:Toggle(parent, opts)      local UI = self:GetUI(); if UI then return UI:CreateToggle(parent, opts)      end end
+function RGX:Slider(parent, opts)      local UI = self:GetUI(); if UI then return UI:CreateSlider(parent, opts)      end end
+function RGX:ColorPicker(parent, opts) local UI = self:GetUI(); if UI then return UI:CreateColorPicker(parent, opts) end end
+function RGX:Section(parent, opts)     local UI = self:GetUI(); if UI then return UI:CreateSection(parent, opts)     end end
+function RGX:Label(parent, opts)       local UI = self:GetUI(); if UI then return UI:CreateLabel(parent, opts)       end end
+
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(_, event, addon)

@@ -1,13 +1,14 @@
-# v1.5.0 - 2026-04-25
+# v1.5.1 - 2026-04-25
 
-## API — Easier to Write, Correct to Run
+## UI — Options Panel Shortcuts
 
-### New
-- `RGX:Slash("cmd", fn)` — shorthand for `RGX:RegisterSlashCommand({"cmd"}, fn)`. Single-command registration no longer requires a table.
-- `RGX:DB("GlobalName")` — initialize and return a SavedVariables global. Optional second arg is a defaults table. Call inside `OnLogin` or `OnLoad` after WoW has restored saved values. Replaces the `MyAddonDB = MyAddonDB or {}` boilerplate every addon had to write.
+Added top-level shortcuts so addon authors never need to call `RGX:GetUI()` manually:
 
-### Fixed
-- `RGX:Hook(target, method, fn)` — switched to `hooksecurefunc` internally. The previous implementation passed the original function as the first argument to the callback instead of calling it, so hooks were silently broken. The callback now receives the same arguments as the original, matching the behavior addon authors expected.
+- `RGX:Options(config)` — create a tabbed options panel registered with WoW Settings
+- `RGX:Toggle(parent, opts)` — checkbox + label
+- `RGX:Slider(parent, opts)` — labeled slider with value display
+- `RGX:ColorPicker(parent, opts)` — color swatch that opens the color picker
+- `RGX:Section(parent, opts)` — bordered section container with header
+- `RGX:Label(parent, opts)` — styled font string
 
-### Removed
-- `RGX:Unhook` and `RGX:UnhookAll` — `hooksecurefunc` cannot be reversed; these methods were misleading. No consumer addons used them.
+All of these are shortcuts for `RGX:GetUI():Create*()`. The underlying API is unchanged.
