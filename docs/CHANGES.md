@@ -1,8 +1,13 @@
-# v1.4.0 - 2026-04-25
+# v1.5.0 - 2026-04-25
 
-## Core — Lifecycle Shortcuts
-- Added `RGX:OnLogin(fn)` — run a callback when the player logs in. Addon authors no longer need to know that `PLAYER_LOGIN` exists.
-- Added `RGX:OnLoad(addonName, fn)` — run a callback when a specific addon finishes loading. Hides `ADDON_LOADED`.
-- Added `RGX:Minimap(config)` — one-call minimap button creation; shortcut for `RGX:GetMinimap():Create(config)`.
+## API — Easier to Write, Correct to Run
 
-These three methods are the primary entry point for new addon authors. The result is a working addon in ~10 lines with no WoW event names, no frame creation, and no compat boilerplate. `RegisterEvent`, timers, and the full module APIs remain for advanced use.
+### New
+- `RGX:Slash("cmd", fn)` — shorthand for `RGX:RegisterSlashCommand({"cmd"}, fn)`. Single-command registration no longer requires a table.
+- `RGX:DB("GlobalName")` — initialize and return a SavedVariables global. Optional second arg is a defaults table. Call inside `OnLogin` or `OnLoad` after WoW has restored saved values. Replaces the `MyAddonDB = MyAddonDB or {}` boilerplate every addon had to write.
+
+### Fixed
+- `RGX:Hook(target, method, fn)` — switched to `hooksecurefunc` internally. The previous implementation passed the original function as the first argument to the callback instead of calling it, so hooks were silently broken. The callback now receives the same arguments as the original, matching the behavior addon authors expected.
+
+### Removed
+- `RGX:Unhook` and `RGX:UnhookAll` — `hooksecurefunc` cannot be reversed; these methods were misleading. No consumer addons used them.

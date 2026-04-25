@@ -13,7 +13,7 @@
 local addonName, RGX = ...
 
 RGX.timers = RGX.timers or {}
-RGX.hooks = RGX.hooks or {}
+RGX._hookRegistry = RGX._hookRegistry or {}
 RGX.slashCommands = RGX.slashCommands or {}
 RGX._slashCommandCounter = RGX._slashCommandCounter or 0
 
@@ -128,61 +128,27 @@ function RGX:UpdateTimers(elapsed)
     end
 end
 
+-- Post-hook target[method] via hooksecurefunc. callback receives the same args
+-- as the original. Safe for Blizzard UI functions; cannot be unhooked.
 function RGX:Hook(target, method, callback)
     if type(target) ~= "table" or type(method) ~= "string" or method == "" then
         return false
     end
-
     if type(callback) ~= "function" then
         return false
     end
-
-    local original = target[method]
-    if type(original) ~= "function" then
+    if type(target[method]) ~= "function" then
         return false
     end
 
-    self.hooks[target] = self.hooks[target] or {}
-    if self.hooks[target][method] then
+    self._hookRegistry[target] = self._hookRegistry[target] or {}
+    if self._hookRegistry[target][method] then
         return false
     end
+    self._hookRegistry[target][method] = true
 
-    self.hooks[target][method] = original
-    target[method] = function(...)
-        return callback(original, ...)
-    end
-
+    hooksecurefunc(target, method, callback)
     return true
-end
-
-function RGX:Unhook(target, method)
-    local hookBucket = self.hooks[target]
-    if not hookBucket or not hookBucket[method] then
-        return false
-    end
-
-    target[method] = hookBucket[method]
-    hookBucket[method] = nil
-
-    if not next(hookBucket) then
-        self.hooks[target] = nil
-    end
-
-    return true
-end
-
-function RGX:UnhookAll()
-    local count = 0
-
-    for target, methods in pairs(self.hooks) do
-        for method, original in pairs(methods) do
-            target[method] = original
-            count = count + 1
-        end
-        self.hooks[target] = nil
-    end
-
-    return count
 end
 
 function RGX:RegisterSlashCommand(commands, callback, id)
@@ -220,4 +186,9 @@ function RGX:RegisterSlashCommand(commands, callback, id)
     }
 
     return token
+end
+
+-- Shorthand: RGX:Slash("mycommand", fn)  →  RGX:RegisterSlashCommand({"mycommand"}, fn)
+function RGX:Slash(command, callback)
+    return self:RegisterSlashCommand({ command }, callback)
 end
