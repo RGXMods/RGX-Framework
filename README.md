@@ -2,8 +2,6 @@
 
 A modular WoW Retail addon foundation. Provides fonts, colors, textures, dropdowns, UI controls, minimap buttons, pet battle events, a native event/timer/hook runtime, and shared utilities — all in one required dependency so every addon in a suite shares the same plumbing instead of duplicating it.
 
-Current version: `1.3.0`
-
 ***
 
 ## Overview
