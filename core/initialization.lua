@@ -33,8 +33,8 @@ end
 
 -- Run fn when a specific addon finishes loading.
 function RGX:OnLoad(addonName, fn)
-    self:RegisterEvent("ADDON_LOADED", function(name)
-        if name == addonName then fn() end
+    self:RegisterEvent("ADDON_LOADED", function(_, name)
+        if name == addonName then fn(name) end
     end)
 end
 
@@ -42,6 +42,25 @@ end
 function RGX:Minimap(config)
     local MM = self:GetMinimap()
     if MM then return MM:Create(config) end
+end
+
+-- Convenience wrapper for the common addon minimap pattern.
+function RGX:CreateMinimapButton(config)
+    config = config or {}
+
+    if type(config.onRightClick) ~= "function" and type(config.openOptions) == "function" then
+        config.onRightClick = function(btn)
+            config.openOptions(btn)
+        end
+    end
+
+    if type(config.onCtrlRight) ~= "function" and type(config.toggleVisibility) == "function" then
+        config.onCtrlRight = function()
+            config.toggleVisibility(false)
+        end
+    end
+
+    return self:Minimap(config)
 end
 
 -- Create a tabbed options panel registered with WoW Settings.
@@ -59,10 +78,8 @@ function RGX:ColorPicker(parent, opts) local UI = self:GetUI(); if UI then retur
 function RGX:Section(parent, opts)     local UI = self:GetUI(); if UI then return UI:CreateSection(parent, opts)     end end
 function RGX:Label(parent, opts)       local UI = self:GetUI(); if UI then return UI:CreateLabel(parent, opts)       end end
 
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("ADDON_LOADED")
-frame:SetScript("OnEvent", function(_, event, addon)
-    if event == "ADDON_LOADED" and addon == addonName then
+RGX:RegisterEvent("ADDON_LOADED", function(_, addon)
+    if addon == addonName then
         -- Initialize database silently
         _G.RGXFrameworkDB = _G.RGXFrameworkDB or {}
         RGX.db = _G.RGXFrameworkDB
@@ -92,5 +109,7 @@ frame:SetScript("OnEvent", function(_, event, addon)
                 print("|cFFFF4444[RGX] OnReady error: " .. tostring(err) .. "|r")
             end
         end
+
+        RGX:UnregisterEvent("ADDON_LOADED", "RGX_Init")
     end
-end)
+end, "RGX_Init")

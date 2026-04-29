@@ -152,6 +152,15 @@ RGX:Debug(...)               -- prints only when debugMode is true
 -- Object composition
 RGX:Mixin(target, ...)       -- copy all fields from source tables into target; returns target
 
+-- Chat helpers
+RGX:CreateChatPrefix({
+    icon     = "Interface\\AddOns\\MyAddon\\media\\logo.tga",
+    tag      = "MYA",
+    tagColor = "58be81",   -- hex without leading "|cff"
+    iconSize = 16,
+    spacer   = " - ",
+})
+
 -- Deep copy / math
 RGX:CopyTable(orig)          -- deep copy including metatables
 RGX:Clamp(val, min, max)     -- number clamp
@@ -366,15 +375,17 @@ Fonts:ApplyStyle(fontString, style)    -- applies all fields
 Fonts:ApplyTextStyle(fontString, style)  -- alias
 Fonts:NormalizeStyle(style)            -- fills missing fields with defaults
 Fonts:GetStyle(font, size, flags)      -- builds a minimal style table
+Fonts:ResolveName(value, fallback)     -- accepts a registered name or saved path
+Fonts:ResolvePath(value, fallback)     -- returns safe path, name
 ```
 
 **Dropdowns and selectors:**
 
 ```lua
--- Full grouped font dropdown (grouped by category → family)
+-- Full grouped font dropdown (available fonts grouped by category → family)
 local control = Fonts:CreateFontDropdown(parent, {
     label    = "Font",
-    value    = "Inter-Regular",   -- initial selection
+    value    = "Inter-Regular",   -- may also be a saved font path
     onChange = function(name, path) end,
     width    = 200,
 })
@@ -385,15 +396,21 @@ local control = Fonts:CreateFontSettingControl(parent, {
     storage    = db,
     key        = "questFont",         -- stores the font PATH in db[key]
     showReset  = true,
-    onChanged  = function(holder, name, path) end,
+    onChange   = function(holder, name, path) end,
 })
 control:Reset()    -- revert to default
 
 -- Simple selector (minimal opts surface)
 local sel = Fonts:CreateSimpleFontSelector(parent, opts)
 
--- Attach to a db key directly (reads/writes db[key] as style table)
+-- Attach to a db key directly (reads/writes db[key] as a font name)
 Fonts:AttachFontSelector(parent, db, key, opts)
+
+-- UIDropDownMenu-compatible nested menu data for addon context menus
+Fonts:CreateFontMenuItems({ current = db.font, onSelect = function(name) end })
+Fonts:CreateFlagMenuItems({ current = db.flags, onSelect = function(flags) end })
+Fonts:CreateSizeMenuItems({ current = db.size, onSelect = function(size) end })
+Fonts:CreateStyleMenuItems({ db = db, key = "titleText", onChange = function(style) end })
 ```
 
 **Flag helpers:**

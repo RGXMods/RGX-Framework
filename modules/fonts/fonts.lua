@@ -33,6 +33,45 @@ if not RGX then
     return
 end
 
+local function SafeDropdownSetText(dropdown, text)
+    if RGX and type(RGX.SafeUIDropDownMenu_SetText) == "function" then
+        return RGX:SafeUIDropDownMenu_SetText(dropdown, text)
+    end
+    if type(UIDropDownMenu_SetText) == "function" then
+        UIDropDownMenu_SetText(dropdown, text)
+        return true
+    end
+    return false
+end
+
+local function SafeDropdownEnable(dropdown)
+    if RGX and type(RGX.SafeUIDropDownMenu_EnableDropDown) == "function" then
+        return RGX:SafeUIDropDownMenu_EnableDropDown(dropdown)
+    end
+    if type(UIDropDownMenu_EnableDropDown) == "function" then
+        UIDropDownMenu_EnableDropDown(dropdown)
+        return true
+    end
+    return false
+end
+
+local function SafeDropdownDisable(dropdown)
+    if RGX and type(RGX.SafeUIDropDownMenu_DisableDropDown) == "function" then
+        return RGX:SafeUIDropDownMenu_DisableDropDown(dropdown)
+    end
+    if type(UIDropDownMenu_DisableDropDown) == "function" then
+        UIDropDownMenu_DisableDropDown(dropdown)
+        return true
+    end
+    return false
+end
+
+local function ChatDebug(message)
+    if DEFAULT_CHAT_FRAME then
+        DEFAULT_CHAT_FRAME:AddMessage("|cffbc6fa8[RGX:fonts]|r " .. tostring(message))
+    end
+end
+
 Fonts.name = "fonts"
 Fonts.version = "1.0.0"
 
@@ -40,6 +79,9 @@ Fonts.version = "1.0.0"
 Fonts.registry = {}
 Fonts.objects = {}
 Fonts.categories = {}
+Fonts.pathLookup = {}
+Fonts._findByPathCache = {}
+Fonts._resolvePathCache = {}
 
 -- Settings
 Fonts.default = nil
@@ -57,8 +99,56 @@ Fonts.flagPresets = {
     { value = "THICKOUTLINE,MONOCHROME", label = "Thick Monochrome" },
 }
 
+local _normalizedPathCache = {}
+local function NormalizeFontPath(path)
+    if type(path) ~= "string" or path == "" then
+        return nil
+    end
+
+    local cached = _normalizedPathCache[path]
+    if cached then
+        return cached
+    end
+
+    local normalized = string.lower((path:gsub("\\", "/")))
+    _normalizedPathCache[path] = normalized
+    return normalized
+end
+
+local _probeCounter = 0
+
+local function ProbeFontPath(path, probeName)
+    if type(path) ~= "string" or path == "" then
+        return false
+    end
+
+    _probeCounter = _probeCounter + 1
+    local safeName = tostring(probeName or path):gsub("[^%w]", "_")
+    local testFont = CreateFont("RGX_Test_" .. safeName .. "_" .. _probeCounter)
+    local ok, applied = pcall(function()
+        return testFont:SetFont(path, 12, "")
+    end)
+
+    return ok and applied == true
+end
+
 -- Font base path
 Fonts.fontPath = "Interface/AddOns/RGX-Framework/media/fonts/"
+Fonts.unavailableFonts = {
+    -- These packaged files were accidentally saved as GitHub HTML pages rather
+    -- than font binaries. Keep them out of runtime pickers until the assets are
+    -- replaced, otherwise WoW exposes choices that cannot actually render.
+    ["Audiowide-Regular"] = true,
+    ["Cinzel-Regular"] = true,
+    ["Merriweather-Regular"] = true,
+    ["Merriweather-Bold"] = true,
+    ["Montserrat-Regular"] = true,
+    ["Montserrat-Bold"] = true,
+    ["Orbitron-Regular"] = true,
+    ["Oswald-Regular"] = true,
+    ["PlayfairDisplay-Regular"] = true,
+    ["PlayfairDisplay-Bold"] = true,
+}
 
 -- Font definitions - ACTUAL fonts we have in media/fonts/
 Fonts.definitions = {
@@ -380,6 +470,14 @@ function Fonts:Register(name, path, info)
     }
 
     self.categories[info.category or "Sans-serif"] = true
+    local normalizedPath = NormalizeFontPath(path)
+    if normalizedPath and not self.pathLookup[normalizedPath] then
+        self.pathLookup[normalizedPath] = name
+    end
+    self._findByPathCache = {}
+    self._resolvePathCache = {}
+    self._availableListCache = nil
+    self._groupedFontsCache = nil
 
     RGX:Debug("Fonts: Registered", name)
     return self.registry[name]
@@ -471,28 +569,32 @@ function Fonts:IsAvailable(name)
     local font = self.registry[name]
     if not font then return false end
     if font.available == nil then
-        local testFont = CreateFont("RGX_Test_" .. name:gsub("[^%w]", "_"))
-        font.available = pcall(function()
-            testFont:SetFont(font.path, 12, "")
-        end)
+        font.available = true
     end
     return font.available
 end
 
 function Fonts:GetPath(name)
-    name = name or self.default
-    
+    name = self:ResolveName(name, self.default) or self.default or "FrizQuadrata"
+
     local font = self.registry[name]
     if font and self:IsAvailable(name) then
         return font.path
     end
 
-    -- Fall back to default
-    if name ~= self.default and self.default then
-        return self:GetPath(self.default)
+    local defaultName = self.default
+    if defaultName and defaultName ~= name then
+        local defaultFont = self.registry[defaultName]
+        if defaultFont and self:IsAvailable(defaultName) then
+            return defaultFont.path
+        end
     end
 
-    -- Ultimate fallback
+    local friz = self.registry.FrizQuadrata
+    if friz and self:IsAvailable("FrizQuadrata") then
+        return friz.path
+    end
+
     return "Fonts/FRIZQT__.TTF"
 end
 
@@ -509,7 +611,7 @@ function Fonts:Get(name, size, flags)
 end
 
 function Fonts:GetFont(name, size, flags)
-    name = name or self.default
+    name = self:ResolveName(name, self.default) or self.default
     
     if not self:Exists(name) then
         return nil
@@ -621,6 +723,10 @@ function Fonts:List()
 end
 
 function Fonts:ListAvailable()
+    if self._availableListCache then
+        return self._availableListCache
+    end
+
     local list = {}
     for name, data in pairs(self.registry) do
         if self:IsAvailable(name) then
@@ -635,13 +741,14 @@ function Fonts:ListAvailable()
         end
     end
     table.sort(list, function(a, b) return a.name < b.name end)
+    self._availableListCache = list
     return list
 end
 
 function Fonts:ListByCategory(category)
     local list = {}
     for name, data in pairs(self.registry) do
-        if data.category == category then
+        if data.category == category and self:IsAvailable(name) then
             table.insert(list, name)
         end
     end
@@ -660,8 +767,10 @@ end
 
 function Fonts:GetFamilies()
     local map = {}
-    for _, data in pairs(self.registry) do
-        map[data.family or data.name] = true
+    for name, data in pairs(self.registry) do
+        if self:IsAvailable(name) then
+            map[data.family or data.name] = true
+        end
     end
 
     local list = {}
@@ -890,6 +999,7 @@ function Fonts:_ApplyPreviewSelection(frame, fontName)
         return
     end
 
+    fontName = self:ResolveName(fontName, self:GetDefault()) or self:GetDefault()
     local entry = self.registry[fontName]
     if not entry then
         return
@@ -1040,31 +1150,46 @@ function Fonts:GetCategoryLabel(category)
 end
 
 function Fonts:GetGroupedFonts()
+    if self._groupedFontsCache then
+        return self._groupedFontsCache
+    end
+
     local groups = {}
 
     for _, fontInfo in ipairs(self:ListAvailable()) do
-        local category = fontInfo.category or "Sans-serif"
-        local family = fontInfo.family or fontInfo.displayName or fontInfo.name
+        if type(fontInfo) ~= "table" or type(fontInfo.name) ~= "string" or fontInfo.name == "" then
+            -- Ignore malformed font registrations instead of breaking every
+            -- addon options panel that asks RGX for a nested font dropdown.
+        else
+            local category = fontInfo.category
+            if type(category) ~= "string" or category == "" then
+                category = "Sans-serif"
+            end
+            local family = fontInfo.family or fontInfo.displayName or fontInfo.name
+            if type(family) ~= "string" or family == "" then
+                family = "Unknown"
+            end
 
-        if not groups[category] then
-            groups[category] = {
-                category = category,
-                label = self:GetCategoryLabel(category),
-                count = 0,
-                families = {},
-            }
+            if not groups[category] then
+                groups[category] = {
+                    category = category,
+                    label = self:GetCategoryLabel(category),
+                    count = 0,
+                    families = {},
+                }
+            end
+
+            local categoryGroup = groups[category]
+            if not categoryGroup.families[family] then
+                categoryGroup.families[family] = {
+                    family = family,
+                    styles = {},
+                }
+            end
+
+            table.insert(categoryGroup.families[family].styles, fontInfo)
+            categoryGroup.count = categoryGroup.count + 1
         end
-
-        local categoryGroup = groups[category]
-        if not categoryGroup.families[family] then
-            categoryGroup.families[family] = {
-                family = family,
-                styles = {},
-            }
-        end
-
-        table.insert(categoryGroup.families[family].styles, fontInfo)
-        categoryGroup.count = categoryGroup.count + 1
     end
 
     local categoryOrder = { "Sans-serif", "Serif", "Monospace", "Display", "Pixel", "Fantasy", "WoW Defaults" }
@@ -1107,7 +1232,33 @@ function Fonts:GetGroupedFonts()
         group.families = families
     end
 
+    self._groupedFontsCache = orderedGroups
     return orderedGroups
+end
+
+function Fonts:GetDebugCounts()
+    local total = 0
+    local available = 0
+
+    for name in pairs(self.registry or {}) do
+        total = total + 1
+        if self:IsAvailable(name) then
+            available = available + 1
+        end
+    end
+
+    return total, available, self:GetDefault() or "nil"
+end
+
+function Fonts:DebugStatus(reason)
+    local total, available, defaultName = self:GetDebugCounts()
+    ChatDebug(string.format(
+        "%s total=%d available=%d default=%s",
+        tostring(reason or "status"),
+        total,
+        available,
+        tostring(defaultName)
+    ))
 end
 
 function Fonts:GetDropdownFontLabel(fontName)
@@ -1129,86 +1280,199 @@ function Fonts:FindByPath(path)
         return nil
     end
 
-    local normalizedPath = string.lower(path:gsub("\\", "/"))
-
-    for fontName, info in pairs(self.registry) do
-        local infoPath = info and info.path
-        if type(infoPath) == "string" and string.lower(infoPath:gsub("\\", "/")) == normalizedPath then
-            return fontName, info
+    self._findByPathCache = self._findByPathCache or {}
+    local cachedName = self._findByPathCache[path]
+    if cachedName ~= nil then
+        if cachedName == false then
+            return nil
         end
+        return cachedName, self.registry and self.registry[cachedName]
+    end
+
+    local normalizedPath = NormalizeFontPath(path)
+    local fontName = normalizedPath and self.pathLookup and self.pathLookup[normalizedPath]
+    if fontName then
+        self._findByPathCache[path] = fontName
+        return fontName, self.registry[fontName]
+    end
+
+    self._findByPathCache[path] = false
+    return nil
+end
+
+function Fonts:ResolveName(value, fallback)
+    if type(value) == "string" and value ~= "" then
+        if self:Exists(value) and self:IsAvailable(value) then
+            return value
+        end
+
+        local found = self:FindByPath(value)
+        if found and self:IsAvailable(found) then
+            return found
+        end
+    end
+
+    if type(fallback) == "string" and fallback ~= "" then
+        if self:Exists(fallback) and self:IsAvailable(fallback) then
+            return fallback
+        end
+
+        local fallbackName = self:FindByPath(fallback)
+        if fallbackName and self:IsAvailable(fallbackName) then
+            return fallbackName
+        end
+    end
+
+    local defaultName = self:GetDefault()
+    if type(defaultName) == "string" and defaultName ~= "" and self:Exists(defaultName) and self:IsAvailable(defaultName) then
+        return defaultName
+    end
+
+    if self:Exists("FrizQuadrata") and self:IsAvailable("FrizQuadrata") then
+        return "FrizQuadrata"
     end
 
     return nil
 end
 
+function Fonts:ResolvePath(value, fallback)
+    self._resolvePathCache = self._resolvePathCache or {}
+    local cacheKey = tostring(value or "") .. "\031" .. tostring(fallback or "")
+    local cached = self._resolvePathCache[cacheKey]
+    if cached then
+        return cached.path, cached.name
+    end
+
+    local fontName = self:ResolveName(value, fallback)
+    if fontName then
+        local path = self:GetPath(fontName) or "Fonts/FRIZQT__.TTF"
+        self._resolvePathCache[cacheKey] = { path = path, name = fontName }
+        return path, fontName
+    end
+
+    self._resolvePathCache[cacheKey] = { path = "Fonts/FRIZQT__.TTF" }
+    return "Fonts/FRIZQT__.TTF", nil
+end
+
+-- Native RGX font picker. This intentionally avoids Blizzard dropdown APIs so
+-- addon options can build inside Settings without tainting protected menus.
 function Fonts:CreateFontDropdown(parent, opts)
     opts = opts or {}
     parent = parent or UIParent
-    Dropdowns = Dropdowns or _G.RGXDropdowns or RGX:GetModule("dropdowns")
-    if not Dropdowns then
-        RGX:Debug("Fonts: RGXDropdowns module is not available")
-        return nil
+
+    self:DebugStatus("CreateFontDropdown")
+
+    self._dropdownCounter = (self._dropdownCounter or 0) + 1
+    local dropdownName = "RGXFontDropdown" .. tostring(self._dropdownCounter)
+    local holder = CreateFrame("Frame", nil, parent)
+    holder:SetSize(opts.width or 260, opts.height or 56)
+    holder.value = self:ResolveName(opts.value, self:GetDefault()) or self:GetDefault()
+    holder.path = self:GetPath(holder.value)
+
+    holder.label = holder:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    holder.label:SetPoint("TOPLEFT", 0, 0)
+    holder.label:SetText(opts.label or "Font")
+
+    local dropdown = CreateFrame("Frame", dropdownName, holder, "UIDropDownMenuTemplate")
+    dropdown:SetPoint("TOPLEFT", holder.label, "BOTTOMLEFT", -16, -5)
+    holder.dropdown = dropdown
+
+    if type(UIDropDownMenu_SetWidth) == "function" then
+        UIDropDownMenu_SetWidth(dropdown, opts.buttonWidth or 180)
     end
 
-    local function buildItems()
-        local items = {}
+    local function UpdateButtonText()
+        if type(UIDropDownMenu_SetText) == "function" then
+            UIDropDownMenu_SetText(dropdown, Fonts:GetDropdownFontLabel(holder.value))
+        end
+    end
 
-        for _, group in ipairs(self:GetGroupedFonts()) do
-            if group.count > 0 then
-                local categoryItem = {
-                    text = string.format("%s (%d)", group.label, group.count),
-                    notCheckable = true,
-                    children = {},
-                }
-
-                for _, familyData in ipairs(group.families) do
-                    if #familyData.styles == 1 then
-                        local only = familyData.styles[1]
-                        categoryItem.children[#categoryItem.children + 1] = {
-                            text = familyData.family,
-                            value = only.name,
-                        }
-                    else
-                        local familyItem = {
-                            text = string.format("%s (%d)", familyData.family, #familyData.styles),
-                            notCheckable = true,
-                            children = {},
-                        }
-
-                        for _, fontInfo in ipairs(familyData.styles) do
-                            familyItem.children[#familyItem.children + 1] = {
-                                text = fontInfo.name,
-                                value = fontInfo.name,
-                            }
-                        end
-
-                        categoryItem.children[#categoryItem.children + 1] = familyItem
-                    end
-                end
-
-                items[#items + 1] = categoryItem
-            end
+    local function SelectFont(fontName)
+        local resolved = Fonts:ResolveName(fontName, holder.value) or holder.value or Fonts:GetDefault()
+        holder.value = resolved
+        holder.path = Fonts:GetPath(resolved)
+        UpdateButtonText()
+        if type(CloseDropDownMenus) == "function" then
+            CloseDropDownMenus()
         end
 
-        return items
+        if type(opts.onChange) == "function" then
+            opts.onChange(resolved, holder.path, nil, holder)
+        end
     end
 
-    return Dropdowns:CreateNestedDropdown(parent, {
-        label = opts.label or "Font",
-        width = opts.width or 260,
-        height = opts.height or 56,
-        buttonWidth = opts.buttonWidth or 210,
-        value = opts.value or self:GetDefault(),
-        items = buildItems,
-        getValueText = function(fontName)
-            return self:GetDropdownFontLabel(fontName or self:GetDefault())
-        end,
-        onChange = function(fontName)
-            if type(opts.onChange) == "function" then
-                opts.onChange(fontName, self:GetPath(fontName))
+    local function AddFontItem(fontInfo, level)
+        local info = UIDropDownMenu_CreateInfo()
+        local text = fontInfo.family or fontInfo.displayName or fontInfo.name
+        if fontInfo.name and fontInfo.name ~= text then
+            text = string.format("%s - %s", text, fontInfo.name)
+        end
+        info.text = text
+        info.value = fontInfo.name
+        info.checked = holder.value == fontInfo.name
+        info.func = function()
+            SelectFont(fontInfo.name)
+        end
+        UIDropDownMenu_AddButton(info, level)
+    end
+
+    UIDropDownMenu_Initialize(dropdown, function(_, level, menuList)
+        level = level or 1
+        local groups = Fonts:GetGroupedFonts()
+        if level == 1 then
+            if #groups == 0 then
+                local info = UIDropDownMenu_CreateInfo()
+                info.text = "No fonts available"
+                info.disabled = true
+                info.notCheckable = true
+                UIDropDownMenu_AddButton(info, level)
+                return
             end
-        end,
-    })
+
+            for index, group in ipairs(groups) do
+                if group.count == 1 and group.families and #group.families == 1 and #group.families[1].styles == 1 then
+                    AddFontItem(group.families[1].styles[1], level)
+                else
+                    local info = UIDropDownMenu_CreateInfo()
+                    info.text = group.label or group.category or "Fonts"
+                    info.value = index
+                    info.hasArrow = true
+                    info.menuList = index
+                    info.notCheckable = true
+                    UIDropDownMenu_AddButton(info, level)
+                end
+            end
+        elseif level == 2 and menuList then
+            local group = groups[menuList]
+            if not group then return end
+            for _, familyData in ipairs(group.families or {}) do
+                for _, fontInfo in ipairs(familyData.styles or {}) do
+                    AddFontItem(fontInfo, level)
+                end
+            end
+        end
+    end)
+
+    function holder:Refresh(value)
+        if value ~= nil then
+            self.value = Fonts:ResolveName(value, self.value) or self.value
+            self.path = Fonts:GetPath(self.value)
+        end
+        UpdateButtonText()
+    end
+
+    function holder:SetEnabled(enabled)
+        local isEnabled = enabled ~= false
+        self.label:SetAlpha(isEnabled and 1 or 0.6)
+        if isEnabled and type(UIDropDownMenu_EnableDropDown) == "function" then
+            UIDropDownMenu_EnableDropDown(dropdown)
+        elseif not isEnabled and type(UIDropDownMenu_DisableDropDown) == "function" then
+            UIDropDownMenu_DisableDropDown(dropdown)
+        end
+    end
+
+    holder:Refresh(holder.value)
+    return holder
 end
 
 function Fonts:CreateFontSettingControl(parent, opts)
@@ -1220,22 +1484,15 @@ function Fonts:CreateFontSettingControl(parent, opts)
 
     local storage = opts.storage
     local key = opts.key
-    local defaultName = opts.defaultName or self:GetDefault()
-    local defaultPath = opts.defaultPath or self:GetPath(defaultName)
+    local defaultName = self:ResolveName(opts.defaultName or opts.defaultPath, self:GetDefault()) or self:GetDefault()
+    local defaultPath = self:ResolvePath(opts.defaultPath or defaultName, defaultName)
 
     local function resolveCurrentName()
         if storage and key and type(storage[key]) == "string" then
-            local found = self:FindByPath(storage[key])
-            if found then
-                return found
-            end
+            return self:ResolveName(storage[key], opts.value or defaultName) or defaultName
         end
 
-        if type(opts.value) == "string" and self:Exists(opts.value) then
-            return opts.value
-        end
-
-        return defaultName
+        return self:ResolveName(opts.value, defaultName) or defaultName
     end
 
     local dropdown = self:CreateFontDropdown(holder, {
@@ -1257,15 +1514,38 @@ function Fonts:CreateFontSettingControl(parent, opts)
             end
         end,
     })
+    if not dropdown then
+        local label = holder:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        label:SetPoint("TOPLEFT", holder, "TOPLEFT", 0, -2)
+        label:SetWidth(opts.width or 250)
+        label:SetJustifyH("LEFT")
+        label:SetText("|cffff5555Font dropdown unavailable.|r")
+        holder.label = label
+        return holder
+    end
     dropdown:SetPoint("TOPLEFT", holder, "TOPLEFT", 0, 0)
     holder.dropdown = dropdown
 
     local reset = nil
     if opts.showReset ~= false then
-        reset = CreateFrame("Button", nil, holder, "UIPanelButtonTemplate")
+        reset = CreateFrame("Button", nil, holder)
         reset:SetSize(opts.resetWidth or 22, opts.resetHeight or 18)
         reset:SetPoint("TOPLEFT", dropdown, "TOPRIGHT", -2, -18)
-        reset:SetText(opts.resetText or "R")
+        reset.bg = reset:CreateTexture(nil, "BACKGROUND")
+        reset.bg:SetAllPoints()
+        reset.bg:SetColorTexture(0.08, 0.08, 0.08, 0.90)
+        reset.border = reset:CreateTexture(nil, "BORDER")
+        reset.border:SetAllPoints()
+        reset.border:SetColorTexture(0.30, 0.30, 0.30, 0.85)
+        reset.text = reset:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        reset.text:SetPoint("CENTER", reset, "CENTER", 0, 0)
+        reset.text:SetText(opts.resetText or "R")
+        reset:SetScript("OnEnter", function()
+            reset.bg:SetColorTexture(0.14, 0.14, 0.14, 0.95)
+        end)
+        reset:SetScript("OnLeave", function()
+            reset.bg:SetColorTexture(0.08, 0.08, 0.08, 0.90)
+        end)
         holder.reset = reset
     end
 
@@ -1286,9 +1566,7 @@ function Fonts:CreateFontSettingControl(parent, opts)
     end
 
     function holder:SetValue(fontName)
-        if type(fontName) ~= "string" or not Fonts:Exists(fontName) then
-            fontName = defaultName
-        end
+        fontName = Fonts:ResolveName(fontName, defaultName) or defaultName
         self.value = fontName
         self.path = Fonts:GetPath(fontName)
         if storage and key then
@@ -1300,8 +1578,7 @@ function Fonts:CreateFontSettingControl(parent, opts)
     end
 
     function holder:SetPath(fontPath)
-        local fontName = Fonts:FindByPath(fontPath) or defaultName
-        self:SetValue(fontName)
+        self:SetValue(Fonts:ResolveName(fontPath, defaultName) or defaultName)
     end
 
     function holder:Reset()
@@ -1316,13 +1593,15 @@ function Fonts:CreateFontSettingControl(parent, opts)
 
     function holder:SetEnabled(enabled)
         local isEnabled = enabled ~= false
-        if self.dropdown and self.dropdown.label then
+        if self.dropdown and type(self.dropdown.SetEnabled) == "function" then
+            self.dropdown:SetEnabled(isEnabled)
+        elseif self.dropdown and self.dropdown.label then
             self.dropdown.label:SetAlpha(isEnabled and 1 or 0.6)
         end
         if self.dropdown and self.dropdown.dropdown then
-            UIDropDownMenu_DisableDropDown(self.dropdown.dropdown)
+            SafeDropdownDisable(self.dropdown.dropdown)
             if isEnabled then
-                UIDropDownMenu_EnableDropDown(self.dropdown.dropdown)
+                SafeDropdownEnable(self.dropdown.dropdown)
             end
             self.dropdown.dropdown:SetAlpha(isEnabled and 1 or 0.45)
         end
@@ -1365,10 +1644,7 @@ function Fonts:NormalizeStyle(style)
         style = { font = style }
     end
 
-    local font = style.font or style.name or self:GetDefault()
-    if not self:Exists(font) or not self:IsAvailable(font) then
-        font = self:GetDefault()
-    end
+    local font = self:ResolveName(style.font or style.name, self:GetDefault()) or self:GetDefault()
 
     local size = tonumber(style.size) or self.defaultSize or 12
     size = math.floor(RGX:Clamp(size, 6, 72) + 0.5)
@@ -1507,11 +1783,8 @@ function Fonts:AttachFontSelector(parent, db, key, opts)
         return nil
     end
 
-    local current = db[key]
-    if type(current) ~= "string" or current == "" then
-        current = opts.value or self:GetDefault()
-        db[key] = current
-    end
+    local current = self:ResolveName(db[key], opts.value or self:GetDefault()) or self:GetDefault()
+    db[key] = current
 
     local selector = self:CreateSimpleFontSelector(parent, {
         label = opts.label or "Font",
@@ -1531,11 +1804,8 @@ function Fonts:AttachFontSelector(parent, db, key, opts)
     selector.DBKey = key
 
     function selector:RefreshFromDB()
-        local value = self.DB[self.DBKey]
-        if type(value) ~= "string" or value == "" then
-            value = Fonts:GetDefault()
-            self.DB[self.DBKey] = value
-        end
+        local value = Fonts:ResolveName(self.DB[self.DBKey], Fonts:GetDefault()) or Fonts:GetDefault()
+        self.DB[self.DBKey] = value
         self:Refresh(value)
     end
 
@@ -1549,6 +1819,200 @@ function Fonts:GetOptionValues()
         values[info.name] = info.displayName or info.family or info.name
     end
     return values
+end
+
+local function ResolveMenuValue(value)
+    if type(value) == "function" then
+        return value()
+    end
+    return value
+end
+
+function Fonts:CreateFontMenuItems(opts)
+    opts = opts or {}
+    self:DebugStatus("CreateFontMenuItems")
+
+    local current = self:ResolveName(ResolveMenuValue(opts.current), self:GetDefault()) or self:GetDefault()
+    local items = {}
+
+    local function createFontItem(fontInfo, text)
+        local fontName = fontInfo.name
+        return {
+            text = text or fontInfo.name,
+            checked = current == fontName,
+            isNotRadio = true,
+            keepShownOnClick = opts.keepShownOnClick ~= false,
+            func = function()
+                if type(opts.onSelect) == "function" then
+                    opts.onSelect(fontName, fontInfo.path, fontInfo)
+                end
+            end,
+        }
+    end
+
+    for _, fontInfo in ipairs(self:ListAvailable()) do
+        local text = fontInfo.family or fontInfo.displayName or fontInfo.name
+        if fontInfo.name and fontInfo.name ~= text then
+            text = string.format("%s - %s", text, fontInfo.name)
+        end
+        items[#items + 1] = createFontItem(fontInfo, text)
+    end
+
+    if #items == 0 then
+        items[#items + 1] = {
+            text = "No fonts available",
+            disabled = true,
+            notCheckable = true,
+        }
+    end
+
+    return items
+end
+
+function Fonts:CreateFlagMenuItems(opts)
+    opts = opts or {}
+
+    local current = self:NormalizeFlags(ResolveMenuValue(opts.current))
+    local items = {}
+
+    for _, preset in ipairs(self:GetFlagPresets()) do
+        local flagValue = preset.value
+        local presetInfo = preset
+        items[#items + 1] = {
+            text = preset.label,
+            checked = current == flagValue,
+            isNotRadio = true,
+            keepShownOnClick = opts.keepShownOnClick ~= false,
+            func = function()
+                if type(opts.onSelect) == "function" then
+                    opts.onSelect(flagValue, presetInfo)
+                end
+            end,
+        }
+    end
+
+    return items
+end
+
+function Fonts:CreateSizeMenuItems(opts)
+    opts = opts or {}
+
+    local current = tonumber(ResolveMenuValue(opts.current)) or self.defaultSize
+    local minSize = tonumber(opts.minSize) or 8
+    local maxSize = tonumber(opts.maxSize) or 24
+    local step = tonumber(opts.step) or 1
+    local items = {}
+
+    for size = minSize, maxSize, step do
+        local menuSize = math.floor(size + 0.5)
+        local selectedSize = menuSize
+        items[#items + 1] = {
+            text = string.format("%d pt", selectedSize),
+            checked = math.floor(current + 0.5) == selectedSize,
+            isNotRadio = true,
+            keepShownOnClick = opts.keepShownOnClick ~= false,
+            func = function()
+                if type(opts.onSelect) == "function" then
+                    opts.onSelect(selectedSize)
+                end
+            end,
+        }
+    end
+
+    return items
+end
+
+function Fonts:CreateStyleMenuItems(opts)
+    opts = opts or {}
+
+    local function getStyle()
+        local source
+        if type(opts.getStyle) == "function" then
+            source = opts.getStyle()
+        elseif type(opts.db) == "table" and type(opts.key) == "string" then
+            source = opts.db[opts.key]
+        else
+            source = opts.value
+        end
+
+        return Fonts:NormalizeStyle(source or opts.default or {
+            font = Fonts:GetDefault(),
+            size = Fonts.defaultSize,
+            flags = Fonts.defaultFlags,
+        })
+    end
+
+    local function saveStyle(style)
+        local normalized = Fonts:NormalizeStyle(style)
+        if type(opts.db) == "table" and type(opts.key) == "string" then
+            opts.db[opts.key] = normalized
+        end
+        if type(opts.onChange) == "function" then
+            opts.onChange(normalized, opts)
+        end
+    end
+
+    local style = getStyle()
+    local items = {
+        {
+            text = "Font: " .. self:GetDropdownFontLabel(style.font),
+            hasArrow = true,
+            notCheckable = true,
+            menuList = self:CreateFontMenuItems({
+                current = style.font,
+                keepShownOnClick = opts.keepShownOnClick,
+                onSelect = function(fontName)
+                    local nextStyle = getStyle()
+                    nextStyle.font = fontName
+                    saveStyle(nextStyle)
+                end,
+            }),
+        },
+        {
+            text = "Style: " .. self:DescribeFlags(style.flags),
+            hasArrow = true,
+            notCheckable = true,
+            menuList = self:CreateFlagMenuItems({
+                current = style.flags,
+                keepShownOnClick = opts.keepShownOnClick,
+                onSelect = function(flags)
+                    local nextStyle = getStyle()
+                    nextStyle.flags = flags or ""
+                    saveStyle(nextStyle)
+                end,
+            }),
+        },
+        {
+            text = string.format("Size: %d pt", style.size or self.defaultSize),
+            hasArrow = true,
+            notCheckable = true,
+            menuList = self:CreateSizeMenuItems({
+                current = style.size,
+                minSize = opts.minSize,
+                maxSize = opts.maxSize,
+                step = opts.sizeStep,
+                keepShownOnClick = opts.keepShownOnClick,
+                onSelect = function(size)
+                    local nextStyle = getStyle()
+                    nextStyle.size = size
+                    saveStyle(nextStyle)
+                end,
+            }),
+        },
+    }
+
+    if opts.default then
+        items[#items + 1] = {
+            text = "Reset",
+            notCheckable = true,
+            keepShownOnClick = opts.keepShownOnClick ~= false,
+            func = function()
+                saveStyle(opts.default)
+            end,
+        }
+    end
+
+    return items
 end
 
 function Fonts:CreateStyleSelector(parent, opts)
@@ -1586,7 +2050,9 @@ function Fonts:CreateStyleSelector(parent, opts)
             selector:Refresh()
         end,
     })
-    selector.dropdown:SetPoint("TOPLEFT", selector.preview, "BOTTOMLEFT", 0, -12)
+    if selector.dropdown and type(selector.dropdown.SetPoint) == "function" then
+        selector.dropdown:SetPoint("TOPLEFT", selector.preview, "BOTTOMLEFT", 0, -12)
+    end
 
     self._widgetId = self._widgetId + 1
     local selectorSliderName = "RGXFontStyleSelectorSlider" .. self._widgetId
@@ -1601,66 +2067,34 @@ function Fonts:CreateStyleSelector(parent, opts)
     _G[selector.sizeSlider:GetName() .. "High"]:SetText(tostring(opts.maxSize or 32))
     _G[selector.sizeSlider:GetName() .. "Text"]:SetText(opts.sizeLabel or "Size")
 
-    selector.flagsLabel = selector:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    selector.flagsLabel:SetPoint("TOPLEFT", selector.sizeSlider, "BOTTOMLEFT", -8, -8)
-    selector.flagsLabel:SetText(opts.flagsLabel or "Style")
-
-    selector.flagsButton = CreateFrame("Button", nil, selector, "UIPanelButtonTemplate")
-    selector.flagsButton:SetSize(150, 24)
-    selector.flagsButton:SetPoint("TOPLEFT", selector.flagsLabel, "BOTTOMLEFT", 0, -4)
-    selector.flagsButton:SetText("")
-
-    selector.flagsButtonText = selector.flagsButton:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    selector.flagsButtonText:SetPoint("LEFT", 8, 0)
-    selector.flagsButtonText:SetPoint("RIGHT", -18, 0)
-    selector.flagsButtonText:SetJustifyH("LEFT")
-
-    selector.flagsArrow = selector.flagsButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    selector.flagsArrow:SetPoint("RIGHT", -8, 0)
-    selector.flagsArrow:SetText("v")
-
-    selector.flagsMenu = CreateFrame("Frame", nil, selector, "BackdropTemplate")
-    selector.flagsMenu:SetPoint("TOPLEFT", selector.flagsButton, "BOTTOMLEFT", 0, -2)
-    selector.flagsMenu:SetSize(176, 150)
-    selector.flagsMenu:SetFrameStrata("DIALOG")
-    selector.flagsMenu:SetBackdrop({
-        bgFile = "Interface/Buttons/WHITE8X8",
-        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-        edgeSize = 12,
-        insets = { left = 3, right = 3, top = 3, bottom = 3 },
-    })
-    selector.flagsMenu:SetBackdropColor(0.05, 0.06, 0.08, 0.96)
-    selector.flagsMenu:SetBackdropBorderColor(0.32, 0.36, 0.42, 1)
-    selector.flagsMenu:Hide()
-
-    selector.flagButtons = {}
-    for index, preset in ipairs(self:GetFlagPresets()) do
-        local button = CreateFrame("Button", nil, selector.flagsMenu, "UIPanelButtonTemplate")
-        button:SetSize(152, 22)
-        button:SetPoint("TOPLEFT", 12, -10 - ((index - 1) * 24))
-        button:SetText("")
-
-        button.text = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        button.text:SetPoint("LEFT", 8, 0)
-        button.text:SetPoint("RIGHT", -8, 0)
-        button.text:SetJustifyH("LEFT")
-        button.text:SetText(preset.label)
-        button.value = preset.value
-        button:SetScript("OnClick", function()
-            selector.value.flags = preset.value
-            selector.flagsButtonText:SetText(preset.label)
-            selector.flagsMenu:Hide()
-            Fonts:ApplyStyle(selector.preview, selector.value)
-            if type(opts.onChange) == "function" then
-                opts.onChange(selector:GetValue())
+    Dropdowns = Dropdowns or _G.RGXDropdowns or RGX:GetModule("dropdowns")
+    selector.flagsDropdown = Dropdowns and Dropdowns:CreateNestedDropdown(selector, {
+        label = opts.flagsLabel or "Style",
+        width = opts.flagsDropdownWidth or 190,
+        buttonWidth = opts.flagsButtonWidth or 150,
+        value = selector.value.flags or "",
+        items = function()
+            local items = {}
+            for _, preset in ipairs(Fonts:GetFlagPresets()) do
+                items[#items + 1] = {
+                    text = preset.label,
+                    value = preset.value,
+                }
             end
-        end)
-        selector.flagButtons[#selector.flagButtons + 1] = button
-    end
+            return items
+        end,
+        getValueText = function(value)
+            return Fonts:DescribeFlags(value or "")
+        end,
+        onChange = function(value)
+            selector.value.flags = value or ""
+            selector:Refresh()
+        end,
+    })
 
-    selector.flagsButton:SetScript("OnClick", function()
-        selector.flagsMenu:SetShown(not selector.flagsMenu:IsShown())
-    end)
+    if selector.flagsDropdown then
+        selector.flagsDropdown:SetPoint("TOPLEFT", selector.sizeSlider, "BOTTOMLEFT", -8, -8)
+    end
 
     function selector:GetValue()
         return RGX:CopyTable(self.value)
@@ -1672,9 +2106,21 @@ function Fonts:CreateStyleSelector(parent, opts)
     end
 
     function selector:Refresh()
-        self.dropdown:Refresh(self.value.font)
-        self.sizeSlider:SetValue(self.value.size)
-        self.flagsButtonText:SetText(Fonts:DescribeFlags(self.value.flags))
+        if self.dropdown then
+            if type(self.dropdown.Refresh) == "function" then
+                self.dropdown:Refresh(self.value.font)
+            elseif self.dropdown.dropdown then
+                SafeDropdownSetText(self.dropdown.dropdown, Fonts:GetDropdownFontLabel(self.value.font))
+            elseif type(self.dropdown.GetName) == "function" then
+                SafeDropdownSetText(self.dropdown, Fonts:GetDropdownFontLabel(self.value.font))
+            end
+        end
+        if self.sizeSlider and type(self.sizeSlider.SetValue) == "function" then
+            self.sizeSlider:SetValue(self.value.size)
+        end
+        if self.flagsDropdown and self.flagsDropdown.Refresh then
+            self.flagsDropdown:Refresh(self.value.flags or "")
+        end
         Fonts:ApplyStyle(self.preview, self.value)
         if type(opts.onChange) == "function" then
             opts.onChange(self:GetValue())
@@ -2160,18 +2606,9 @@ function Fonts:Init()
             displayName = def.family,
             family = def.family,
             category = def.category,
-            license = def.license
+            license = def.license,
+            available = self.unavailableFonts[name] and false or true,
         })
-    end
-
-    -- Check availability
-    for name, data in pairs(self.registry) do
-        if data.available == nil then
-            local testFont = CreateFont("RGX_Test_" .. name:gsub("[^%w]", "_"))
-            data.available = pcall(function()
-                testFont:SetFont(data.path, 12, "")
-            end)
-        end
     end
 
     -- Set default
@@ -2186,6 +2623,8 @@ function Fonts:Init()
 	
     -- SUPER SIMPLE: Make Fonts globally accessible
     _G.RGXFonts = self
+
+    self:DebugStatus("Init")
 end
 
 Fonts:Init()
