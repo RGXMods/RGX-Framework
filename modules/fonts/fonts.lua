@@ -26,7 +26,7 @@
 
 local _, Fonts = ...
 local RGX = _G.RGXFramework
-local Dropdowns = _G.RGXDropdowns
+local Dropdowns -- resolved lazily at call site; do not capture at file-load time
 
 if not RGX then
     error("RGX Fonts: RGX-Framework not loaded")
@@ -1362,113 +1362,77 @@ function Fonts:CreateFontDropdown(parent, opts)
 
     self:DebugStatus("CreateFontDropdown")
 
-    self._dropdownCounter = (self._dropdownCounter or 0) + 1
-    local dropdownName = "RGXFontDropdown" .. tostring(self._dropdownCounter)
-    local holder = CreateFrame("Frame", nil, parent)
-    holder:SetSize(opts.width or 260, opts.height or 56)
-    holder.value = self:ResolveName(opts.value, self:GetDefault()) or self:GetDefault()
-    holder.path = self:GetPath(holder.value)
-
-    holder.label = holder:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-    holder.label:SetPoint("TOPLEFT", 0, 0)
-    holder.label:SetText(opts.label or "Font")
-
-    local dropdown = CreateFrame("Frame", dropdownName, holder, "UIDropDownMenuTemplate")
-    dropdown:SetPoint("TOPLEFT", holder.label, "BOTTOMLEFT", -16, -5)
-    holder.dropdown = dropdown
-
-    if type(UIDropDownMenu_SetWidth) == "function" then
-        UIDropDownMenu_SetWidth(dropdown, opts.buttonWidth or 180)
+    local D = RGX:GetDropdowns()
+    if not D then
+        RGX:Debug("Fonts:CreateFontDropdown: RGXDropdowns not available")
+        return nil
     end
 
-    local function UpdateButtonText()
-        if type(UIDropDownMenu_SetText) == "function" then
-            UIDropDownMenu_SetText(dropdown, Fonts:GetDropdownFontLabel(holder.value))
-        end
-    end
+    local initialValue = self:ResolveName(opts.value, self:GetDefault()) or self:GetDefault()
 
-    local function SelectFont(fontName)
-        local resolved = Fonts:ResolveName(fontName, holder.value) or holder.value or Fonts:GetDefault()
-        holder.value = resolved
-        holder.path = Fonts:GetPath(resolved)
-        UpdateButtonText()
-        if type(CloseDropDownMenus) == "function" then
-            CloseDropDownMenus()
-        end
-
-        if type(opts.onChange) == "function" then
-            opts.onChange(resolved, holder.path, nil, holder)
-        end
-    end
-
-    local function AddFontItem(fontInfo, level)
-        local info = UIDropDownMenu_CreateInfo()
-        local text = fontInfo.family or fontInfo.displayName or fontInfo.name
-        if fontInfo.name and fontInfo.name ~= text then
-            text = string.format("%s - %s", text, fontInfo.name)
-        end
-        info.text = text
-        info.value = fontInfo.name
-        info.checked = holder.value == fontInfo.name
-        info.func = function()
-            SelectFont(fontInfo.name)
-        end
-        UIDropDownMenu_AddButton(info, level)
-    end
-
-    UIDropDownMenu_Initialize(dropdown, function(_, level, menuList)
-        level = level or 1
-        local groups = Fonts:GetGroupedFonts()
-        if level == 1 then
-            if #groups == 0 then
-                local info = UIDropDownMenu_CreateInfo()
-                info.text = "No fonts available"
-                info.disabled = true
-                info.notCheckable = true
-                UIDropDownMenu_AddButton(info, level)
-                return
-            end
-
-            for index, group in ipairs(groups) do
-                if group.count == 1 and group.families and #group.families == 1 and #group.families[1].styles == 1 then
-                    AddFontItem(group.families[1].styles[1], level)
-                else
-                    local info = UIDropDownMenu_CreateInfo()
-                    info.text = group.label or group.category or "Fonts"
-                    info.value = index
-                    info.hasArrow = true
-                    info.menuList = index
-                    info.notCheckable = true
-                    UIDropDownMenu_AddButton(info, level)
+    local function buildItems()
+        local groups = self:GetGroupedFonts()
+        local items = {}
+        for _, group in ipairs(groups) do
+            if group.count == 1 and group.families and #group.families == 1 and #group.families[1].styles == 1 then
+                local fontInfo = group.families[1].styles[1]
+                local text = fontInfo.family or fontInfo.displayName or fontInfo.name
+                items[#items + 1] = { text = text, value = fontInfo.name }
+            else
+                local children = {}
+                for _, familyData in ipairs(group.families or {}) do
+                    for _, fontInfo in ipairs(familyData.styles or {}) do
+                        local text = fontInfo.family or fontInfo.displayName or fontInfo.name
+                        if fontInfo.name and fontInfo.name ~= text then
+                            text = string.format("%s - %s", text, fontInfo.name)
+                        end
+                        children[#children + 1] = { text = text, value = fontInfo.name }
+                    end
                 end
-            end
-        elseif level == 2 and menuList then
-            local group = groups[menuList]
-            if not group then return end
-            for _, familyData in ipairs(group.families or {}) do
-                for _, fontInfo in ipairs(familyData.styles or {}) do
-                    AddFontItem(fontInfo, level)
-                end
+                items[#items + 1] = {
+                    text = group.label or group.category or "Fonts",
+                    children = children,
+                }
             end
         end
-    end)
+        if #items == 0 then
+            items[#items + 1] = { text = "No fonts available", notCheckable = true }
+        end
+        return items
+    end
 
+    local holder = D:CreateNestedDropdown(parent, {
+        width = opts.width or 260,
+        height = opts.height or 56,
+        label = opts.label or "Font",
+        buttonWidth = opts.buttonWidth or 180,
+        value = initialValue,
+        items = buildItems,
+        getValueText = function(value)
+            return Fonts:GetDropdownFontLabel(value)
+        end,
+        onChange = function(value, item, h)
+            local resolved = Fonts:ResolveName(value, h.value) or h.value or Fonts:GetDefault()
+            h.value = resolved
+            h.path = Fonts:GetPath(resolved)
+            if type(opts.onChange) == "function" then
+                opts.onChange(resolved, h.path, nil, h)
+            end
+        end,
+    })
+
+    if not holder then
+        RGX:Debug("Fonts:CreateFontDropdown: CreateNestedDropdown returned nil")
+        return nil
+    end
+
+    -- Maintain .path alongside .value (used by CreateFontSettingControl and callers).
+    holder.path = self:GetPath(holder.value or initialValue)
+
+    local _origRefresh = holder.Refresh
     function holder:Refresh(value)
-        if value ~= nil then
-            self.value = Fonts:ResolveName(value, self.value) or self.value
-            self.path = Fonts:GetPath(self.value)
-        end
-        UpdateButtonText()
-    end
-
-    function holder:SetEnabled(enabled)
-        local isEnabled = enabled ~= false
-        self.label:SetAlpha(isEnabled and 1 or 0.6)
-        if isEnabled and type(UIDropDownMenu_EnableDropDown) == "function" then
-            UIDropDownMenu_EnableDropDown(dropdown)
-        elseif not isEnabled and type(UIDropDownMenu_DisableDropDown) == "function" then
-            UIDropDownMenu_DisableDropDown(dropdown)
-        end
+        _origRefresh(self, value)
+        self.path = Fonts:GetPath(self.value)
     end
 
     holder:Refresh(holder.value)
@@ -2067,7 +2031,7 @@ function Fonts:CreateStyleSelector(parent, opts)
     _G[selector.sizeSlider:GetName() .. "High"]:SetText(tostring(opts.maxSize or 32))
     _G[selector.sizeSlider:GetName() .. "Text"]:SetText(opts.sizeLabel or "Size")
 
-    Dropdowns = Dropdowns or _G.RGXDropdowns or RGX:GetModule("dropdowns")
+    Dropdowns = Dropdowns or RGX:GetDropdowns()
     selector.flagsDropdown = Dropdowns and Dropdowns:CreateNestedDropdown(selector, {
         label = opts.flagsLabel or "Style",
         width = opts.flagsDropdownWidth or 190,
