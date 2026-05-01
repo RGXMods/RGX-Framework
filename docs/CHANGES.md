@@ -7,6 +7,13 @@
 - Updated shared option UI behavior for tabs, buttons, labels, and reset controls.
 - Restored framework tab sizing and label anchoring to the expected RGX defaults.
 - Cleaned up button/tab text handling to avoid unintended wrapping, alignment drift, and inconsistent font-string anchors.
+- Rewrote README.md as a polished entry point with links to the full wiki documentation.
+- Added comprehensive wiki documentation: Architecture, API Reference, Fonts System, Dropdowns System, Theming & Design, Troubleshooting, and Migration Guide.
+- Updated CurseForge description.html with current module list, font counts, and documentation links.
+- Fixed stale file path references (modules/fonts/fonts.lua → modules/fonts/definitions.lua).
+- Fixed inconsistent dormant module wording across all docs (standardized to "in-tree but not loaded by the XML loader").
+- Fixed stale interface version in Super Simple example code (110002 → 120005).
+- Standardized font count language across all docs (36 bundled + 8 WoW defaults = ~44 total, 10 blocked, ~34 available).
 
 ## Fixes
 
