@@ -284,7 +284,27 @@ BLU currently has its own parallel implementations of: event system, timers, Sha
 Target: BLU drops its own `sharedmedia.lua`, `database.lua`, and event infrastructure in favour of `RGX:GetSharedMedia()`, `RGX:NewDatabase()`, and `RGX:RegisterEvent()`.
 
 ### RGX-Mod
-The future high-complexity addon in the suite. RGX-Framework should already provide the base systems RGX-Mod will need: trigger/data plumbing, display/media plumbing, reusable editor and option widgets, shared serialization, messaging, and preview behavior. Build the foundation correctly now — RGX-Mod consumes it later.
+WeakAuras-style aura engine. Starts as a copy of BLU, then grows into a configurable trigger/condition/display system. See [RGX-Mod docs](../../RGX-Mod/docs/) for full architecture.
+
+**Framework dependencies by phase:**
+
+| Phase | RGX-Mod Feature | Framework API Needed | Status |
+|-------|----------------|---------------------|--------|
+| 1 | BLU copy baseline | Core, DB, Events, Options, Sound, Combat | Done |
+| 2 | Multi-trigger auras | `RegisterUnitEvent` | Done |
+| 3 | Display types + conditions | None new | — |
+| 4 | Options editor + actions | Scroll, Dropdown | Done |
+| 5 | Import/export + profiles | Serialization, Profiles, Bucket events | Not built |
+| 6 | Groups, animations, pooling | Frame pooling, Animation helpers, Locale | Not built |
+
+**Framework work triggered by RGX-Mod (ordered by phase need):**
+
+1. **Profile system** (Phase 5) — highest priority. `RGX:NewDatabase()` with profile CRUD, metamethod access, protected Default. Every addon benefits.
+2. **Bucket events** (Phase 5) — `RegisterBucketEvent(event, delay, callback)`. Needed for `UNIT_AURA` spam throttle. Any combat addon benefits.
+3. **Serialization** (Phase 5) — `Serialize(table)` / `Deserialize(string)` with type preservation. Needed for import/export.
+4. **Frame pooling** (Phase 6) — `CreatePool(frameType, parent, resetFunc)`. General performance utility.
+5. **Animation/tween helpers** (Phase 6) — lerp utilities for smooth transitions. Any animated UI benefits.
+6. **Locale** (Phase 6) — `RGX:NewLocale(addonName, locale, isDefault)`. Any addon going to CurseForge benefits.
 
 ---
 
