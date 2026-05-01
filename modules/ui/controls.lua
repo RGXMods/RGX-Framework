@@ -334,7 +334,7 @@ function UI:CreateResetButton(parent, onClick)
 
     btn:SetScript("OnClick", onClick)
     btn:SetScript("OnEnter", function(self)
-        local D = _G.RGXDesign
+        local D = RGX:GetDesign()
         local pr, pg, pb = D and D:Unpack("primary") or 0.345, 0.745, 0.506
         self.border:SetBackdropBorderColor(pr, pg, pb, 1)
         self.bg:SetColorTexture(0.11, 0.18, 0.24, 1)
@@ -354,7 +354,7 @@ end
 
 function UI:CreateButton(parent, text, w, h)
     h = h or 22
-    local D = _G.RGXDesign
+    local D = RGX:GetDesign()
     if D and type(D.CreateButton) == "function" then
         return D:CreateButton(parent, text, w, h)
     end
@@ -374,7 +374,7 @@ function UI:CreateButton(parent, text, w, h)
     lbl:SetText(text or "")
     lbl:SetTextColor(0.80, 0.80, 0.80, 1)
     btn:SetScript("OnEnter", function()
-        local D2 = _G.RGXDesign
+        local D2 = RGX:GetDesign()
         local pr, pg, pb = D2 and D2:Unpack("primary") or 0.345, 0.745, 0.506
         border:SetBackdropBorderColor(pr, pg, pb, 1)
         bg:SetColorTexture(0.11, 0.18, 0.24, 1)

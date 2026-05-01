@@ -144,16 +144,63 @@ end
 
 local function CopyItem(item)
     if type(item) ~= "table" then return nil end
+
     local copy = {}
     for k, v in pairs(item) do
         if k == "children" and type(v) == "table" then
             local children = {}
-            for i, child in ipairs(v) do children[i] = CopyItem(child) end
+            for i, child in ipairs(v) do
+                children[i] = CopyItem(child)
+            end
             copy.children = children
         else
             copy[k] = v
         end
     end
+
+    -- UIDropDownMenu compatibility layer
+    -- Normalize old schema fields to RGXDropdowns schema
+    local originalText = copy.text
+    local originalValue = copy.value
+
+    copy.text = copy.text or copy.label or copy.name or ""
+
+    -- Handle legacy value fields
+    if copy.value == nil then
+        if copy.arg1 ~= nil then
+            copy.value = copy.arg1
+            RGX:Debug("Dropdowns:Normalize", "Converted arg1->value", tostring(copy.arg1))
+        elseif copy.font ~= nil then
+            copy.value = copy.font
+            RGX:Debug("Dropdowns:Normalize", "Converted font->value", tostring(copy.font))
+        elseif copy.name ~= nil and copy.path ~= nil then
+            copy.value = copy.name
+            RGX:Debug("Dropdowns:Normalize", "Converted name->value", tostring(copy.name))
+        end
+    end
+
+    -- Log normalization if values changed
+    if (originalText ~= copy.text or originalValue ~= copy.value) then
+        RGX:Debug("Dropdowns:Normalize", "Item text:", tostring(originalText), "->", tostring(copy.text), "value:", tostring(originalValue), "->", tostring(copy.value))
+    end
+
+    -- Convert menuList to children
+    if copy.menuList then
+        copy.children = copy.children or copy.menuList
+        copy.menuList = nil
+    end
+
+    -- Recursively normalize children
+    if type(copy.children) == "table" then
+        copy.children = Dropdowns:NormalizeItems(copy.children)
+    end
+
+    -- Preserve legacy callback as onClick wrapper
+    if copy.func and not copy.onClick then
+        local func = copy.func
+        copy.onClick = function() func(copy, copy.arg1, copy.arg2, nil) end
+    end
+
     return copy
 end
 
@@ -525,8 +572,18 @@ function Dropdowns:CreateNestedDropdown_MenuUtil(parent, opts)
 
     -- Generator runs every time the menu opens, so radio "checked" state
     -- always reflects the current holder.value.
-    local function generator(_, rootDescription)
-        local function isSelected(value) return holder.value == value end
+	local _genCalledOnce = false
+	local function generator(_, rootDescription)
+		if not _genCalledOnce then
+			_genCalledOnce = true
+			local items = holder:GetItems()
+			local leafCount, groupCount = 0, 0
+			for _, it in ipairs(items or {}) do
+				if type(it.children) == "table" and #it.children > 0 then groupCount = groupCount + 1 else leafCount = leafCount + 1 end
+			end
+			RGX:Debug("RGXDropdown:generator first call, items=" .. #items .. " groups=" .. groupCount .. " leafs=" .. leafCount)
+		end
+		local function isSelected(value) return holder.value == value end
         local function setSelected(value)
             holder.value = value
             local item = FindItemByValue(holder:GetItems(), value)
@@ -799,11 +856,12 @@ function Dropdowns:CreateNestedDropdown_Legacy(parent, opts)
 end
 
 function Dropdowns:CreateNestedDropdown(parent, opts)
-    if HasModernDropdownTemplate() then
-        return self:CreateNestedDropdown_MenuUtil(parent, opts)
-    end
-
-    return self:CreateNestedDropdown_Legacy(parent, opts)
+	if HasModernDropdownTemplate() then
+		RGX:Debug("RGXDropdown: dispatching to MenuUtil path")
+		return self:CreateNestedDropdown_MenuUtil(parent, opts)
+	end
+	RGX:Debug("RGXDropdown: dispatching to Legacy path")
+	return self:CreateNestedDropdown_Legacy(parent, opts)
 end
 
 --[[============================================================================

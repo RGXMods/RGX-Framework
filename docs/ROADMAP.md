@@ -39,6 +39,7 @@ The player-facing experience stays quiet. The author-facing experience should be
 | Combat event library | RGXCombat | ✅ Done |
 | Reputation + renown tracking | RGXReputation | ✅ Done |
 | Data broker registry | RGXDataBroker | ✅ Done |
+| Level-up sound system (variant playback, mute, settings) | RGXSound | ✅ Done |
 
 ---
 

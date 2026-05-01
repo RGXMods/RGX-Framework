@@ -10,7 +10,7 @@ RGX-Framework is a modern, self-contained addon framework — an alternative to 
 
 **One dependency. Everything you need.** Declare `RequiredDeps: RGX-Framework` once and every addon in your suite shares the same initialized instance — events, timers, hooks, minimap, fonts, UI controls, combat events, and more, loaded once, always up-to-date. No embedded libraries to juggle. No version arbitration. When the framework updates, every addon on the player's machine benefits automatically.
 
-**What it provides:** a lifecycle-aware event bus, a tick-based timer system, hook helpers, slash command registration, 30+ bundled fonts, a named color palette, statusbar textures, nested dropdowns with auto-width and inline buttons, reusable UI controls, an options panel builder, circular-drag minimap buttons, pet battle callbacks, a combat event library, reputation/renown tracking, a shared media registry, a color picker, and a data broker registry.
+**What it provides:** a lifecycle-aware event bus, a tick-based timer system, hook helpers, slash command registration, a curated set of bundled fonts (some temporarily unavailable), a named color palette, statusbar textures, nested dropdowns with auto-width and inline buttons, reusable UI controls, an options panel builder, circular-drag minimap buttons, pet battle callbacks, a combat event library, reputation/renown tracking, a shared media registry, a color picker, and a data broker registry.
 
 The framework is used by `SimpleQuestPlates`, `petbuddy2`, and `RemoveNameplateDebuffs`, and is designed to be usable by any addon author, not just first-party projects.
 
@@ -27,14 +27,15 @@ local RGX = assert(_G.RGXFramework, "MyAddon: RGX-Framework not loaded")
 
 -- Optional: defer initialization until the framework is fully ready
 RGX:OnReady(function()
-    -- modules are guaranteed loaded here
+    -- always-loaded modules are guaranteed non-nil here
     local Fonts    = RGX:GetFonts()
     local Colors   = RGX:GetColors()
     local Textures = RGX:GetTextures()
     local Drops    = RGX:GetDropdowns()
     local UI       = RGX:GetUI()
     local MM       = RGX:GetMinimap()
-    local PB       = RGX:GetPetBattles()
+    -- optional modules (not loaded by default — see module table below)
+    local PB       = RGX:GetPetBattles()   -- nil unless re-enabled
 end)
 ```
 
@@ -64,12 +65,13 @@ RGX:GetDropdowns()   -- "dropdowns"   → RGXDropdowns
 RGX:GetUI()          -- "ui"          → RGXUI
 RGX:GetColorPicker() -- "colorpicker" → RGXColorPicker
 RGX:GetMinimap()     -- "minimap"     → RGXMinimap
+RGX:GetDesign()      -- "design"      → RGXDesign
+RGX:GetDataBroker()  -- "databroker"  → RGXDataBroker
+-- † not loaded in default build — return nil until re-enabled in XML:
 RGX:GetPetBattles()  -- "petbattles"  → RGXPetBattles
 RGX:GetSharedMedia() -- "sharedmedia" → RGXSharedMedia
-RGX:GetDesign()      -- "design"      → RGXDesign
 RGX:GetCombat()      -- "combat"      → RGXCombat
 RGX:GetReputation()  -- "reputation"  → RGXReputation
-RGX:GetDataBroker()  -- "databroker"  → RGXDataBroker
 ```
 
 **Module resolution API:**
@@ -101,19 +103,21 @@ local _, MyModule = ...
 | Module | Global | `RGX:Get*()` | Description |
 |---|---|---|---|
 | Core | `RGXFramework` | — | Module registry, utilities, version |
-| Fonts | `RGXFonts` | `GetFonts()` | 30+ bundled fonts, style objects, dropdowns |
+| Fonts | `RGXFonts` | `GetFonts()` | Curated bundled fonts (some temporarily unavailable), style objects, dropdowns |
 | Colors | `RGXColors` | `GetColors()` | Named/class/quality colors, color picker, gradients |
 | Textures | `RGXTextures` | `GetTextures()` | Statusbar textures, RGX-provided media |
 | Dropdowns | `RGXDropdowns` | `GetDropdowns()` | Nested UIDropDownMenu, inline buttons, auto-width |
 | UI | `RGXUI` | `GetUI()` | Slider, toggle, label, options panel builder |
 | ColorPicker | `RGXColorPicker` | `GetColorPicker()` | Custom HSV color picker with presets |
 | Minimap | `RGXMinimap` | `GetMinimap()` | Circular-drag minimap button, tooltip, persistent state |
-| PetBattles | `RGXPetBattles` | `GetPetBattles()` | Pet battle callbacks, level-up detection, journal utils |
-| SharedMedia | `RGXSharedMedia` | `GetSharedMedia()` | Sound/font/statusbar registry, drop-in sound pack scanner |
 | Design | `RGXDesign` | `GetDesign()` | Visual building blocks using the static RGX palette |
-| Combat | `RGXCombat` | `GetCombat()` | Combat event library — enter/leave/kill/damage/heal/crit |
-| Reputation | `RGXReputation` | `GetReputation()` | Reputation and renown tracking, cross-expansion normalized |
 | DataBroker | `RGXDataBroker` | `GetDataBroker()` | Data object registry — drop-in for LibDataBroker-1.1 |
+| PetBattles † | `RGXPetBattles` | `GetPetBattles()` | Pet battle callbacks, level-up detection, journal utils |
+| SharedMedia † | `RGXSharedMedia` | `GetSharedMedia()` | Sound/font/statusbar registry, drop-in sound pack scanner |
+| Combat † | `RGXCombat` | `GetCombat()` | Combat event library — enter/leave/kill/damage/heal/crit |
+| Reputation † | `RGXReputation` | `GetReputation()` | Reputation and renown tracking, cross-expansion normalized |
+
+† **Not loaded in the current default build.** These modules are in-tree and fully implemented but were removed from `RGX-Framework.xml` at v1.5.18 to reduce the runtime surface during SQP/PB2 testing. Their `Get*()` accessors return `nil` until they are re-added to the XML loader. Re-enabling is a one-line XML change per module.
 
 ***
 
@@ -799,14 +803,14 @@ PB:SchedulePetLevelScan(delay)    -- RGX:After(delay, ScanPetLevels)
 
 ## Font Coverage
 
-30+ bundled fonts organized by category:
+Bundled fonts organized by category (some temporarily unavailable due to invalid assets):
 
-- **Sans / UI:** Inter, Ubuntu, Liberation Sans, DejaVu Sans, Lato, Poppins, Montserrat, Rajdhani
-- **Serif:** Crimson Text, Merriweather, Playfair Display
+- **Sans / UI:** Inter, Ubuntu, Liberation Sans, DejaVu Sans, Lato, Poppins, Rajdhani (Montserrat temporarily unavailable)
+- **Serif:** Crimson Text (Merriweather, Playfair Display temporarily unavailable)
 - **Monospace:** IBM Plex Mono, JetBrains Mono
-- **Display:** Bebas Neue, Bangers, Creepster, Oswald, Orbitron, Audiowide, Anton
+- **Display:** Bebas Neue, Bangers, Creepster, Anton (Oswald, Orbitron, Audiowide temporarily unavailable)
 - **Pixel:** Press Start 2P, Silkscreen, VT323
-- **Fantasy / Themed:** Uncial Antiqua, Cinzel
+- **Fantasy / Themed:** Uncial Antiqua (Cinzel temporarily unavailable)
 - **WoW defaults:** Friz Quadrata, Arial Narrow, Morpheus, Skurri
 
 Font pack addons can extend the registry at runtime with `Fonts:RegisterFontPack(addonName, defs)`. See [docs/FONT-SOURCES.md](docs/FONT-SOURCES.md) for attribution.

@@ -29,6 +29,9 @@ local addonName, RGX = ...
 
 -- This file extends the existing RGXUI module registered in controls.lua.
 -- It waits until UI is available via the module system.
+-- GetUI/GetDesign read _G directly: options.lua patches RGXUI after the module
+-- registers itself, so RGX:GetUI() / RGX:GetDesign() are equivalent but the
+-- _G read makes the bootstrap dependency explicit and avoids a forward reference.
 
 local function GetUI()
     return _G.RGXUI
@@ -40,7 +43,7 @@ end
 
 -- ── Layout constants ──────────────────────────────────────────────────────────
 
-local TAB_W        = 94
+local TAB_W = 94
 local TAB_H        = 22
 local TAB_SPACING  = 6
 local TAB_ROW_PAD  = 8
@@ -475,15 +478,16 @@ local function CreateOptionsPanel(UI, opts)
     tabArea:HookScript("OnShow",        RepositionTabs)
     RepositionTabs()
 
-    local function RunSoon(delay, fn)
-        if C_Timer and type(C_Timer.After) == "function" then
-            C_Timer.After(delay or 0, fn)
-        elseif RGX and type(RGX.After) == "function" then
-            RGX:After(delay or 0, fn)
-        else
-            fn()
-        end
-    end
+local function RunSoon(delay, fn)
+  -- Prefer RGX timer API for framework budget/diagnostics
+  if RGX and type(RGX.After) == "function" then
+    RGX:After(delay or 0, fn, "Options:RunSoon")
+  elseif C_Timer and type(C_Timer.After) == "function" then
+    C_Timer.After(delay or 0, fn)
+  else
+    fn()
+  end
+end
 
     local bannerQueued = false
 
@@ -674,15 +678,16 @@ local function CreateOptionsPanel(UI, opts)
         return okFirst or okSecond
     end
 
-    local function DeferOptionsOpen(fn)
-        if C_Timer and type(C_Timer.After) == "function" then
-            C_Timer.After(0, fn)
-        elseif RGX and type(RGX.After) == "function" then
-            RGX:After(0, fn)
-        else
-            fn()
-        end
-    end
+local function DeferOptionsOpen(fn)
+  -- Prefer RGX timer API for framework budget/diagnostics
+  if RGX and type(RGX.After) == "function" then
+    RGX:After(0, fn, "Options:DeferOptionsOpen")
+  elseif C_Timer and type(C_Timer.After) == "function" then
+    C_Timer.After(0, fn)
+  else
+    fn()
+  end
+end
 
     -- ── Open ──────────────────────────────────────────────────────────────────
     function panel:Open()
