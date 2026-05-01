@@ -389,7 +389,35 @@ function UI:CreateButton(parent, text, w, h)
 end
 
 --[[============================================================================
-    SECTION/PANEL
+DROPDOWN CONTROL
+============================================================================]]
+
+function UI:CreateDropdown(parent, options)
+  options = options or {}
+  local Dropdowns = RGX:GetModule("dropdowns")
+  if not Dropdowns then
+    return self:CreateLabel(parent, {text = "RGX Dropdowns not loaded", color = "red"})
+  end
+
+  local items = options.items or {}
+  if type(options.items) == "function" then
+    items = options.items
+  end
+
+  local holder = Dropdowns:CreateNestedDropdown(parent, {
+    label = options.label or "Dropdown",
+    items = items,
+    value = options.value,
+    onChange = options.onChange or function() end,
+    buttonWidth = options.width or 200,
+    placeholder = options.placeholder or "Select",
+  })
+
+  return holder
+end
+
+--[[============================================================================
+SECTION/PANEL
 ============================================================================]]
 
 function UI:CreateSection(parent, options)

@@ -19,8 +19,8 @@ RGX._slashCommandCounter = RGX._slashCommandCounter or 0
 RGX.combatQueue = RGX.combatQueue or {}
 RGX._timerCounter = RGX._timerCounter or 0
 RGX.timerBudget = RGX.timerBudget or {
-    maxPerFrame = 120,
-    maxSeconds = 0.016,
+    maxPerFrame = 256,
+    maxSeconds = 0.033,
     slowSeconds = 0.050,
 }
 

@@ -163,17 +163,27 @@ end
 --       add:Color("Bar Color", db, "barColor")
 --   end
 
-local function CreateAddHelper(frame)
-    local UI = GetUI()
-    local yOff = 0
-    local X    = 16
-    local Y0   = 16
-    local GAP  = 10
+local function GetBuildTarget(content)
+  local target = content.scrollChild or content
+  target._scrollChild = content.scrollChild
+  return target
+end
 
-    local function Place(w)
-        w:SetPoint("TOPLEFT", frame, "TOPLEFT", X, -(Y0 + yOff))
-        yOff = yOff + w:GetHeight() + GAP
+local function CreateAddHelper(frame)
+  local UI = GetUI()
+  local yOff = 0
+  local X = 16
+  local Y0 = 16
+  local GAP = 10
+  local scrollChild = frame._scrollChild
+
+  local function Place(w)
+    w:SetPoint("TOPLEFT", frame, "TOPLEFT", X, -(Y0 + yOff))
+    yOff = yOff + w:GetHeight() + GAP
+    if scrollChild then
+      scrollChild:SetHeight(Y0 + yOff + GAP)
     end
+  end
 
     -- Extend the frame itself with helper methods so it remains a valid WoW
     -- frame (usable as a parent, CreateTexture target, etc.) while also
@@ -221,15 +231,30 @@ local function CreateAddHelper(frame)
         return w
     end
 
-    function frame:Section(title)
-        if not UI then return end
-        local w = UI:CreateLabel(frame, { text = title, size = "normal", color = "accent" })
-        w:SetPoint("TOPLEFT", frame, "TOPLEFT", X, -(Y0 + yOff))
-        yOff = yOff + 28 + GAP
-        return w
-    end
+  function frame:Section(title)
+    if not UI then return end
+    local w = UI:CreateLabel(frame, { text = title, size = "normal", color = "accent" })
+    w:SetPoint("TOPLEFT", frame, "TOPLEFT", X, -(Y0 + yOff))
+    yOff = yOff + 28 + GAP
+    return w
+  end
 
-    function frame:Text(text)
+  function frame:Dropdown(label, items, value, onChange, opts)
+    if not UI then return end
+    opts = opts or {}
+    local w = UI:CreateDropdown(frame, {
+      label = label,
+      items = items,
+      value = value,
+      onChange = onChange,
+      width = opts.width or 200,
+      placeholder = opts.placeholder or "Select",
+    })
+    Place(w)
+    return w
+  end
+
+  function frame:Text(text)
         if not UI then return end
         local w = UI:CreateLabel(frame, { text = text, size = "small", color = "muted" })
         local y = -(Y0 + yOff)
@@ -245,14 +270,15 @@ end
 -- ── Build the full content area ───────────────────────────────────────────────
 
 local function ClearContent(frame)
-    for _, child in ipairs({frame:GetChildren()}) do
-        child:Hide()
-        child:SetParent(nil)
-    end
-    for _, region in ipairs({frame:GetRegions()}) do
-        region:Hide()
-    end
-    frame.Refresh = nil
+  local target = frame.scrollChild or frame
+  for _, child in ipairs({target:GetChildren()}) do
+    child:Hide()
+    child:SetParent(nil)
+  end
+  for _, region in ipairs({target:GetRegions()}) do
+    region:Hide()
+  end
+  frame.Refresh = nil
 end
 
 -- ── CreateOptionsPanel ────────────────────────────────────────────────────────
@@ -431,19 +457,71 @@ local function CreateOptionsPanel(UI, opts)
         )
         panel.tabs[i] = tabBtn
 
-        -- Content frame for this tab
-        local content = CreateFrame("Frame", nil, container, "BackdropTemplate")
-        content:SetPoint("TOPLEFT",     tabArea, "BOTTOMLEFT",          1, -8)
-        content:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT",      -7,  8)
-        content:SetBackdrop({
-            bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            tile = true, tileSize = 16, edgeSize = 1,
-            insets = {left=1, right=1, top=1, bottom=1},
-        })
-        content:SetBackdropColor(0.06, 0.06, 0.06, 0.95)
-        content:SetBackdropBorderColor(0.20, 0.20, 0.20, 1)
-        content:Hide()
+  -- Content frame for this tab
+  local content
+  if tabInfo.scroll then
+    -- Scrollable content: ScrollFrame wraps a child that auto-sizes vertically
+    local scrollFrame = CreateFrame("ScrollFrame", nil, container, "BackdropTemplate")
+    scrollFrame:SetPoint("TOPLEFT", tabArea, "BOTTOMLEFT", 1, -8)
+    scrollFrame:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -7, 8)
+    scrollFrame:SetBackdrop({
+      bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+      edgeFile = "Interface\\Buttons\\WHITE8x8",
+      tile = true, tileSize = 16, edgeSize = 1,
+      insets = {left=1, right=1, top=1, bottom=1},
+    })
+    scrollFrame:SetBackdropColor(0.06, 0.06, 0.06, 0.95)
+    scrollFrame:SetBackdropBorderColor(0.20, 0.20, 0.20, 1)
+    scrollFrame:Hide()
+
+    local scrollbar = CreateFrame("Slider", nil, scrollFrame, "UIPanelScrollBarTemplate")
+    scrollbar:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", -2, -20)
+    scrollbar:SetPoint("BOTTOMLEFT", scrollFrame, "BOTTOMRIGHT", -2, 20)
+    scrollbar:SetMinMaxValues(0, 0)
+    scrollbar:SetValueStep(20)
+    scrollbar.scrollStep = 20
+
+    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
+    scrollChild:SetHeight(1)
+    scrollFrame:SetScrollChild(scrollChild)
+
+    scrollFrame:SetScript("OnSizeChanged", function(self)
+      scrollChild:SetWidth(self:GetWidth() - 20)
+    end)
+
+    scrollbar:SetScript("OnValueChanged", function(self, value)
+      scrollFrame:SetVerticalScroll(value)
+    end)
+
+    scrollFrame:SetScript("OnMouseWheel", function(self, delta)
+      local current = scrollbar:GetValue()
+      local minVal, maxVal = scrollbar:GetMinMaxValues()
+      scrollbar:SetValue(math.min(math.max(current - delta * scrollbar.scrollStep, minVal), maxVal))
+    end)
+
+    scrollChild:SetScript("OnSizeChanged", function(self)
+      local h = self:GetHeight()
+      local sh = scrollFrame:GetHeight()
+      scrollbar:SetMinMaxValues(0, math.max(0, h - sh))
+    end)
+
+    scrollFrame.scrollChild = scrollChild
+    scrollFrame.scrollbar = scrollbar
+    content = scrollFrame
+  else
+    content = CreateFrame("Frame", nil, container, "BackdropTemplate")
+    content:SetPoint("TOPLEFT", tabArea, "BOTTOMLEFT", 1, -8)
+    content:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -7, 8)
+    content:SetBackdrop({
+      bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+      edgeFile = "Interface\\Buttons\\WHITE8x8",
+      tile = true, tileSize = 16, edgeSize = 1,
+      insets = {left=1, right=1, top=1, bottom=1},
+    })
+    content:SetBackdropColor(0.06, 0.06, 0.06, 0.95)
+    content:SetBackdropBorderColor(0.20, 0.20, 0.20, 1)
+    content:Hide()
+  end
 
         panel.contents[i] = content
         panel.tabs[i]._tabInfo = tabInfo
@@ -535,8 +613,8 @@ end
                             ClearContent(content)
                             content._dirty = nil
                         end
-                        if tabInfo and type(tabInfo.content) == "function" then
-                            local ok, err = pcall(tabInfo.content, CreateAddHelper(content))
+            if tabInfo and type(tabInfo.content) == "function" then
+              local ok, err = pcall(tabInfo.content, CreateAddHelper(GetBuildTarget(content)))
                             if ok then
                                 content._built = true
                             else
@@ -582,8 +660,8 @@ end
                     if tabInfo then
                         ClearContent(content)
                         content._dirty = nil
-                        if type(tabInfo.content) == "function" then
-                            local ok = pcall(tabInfo.content, CreateAddHelper(content))
+          if type(tabInfo.content) == "function" then
+            local ok = pcall(tabInfo.content, CreateAddHelper(GetBuildTarget(content)))
                             content._built = ok == true
                         end
                     end

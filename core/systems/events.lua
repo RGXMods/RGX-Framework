@@ -11,6 +11,7 @@
 local addonName, RGX = ...
 
 RGX.events = RGX.events or {}
+RGX.unitEvents = RGX.unitEvents or {}
 RGX.messages = RGX.messages or {}
 
 local function reportDispatchError(channel, name, id, err)
@@ -229,25 +230,101 @@ function RGX:UnregisterEvent(event, id)
 end
 
 function RGX:UnregisterAllEvents(id)
-    local removed = false
+  local removed = false
 
-    for event, bucket in pairs(self.events) do
-        if bucket[id] then
-            bucket[id] = nil
-            removed = true
-        end
-
-        if not next(bucket) then
-            self.events[event] = nil
-            safeUnregisterFrameEvent(self.eventFrame, event)
-        end
+  for event, bucket in pairs(self.events) do
+    if bucket[id] then
+      bucket[id] = nil
+      removed = true
     end
 
-    return removed
+    if not next(bucket) then
+      self.events[event] = nil
+      safeUnregisterFrameEvent(self.eventFrame, event)
+    end
+  end
+
+  return removed
+end
+
+-- Register a unit-filtered event (e.g. UNIT_AURA for "player" and "target").
+-- WoW's RegisterUnitEvent(event, unit1, unit2) fires the callback only when
+-- the event concerns one of the specified unit tokens.
+--
+--   RGX:RegisterUnitEvent("UNIT_AURA", "player", callback, "myId")
+--   RGX:RegisterUnitEvent("UNIT_AURA", {"player","target"}, callback, "myId")
+--
+-- The callback receives (event, unit, ...) — the unit token is always the
+-- second argument, matching WoW's native unit event signature.
+function RGX:RegisterUnitEvent(event, unit, callback, id, owner)
+  if type(event) ~= "string" or event == "" then return false end
+
+  local units
+  if type(unit) == "table" then
+    units = unit
+  elseif type(unit) == "string" and unit ~= "" then
+    units = { unit }
+  else
+    return false
+  end
+
+  local handlerId = registerHandler(self.unitEvents, event, callback, id, owner, self)
+  if not handlerId then return false end
+
+  local entry = self.unitEvents[event][handlerId]
+  entry.units = units
+
+  local created = not self.events[event]
+  if created then
+    if not safeRegisterFrameEvent(self.eventFrame, event) then
+      unregisterHandler(self.unitEvents, event, handlerId)
+      return false
+    end
+  end
+
+  return handlerId
+end
+
+function RGX:UnregisterUnitEvent(event, id)
+  return unregisterHandler(self.unitEvents, event, id)
+end
+
+function RGX:UnregisterAllUnitEvents(id)
+  return unregisterHandlerEverywhere(self.unitEvents, id)
 end
 
 function RGX:FireEvent(event, ...)
-    return dispatchHandlers(self.events, "event", event, ...)
+  local count = dispatchHandlers(self.events, "event", event, ...)
+
+  local unitBucket = self.unitEvents[event]
+  if unitBucket then
+    local unitToken = select(1, ...)
+    for id, entry in pairs(unitBucket) do
+      local match = false
+      if entry.units then
+        for _, u in ipairs(entry.units) do
+          if u == unitToken then
+            match = true
+            break
+          end
+        end
+      end
+      if match then
+        local ok, err
+        if entry.callbackType == "string" then
+          ok, err = pcall(entry.owner[entry.callback], entry.owner, event, ...)
+        else
+          ok, err = pcall(entry.callback, event, ...)
+        end
+        if not ok then
+          reportDispatchError("unitEvent", event, id, err)
+        end
+        count = count + 1
+      end
+    end
+  end
+
+  return count
 end
 
 function RGX:RegisterMessage(message, callback, id, owner)

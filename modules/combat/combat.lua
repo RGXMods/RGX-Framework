@@ -39,7 +39,8 @@ Combat._onKill          = {}
 Combat._onPlayerDied    = {}
 Combat._onPlayerDamaged = {}
 Combat._onPlayerHealed  = {}
-Combat._onCrit          = {}
+Combat._onCrit = {}
+Combat._onComboPoints = {}
 
 -- ── Callback helpers ──────────────────────────────────────────────────────────
 
@@ -80,7 +81,11 @@ function Combat:OnPlayerHealed(fn) AddCb(self._onPlayerHealed, fn) end
 
 -- Fired when the player scores a critical hit.
 -- fn(amount, spellName, isMelee)
-function Combat:OnCrit(fn)    AddCb(self._onCrit, fn)          end
+function Combat:OnCrit(fn) AddCb(self._onCrit, fn) end
+
+-- Fired when the player's combo points change.
+-- fn(current, max, unit)
+function Combat:OnComboPoints(fn) AddCb(self._onComboPoints, fn) end
 
 -- ── State queries ─────────────────────────────────────────────────────────────
 
@@ -243,9 +248,28 @@ function Combat:Init()
         OnCombatLogEvent(...)
     end)
 
-    RGX:RegisterEvent("PLAYER_LOGIN", function()
-        PLAYER_GUID = UnitGUID and UnitGUID("player") or ""
-    end)
+RGX:RegisterEvent("PLAYER_LOGIN", function()
+    PLAYER_GUID = UnitGUID and UnitGUID("player") or ""
+  end)
+
+  -- Combo points: fires whenever the player's combo points change on any unit
+  -- (target, focus, etc.) Works for retail UNIT_POWER_UPDATE API
+  -- Cache power type ID for safety across Retail/Classic compatibility
+  local COMBO_POINTS_POWER_TYPE = (Enum and Enum.PowerType and Enum.PowerType.ComboPoints) or 4
+  RGX:RegisterEvent("UNIT_POWER_UPDATE", function(_, unit, powerType)
+    if powerType == "COMBO_POINTS" then
+      local current = UnitPower and UnitPower(unit, COMBO_POINTS_POWER_TYPE) or 0
+      local max = UnitPowerMax and UnitPowerMax(unit, COMBO_POINTS_POWER_TYPE) or 0
+      Fire(Combat._onComboPoints, current, max, unit)
+    end
+  end)
+
+  -- Also fire on target change to report initial combo points
+  RGX:RegisterEvent("PLAYER_TARGET_CHANGED", function()
+    local current = UnitPower and UnitPower("target", COMBO_POINTS_POWER_TYPE) or 0
+    local max = UnitPowerMax and UnitPowerMax("target", COMBO_POINTS_POWER_TYPE) or 0
+    Fire(Combat._onComboPoints, current, max, "target")
+  end)
 end
 
 -- ── Wire into framework ───────────────────────────────────────────────────────
