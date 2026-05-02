@@ -1,3 +1,16 @@
+# v1.7.0 - 2026-05-02
+
+## Changes
+
+- Rewrote `UI:CreateSlider` to use a custom track-style slider with RGX brand colors instead of Blizzard's OptionsSliderTemplate.
+- Added `UI:CreateVolumeSlider` for discrete 3-position volume control with the same custom track styling.
+- Both slider types use Design module brand colors for consistent theming across all RGX addons.
+- New sliders support click, drag, scroll wheel, hover value label, and built-in reset button.
+
+## Fixes
+
+- Fixed reset button vertical alignment on the new slider.
+
 # v1.6.0 - 2026-05-01
 
 ## Changes
