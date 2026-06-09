@@ -342,6 +342,15 @@ function Combat:Init()
     if self._eventsInit then return end
     self._eventsInit = true
 
+    -- If we're in combat, defer to PLAYER_REGEN_ENABLED.
+    if InCombatLockdown and InCombatLockdown() then
+        self._eventsInit = false
+        RGX:RegisterEvent("PLAYER_REGEN_ENABLED", function()
+            self:Init()
+        end, "RGXCombat_Retry")
+        return
+    end
+
     PLAYER_GUID = nil  -- reset so it's fetched after login
 
     RGX:RegisterEvent("PLAYER_REGEN_DISABLED", function()

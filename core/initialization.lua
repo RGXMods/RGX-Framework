@@ -128,14 +128,14 @@ RGX:RegisterEvent("ADDON_LOADED", function(_, addon)
     end
 end, "RGX_Init")
 
--- Combat module deferred: RegisterEvent is protected during ADDON_LOADED in combat.
+-- Combat module deferred: RegisterEvent is blocked during loading screen into combat.
+-- C_Timer.After(0.5) ensures the world is fully loaded and InCombatLockdown() is accurate.
 RGX:RegisterEvent("PLAYER_LOGIN", function()
-    local mod = _G.RGXCombat
-    if mod and type(mod.Init) == "function" then
-        local ok, err = pcall(mod.Init, mod)
-        if not ok then
-            print("|cFFFF4444[RGX] Init error RGXCombat: " .. tostring(err) .. "|r")
+    C_Timer.After(0.5, function()
+        local mod = _G.RGXCombat
+        if mod and type(mod.Init) == "function" then
+            mod:Init()
         end
-    end
+    end)
     RGX:UnregisterEvent("PLAYER_LOGIN", "RGX_CombatInit")
 end, "RGX_CombatInit")
