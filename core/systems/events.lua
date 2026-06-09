@@ -52,25 +52,7 @@ local function safeRegisterFrameEvent(frame, event)
         return false
     end
 
-    local ok, result = pcall(frame.RegisterEvent, frame, event)
-    if not ok then
-        if string.find(tostring(result), "unknown event", 1, true) then
-            if RGX and type(RGX.Debug) == "function" then
-                RGX:Debug("RegisterEvent unknown event", event)
-            end
-            return false
-        end
-        reportEventRegistrationError("RegisterEvent", event, result)
-        return false
-    end
-
-    if result == false then
-        if RGX and type(RGX.Debug) == "function" then
-            RGX:Debug("RegisterEvent rejected", event)
-        end
-        return false
-    end
-
+    frame:RegisterEvent(event)
     return true
 end
 
@@ -79,12 +61,7 @@ local function safeUnregisterFrameEvent(frame, event)
         return false
     end
 
-    local ok, err = pcall(frame.UnregisterEvent, frame, event)
-    if not ok then
-        reportEventRegistrationError("UnregisterEvent", event, err)
-        return false
-    end
-
+    frame:UnregisterEvent(event)
     return true
 end
 
