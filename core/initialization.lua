@@ -99,7 +99,7 @@ RGX:RegisterEvent("ADDON_LOADED", function(_, addon)
 
         TryInit("RGXFonts")
         TryInit("RGXSharedMedia")
-        TryInit("RGXCombat")
+        -- RGXCombat deferred to PLAYER_LOGIN — RegisterEvent is blocked during ADDON_LOADED in combat
         TryInit("RGXPetBattles")
         TryInit("RGXReputation")
         TryInit("RGXAchievement")
@@ -127,3 +127,15 @@ RGX:RegisterEvent("ADDON_LOADED", function(_, addon)
         RGX:UnregisterEvent("ADDON_LOADED", "RGX_Init")
     end
 end, "RGX_Init")
+
+-- Combat module deferred: RegisterEvent is protected during ADDON_LOADED in combat.
+RGX:RegisterEvent("PLAYER_LOGIN", function()
+    local mod = _G.RGXCombat
+    if mod and type(mod.Init) == "function" then
+        local ok, err = pcall(mod.Init, mod)
+        if not ok then
+            print("|cFFFF4444[RGX] Init error RGXCombat: " .. tostring(err) .. "|r")
+        end
+    end
+    RGX:UnregisterEvent("PLAYER_LOGIN", "RGX_CombatInit")
+end, "RGX_CombatInit")
