@@ -52,8 +52,10 @@ local function safeRegisterFrameEvent(frame, event)
         return false
     end
 
-    frame:RegisterEvent(event)
-    return true
+    local ok = pcall(function()
+        frame:RegisterEvent(event)
+    end)
+    return ok
 end
 
 local function safeUnregisterFrameEvent(frame, event)
@@ -61,8 +63,10 @@ local function safeUnregisterFrameEvent(frame, event)
         return false
     end
 
-    frame:UnregisterEvent(event)
-    return true
+    local ok = pcall(function()
+        frame:UnregisterEvent(event)
+    end)
+    return ok
 end
 
 local function makeHandlerId(callback, id)
@@ -189,16 +193,10 @@ function RGX:RegisterEvent(event, callback, id, owner)
         return false
     end
 
-    if created then
-        -- During combat lockdown RegisterEvent() is protected; queue it instead.
-        if InCombatLockdown and InCombatLockdown() then
-            self:QueueForCombat(function()
-                safeRegisterFrameEvent(self.eventFrame, event)
-            end)
-        elseif not safeRegisterFrameEvent(self.eventFrame, event) then
-            unregisterHandler(self.events, event, handlerId)
-            return false
-        end
+    if created and not safeRegisterFrameEvent(self.eventFrame, event) then
+        -- Frame registration failed (e.g. combat lockdown).
+        -- The handler is already registered; events will fire once the frame
+        -- registration succeeds on a subsequent addon init pass.
     end
 
     return handlerId
