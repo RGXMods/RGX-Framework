@@ -189,9 +189,16 @@ function RGX:RegisterEvent(event, callback, id, owner)
         return false
     end
 
-    if created and not safeRegisterFrameEvent(self.eventFrame, event) then
-        unregisterHandler(self.events, event, handlerId)
-        return false
+    if created then
+        -- During combat lockdown RegisterEvent() is protected; queue it instead.
+        if InCombatLockdown and InCombatLockdown() then
+            self:QueueForCombat(function()
+                safeRegisterFrameEvent(self.eventFrame, event)
+            end)
+        elseif not safeRegisterFrameEvent(self.eventFrame, event) then
+            unregisterHandler(self.events, event, handlerId)
+            return false
+        end
     end
 
     return handlerId
