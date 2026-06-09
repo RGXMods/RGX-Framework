@@ -309,6 +309,31 @@ function RGX:SafeCloseDropDownMenus(...)
     return queueSecureCall(self, "CloseDropDownMenus", CloseDropDownMenus, ...)
 end
 
+function RGX:SafeEnable(button)
+    if not button or type(button.Enable) ~= "function" then return false end
+    return queueSecureCall(self, "Enable", button.Enable, button)
+end
+
+function RGX:SafeDisable(button)
+    if not button or type(button.Disable) ~= "function" then return false end
+    return queueSecureCall(self, "Disable", button.Disable, button)
+end
+
+function RGX:SafeSetChecked(checkbox, checked)
+    if not checkbox or type(checkbox.SetChecked) ~= "function" then return false end
+    return queueSecureCall(self, "SetChecked", checkbox.SetChecked, checkbox, checked)
+end
+
+function RGX:SafeSetValue(slider, value)
+    if not slider or type(slider.SetValue) ~= "function" then return false end
+    return queueSecureCall(self, "SetValue", slider.SetValue, slider, value)
+end
+
+function RGX:SafeSetMinMaxValues(slider, min, max)
+    if not slider or type(slider.SetMinMaxValues) ~= "function" then return false end
+    return queueSecureCall(self, "SetMinMaxValues", slider.SetMinMaxValues, slider, min, max)
+end
+
 function RGX:UpdateTimers(elapsed)
     local budget = self.timerBudget or {}
     local maxPerFrame = tonumber(budget.maxPerFrame) or 120

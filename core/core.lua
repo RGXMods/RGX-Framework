@@ -86,6 +86,16 @@ RGX.moduleAliases = {
   reputation = "RGXReputation",
   databroker = "RGXDataBroker",
   sound = "RGXSound",
+  collectibles = "RGXCollectibles",
+  loot = "RGXLoot",
+  achievement = "RGXAchievement",
+  levelup = "RGXLevelUp",
+  quest = "RGXQuest",
+  honor = "RGXHonor",
+  delves = "RGXDelves",
+  housing = "RGXHousing",
+  tradingpost = "RGXTradingPost",
+  prey = "RGXPrey",
 }
 
 local function ResolveModuleAlias(self, normalizedName)
@@ -161,7 +171,31 @@ function RGX:GetDesign()       return self:GetModule("design")       end
 function RGX:GetCombat()       return self:GetModule("combat")       end
 function RGX:GetReputation()   return self:GetModule("reputation")   end
 function RGX:GetDataBroker() return self:GetModule("databroker") end
-function RGX:GetSound() return self:GetModule("sound") end
+function RGX:GetSound()        return self:GetModule("sound")        end
+function RGX:GetCollectibles() return self:GetModule("collectibles") end
+function RGX:GetLoot()         return self:GetModule("loot")         end
+function RGX:GetAchievement()  return self:GetModule("achievement")  end
+function RGX:GetLevelUp()      return self:GetModule("levelup")      end
+function RGX:GetQuest()        return self:GetModule("quest")        end
+function RGX:GetHonor()        return self:GetModule("honor")        end
+function RGX:GetDelves()       return self:GetModule("delves")       end
+function RGX:GetHousing()      return self:GetModule("housing")      end
+function RGX:GetTradingPost()  return self:GetModule("tradingpost")  end
+function RGX:GetPrey()         return self:GetModule("prey")         end
+
+function RGX:SetTheme(config)
+    local Design = self:GetDesign()
+    if Design and type(Design.SetTheme) == "function" then
+        Design:SetTheme(config)
+    end
+end
+
+function RGX:SetHighlightColor(color, accent)
+    local Design = self:GetDesign()
+    if Design and type(Design.SetHighlightColor) == "function" then
+        Design:SetHighlightColor(color, accent)
+    end
+end
 
 -- One-call sound playback: looks up path from RGXSharedMedia and plays it.
 -- RGX:PlaySound("mysoundpack:Kill Shot")

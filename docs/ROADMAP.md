@@ -6,6 +6,24 @@ RGX-Framework is a modern WoW addon framework — an alternative to Ace3. It shi
 
 The player-facing experience stays quiet. The author-facing experience should be powerful, predictable, and simple to adopt.
 
+The long-term goal is broader than migrating BLU. RGX should be good enough that other addon authors can use it to build polished addons faster. The existing RGX addons are reference implementations that prove and shape the framework:
+
+- ETL proves lifecycle, Traveler's Log event handling, minimap, and slash command patterns.
+- SQP proves large options panels, UI controls, fonts, and nameplate-heavy event wiring.
+- RND proves the small utility addon pattern with RGX events, timers, minimap, and settings.
+- BLU v7 proves the large sound/progression suite pattern and drives shared media/event module needs.
+
+Reusable patterns discovered in those addons should move into RGX. Addon-specific product behavior should stay in the addon.
+
+Current reference consumers:
+
+| Addon | Role |
+|---|---|
+| ETL | Lifecycle, Traveler's Log events, minimap, slash command reference |
+| SQP | Options UI, controls, fonts, nameplate event reference |
+| RND | Small utility addon reference for events, timers, minimap, slash command |
+| BLU v7 | Full sound/progression suite migration target |
+
 ---
 
 ## Core Principles
@@ -44,6 +62,17 @@ The player-facing experience stays quiet. The author-facing experience should be
 | Data broker registry | RGXDataBroker | ✅ Done |
 | Level-up sound system (variant playback, mute, settings) | RGXSound | ✅ Done |
 | Opt-in scroll container for options tabs | RGXUI | ✅ Done |
+| Addon theme highlight tokens | RGXDesign/RGXUI | ✅ Done |
+| Achievement callbacks | RGXAchievement | ✅ Done |
+| Level-up callbacks | RGXLevelUp | ✅ Done |
+| Collectible unlock callbacks | RGXCollectibles | ✅ Done |
+| Loot/currency callbacks | RGXLoot | ✅ Done |
+| Quest lifecycle/progress callbacks | RGXQuest | ✅ Done |
+| Honor level callbacks | RGXHonor | ✅ Done |
+| Delve companion/lives callbacks | RGXDelves | ✅ Done |
+| Housing progression/decor callbacks | RGXHousing | ✅ Done |
+| Trading Post callbacks | RGXTradingPost | ✅ Done |
+| Prey hunt callbacks | RGXPrey | ✅ Done |
 
 † Dormant — in-tree but not loaded by the XML loader since v1.5.18. `Get*()` returns `nil` until re-added to `RGX-Framework.xml`.
 

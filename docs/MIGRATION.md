@@ -4,6 +4,34 @@ Guide for addon authors moving from Ace3, LibSharedMedia, or standalone implemen
 
 ---
 
+## Migration Goal
+
+RGX-Framework should make addon development easier, not force every addon into the same shape.
+
+Your addon remains a normal addon table with its own branding, saved variables, features, and product logic. RGX provides reusable building blocks:
+
+- `RequiredDeps: RGX-Framework`
+- lifecycle helpers
+- event, timer, and slash-command APIs
+- minimap button creation
+- options UI controls
+- media, font, texture, and sound helpers
+- theme/highlight tokens
+- common gameplay callback modules
+
+Use the existing RGX-native addons as references:
+
+| Addon | Use As Reference For |
+|---|---|
+| ETL | lifecycle, Traveler's Log events, minimap launchers |
+| SQP | options panels, UI controls, fonts, nameplate-heavy event wiring |
+| RND | small utility addon structure with RGX events/timers/slash/minimap |
+| BLU v7 | larger suite migration, sound categories, media registry pressure |
+
+The intended migration is incremental: keep the addon working, move one repeated system at a time into RGX, and leave addon-specific behavior in the addon.
+
+---
+
 ## From Ace3
 
 ### Addon Object / Lifecycle

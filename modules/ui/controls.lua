@@ -153,74 +153,329 @@ function UI:CreateColorPicker(parent, options)
 end
 
 --[[============================================================================
-    SLIDER CONTROL
+SLIDER CONTROL
+
+Custom track-style slider using RGX brand colors.
+- Drag, click, or scroll to change value
+- Value label appears on hover
+- Reset button snaps to default
+
+Usage:
+	UI:CreateSlider(parent, {
+		key = "scale",
+		label = "Scale",
+		min = 0.5,
+		max = 2,
+		step = 0.1,
+		default = 1,
+		storage = myDB,
+		suffix = "%",
+		onChange = function(value) end,
+		width = 200,
+	})
 ============================================================================]]
 
 function UI:CreateSlider(parent, options)
-    options = options or {}
-    local key = options.key or "value"
-    local label = options.label or "Slider"
-    local min = options.min or 0
-    local max = options.max or 100
-    local step = options.step or 1
-    local default = options.default or min
-    local storage = options.storage or {}
-    local suffix = options.suffix or ""
-    local onChange = options.onChange or function() end
-    local width = options.width or 200
-    
-    local container = CreateFrame("Frame", nil, parent)
-    container:SetSize(width, 50)
-    
-    -- Label with current value
-    container.label = self:CreateLabel(container, {
-        text = label,
-        size = "small",
-        color = "muted"
-    })
-    container.label:SetPoint("TOPLEFT", 0, 0)
-    
-    container.valueLabel = self:CreateLabel(container, {
-        text = (storage[key] or default) .. suffix,
-        size = "small"
-    })
-    container.valueLabel:SetPoint("TOPRIGHT", 0, 0)
-    
-    -- Slider
-    local slider = CreateFrame("Slider", nil, container, "OptionsSliderTemplate")
-    slider:SetSize(width, 20)
-    slider:SetPoint("TOPLEFT", container.label, "BOTTOMLEFT", 0, -4)
-    slider:SetMinMaxValues(min, max)
-    slider:SetValueStep(step)
-    slider:SetValue(storage[key] or default)
-    
-    -- Style the slider
-    slider.Low:SetText("")
-    slider.High:SetText("")
-    slider.Text:SetText("")
-    
-    slider:SetScript("OnValueChanged", function(self, value)
-        value = math.floor(value / step + 0.5) * step
-        storage[key] = value
-        container.valueLabel:SetText(value .. suffix)
-        onChange(value)
-    end)
-    
-    -- Reset button
-    local reset = self:CreateResetButton(container, function()
-        slider:SetValue(default)
-        storage[key] = default
-        container.valueLabel:SetText(default .. suffix)
-        onChange(default)
-    end)
-    reset:SetPoint("TOPLEFT", slider, "TOPRIGHT", 8, 0)
+	options = options or {}
+	local key = options.key or "value"
+	local label = options.label or "Slider"
+	local min = options.min or 0
+	local max = options.max or 100
+	local step = options.step or 1
+	local default = options.default or min
+	local storage = options.storage or {}
+	local suffix = options.suffix or ""
+	local onChange = options.onChange or function() end
+	local sliderWidth = options.width or 200
 
-    container.slider = slider
-    return container
+	local D = RGX:GetDesign()
+
+	local container = CreateFrame("Frame", nil, parent)
+	container:SetSize(sliderWidth + 32, 38)
+
+	container.label = self:CreateLabel(container, {
+		text = label,
+		size = "small",
+		color = "muted"
+	})
+	container.label:SetPoint("TOPLEFT", 0, 0)
+
+	container.valueLabel = self:CreateLabel(container, {
+		text = (storage[key] or default) .. suffix,
+		size = "small"
+	})
+	container.valueLabel:SetPoint("TOPRIGHT", -28, 0)
+
+	local trackFrame = CreateFrame("Frame", nil, container)
+	trackFrame:SetPoint("TOPLEFT", container.label, "BOTTOMLEFT", 0, -4)
+	trackFrame:SetPoint("TOPRIGHT", container.valueLabel, "BOTTOMRIGHT", 0, -4)
+	trackFrame:SetHeight(18)
+
+	local button = CreateFrame("Button", nil, trackFrame)
+	button:SetAllPoints(trackFrame)
+	button:SetHeight(18)
+
+	local valueLabel = trackFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	valueLabel:SetTextColor(D:Unpack("subtext"))
+	valueLabel:SetPoint("TOP", button, "BOTTOM", 0, 2)
+	valueLabel:Hide()
+
+	button:SetScript("OnEnter", function() valueLabel:Show() end)
+	button:SetScript("OnLeave", function() valueLabel:Hide() end)
+
+	local track = trackFrame:CreateTexture(nil, "ARTWORK")
+	track:SetHeight(4)
+	track:SetPoint("LEFT", button, "LEFT", 0, 0)
+	track:SetPoint("RIGHT", button, "RIGHT", 0, 0)
+	track:SetPoint("CENTER", button, "CENTER", 0, 0)
+	track:SetColorTexture(D:Unpack("track"))
+
+	local fill = trackFrame:CreateTexture(nil, "ARTWORK")
+	fill:SetHeight(4)
+	fill:SetPoint("LEFT", track, "LEFT", 0, 0)
+	fill:SetColorTexture(D:Unpack("primary"))
+
+	local thumb = trackFrame:CreateTexture(nil, "ARTWORK")
+	thumb:SetSize(8, 8)
+	thumb:SetTexture("Interface\\Buttons\\WHITE8x8")
+	thumb:SetVertexColor(D:Unpack("primary"))
+
+	local function valueToPercent(value)
+		if max == min then return 0 end
+		return (value - min) / (max - min)
+	end
+
+	local function percentToValue(pct)
+		local raw = min + pct * (max - min)
+		local snapped = math.floor(raw / step + 0.5) * step
+		return math.max(min, math.min(max, snapped))
+	end
+
+	local updating = false
+	local function apply(value)
+		updating = true
+		value = math.floor(value / step + 0.5) * step
+		value = math.max(min, math.min(max, value))
+		storage[key] = value
+		container.valueLabel:SetText(value .. suffix)
+		valueLabel:SetText(value .. suffix)
+
+		local function updateVisuals()
+			local trackWidth = track:GetWidth()
+			if trackWidth < 1 then return false end
+			local pct = valueToPercent(value)
+			local fillW = math.max(4, trackWidth * pct)
+			fill:SetWidth(fillW)
+			thumb:ClearAllPoints()
+			thumb:SetPoint("CENTER", track, "LEFT", fillW, 0)
+			return true
+		end
+
+		if not updateVisuals() then
+			trackFrame:SetScript("OnUpdate", function()
+				if updateVisuals() then
+					trackFrame:SetScript("OnUpdate", nil)
+				end
+			end)
+		end
+		updating = false
+		onChange(value)
+	end
+
+	local dragging = false
+
+	button:SetScript("OnMouseDown", function(self, clickButton)
+		if clickButton == "RightButton" then return end
+		local cursorX = GetCursorPosition()
+		local scale = self:GetEffectiveScale()
+		local left = self:GetLeft() and (self:GetLeft() * scale) or 0
+		local w = math.max(1, (self:GetWidth() or 1) * scale)
+		local pct = math.max(0, math.min(1, (cursorX - left) / w))
+		apply(percentToValue(pct))
+		dragging = true
+	end)
+
+	button:SetScript("OnMouseUp", function()
+		dragging = false
+	end)
+
+	button:SetScript("OnUpdate", function(self)
+		if not dragging then return end
+		if not IsMouseButtonDown("LeftButton") then
+			dragging = false
+			return
+		end
+		local cursorX = GetCursorPosition()
+		local scale = self:GetEffectiveScale()
+		local left = self:GetLeft() and (self:GetLeft() * scale) or 0
+		local w = math.max(1, (self:GetWidth() or 1) * scale)
+		local pct = math.max(0, math.min(1, (cursorX - left) / w))
+		apply(percentToValue(pct))
+	end)
+
+	button:SetScript("OnMouseWheel", function(self, delta)
+		local current = storage[key] or default
+		local newVal = current + delta * step
+		apply(newVal)
+	end)
+	button:EnableMouseWheel(true)
+
+	local reset = self:CreateResetButton(container, function()
+		apply(default)
+	end)
+	reset:SetPoint("RIGHT", container, "RIGHT", 0, -10)
+
+	apply(storage[key] or default)
+
+	container.SetValue = apply
+	container.GetValue = function() return storage[key] or default end
+
+	return container
 end
 
 --[[============================================================================
-    TOGGLE CONTROL
+VOLUME SLIDER CONTROL
+
+3-position discrete slider (Low / Medium / High) using the RGX brand colors.
+Click or scroll to cycle. Label appears below on hover.
+
+Usage:
+	UI:CreateVolumeSlider(parent, {
+		key = "volume",
+		storage = myDB,
+		default = "medium",
+		onChange = function(volume) end,
+	})
+
+Options:
+	key      - string, storage key (default "volume")
+	storage  - table, SavedVariables ref (default {})
+	default  - "low"|"medium"|"high" (default "medium")
+	onChange - callback(volumeString) (default noop)
+	width    - number, track width (default 64)
+============================================================================]]
+
+function UI:CreateVolumeSlider(parent, options)
+	options = options or {}
+	local key = options.key or "volume"
+	local storage = options.storage or {}
+	local default = options.default or "medium"
+	local onChange = options.onChange or function() end
+	local width = options.width or 64
+
+	local D = RGX:GetDesign()
+
+	local frame = CreateFrame("Frame", nil, parent)
+	frame:SetHeight(18)
+
+	local button = CreateFrame("Button", nil, frame)
+	button:SetAllPoints(frame)
+	button:SetHeight(18)
+
+	local label = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	label:SetTextColor(D:Unpack("subtext"))
+	label:SetPoint("TOP", button, "BOTTOM", 0, 2)
+	label:Hide()
+
+	button:SetScript("OnEnter", function() label:Show() end)
+	button:SetScript("OnLeave", function() label:Hide() end)
+
+	local track = frame:CreateTexture(nil, "ARTWORK")
+	track:SetHeight(4)
+	track:SetPoint("LEFT", button, "LEFT", 0, 0)
+	track:SetPoint("RIGHT", button, "RIGHT", 0, 0)
+	track:SetPoint("CENTER", button, "CENTER", 0, 0)
+	track:SetColorTexture(D:Unpack("track"))
+
+	local fill = frame:CreateTexture(nil, "ARTWORK")
+	fill:SetHeight(4)
+	fill:SetPoint("LEFT", track, "LEFT", 0, 0)
+	fill:SetColorTexture(D:Unpack("primary"))
+
+	local thumb = frame:CreateTexture(nil, "ARTWORK")
+	thumb:SetSize(8, 8)
+	thumb:SetTexture("Interface\\Buttons\\WHITE8x8")
+	thumb:SetVertexColor(D:Unpack("primary"))
+
+	local function getVolume()
+		return storage[key] or default
+	end
+
+	local function setVolume(volume)
+		storage[key] = volume
+		onChange(volume)
+	end
+
+	local function apply(volume)
+		if volume ~= "low" and volume ~= "high" then
+			volume = "medium"
+		end
+		setVolume(volume)
+
+		local function updateVisuals()
+			local trackWidth = track:GetWidth()
+			if trackWidth < 1 then return false end
+			local pct = 0.50
+			if volume == "low" then
+				pct = 0.15
+			elseif volume == "high" then
+				pct = 0.85
+			end
+			local fillW = math.max(4, trackWidth * pct)
+			fill:SetWidth(fillW)
+			thumb:ClearAllPoints()
+			thumb:SetPoint("CENTER", track, "LEFT", fillW, 0)
+			label:SetText(volume:gsub("^%l", string.upper))
+			return true
+		end
+
+		if not updateVisuals() then
+			frame:SetScript("OnUpdate", function()
+				if updateVisuals() then
+					frame:SetScript("OnUpdate", nil)
+				end
+			end)
+		end
+	end
+
+	button:SetScript("OnMouseDown", function(self)
+		local cursorX = GetCursorPosition()
+		local scale = self:GetEffectiveScale()
+		local left = self:GetLeft() and (self:GetLeft() * scale) or 0
+		local w = math.max(1, (self:GetWidth() or 1) * scale)
+		local percent = math.max(0, math.min(1, (cursorX - left) / w))
+		if percent < 0.34 then
+			apply("low")
+		elseif percent > 0.66 then
+			apply("high")
+		else
+			apply("medium")
+		end
+	end)
+
+	button:SetScript("OnMouseWheel", function()
+		local current = getVolume()
+		if current == "low" then
+			apply("medium")
+		elseif current == "medium" then
+			apply("high")
+		else
+			apply("low")
+		end
+	end)
+	button:EnableMouseWheel(true)
+
+	apply(getVolume())
+
+	frame.Refresh = function()
+		apply(getVolume())
+	end
+
+	return frame
+end
+
+--[[============================================================================
+TOGGLE CONTROL
 ============================================================================]]
 
 function UI:CreateToggle(parent, options)
@@ -274,6 +529,7 @@ function UI:CreateLabel(parent, options)
     local text = options.text or ""
     local size = options.size or "normal"  -- small, normal, large
     local color = options.color or "normal"  -- normal, muted, accent, red, green
+    local D = RGX:GetDesign()
     
     local label = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     
@@ -286,17 +542,20 @@ function UI:CreateLabel(parent, options)
         label:SetFontObject("GameFontNormal")
     end
     
-    -- Set color
-    local colors = {
-        muted = {0.7, 0.7, 0.7},
-        accent = {0, 0.64, 1},
-        red = {1, 0.2, 0.2},
-        green = {0.2, 1, 0.2},
-        yellow = {1, 1, 0.2}
+    local colorKeys = {
+        normal = "text",
+        muted  = "subtext",
+        accent = "primary",
+        red    = "error",
+        green  = "success",
+        yellow = "warning",
     }
-    
-    local c = colors[color] or {1, 1, 1}
-    label:SetTextColor(c[1], c[2], c[3])
+
+    if D then
+        label:SetTextColor(D:Unpack(colorKeys[color] or "text"))
+    else
+        label:SetTextColor(1, 1, 1)
+    end
     
     label:SetText(text)
     return label
@@ -308,20 +567,21 @@ end
 
 function UI:CreateResetButton(parent, onClick)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    local D = RGX:GetDesign()
     -- 24px wide: 2px transparent margin each side keeps the visual clear of adjacent controls
     btn:SetSize(24, 16)
 
     local bg = btn:CreateTexture(nil, "BACKGROUND")
     bg:SetPoint("TOPLEFT",     btn, "TOPLEFT",     2,  0)
     bg:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -2, 0)
-    bg:SetColorTexture(0.05, 0.07, 0.10, 1)
+    bg:SetColorTexture(D:Unpack("surface"))
     btn.bg = bg
 
     local border = CreateFrame("Frame", nil, btn, "BackdropTemplate")
     border:SetPoint("TOPLEFT",     btn, "TOPLEFT",     2,  0)
     border:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -2, 0)
     border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    border:SetBackdropBorderColor(0.14, 0.20, 0.28, 1)
+    border:SetBackdropBorderColor(D:Unpack("border"))
     btn.border = border
 
     local lbl = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -329,24 +589,24 @@ function UI:CreateResetButton(parent, onClick)
     lbl:SetJustifyH("CENTER")
     lbl:SetJustifyV("MIDDLE")
     lbl:SetText("R")
-    lbl:SetTextColor(0.70, 0.70, 0.70, 1)
+    lbl:SetTextColor(D:Unpack("subtext"))
     btn.lbl = lbl
 
     btn:SetScript("OnClick", onClick)
     btn:SetScript("OnEnter", function(self)
         local D = RGX:GetDesign()
-        local pr, pg, pb = D and D:Unpack("primary") or 0.345, 0.745, 0.506
-        self.border:SetBackdropBorderColor(pr, pg, pb, 1)
-        self.bg:SetColorTexture(0.11, 0.18, 0.24, 1)
-        self.lbl:SetTextColor(pr, pg, pb, 1)
+        self.border:SetBackdropBorderColor(D:Unpack("primary"))
+        self.bg:SetColorTexture(D:Unpack("hover"))
+        self.lbl:SetTextColor(D:Unpack("primary"))
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText("Reset to default")
         GameTooltip:Show()
     end)
     btn:SetScript("OnLeave", function(self)
-        self.border:SetBackdropBorderColor(0.14, 0.20, 0.28, 1)
-        self.bg:SetColorTexture(0.05, 0.07, 0.10, 1)
-        self.lbl:SetTextColor(0.70, 0.70, 0.70, 1)
+        local D = RGX:GetDesign()
+        self.border:SetBackdropBorderColor(D:Unpack("border"))
+        self.bg:SetColorTexture(D:Unpack("surface"))
+        self.lbl:SetTextColor(D:Unpack("subtext"))
         GameTooltip:Hide()
     end)
     return btn
@@ -362,62 +622,33 @@ function UI:CreateButton(parent, text, w, h)
     btn:SetSize(w or 120, h or 22)
     local bg = btn:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
-    bg:SetColorTexture(0.05, 0.07, 0.10, 1)
+    bg:SetColorTexture(D:Unpack("surface"))
     local border = CreateFrame("Frame", nil, btn, "BackdropTemplate")
     border:SetAllPoints()
     border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    border:SetBackdropBorderColor(0.14, 0.20, 0.28, 1)
+    border:SetBackdropBorderColor(D:Unpack("border"))
     local lbl = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     lbl:SetAllPoints()
     lbl:SetJustifyH("CENTER")
     lbl:SetJustifyV("MIDDLE")
     lbl:SetText(text or "")
-    lbl:SetTextColor(0.80, 0.80, 0.80, 1)
+    lbl:SetTextColor(D:Unpack("subtext"))
     btn:SetScript("OnEnter", function()
         local D2 = RGX:GetDesign()
-        local pr, pg, pb = D2 and D2:Unpack("primary") or 0.345, 0.745, 0.506
-        border:SetBackdropBorderColor(pr, pg, pb, 1)
-        bg:SetColorTexture(0.11, 0.18, 0.24, 1)
-        lbl:SetTextColor(pr, pg, pb, 1)
+        border:SetBackdropBorderColor(D2:Unpack("primary"))
+        bg:SetColorTexture(D2:Unpack("hover"))
+        lbl:SetTextColor(D2:Unpack("primary"))
     end)
     btn:SetScript("OnLeave", function()
-        border:SetBackdropBorderColor(0.14, 0.20, 0.28, 1)
-        bg:SetColorTexture(0.05, 0.07, 0.10, 1)
-        lbl:SetTextColor(0.80, 0.80, 0.80, 1)
+        border:SetBackdropBorderColor(D:Unpack("border"))
+        bg:SetColorTexture(D:Unpack("surface"))
+        lbl:SetTextColor(D:Unpack("subtext"))
     end)
     return btn
 end
 
 --[[============================================================================
-DROPDOWN CONTROL
-============================================================================]]
-
-function UI:CreateDropdown(parent, options)
-  options = options or {}
-  local Dropdowns = RGX:GetModule("dropdowns")
-  if not Dropdowns then
-    return self:CreateLabel(parent, {text = "RGX Dropdowns not loaded", color = "red"})
-  end
-
-  local items = options.items or {}
-  if type(options.items) == "function" then
-    items = options.items
-  end
-
-  local holder = Dropdowns:CreateNestedDropdown(parent, {
-    label = options.label or "Dropdown",
-    items = items,
-    value = options.value,
-    onChange = options.onChange or function() end,
-    buttonWidth = options.width or 200,
-    placeholder = options.placeholder or "Select",
-  })
-
-  return holder
-end
-
---[[============================================================================
-SECTION/PANEL
+    SECTION/PANEL
 ============================================================================]]
 
 function UI:CreateSection(parent, options)
@@ -429,8 +660,10 @@ function UI:CreateSection(parent, options)
     local section = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     section:SetSize(width, height)
     section:SetBackdrop(self.backdrop)
-    section:SetBackdropColor(0.08, 0.08, 0.08, 0.85)
-    section:SetBackdropBorderColor(0.188, 0.212, 0.231, 1)
+    local D = RGX:GetDesign()
+    local sr, sg, sb = D:Unpack("surface")
+    section:SetBackdropColor(sr, sg, sb, 0.85)
+    section:SetBackdropBorderColor(D:Unpack("border"))
     
     -- Header
     section.header = self:CreateLabel(section, {
@@ -456,12 +689,14 @@ function UI:CreatePreviewFrame(parent, options)
     options = options or {}
     local width = options.width or 250
     local height = options.height or 150
+    local D = RGX:GetDesign()
     
     local frame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     frame:SetSize(width, height)
     frame:SetBackdrop(self.backdrop)
-    frame:SetBackdropColor(0.1, 0.1, 0.1, 0.9)
-    frame:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
+    local sr, sg, sb = D:Unpack("surface")
+    frame:SetBackdropColor(sr, sg, sb, 0.9)
+    frame:SetBackdropBorderColor(D:Unpack("border"))
     
     -- Label
     frame.label = self:CreateLabel(frame, {
@@ -479,7 +714,7 @@ function UI:CreatePreviewFrame(parent, options)
     -- Background for preview
     frame.preview.bg = frame.preview:CreateTexture(nil, "BACKGROUND")
     frame.preview.bg:SetAllPoints()
-    frame.preview.bg:SetColorTexture(0.15, 0.15, 0.15, 1)
+    frame.preview.bg:SetColorTexture(D:Unpack("background"))
     
     return frame
 end
