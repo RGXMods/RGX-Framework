@@ -33,7 +33,7 @@
 <Script file="modules/ui/options.lua"/>
 <Script file="modules/minimap/minimap.lua"/>
   <Script file="modules/sharedmedia/sharedmedia.lua"/>
-  <Script file="modules/combat/combat.lua"/>
+  <!-- <Script file="modules/combat/combat.lua"/> -->
   <Script file="modules/petbattles/petbattles.lua"/>
   <Script file="modules/reputation/reputation.lua"/>
   <Script file="modules/databroker/databroker.lua"/>
