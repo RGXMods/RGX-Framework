@@ -99,7 +99,7 @@ RGX:RegisterEvent("ADDON_LOADED", function(_, addon)
 
         TryInit("RGXFonts")
         TryInit("RGXSharedMedia")
-        -- RGXCombat deferred to PLAYER_LOGIN — RegisterEvent is blocked during ADDON_LOADED in combat
+        -- RGXCombat currently dormant — RegisterEvent blocked during load screen
         TryInit("RGXPetBattles")
         TryInit("RGXReputation")
         TryInit("RGXAchievement")
@@ -128,14 +128,6 @@ RGX:RegisterEvent("ADDON_LOADED", function(_, addon)
     end
 end, "RGX_Init")
 
--- Combat module deferred: RegisterEvent is blocked during loading screen into combat.
--- C_Timer.After(0.5) ensures the world is fully loaded and InCombatLockdown() is accurate.
-RGX:RegisterEvent("PLAYER_LOGIN", function()
-    C_Timer.After(0.5, function()
-        local mod = _G.RGXCombat
-        if mod and type(mod.Init) == "function" then
-            mod:Init()
-        end
-    end)
-    RGX:UnregisterEvent("PLAYER_LOGIN", "RGX_CombatInit")
-end, "RGX_CombatInit")
+-- RGXCombat currently dormant — RegisterEvent blocked during load screen into combat zones.
+-- See modules/combat/combat.lua for the module code.
+-- RGX:RegisterEvent("PLAYER_LOGIN", ... deferred combat init removed)
