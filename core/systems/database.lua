@@ -458,7 +458,7 @@ end
 --   1. Is "something" a method on DB?        → return the function
 --   2. Is it "global"?                       → return the cross-character table
 --   3. Is it an internal field?              → return it from the proxy itself
---   4. Otherwise                             → read from active profile, then defaults
+--   4. Otherwise                             → read from active profile (only)
 DB.__index = function(self, key)
   local method = DB[key]
   if method then return method end                            -- step 1
@@ -474,10 +474,9 @@ DB.__index = function(self, key)
 
   local profile = ActiveProfile(self)                         -- step 4
   if profile then
-    local val = profile[key]
-    if val ~= nil then return val end
+    return profile[key]
   end
-  return self._defaults and self._defaults[key]
+  return nil
 end
 
 -- __newindex: called when you do db.something = value

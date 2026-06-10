@@ -19,34 +19,31 @@ RGX-Framework is a modern, self-contained WoW Retail addon framework — an alte
 
 ```lua
 local MyAddon = _G.RGXFramework.Addon("MyAddon", {
-    db    = { enabled = true, volume = 1.0 },
-    slash = true,
-    icon  = "Interface\\AddOns\\MyAddon\\icon.tga",
-    onInit = function(self)
-        self:Print("Ready! " .. self.db.enabled)
-    end,
+    db,                              -- db = true  = auto-creates MyAddonDB
+    slash   = "myaddon",             -- /myaddon
+    minimap = "Interface\\AddOns\\MyAddon\\icon.tga",
+    brand   = "05dffa",              -- chat prefix color
+    welcome = "MyAddon loaded!",
 })
 ```
 
-That's it. Database, slash command, minimap button, branded logging — all wired.
+That's it — database, slash command, minimap button, branded logging.
 
-**3. Use modules:**
+**3. Modules — pick what you need:**
 
 ```lua
--- Events
-RGX:RegisterEvent("PLAYER_LOGIN", function() print("logged in") end)
-
--- Fonts
 local Fonts = RGX:GetFonts()
-myLabel:SetFont(Fonts:GetPath("Inter-Regular"), 14, "OUTLINE")
+myLabel:SetFont(Fonts:GetPath("Inter-Regular"), 14)
 
--- Dropdowns
 local Drops = RGX:GetDropdowns()
 Drops:CreateNestedDropdown(parent, {
     label = "Sound",
     items = { { text = "Fanfare", value = "fanfare" } },
     onChange = function(v) print(v) end,
 })
+
+local Combat = RGX:GetCombat()
+Combat:OnEnter(function() showMyTexture() end)
 ```
 
 ---
