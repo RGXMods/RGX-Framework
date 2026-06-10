@@ -279,24 +279,24 @@ end
 
 --[[
         local MyAddon = RGX.Addon("MyAddon", {
-            db,
-            slash   = "myaddon",
-            minimap = "Interface\\AddOns\\MyAddon\\icon.tga",
-            brand   = "05dffa",
-            welcome = "MyAddon loaded!",
+            db    = { enabled = true },
+            slash = "myaddon",
+            brand = "05dffa",
             options = {
-                General = {
-                    { toggle = "enabled" },
-                    { slider = "volume", min = 0, max = 100 },
-                },
+                General = { { toggle = "enabled" } },
             },
+            onInit = function(self)
+                self:Print("Ready!")          -- product behavior starts here
+                local Combat = RGX:GetCombat()
+                Combat:OnEnter(function() ... end)
+            end,
         })
 
-    What you get:
-      self.name       — "MyAddon"
-      self.db         — proxy (db.enabled reads/writes profile)
-      self.panel      — options panel, opens via /myaddon
-      self:Print(msg) — |cff05dffa[MYADDON]|r message
+    Framework owns:            addon owns (in onInit):
+      db, slash, minimap        event wiring (Combat:OnEnter, LevelUp:OnLevelUp)
+      brand, welcome            module init (sound registry, shared media)
+      options panel chrome      slash subcommands, feature toggles
+      Print/Warn/Error          product-specific logic
 
     opts:
       db      → true = empty defaults, or { key = val } = with defaults
@@ -406,6 +406,11 @@ function RGX.Addon(name, opts)
         -- Welcome message
         if opts.welcome then
             addon:Print(opts.welcome)
+        end
+
+        -- Product behavior — addon owns this
+        if opts.onInit then
+            opts.onInit(addon)
         end
 
         self:UnregisterEvent("ADDON_LOADED", name .. "_RGXAddon")
