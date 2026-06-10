@@ -1,8 +1,79 @@
-# RGX-Framework Wiki
+# RGX-Framework
 
-Welcome to the RGX-Framework wiki, the complete reference for the modern WoW addon framework.
+## Directive
 
-## Quick Links
+**Make addon building fast, easy, and fun.** Everything in RGX-Framework exists to serve this goal:
+
+- An addon author should be able to spin up a complete addon with options, minimap icon, slash commands, themed UI, nested dropdowns, sound playback, profiles, and event handling **in minutes** — not days.
+- Every API should work with **one or two lines of code** for the common case.
+- Complexity lives inside the framework. The consumer surface stays simple.
+- New features are extracted from real addon usage (BLU, ETL, SQP, RND), not designed in isolation.
+- Dormant code that causes errors in production is disabled until a safe load path exists.
+
+When adding or changing anything in RGX-Framework, ask: _does this make addon building easier for the next author?_
+
+## What It Is
+
+One `RequiredDeps` entry, everything included. No embedding, no version conflicts, no library chains. A modern alternative to Ace3.
+
+## Quick Start
+
+```toc
+## RequiredDeps: RGX-Framework
+```
+
+```lua
+local addonName, addonTable = ...
+local RGX = _G.RGXFramework
+assert(RGX, "RGX-Framework is required")
+
+-- Database with profile support
+addonTable.db = RGX:NewDatabase("MyAddonDB", { enabled = true, volume = 1.0 })
+
+-- Events
+RGX:RegisterEvent("PLAYER_LOGIN", function() print("Hello!") end)
+
+-- Minimap button
+local minimap = RGX:GetMinimap()
+minimap:CreateButton("MyAddon", { icon = "Interface\\Icons\\inv_misc_questionmark" })
+
+-- Slash command
+RGX:RegisterSlashCommand("myaddon", function() print("Options opened") end)
+
+-- Dropdown with nested menus
+local Drops = RGX:GetDropdowns()
+local dd = Drops:CreateNestedDropdown(parent, {
+    label = "Choose Sound",
+    items = {
+        { text = "Fanfare", value = "fanfare" },
+        { text = "Chime",   value = "chime"   },
+    },
+    onChange = function(value) print("selected:", value) end,
+})
+
+-- Options panel
+local Options = RGX:GetOptions()
+Options:CreatePanel("MyAddon", {
+    tabs = {
+        { label = "General", create = function(parent)
+            Options:Toggle(parent, { label = "Enabled", get = function() return MyAddon.db.enabled end, set = function(v) MyAddon.db.enabled = v end })
+        end},
+    },
+})
+```
+
+## Reference Addons
+
+| Addon | What It Proves |
+|---|---|
+| BLU | Full sound/progression suite — profiles, shared media, combat, 15+ event triggers |
+| ETL | Traveler's Log handling, minimap, slash commands |
+| SQP | Large options panels, UI controls, fonts, nameplate events |
+| RND | Small utility addon pattern — events, timers, minimap, settings |
+
+Lessons from these addons feed back into RGX-Framework when a pattern is reusable.
+
+## Docs
 
 - [[Architecture]] - Load order, module system, lifecycle, conventions
 - [[API Reference]] - Complete public API by module
@@ -11,20 +82,3 @@ Welcome to the RGX-Framework wiki, the complete reference for the modern WoW add
 - [[Theming & Design]] - Design palette, color usage, font styling, templates
 - [[Troubleshooting]] - Common issues and fixes
 - [[Migration Guide]] - From Ace3, LibSharedMedia, standalone implementations
-
-## What Is RGX-Framework?
-
-A modern WoW addon framework: one `RequiredDeps` entry, everything included. No embedding, no version conflicts, no library chains.
-
-## Project Goal
-
-RGX-Framework exists to make building World of Warcraft addons easier for other authors.
-
-It is the shared platform for the RGX addon family and future community addons:
-
-- addon authors should be able to build options panels, minimap buttons, slash commands, events, timers, media dropdowns, themes, and common WoW event callbacks without rebuilding the same foundation every time
-- existing RGX addons are reference implementations, not throwaway examples
-- ETL, SQP, and RND show the framework consumer pattern that BLU v7 is migrating toward
-- BLU, ETL, SQP, RND, and future addons should all feed lessons back into RGX when a pattern is reusable
-
-The boundary is intentional: RGX owns reusable addon-building tools; each addon owns its product behavior, branding, data model, and feature decisions.
