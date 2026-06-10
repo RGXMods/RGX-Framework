@@ -281,12 +281,12 @@ end
     Spin up an addon with a single call.
 
         local MyAddon = RGX.Addon("MyAddon", {
-            db      = { enabled = true, volume = 1.0 },
-            slash   = "myaddon",
+            db      = { enabled = true },
+            slash   = { "myaddon", "myconfig" },
             minimap = { icon = "Interface\\AddOns\\MyAddon\\icon.tga" },
-            brand   = { color = "05dffa" },   -- chat prefix "[MYADDON]" in cyan
+            brand   = { color = "05dffa" },
             onInit  = function(self)
-                self:Print("Ready!")          -- |cff05dffa[MYADDON]|r Ready!
+                self:Print("Ready!")
             end,
         })
 
@@ -294,21 +294,37 @@ end
       self.name       — "MyAddon"
       self.db         — NewDatabase proxy (db.key reads/writes profile)
       self.db.global  — cross-character storage
-      self:Print(msg) — branded output: [MYADDON] msg in your brand color
-      self:Warn(msg)  — yellow warning with prefix
-      self:Error(msg) — red error with prefix
+      self:Print(msg) — branded chat output in your brand color
+      self:Warn(msg)
+      self:Error(msg)
+
+    Everything else is modules — pick what you need in onInit:
+
+        onInit = function(self)
+            -- Combat enter / leave
+            local Combat = RGX:GetCombat()
+            Combat:OnEnter(function() showMyTexture() end)
+            Combat:OnLeave(function() hideMyTexture() end)
+
+            -- Level up
+            local LevelUp = RGX:GetLevelUp()
+            LevelUp:OnLevelUp(function() playMySound() end)
+
+            -- Profile changes
+            self.db:OnProfileChanged(function(name) refreshUI() end)
+
+            -- More events
+            RGX:RegisterEvent("ZONE_CHANGED", onZone)
+        end,
 
     opts:
-      db       → defaults table (auto-creates <Name>DB SavedVariable)
-      dbName   → override DB name (default: "<Name>DB")
-      global   → cross-character defaults
-      slash    → true for /addonname, or "mycmd" for custom
-      minimap  → { icon = "path" } to add minimap button
-      brand    → { tag = "MY", color = "58be81" } override chat prefix
-      onInit   → function(self) called when ADDON_LOADED fires
-      onSwitch → function(name, profile) called on profile change
-
-    All RGX modules are available via RGX:GetFonts(), RGX:GetDropdowns(), etc.
+      db      → defaults table (auto-creates <Name>DB SavedVariable)
+      dbName  → override DB name (default: "<Name>DB")
+      global  → cross-character defaults for db.global
+      slash   → "cmd" or { "cmd1", "cmd2" } — registers /cmd
+      minimap → { icon = "path" } — adds minimap button
+      brand   → { tag = "MY", color = "58be81" } — chat prefix
+      onInit  → function(self) — called when ADDON_LOADED fires
 --]]
 function RGX.Addon(name, opts)
     if type(name) ~= "string" or name == "" then return end
@@ -318,7 +334,7 @@ function RGX.Addon(name, opts)
     addon.name = name
     addon.framework = self
 
-    -- Brand — controls how Print/Warn/Error look in chat
+    -- Brand
     local brand = opts.brand or {}
     local tag = brand.tag or name:upper()
     local color = brand.color or "58be81"
@@ -327,7 +343,7 @@ function RGX.Addon(name, opts)
     function addon:Warn(msg)   print("|cffffcc00" .. prefix .. msg .. "|r") end
     function addon:Error(msg)  print("|cffff4444" .. prefix .. msg .. "|r") end
 
-    -- Deferred init — waits for ADDON_LOADED so SavedVariables are ready
+    -- Deferred init
     self:RegisterEvent("ADDON_LOADED", function(_, loaded)
         if loaded ~= name then return end
 
@@ -335,35 +351,31 @@ function RGX.Addon(name, opts)
         if opts.db then
             local dbName = opts.dbName or (name .. "DB")
             addon.db = self:NewDatabase(dbName, opts.db, {
-                global   = opts.global,
-                onSwitch = opts.onSwitch,
+                global = opts.global,
             })
         end
 
-        -- Minimap button
+        -- Minimap
         local minimap = opts.minimap
         if minimap and minimap.icon then
             local MM = self:GetMinimap()
             if MM then
                 MM:CreateButton(name, { icon = minimap.icon })
             end
-        elseif opts.icon then  -- shorthand: opts.icon = "path"
-            local MM = self:GetMinimap()
-            if MM then
-                MM:CreateButton(name, { icon = opts.icon })
-            end
         end
 
-        -- Slash command
+        -- Slash commands — single string or table of commands
         if opts.slash then
-            local cmd = type(opts.slash) == "string" and opts.slash or name:lower()
-            self:RegisterSlashCommand(cmd, function(msg)
-                if addon.OpenOptions then
-                    addon:OpenOptions()
-                else
-                    addon:Print(name .. " v" .. addon.tocVersion)
-                end
-            end, name:upper())
+            local cmds = type(opts.slash) == "table" and opts.slash or { opts.slash }
+            for _, cmd in ipairs(cmds) do
+                self:RegisterSlashCommand(cmd, function(msg)
+                    if addon.OpenOptions then
+                        addon:OpenOptions()
+                    else
+                        addon:Print(name .. " v" .. (addon.tocVersion or "?"))
+                    end
+                end, name:upper())
+            end
         end
 
         -- User init
