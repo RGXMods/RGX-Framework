@@ -281,35 +281,34 @@ end
     Spin up an addon with a single call.
 
         local MyAddon = RGX.Addon("MyAddon", {
-            db    = { enabled = true, volume = 1.0 },
-            slash = true,
-            icon  = "Interface\\AddOns\\MyAddon\\icon.tga",
-            onInit = function(self)
-                self:Print("Ready!")
+            db      = { enabled = true, volume = 1.0 },
+            slash   = "myaddon",
+            minimap = { icon = "Interface\\AddOns\\MyAddon\\icon.tga" },
+            brand   = { color = "05dffa" },   -- chat prefix "[MYADDON]" in cyan
+            onInit  = function(self)
+                self:Print("Ready!")          -- |cff05dffa[MYADDON]|r Ready!
             end,
         })
 
-    The addon table gets:
-      .name         — addon name
-      .db           — NewDatabase proxy (db.key just works)
-      .db.global    — cross-character storage
-      .tocVersion   — TOC ## Version
-      .Print(msg)   — branded chat output
-      .Warn(msg)    — yellow warning
-      .Error(msg)   — red error
+    What you get:
+      self.name       — "MyAddon"
+      self.db         — NewDatabase proxy (db.key reads/writes profile)
+      self.db.global  — cross-character storage
+      self:Print(msg) — branded output: [MYADDON] msg in your brand color
+      self:Warn(msg)  — yellow warning with prefix
+      self:Error(msg) — red error with prefix
 
     opts:
-      db       → table of defaults (auto-creates <Name>DB SavedVariable)
-      dbName   → override SavedVariable name (default: "<Name>DB")
-      global   → table of global defaults for cross-character storage
-      slash    → true = auto /addonname, or string = specific command
-      icon     → minimap icon texture path
-      brand    → { tag = "MY", color = "58be81" } — chat prefix branding
-      onInit   → function(self) called after ADDON_LOADED
+      db       → defaults table (auto-creates <Name>DB SavedVariable)
+      dbName   → override DB name (default: "<Name>DB")
+      global   → cross-character defaults
+      slash    → true for /addonname, or "mycmd" for custom
+      minimap  → { icon = "path" } to add minimap button
+      brand    → { tag = "MY", color = "58be81" } override chat prefix
+      onInit   → function(self) called when ADDON_LOADED fires
       onSwitch → function(name, profile) called on profile change
 
-    Returns the addon table.  All framework modules are available via RGX:Get*(),
-    even before onInit fires.
+    All RGX modules are available via RGX:GetFonts(), RGX:GetDropdowns(), etc.
 --]]
 function RGX.Addon(name, opts)
     if type(name) ~= "string" or name == "" then return end
@@ -319,7 +318,7 @@ function RGX.Addon(name, opts)
     addon.name = name
     addon.framework = self
 
-    -- Branded output
+    -- Brand — controls how Print/Warn/Error look in chat
     local brand = opts.brand or {}
     local tag = brand.tag or name:upper()
     local color = brand.color or "58be81"
@@ -328,10 +327,7 @@ function RGX.Addon(name, opts)
     function addon:Warn(msg)   print("|cffffcc00" .. prefix .. msg .. "|r") end
     function addon:Error(msg)  print("|cffff4444" .. prefix .. msg .. "|r") end
 
-    -- TOC version
-    addon.tocVersion = GetAddOnMetadataCompat(name, "Version") or "unknown"
-
-    -- Deferred init
+    -- Deferred init — waits for ADDON_LOADED so SavedVariables are ready
     self:RegisterEvent("ADDON_LOADED", function(_, loaded)
         if loaded ~= name then return end
 
@@ -344,8 +340,14 @@ function RGX.Addon(name, opts)
             })
         end
 
-        -- Minimap
-        if opts.icon then
+        -- Minimap button
+        local minimap = opts.minimap
+        if minimap and minimap.icon then
+            local MM = self:GetMinimap()
+            if MM then
+                MM:CreateButton(name, { icon = minimap.icon })
+            end
+        elseif opts.icon then  -- shorthand: opts.icon = "path"
             local MM = self:GetMinimap()
             if MM then
                 MM:CreateButton(name, { icon = opts.icon })
