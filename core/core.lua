@@ -274,3 +274,103 @@ function RGX:TableCount(tbl)
     for _ in pairs(tbl) do count = count + 1 end
     return count
 end
+
+-- ── RGX.Addon — one call to set up an addon ──────────────────────────────────
+
+--[[
+    Spin up an addon with a single call.
+
+        local MyAddon = RGX.Addon("MyAddon", {
+            db    = { enabled = true, volume = 1.0 },
+            slash = true,
+            icon  = "Interface\\AddOns\\MyAddon\\icon.tga",
+            onInit = function(self)
+                self:Print("Ready!")
+            end,
+        })
+
+    The addon table gets:
+      .name         — addon name
+      .db           — NewDatabase proxy (db.key just works)
+      .db.global    — cross-character storage
+      .tocVersion   — TOC ## Version
+      .Print(msg)   — branded chat output
+      .Warn(msg)    — yellow warning
+      .Error(msg)   — red error
+
+    opts:
+      db       → table of defaults (auto-creates <Name>DB SavedVariable)
+      dbName   → override SavedVariable name (default: "<Name>DB")
+      global   → table of global defaults for cross-character storage
+      slash    → true = auto /addonname, or string = specific command
+      icon     → minimap icon texture path
+      brand    → { tag = "MY", color = "58be81" } — chat prefix branding
+      onInit   → function(self) called after ADDON_LOADED
+      onSwitch → function(name, profile) called on profile change
+
+    Returns the addon table.  All framework modules are available via RGX:Get*(),
+    even before onInit fires.
+--]]
+function RGX.Addon(name, opts)
+    if type(name) ~= "string" or name == "" then return end
+    opts = opts or {}
+
+    local addon = opts.table or {}
+    addon.name = name
+    addon.framework = self
+
+    -- Branded output
+    local brand = opts.brand or {}
+    local tag = brand.tag or name:upper()
+    local color = brand.color or "58be81"
+    local prefix = "|cff" .. color .. "[" .. tag .. "]|r "
+    function addon:Print(msg)  print(prefix .. msg) end
+    function addon:Warn(msg)   print("|cffffcc00" .. prefix .. msg .. "|r") end
+    function addon:Error(msg)  print("|cffff4444" .. prefix .. msg .. "|r") end
+
+    -- TOC version
+    addon.tocVersion = GetAddOnMetadataCompat(name, "Version") or "unknown"
+
+    -- Deferred init
+    self:RegisterEvent("ADDON_LOADED", function(_, loaded)
+        if loaded ~= name then return end
+
+        -- Database
+        if opts.db then
+            local dbName = opts.dbName or (name .. "DB")
+            addon.db = self:NewDatabase(dbName, opts.db, {
+                global   = opts.global,
+                onSwitch = opts.onSwitch,
+            })
+        end
+
+        -- Minimap
+        if opts.icon then
+            local MM = self:GetMinimap()
+            if MM then
+                MM:CreateButton(name, { icon = opts.icon })
+            end
+        end
+
+        -- Slash command
+        if opts.slash then
+            local cmd = type(opts.slash) == "string" and opts.slash or name:lower()
+            self:RegisterSlashCommand(cmd, function(msg)
+                if addon.OpenOptions then
+                    addon:OpenOptions()
+                else
+                    addon:Print(name .. " v" .. addon.tocVersion)
+                end
+            end, name:upper())
+        end
+
+        -- User init
+        if opts.onInit then
+            opts.onInit(addon)
+        end
+
+        self:UnregisterEvent("ADDON_LOADED", name .. "_RGXAddon")
+    end, name .. "_RGXAddon")
+
+    return addon
+end

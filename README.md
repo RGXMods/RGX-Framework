@@ -12,61 +12,42 @@ RGX-Framework is a modern, self-contained WoW Retail addon framework — an alte
 
 ```toc
 ## RequiredDeps: RGX-Framework
+## SavedVariables: MyAddonDB
 ```
 
-**2. Get the framework:**
+**2. One call:**
 
 ```lua
-local RGX = assert(_G.RGXFramework, "MyAddon: RGX-Framework not loaded")
+local MyAddon = _G.RGXFramework.Addon("MyAddon", {
+    db    = { enabled = true, volume = 1.0 },
+    slash = true,
+    icon  = "Interface\\AddOns\\MyAddon\\icon.tga",
+    onInit = function(self)
+        self:Print("Ready! " .. self.db.enabled)
+    end,
+})
 ```
 
-**3. Use it:**
+That's it. Database, slash command, minimap button, branded logging — all wired.
+
+**3. Use modules:**
 
 ```lua
 -- Events
-RGX:RegisterEvent("PLAYER_LOGIN", function() print("logged in") end, "myAddon-login")
-
--- Timers
-RGX:After(1.0, function() print("one second later") end)
+RGX:RegisterEvent("PLAYER_LOGIN", function() print("logged in") end)
 
 -- Fonts
 local Fonts = RGX:GetFonts()
-local path = Fonts:GetPath("Inter-Regular")
-myFontString:SetFont(path, 14, "OUTLINE")
+myLabel:SetFont(Fonts:GetPath("Inter-Regular"), 14, "OUTLINE")
 
--- Or the one-line style path:
-Fonts:AttachStyleSelector(parent, db, "titleText")
-Fonts:ApplyStyle(myLabel, db.titleText)
-
--- Colors
-local Colors = RGX:GetColors()
-myFontString:SetTextColor(Colors:GetRGB("primary"))
-
--- Minimap button
-RGX:CreateMinimapButton({
-    name = "MyAddonMinimap",
-    icon = "Interface\\AddOns\\MyAddon\\media\\logo.tga",
-    onLeftClick = function() myPanel:Open() end,
+-- Dropdowns
+local Drops = RGX:GetDropdowns()
+Drops:CreateNestedDropdown(parent, {
+    label = "Sound",
+    items = { { text = "Fanfare", value = "fanfare" } },
+    onChange = function(v) print(v) end,
 })
-
--- Slash command
-RGX:RegisterSlashCommand("myaddon", function(msg) print("/myaddon:", msg) end, "MYADDON")
 ```
-
-For module-dependent code, wrap in `OnReady`:
-
-```lua
-RGX:OnReady(function()
-    local Fonts = RGX:GetFonts()
-    local Colors = RGX:GetColors()
-    local Textures = RGX:GetTextures()
-    local Drops = RGX:GetDropdowns()
-    local UI = RGX:GetUI()
-    local MM = RGX:GetMinimap()
-end)
-```
-
-Core-only APIs (events, timers, hooks, slash commands) are available immediately — no `OnReady` needed.
 
 ---
 
