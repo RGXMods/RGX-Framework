@@ -338,7 +338,7 @@ function RGX:UpdateTimers(elapsed)
     local budget = self.timerBudget or {}
     local maxPerFrame = tonumber(budget.maxPerFrame) or 120
     local maxSeconds = tonumber(budget.maxSeconds) or 0.008
-    local slowSeconds = tonumber(budget.slowSeconds) or 0.050
+    local slowSeconds = tonumber(budget.slowSeconds) or 0.250
     local started = nowSeconds()
     local processed = 0
     local index = #self.timers
