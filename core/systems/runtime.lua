@@ -21,7 +21,7 @@ RGX._timerCounter = RGX._timerCounter or 0
 RGX.timerBudget = RGX.timerBudget or {
     maxPerFrame = 256,
     maxSeconds = 0.033,
-    slowSeconds = 0.050,
+    slowSeconds = 0.250,
 }
 
 local unpackFunc = unpack or table.unpack
