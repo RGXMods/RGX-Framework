@@ -284,15 +284,19 @@ end
             minimap = "Interface\\AddOns\\MyAddon\\icon.tga",
             brand   = "05dffa",
             welcome = "MyAddon loaded!",
+            options = {
+                General = {
+                    { toggle = "enabled" },
+                    { slider = "volume", min = 0, max = 100 },
+                },
+            },
         })
 
     What you get:
       self.name       — "MyAddon"
-      self.db         — NewDatabase proxy (db.key reads/writes profile)
-      self.db.global  — cross-character storage
+      self.db         — proxy (db.enabled reads/writes profile)
+      self.panel      — options panel, opens via /myaddon
       self:Print(msg) — |cff05dffa[MYADDON]|r message
-      self:Warn(msg)
-      self:Error(msg)
 
     opts:
       db      → true = empty defaults, or { key = val } = with defaults
@@ -355,6 +359,47 @@ function RGX.Addon(name, opts)
                         addon:Print(name .. " v" .. (addon.tocVersion or "?"))
                     end
                 end, name:upper())
+            end
+        end
+
+        -- Options panel — declarative { General = { { toggle = "key" } } }
+        if type(opts.options) == "table" and addon.db then
+            local UI = self:GetUI()
+            if UI and UI.CreateOptionsPanel then
+                local tabs = {}
+                for tabName, controls in pairs(opts.options) do
+                    tabs[#tabs + 1] = {
+                        text = tabName,
+                        content = function(frame)
+                            for _, ctrl in ipairs(controls) do
+                                local ctype = type(ctrl) == "table" and #ctrl > 0 and ctrl[1] or ctrl
+                                if type(ctrl) == "table" then
+                                    if type(ctrl.toggle) == "string" then
+                                        UI:CreateToggle(frame, {
+                                            key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper),
+                                            storage = addon.db, default = ctrl.default })
+                                    elseif type(ctrl.slider) == "string" then
+                                        UI:CreateSlider(frame, {
+                                            key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper),
+                                            storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100,
+                                            step = ctrl.step or 1, suffix = ctrl.suffix or "" })
+                                    elseif type(ctrl.section) == "string" then
+                                        UI:CreateSection(frame, ctrl.section)
+                                    end
+                                end
+                            end
+                        end,
+                    }
+                end
+                addon.panel = UI:CreateOptionsPanel({
+                    addonName = name,
+                    title    = opts.title or name,
+                    subtitle = opts.subtitle,
+                    icon     = opts.icon,
+                    tabs     = tabs,
+                })
+                -- Slash command auto-opens the panel
+                addon.OpenOptions = function() addon.panel:Open() end
             end
         end
 
