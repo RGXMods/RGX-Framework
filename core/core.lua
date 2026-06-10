@@ -283,7 +283,14 @@ end
             slash = "myaddon",
             brand = "05dffa",
             options = {
-                General = { { toggle = "enabled" } },
+                General = {
+                    { toggle   = "enabled" },
+                    { slider   = "volume", min = 0, max = 100 },
+                    { dropdown = "sound", items = { "Fanfare", "Chime", "None" } },
+                    { section  = "Advanced" },
+                    { toggle   = "debugMode" },
+                    { button   = "Reset", action = function() addon.db:ResetProfile() end },
+                },
             },
             onInit = function(self)
                 self:Print("Ready!")          -- product behavior starts here
@@ -366,13 +373,13 @@ function RGX.Addon(name, opts)
         if type(opts.options) == "table" and addon.db then
             local UI = self:GetUI()
             if UI and UI.CreateOptionsPanel then
+                local Drops = self:GetDropdowns()
                 local tabs = {}
                 for tabName, controls in pairs(opts.options) do
                     tabs[#tabs + 1] = {
                         text = tabName,
                         content = function(frame)
                             for _, ctrl in ipairs(controls) do
-                                local ctype = type(ctrl) == "table" and #ctrl > 0 and ctrl[1] or ctrl
                                 if type(ctrl) == "table" then
                                     if type(ctrl.toggle) == "string" then
                                         UI:CreateToggle(frame, {
@@ -383,8 +390,27 @@ function RGX.Addon(name, opts)
                                             key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper),
                                             storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100,
                                             step = ctrl.step or 1, suffix = ctrl.suffix or "" })
+                                    elseif type(ctrl.dropdown) == "string" then
+                                        local items = {}
+                                        for _, v in ipairs(ctrl.items or {}) do
+                                            items[#items + 1] = { text = type(v) == "string" and v or v.text or tostring(v), value = v }
+                                        end
+                                        if Drops then
+                                            Drops:CreateNestedDropdown(frame, {
+                                                label = ctrl.label or ctrl.dropdown:gsub("^%l", string.upper),
+                                                items = items,
+                                                width = ctrl.width or 260,
+                                                onChange = function(value)
+                                                    addon.db[ctrl.dropdown] = value
+                                                end,
+                                            })
+                                        end
+                                    elseif type(ctrl.button) == "string" and type(ctrl.action) == "function" then
+                                        UI:CreateButton(frame, ctrl.button, ctrl.width or 120, ctrl.height or 22, ctrl.action)
                                     elseif type(ctrl.section) == "string" then
                                         UI:CreateSection(frame, ctrl.section)
+                                    elseif type(ctrl.label) == "string" then
+                                        UI:CreateLabel(frame, { text = ctrl.label, size = ctrl.size or "small" })
                                     end
                                 end
                             end
@@ -398,7 +424,6 @@ function RGX.Addon(name, opts)
                     icon     = opts.icon,
                     tabs     = tabs,
                 })
-                -- Slash command auto-opens the panel
                 addon.OpenOptions = function() addon.panel:Open() end
             end
         end
