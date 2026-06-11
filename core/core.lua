@@ -317,9 +317,13 @@ function RGX.Addon(name, opts)
             local defaults = type(opts.db) == "table" and opts.db or {}
             local dbName = opts.dbName or (name .. "DB")
             addon.db = RGX:NewDatabase(dbName, defaults, { global = opts.global })
+            addon:Print("db created") -- debug
         end
 
-        if type(opts.options) == "table" and addon.db then
+        if type(opts.options) == "table" then
+            addon:Print("options found") -- debug
+            if addon.db then
+                addon:Print("db ready, building panel") -- debug
             local UI = RGX:GetUI()
             local Drops = RGX:GetDropdowns()
             if UI and UI.CreateOptionsPanel then
@@ -349,8 +353,9 @@ function RGX.Addon(name, opts)
                     }
                 end
                 addon.panel = UI:CreateOptionsPanel({ addonName = name, title = opts.title or name, tabs = tabs })
-            end
-        end
+            end -- UI check
+        end -- addon.db check
+    end -- options check
 
         if opts.welcome then addon:Print(opts.welcome) end
         if opts.onInit then opts.onInit(addon) end
