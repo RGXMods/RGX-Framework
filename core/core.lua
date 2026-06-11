@@ -274,3 +274,87 @@ function RGX:TableCount(tbl)
     for _ in pairs(tbl) do count = count + 1 end
     return count
 end
+
+-- ── RGX.Addon — one call spins up an addon ────────────────────────────────────
+
+function RGX.Addon(name, opts)
+    if type(name) ~= "string" or name == "" then return end
+    opts = opts or {}
+
+    local addon = opts.table or {}
+    addon.name = name
+
+    -- Brand
+    local color = type(opts.brand) == "string" and opts.brand or "58be81"
+    local prefix = "|cff" .. color .. "[" .. name:upper() .. "]|r "
+    function addon:Print(msg)  print(prefix .. msg) end
+    function addon:Warn(msg)   print("|cffffcc00" .. prefix .. msg .. "|r") end
+    function addon:Error(msg)  print("|cffff4444" .. prefix .. msg .. "|r") end
+
+    -- Slash — register at file scope, no ADDON_LOADED needed
+    if opts.slash then
+        local cmds = type(opts.slash) == "table" and opts.slash or { opts.slash }
+        for _, cmd in ipairs(cmds) do
+            self:RegisterSlashCommand(cmd, function(msg)
+                if addon.panel then addon.panel:Open() return end
+                addon:Print(cmd .. " v?" )
+            end, name:upper())
+        end
+    end
+
+    -- Minimap
+    if type(opts.minimap) == "string" then
+        local MM = self:GetMinimap()
+        if MM then MM:CreateButton(name, { icon = opts.minimap }) end
+    end
+
+    -- Database + options deferred to ADDON_LOADED
+    self:RegisterEvent("ADDON_LOADED", function(_, loaded)
+        if loaded ~= name then return end
+
+        if opts.db ~= nil then
+            local defaults = type(opts.db) == "table" and opts.db or {}
+            local dbName = opts.dbName or (name .. "DB")
+            addon.db = self:NewDatabase(dbName, defaults, { global = opts.global })
+        end
+
+        if type(opts.options) == "table" and addon.db then
+            local UI = self:GetUI()
+            local Drops = self:GetDropdowns()
+            if UI and UI.CreateOptionsPanel then
+                local tabs = {}
+                for tabName, controls in pairs(opts.options) do
+                    tabs[#tabs + 1] = {
+                        text = tabName,
+                        content = function(frame)
+                            for _, ctrl in ipairs(controls) do
+                                if type(ctrl) == "table" then
+                                    if type(ctrl.toggle) == "string" then
+                                        UI:CreateToggle(frame, { key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default })
+                                    elseif type(ctrl.slider) == "string" then
+                                        UI:CreateSlider(frame, { key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper), storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100, step = ctrl.step or 1 })
+                                    elseif type(ctrl.dropdown) == "string" and Drops then
+                                        local items = {}
+                                        for _, v in ipairs(ctrl.items or {}) do items[#items+1] = { text = tostring(v), value = v } end
+                                        Drops:CreateNestedDropdown(frame, { label = ctrl.label or ctrl.dropdown:gsub("^%l", string.upper), items = items, width = ctrl.width or 260, onChange = function(v) addon.db[ctrl.dropdown] = v end })
+                                    elseif type(ctrl.button) == "string" and type(ctrl.action) == "function" then
+                                        UI:CreateButton(frame, ctrl.button, ctrl.width or 120, ctrl.height or 22, ctrl.action)
+                                    elseif type(ctrl.section) == "string" then
+                                        UI:CreateSection(frame, ctrl.section)
+                                    end
+                                end
+                            end
+                        end,
+                    }
+                end
+                addon.panel = UI:CreateOptionsPanel({ addonName = name, title = opts.title or name, tabs = tabs })
+            end
+        end
+
+        if opts.welcome then addon:Print(opts.welcome) end
+        if opts.onInit then opts.onInit(addon) end
+        self:UnregisterEvent("ADDON_LOADED", name .. "_RGXAddon")
+    end, name .. "_RGXAddon")
+
+    return addon
+end
