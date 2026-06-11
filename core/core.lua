@@ -280,6 +280,7 @@ end
 function RGX.Addon(name, opts)
     if type(name) ~= "string" or name == "" then return end
     opts = opts or {}
+    local RGX = _G.RGXFramework
 
     local addon = opts.table or {}
     addon.name = name
@@ -295,7 +296,7 @@ function RGX.Addon(name, opts)
     if opts.slash then
         local cmds = type(opts.slash) == "table" and opts.slash or { opts.slash }
         for _, cmd in ipairs(cmds) do
-            self:RegisterSlashCommand(cmd, function(msg)
+            RGX:RegisterSlashCommand(cmd, function(msg)
                 if addon.panel then addon.panel:Open() return end
                 addon:Print(cmd .. " v?" )
             end, name:upper())
@@ -304,23 +305,23 @@ function RGX.Addon(name, opts)
 
     -- Minimap
     if type(opts.minimap) == "string" then
-        local MM = self:GetMinimap()
+        local MM = RGX:GetMinimap()
         if MM then MM:CreateButton(name, { icon = opts.minimap }) end
     end
 
     -- Database + options deferred to ADDON_LOADED
-    self:RegisterEvent("ADDON_LOADED", function(_, loaded)
+    RGX:RegisterEvent("ADDON_LOADED", function(_, loaded)
         if loaded ~= name then return end
 
         if opts.db ~= nil then
             local defaults = type(opts.db) == "table" and opts.db or {}
             local dbName = opts.dbName or (name .. "DB")
-            addon.db = self:NewDatabase(dbName, defaults, { global = opts.global })
+            addon.db = RGX:NewDatabase(dbName, defaults, { global = opts.global })
         end
 
         if type(opts.options) == "table" and addon.db then
-            local UI = self:GetUI()
-            local Drops = self:GetDropdowns()
+            local UI = RGX:GetUI()
+            local Drops = RGX:GetDropdowns()
             if UI and UI.CreateOptionsPanel then
                 local tabs = {}
                 for tabName, controls in pairs(opts.options) do
@@ -353,7 +354,7 @@ function RGX.Addon(name, opts)
 
         if opts.welcome then addon:Print(opts.welcome) end
         if opts.onInit then opts.onInit(addon) end
-        self:UnregisterEvent("ADDON_LOADED", name .. "_RGXAddon")
+        RGX:UnregisterEvent("ADDON_LOADED", name .. "_RGXAddon")
     end, name .. "_RGXAddon")
 
     return addon
