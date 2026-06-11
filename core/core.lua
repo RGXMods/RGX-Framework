@@ -303,10 +303,11 @@ function RGX.Addon(name, opts)
         end
     end
 
-    -- Minimap
-    if type(opts.minimap) == "string" then
+    -- Minimap — true uses default icon, string uses custom path
+    if opts.minimap then
+        local icon = type(opts.minimap) == "string" and opts.minimap or "Interface\\Icons\\inv_misc_questionmark"
         local MM = RGX:GetMinimap()
-        if MM then MM:CreateButton(name, { icon = opts.minimap }) end
+        if MM then MM:CreateButton(name, { icon = icon }) end
     end
 
     -- Database + options deferred to ADDON_LOADED
@@ -317,13 +318,9 @@ function RGX.Addon(name, opts)
             local defaults = type(opts.db) == "table" and opts.db or {}
             local dbName = opts.dbName or (name .. "DB")
             addon.db = RGX:NewDatabase(dbName, defaults, { global = opts.global })
-            addon:Print("db created") -- debug
         end
 
-        if type(opts.options) == "table" then
-            addon:Print("options found") -- debug
-            if addon.db then
-                addon:Print("db ready, building panel") -- debug
+        if type(opts.options) == "table" and addon.db then
             local UI = RGX:GetUI()
             local Drops = RGX:GetDropdowns()
             if UI and UI.CreateOptionsPanel then
@@ -355,7 +352,6 @@ function RGX.Addon(name, opts)
                 addon.panel = UI:CreateOptionsPanel({ addonName = name, title = opts.title or name, tabs = tabs })
             end -- UI check
         end -- addon.db check
-    end -- options check
 
         if opts.welcome then addon:Print(opts.welcome) end
         if opts.onInit then opts.onInit(addon) end
