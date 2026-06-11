@@ -307,7 +307,7 @@ function RGX.Addon(name, opts)
     if opts.minimap then
         local icon = type(opts.minimap) == "string" and opts.minimap or "Interface\\Icons\\inv_misc_questionmark"
         local MM = RGX:GetMinimap()
-        if MM then MM:CreateButton(name, { icon = icon }) end
+        if MM then MM:Create({ name = name, icon = icon }) end
     end
 
     -- Database + options deferred to ADDON_LOADED
