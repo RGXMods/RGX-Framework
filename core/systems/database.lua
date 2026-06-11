@@ -461,20 +461,19 @@ function DB:CopyProfile(sourceName, targetName)
 end
 
 function DB:ResetProfile(name)
-    name = name or self._raw.activeProfile
-    if name == PROTECTED_PROFILE then return false end
-    local profile = self._raw.profiles and self._raw.profiles[name]
-    if not profile then return false end
-    for k in pairs(profile) do
-        if k ~= "currentProfile" then profile[k] = nil end
-    end
-    FillDefaults(self, profile)
-    profile.currentProfile = name
-    if name == self._raw.activeProfile then
-        NotifySwitch(self)
-    end
-    return true
-end
+ name = name or self._raw.activeProfile
+ local profile = self._raw.profiles and self._raw.profiles[name]
+ if not profile then return false end
+ for k in pairs(profile) do
+ if k ~= "currentProfile" then profile[k] = nil end
+ end
+ FillDefaults(self, profile)
+ profile.currentProfile = name
+ if name == self._raw.activeProfile then
+ NotifySwitch(self)
+ end
+ return true
+ end
 
 function DB:OnProfileChanged(callback)
     if type(callback) ~= "function" then return end
@@ -531,34 +530,38 @@ end
 --   3. Is it an internal field?              → return it from the proxy itself
 --   4. Otherwise                             → read from active profile, then defaults
 DB.__index = function(self, key)
-    local method = DB[key]
-    if method then return method end -- step 1
+ local method = DB[key]
+ if method then return method end -- step 1
 
-    if key == "global" then          -- step 2
-        if not self._raw.global then self._raw.global = {} end
-        return self._raw.global
-    end
+ if key == "global" then -- step 2
+ if not self._raw.global then self._raw.global = {} end
+ return self._raw.global
+ end
 
-    if key == "_raw" or key == "_defaults" or key == "_callbacks" or key == "_onSwitch" then
-        return rawget(self, key) -- step 3
-    end
+ if key == "_raw" or key == "_defaults" or key == "_callbacks" or key == "_onSwitch" or key == "_guard" then
+ return rawget(self, key) -- step 3
+ end
 
-    local profile = ActiveProfile(self) -- step 4
-    if profile then
-        local val = profile[key]
-        if val ~= nil then return val end
-    end
-    return self._defaults and self._defaults[key]
-end
+ local profile = ActiveProfile(self) -- step 4
+ if profile then
+ local val = profile[key]
+ if val ~= nil then return val end
+ end
+ return self._defaults and self._defaults[key]
+ end
 
--- __newindex: called when you do db.something = value
-DB.__newindex = function(self, key, value)
-    if key == "global" then return end -- block: use db.global.key instead
-    local profile = ActiveProfile(self)
-    if profile then
-        profile[key] = value
-    end
-end
+ -- __newindex: called when you do db.something = value
+ DB.__newindex = function(self, key, value)
+ if key == "global" then return end -- block: use db.global.key instead
+ if key == "_raw" or key == "_defaults" or key == "_callbacks" or key == "_onSwitch" or key == "_guard" then
+ rawset(self, key, value)
+ return
+ end
+ local profile = ActiveProfile(self)
+ if profile then
+ profile[key] = value
+ end
+ end
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- FACTORY FUNCTIONS
