@@ -73,6 +73,10 @@ Current reference consumers:
 | Housing progression/decor callbacks | RGXHousing | ✅ Done |
 | Trading Post callbacks | RGXTradingPost | ✅ Done |
 | Prey hunt callbacks | RGXPrey | ✅ Done |
+| Profile-aware database with metamethod access | Core | ✅ Done (v1.9.0) |
+| RGX.Addon() one-call addon factory | Core | ✅ Done (v2.0.0-alpha.1) |
+| Declarative options engine | RGXUI | ✅ Done (v2.0.0-alpha.1) |
+| Database test harness (`/rgx dbtest`) | Core | ✅ Done (v2.0.0-alpha.1) |
 
 † Dormant — in-tree but not loaded by the XML loader since v1.5.18. `Get*()` returns `nil` until re-added to `RGX-Framework.xml`.
 
@@ -80,38 +84,10 @@ Current reference consumers:
 
 ## Immediate Priority
 
-### Profile / Database System
-**Priority: HIGH — biggest gap vs Ace3**
+### ~~Profile / Database System~~ — DONE (v1.9.0 + v2.0.0-alpha.1)
+**Priority: ~~HIGH~~ — SHIPPED**
 
-A profile-aware saved variable system so any addon can do:
-
-```lua
-local db = RGX:NewDatabase("MyAddonDB", {
-  iconSize = 32,
-  showIcon = true,
-})
-
-db.iconSize -- reads active profile, falls back to default
-db.iconSize = 48 -- writes to active profile
-db.global.foo -- cross-character storage
-
-db:CreateProfile("Tank")
-db:LoadProfile("Tank")
-db:DeleteProfile("Tank")
-db:ResetProfile()
-db:GetProfiles()
-db:GetActiveProfile()
-db:OnProfileChanged(fn)
-```
-
-**Design principles (why this is better than AceDB):**
-- Two scopes only: `profile` (per-character) and `global` (cross-character). No realm/class/race/faction scopes — those exist in AceDB to cover every possible case; we cover what 95% of addons need.
-- `db.myKey` just works — `__index`/`__newindex` metamethods so the active profile IS the table surface. No `db.profile.myKey` namespace prefix bleeding into every line of consumer code.
-- Flat defaults — pass a plain table, not a namespace-structured table mirrored to the scope system.
-- Protected `Default` profile — always exists, never deleted, always a safe fallback.
-- Missing keys auto-filled from defaults at read time (metamethod, not copy) — adding a new setting to defaults is safe for existing saved variables.
-
-**Base:** BLU's `core/systems/database.lua` — profile CRUD, `MergeDefaults`, protected Default, rename, import/export serialization are all solid. Remove BLU-specific coupling, make it a generic factory, replace `GetDB`/`SetDB` dot-path accessors with metamethods.
+Shipped via `RGX:NewDatabase()` (v1.9.0) with proxy metamethod guard hardening (v2.0.0-alpha.1). See the "What's Built" table above for the current API surface.
 
 ---
 
@@ -307,10 +283,11 @@ AceConfig-style but without AceConfig's complexity. A table-driven panel builder
 ### Widget `SetEnabled(bool)` State
 Standardized enable/disable on all RGXUI widgets. Currently only dropdowns have `SetEnabled`. Add it to sliders, toggles, color pickers, and buttons so addon authors can grey out controls based on other settings.
 
-### BLU Migration to RGX
-BLU currently has its own parallel implementations of: event system, timers, SharedMedia scanning, dropdown helpers, database/profiles. As RGX matures, BLU migrates to consume RGX for each of these. This is a gradual process — BLU is complex and stable; no disruption for its own sake.
+### BLU Migration to RGX — Largely Complete
+BLU v8.0.0-alpha.1 has migrated: events, timers, hooks, slash commands, database/profiles, combat protection, dropdowns, utility functions, and sound muting to RGX. The remaining local system is `sharedmedia.lua` (sound pack scanning), which will move to `RGXSharedMedia` when the SharedMedia Drop-In is built.
 
-Target: BLU drops its own `sharedmedia.lua`, `database.lua`, and event infrastructure in favour of `RGX:GetSharedMedia()`, `RGX:NewDatabase()`, and `RGX:RegisterEvent()`.
+Done: `RGX:RegisterEvent()`, `RGX:NewDatabase()`, `RGX:QueueForCombat()`, `RGX:GetDropdowns()`, `RGX:DeepCopy/Throttle/Debounce`, `RGX:GetSound():MuteList()`.
+Remaining: `RGX:GetSharedMedia()` (sound pack scanning).
 
 ### RGX-Mod
 WeakAuras-style aura engine. Starts as a copy of BLU, then grows into a configurable trigger/condition/display system. See [RGX-Mod docs](../../RGX-Mod/docs/) for full architecture.
@@ -323,7 +300,7 @@ WeakAuras-style aura engine. Starts as a copy of BLU, then grows into a configur
 | 2 | Multi-trigger auras | `RegisterUnitEvent` | Done |
 | 3 | Display types + conditions | None new | — |
 | 4 | Options editor + actions | Scroll, Dropdown | Done |
-| 5 | Import/export + profiles | Serialization, Profiles, Bucket events | Not built |
+| 5 | Import/export + profiles | Serialization, Profiles, Bucket events | Profiles ✅ Done, Serialization/Bucket events not built |
 | 6 | Groups, animations, pooling | Frame pooling, Animation helpers, Locale | Not built |
 
 **Framework work triggered by RGX-Mod (ordered by phase need):**

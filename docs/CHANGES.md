@@ -1,4 +1,34 @@
-# v1.6.0 - 2026-05-01
+# Changes
+
+## Current Development Release
+
+### [v2.0.0-alpha.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0-alpha.1.md) - 2026-06-11
+
+- **RGX.Addon()** — one-call addon factory: auto-creates database, slash commands, minimap button from a single declarative table.
+- **Declarative options engine** — table-driven panel builder with toggle, slider, dropdown, button, section, label controls, all auto-bound to `addon.db`.
+- **Proxy fix** — `__newindex`/`__index` now guard internal fields (`_guard`, `_raw`, `_defaults`, `_callbacks`, `_onSwitch`) with `rawget`/`rawset` so they never leak into profile SavedVars.
+- Fixed `MergeDefaults` → `MergeTable` (3 call sites — `MergeDefaults` was never defined).
+- Added `database_test.lua` with 14 assertions, wired via `/rgx dbtest` command.
+- `RGX.Addon()` now passes `opts.onSwitch` through to `NewDatabase`.
+- Timer-slow threshold: 50ms → 250ms (SharedMedia:QueueScan ~207ms is normal I/O).
+
+Full notes:
+- [v2.0.0-alpha.1 changelog](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0-alpha.1.md)
+
+## Production Releases
+
+### [v1.9.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/1.9.0.md) - 2026-06-09
+
+- **NewDatabase API** — `RGX:NewDatabase(name, defaults, opts)` with metamethod-based profile access, profile CRUD, cross-character `db.global`.
+- Combat lockdown safety — `pcall(function() ... end)` closure pattern replaces raw C function reference.
+- `RGXCombat` returned to dormant status.
+
+### [v1.8.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/1.8.0.md) - 2026-06-09
+
+- **BLU v7 migration foundation** — 10 callback modules (Achievement, LevelUp, Collectibles, Loot, Quest, Honor, Delves, Housing, TradingPost, Prey).
+- Theme highlight tokens, combat safety guards.
+
+### [v1.6.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/1.6.0.md) - 2026-05-01
 
 ## Changes
 
