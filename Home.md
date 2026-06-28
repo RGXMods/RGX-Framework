@@ -4,7 +4,7 @@
 
 **Make addon building fast, easy, and fun.** Everything in RGX-Framework exists to serve this goal:
 
-- An addon author should be able to spin up a complete addon with options, minimap icon, slash commands, themed UI, nested dropdowns, sound playback, profiles, and event handling **in minutes** — not days.
+- An addon author should be able to spin up a complete addon with options, minimap icon, slash commands, themed UI, nested dropdowns, sound playback, profiles, and event handling **in minutes** â€” not days.
 - Every API should work with **one or two lines of code** for the common case.
 - Complexity lives inside the framework. The consumer surface stays simple.
 - New features are extracted from real addon usage (BLU, ETL, SQP, RND), not designed in isolation.
@@ -66,10 +66,10 @@ Options:CreatePanel("MyAddon", {
 
 | Addon | What It Proves |
 |---|---|
-| BLU | Full sound/progression suite — profiles, shared media, combat, 15+ event triggers |
+| BLU | Full sound/progression suite â€” profiles, shared media, combat, 15+ event triggers |
 | ETL | Traveler's Log handling, minimap, slash commands |
 | SQP | Large options panels, UI controls, fonts, nameplate events |
-| RND | Small utility addon pattern — events, timers, minimap, settings |
+| RND | Small utility addon pattern â€” events, timers, minimap, settings |
 
 Lessons from these addons feed back into RGX-Framework when a pattern is reusable.
 
