@@ -10,6 +10,7 @@ RGX-Framework - Database
       db.enabled         → reads active profile, falls back to default
       db.enabled = false → writes to active profile
       db.global.foo      → cross-character storage
+      db.char.foo        → per-character storage (keyed by "Name - Realm")
       db:CreateProfile("Tank")
       db:LoadProfile("Tank")
       db:DeleteProfile("Tank")
@@ -309,16 +310,28 @@ end
 -- db.key reads from:  active profile → defaults
 -- db.key = v writes to the active profile
 -- db.global returns the cross-character storage table
+-- db.char   returns the per-character storage table (keyed by "Name - Realm")
 -- db:Method() calls one of the profile management methods below
 --
 -- Internal fields (stored on the proxy table itself, not in the profile):
---   _raw       → the SavedVariables global table (has .profiles, .global, .activeProfile)
---   _defaults  → fallback values when a key is missing from the profile
---   _callbacks → functions registered via OnProfileChanged
---   _onSwitch  → opt-in callback from opts.onSwitch
---   _guard     → lock to prevent re-entrant notification
+--   _raw        → the SavedVariables global table (has .profiles, .global, .char, .activeProfile)
+--   _defaults   → fallback values when a key is missing from the profile
+--   _charDefaults → fallback values for per-character data
+--   _charKey    → current "Name - Realm" key
+--   _callbacks       → functions registered via OnProfileChanged
+--   _onSwitch        → opt-in callback from opts.onSwitch
+--   _guard           → lock to prevent re-entrant notification
+--   _profileIsGlobal → when true, db.global returns the active profile (for legacy addons)
 
 local DB = {} -- method table
+
+-- ── Internal: build "Name - Realm" character key ──────────────────────────
+
+local function CharKey()
+    local name = UnitName("player") or "Unknown"
+    local realm = GetRealmName() or "Unknown"
+    return name .. " - " .. realm
+end
 
 -- ── Internal: get the active profile table ────────────────────────────────────
 
@@ -383,6 +396,20 @@ end
 
 function DB:GetActiveProfile()
     return self._raw.activeProfile
+end
+
+function DB:GetChar()
+    local raw = self._raw
+    raw.char = raw.char or {}
+    local key = self._charKey
+    if type(raw.char[key]) ~= "table" then
+        raw.char[key] = {}
+    end
+    local charData = raw.char[key]
+    if self._charDefaults then
+        MergeTable(charData, self._charDefaults)
+    end
+    return charData
 end
 
 function DB:ListProfiles()
@@ -534,11 +561,18 @@ DB.__index = function(self, key)
  if method then return method end -- step 1
 
  if key == "global" then -- step 2
+ if self._profileIsGlobal then
+ return ActiveProfile(self) or self._raw.global
+ end
  if not self._raw.global then self._raw.global = {} end
  return self._raw.global
  end
 
- if key == "_raw" or key == "_defaults" or key == "_callbacks" or key == "_onSwitch" or key == "_guard" then
+ if key == "char" then -- step 2b
+ return self:GetChar()
+ end
+
+ if key == "_raw" or key == "_defaults" or key == "_charDefaults" or key == "_charKey" or key == "_callbacks" or key == "_onSwitch" or key == "_guard" or key == "_profileIsGlobal" then
  return rawget(self, key) -- step 3
  end
 
@@ -552,8 +586,8 @@ DB.__index = function(self, key)
 
  -- __newindex: called when you do db.something = value
  DB.__newindex = function(self, key, value)
- if key == "global" then return end -- block: use db.global.key instead
- if key == "_raw" or key == "_defaults" or key == "_callbacks" or key == "_onSwitch" or key == "_guard" then
+ if key == "global" or key == "char" then return end -- block: use db.global.key / db.char.key
+ if key == "_raw" or key == "_defaults" or key == "_charDefaults" or key == "_charKey" or key == "_callbacks" or key == "_onSwitch" or key == "_guard" or key == "_profileIsGlobal" then
  rawset(self, key, value)
  return
  end
@@ -570,6 +604,8 @@ DB.__index = function(self, key)
 -- Modern API: flat defaults, metamethod access.
 --   local db = RGX:NewDatabase("BLUDB", { enabled = true, volume = 1.0 }, {
 --       global = { installedVersion = "1.0" },
+--       char   = { lastZone = nil },        -- per-character defaults
+--       profileIsGlobal = true,             -- db.global → active profile (legacy compat)
 --       onSwitch = function(name, profile) RefreshUI() end,
 --   })
 function RGX:NewDatabase(globalName, defaults, opts)
@@ -580,19 +616,32 @@ function RGX:NewDatabase(globalName, defaults, opts)
     local raw = _G[globalName]
     raw.profiles = raw.profiles or {}
     raw.global = raw.global or {}
+    raw.char = raw.char or {}
 
     -- Step 2: build the proxy table
     local db = setmetatable({
-        _raw       = raw,
-        _defaults  = defaults or {},
-        _callbacks = {},
-        _onSwitch  = opts.onSwitch,
+        _raw        = raw,
+        _defaults   = defaults or {},
+        _charDefaults = opts.char,
+        _charKey    = CharKey(),
+        _callbacks  = {},
+        _onSwitch   = opts.onSwitch,
+        _profileIsGlobal = opts.profileIsGlobal and true or nil,
     }, DB)
 
     -- Step 3: apply global defaults
  if type(opts.global) == "table" then
  MergeTable(raw.global, opts.global)
  end
+
+    -- Step 3b: apply char defaults for current character
+    if type(opts.char) == "table" then
+        local key = db._charKey
+        if type(raw.char[key]) ~= "table" then
+            raw.char[key] = {}
+        end
+        MergeTable(raw.char[key], opts.char)
+    end
 
     -- Step 4: ensure the Default profile exists
     EnsureDefault(db)
@@ -624,6 +673,8 @@ function RGX:OpenDB(globalName, opts)
     opts = opts or {}
     return RGX:NewDatabase(globalName, opts.profile or opts.defaults, {
         global   = opts.global,
+        char     = opts.char,
+        profileIsGlobal = opts.profileIsGlobal,
         onSwitch = opts.onSwitch,
     })
 end

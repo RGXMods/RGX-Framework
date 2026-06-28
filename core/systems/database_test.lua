@@ -123,6 +123,28 @@ function RGX:RunDBTests()
  db:Set("nested.value", 88)
  assert(db:Get("nested.value") == 88, "String dot-path Get/Set should work")
 
+ -- 15. Character storage (char)
+ local charName = (UnitName("player") or "Unknown") .. " - " .. (GetRealmName() or "Unknown")
+ db.char.lastZone = "Elwynn Forest"
+ assert(_G[testDBName].char[charName].lastZone == "Elwynn Forest", "char should persist in raw table")
+ assert(db.char.lastZone == "Elwynn Forest", "char should be readable from proxy")
+
+ -- 16. profileIsGlobal mode
+ if _G[testDBName .. "_GlobalAsProfile"] then
+     _G[testDBName .. "_GlobalAsProfile"] = nil
+ end
+ local gdb = self:NewDatabase(testDBName .. "_GlobalAsProfile",
+     { settingA = "hi", settingB = 42 },
+     { profileIsGlobal = true }
+ )
+ assert(gdb.global.settingA == "hi", "profileIsGlobal: db.global should return active profile data")
+ assert(gdb.global.settingB == 42, "profileIsGlobal: should read profile defaults through db.global")
+ gdb.global.settingB = 99
+ assert(gdb.global.settingB == 99, "profileIsGlobal: db.global writes should persist")
+ local rawTable = _G[testDBName .. "_GlobalAsProfile"]
+ assert(rawTable.profiles.Default.settingB == 99, "profileIsGlobal: writes via db.global should land in the profile")
+ _G[testDBName .. "_GlobalAsProfile"] = nil
+
  -- Cleanup
     _G[testDBName] = nil
 
