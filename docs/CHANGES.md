@@ -2,6 +2,15 @@
 
 ## Current Development Release
 
+### [v2.0.0-alpha.2](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0-alpha.2.md) - 2026-06-28
+
+- SharedMedia startup scan now coalesces light/full rescans instead of doing the expensive generic pass immediately.
+- Generic addon-global media scan is deferred until after `PLAYER_LOGIN`, reducing startup timer-slow warnings.
+- Added scan-state guards so late media-provider loads can upgrade a pending scan without duplicating work.
+
+Full notes:
+- [v2.0.0-alpha.2 changelog](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0-alpha.2.md)
+
 ### [v2.0.0-alpha.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0-alpha.1.md) - 2026-06-11
 
 - **RGX.Addon()** â€” one-call addon factory: auto-creates database, slash commands, minimap button from a single declarative table.
