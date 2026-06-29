@@ -317,7 +317,9 @@ function RGX.Addon(name, opts)
         if opts.db ~= nil then
             local defaults = type(opts.db) == "table" and opts.db or {}
             local dbName = opts.dbName or (name .. "DB")
-            addon.db = RGX:NewDatabase(dbName, defaults, { global = opts.global, onSwitch = opts.onSwitch })
+            if not addon.db then
+                addon.db = RGX:NewDatabase(dbName, defaults, { global = opts.global, onSwitch = opts.onSwitch })
+            end
         end
 
         if type(opts.options) == "table" and addon.db then
