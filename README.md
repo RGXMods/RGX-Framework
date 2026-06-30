@@ -2,7 +2,7 @@
 
 **One dependency. Everything your addon suite needs.**
 
-RGX-Framework is a modern, self-contained WoW Retail addon framework — an alternative to Ace3 covering events, timers, hooks, slash commands, minimap buttons, options panels, database, and data broker, plus a full media stack (fonts, colors, textures, sound), dropdown menus, UI controls, and a visual design system. It is not a player-facing addon — it loads silently and exposes an API.
+RGX-Framework is a modern, self-contained WoW Retail addon framework â€” an alternative to Ace3 covering events, timers, hooks, slash commands, minimap buttons, options panels, database, and data broker, plus a full media stack (fonts, colors, textures, sound), dropdown menus, UI controls, and a visual design system. It is not a player-facing addon â€” it loads silently and exposes an API.
 
 ---
 
@@ -12,39 +12,61 @@ RGX-Framework is a modern, self-contained WoW Retail addon framework — an alte
 
 ```toc
 ## RequiredDeps: RGX-Framework
-## SavedVariables: MyAddonDB
 ```
 
-**2. One call:**
+**2. Get the framework:**
 
 ```lua
-local MyAddon = _G.RGXFramework.Addon("MyAddon", {
-    db,                              -- db = true  = auto-creates MyAddonDB
-    slash   = "myaddon",             -- /myaddon
-    minimap = "Interface\\AddOns\\MyAddon\\icon.tga",
-    brand   = "05dffa",              -- chat prefix color
-    welcome = "MyAddon loaded!",
-})
+local RGX = assert(_G.RGXFramework, "MyAddon: RGX-Framework not loaded")
 ```
 
-That's it — database, slash command, minimap button, branded logging.
-
-**3. Modules — pick what you need:**
+**3. Use it:**
 
 ```lua
+-- Events
+RGX:RegisterEvent("PLAYER_LOGIN", function() print("logged in") end, "myAddon-login")
+
+-- Timers
+RGX:After(1.0, function() print("one second later") end)
+
+-- Fonts
 local Fonts = RGX:GetFonts()
-myLabel:SetFont(Fonts:GetPath("Inter-Regular"), 14)
+local path = Fonts:GetPath("Inter-Regular")
+myFontString:SetFont(path, 14, "OUTLINE")
 
-local Drops = RGX:GetDropdowns()
-Drops:CreateNestedDropdown(parent, {
-    label = "Sound",
-    items = { { text = "Fanfare", value = "fanfare" } },
-    onChange = function(v) print(v) end,
+-- Or the one-line style path:
+Fonts:AttachStyleSelector(parent, db, "titleText")
+Fonts:ApplyStyle(myLabel, db.titleText)
+
+-- Colors
+local Colors = RGX:GetColors()
+myFontString:SetTextColor(Colors:GetRGB("primary"))
+
+-- Minimap button
+RGX:CreateMinimapButton({
+    name = "MyAddonMinimap",
+    icon = "Interface\\AddOns\\MyAddon\\media\\logo.tga",
+    onLeftClick = function() myPanel:Open() end,
 })
 
-local Combat = RGX:GetCombat()
-Combat:OnEnter(function() showMyTexture() end)
+-- Slash command
+RGX:RegisterSlashCommand("myaddon", function(msg) print("/myaddon:", msg) end, "MYADDON")
 ```
+
+For module-dependent code, wrap in `OnReady`:
+
+```lua
+RGX:OnReady(function()
+    local Fonts = RGX:GetFonts()
+    local Colors = RGX:GetColors()
+    local Textures = RGX:GetTextures()
+    local Drops = RGX:GetDropdowns()
+    local UI = RGX:GetUI()
+    local MM = RGX:GetMinimap()
+end)
+```
+
+Core-only APIs (events, timers, hooks, slash commands) are available immediately â€” no `OnReady` needed.
 
 ---
 
@@ -54,9 +76,9 @@ Combat:OnEnter(function() showMyTexture() end)
 |---|---|
 | **Lifecycle** | `OnReady`, `OnLogin`, module readiness tracking |
 | **Events & Messages** | Blizzard event registration + internal message bus + module-local emitters |
-| **Timers** | `After`, `Every`, `CancelTimer` — native OnUpdate driver, no C_Timer |
-| **Hooks** | Post-hooks via `hooksecurefunc` — safe for Blizzard UI functions |
-| **Slash Commands** | `RegisterSlashCommand` — no raw SLASH_X boilerplate |
+| **Timers** | `After`, `Every`, `CancelTimer` â€” native OnUpdate driver, no C_Timer |
+| **Hooks** | Post-hooks via `hooksecurefunc` â€” safe for Blizzard UI functions |
+| **Slash Commands** | `RegisterSlashCommand` â€” no raw SLASH_X boilerplate |
 | **Combat Queue** | `QueueForCombat`, `SafeShow`, `SafeHide`, `SafeSetPoint`, and more |
 | **Fonts** | 36 bundled + 8 WoW defaults (~44 total), 10 blocked in unavailableFonts, grouped dropdowns, style objects |
 | **Colors** | Named palette, class/quality/power colors, color math, wrapping, picker integration |
@@ -75,7 +97,7 @@ Combat:OnEnter(function() showMyTexture() end)
 
 | Module | Global | `RGX:Get*()` | Status |
 |---|---|---|---|
-| Core | `RGXFramework` | — | Active |
+| Core | `RGXFramework` | â€” | Active |
 | Fonts | `RGXFonts` | `GetFonts()` | Active |
 | Colors | `RGXColors` | `GetColors()` | Active |
 | Textures | `RGXTextures` | `GetTextures()` | Active |
@@ -107,7 +129,7 @@ Pixel: Press Start 2P, Silkscreen, VT323
 Fantasy: Uncial Antiqua
 WoW defaults: Friz Quadrata, Arial Narrow, Morpheus, Skurri
 
-**Temporarily unavailable (10 fonts with corrupted assets):** Montserrat, Merriweather, Playfair Display, Oswald, Orbitron, Audiowide, Cinzel — blocked in `unavailableFonts` until asset files are replaced.
+**Temporarily unavailable (10 fonts with corrupted assets):** Montserrat, Merriweather, Playfair Display, Oswald, Orbitron, Audiowide, Cinzel â€” blocked in `unavailableFonts` until asset files are replaced.
 
 Total: 36 bundled (26 available + 10 blocked) + 8 WoW defaults = ~44 registered, ~34 selectable.
 
@@ -121,32 +143,32 @@ Full documentation lives in the [`docs/`](docs/) directory:
 
 ### Getting Started
 
-- **[Super Simple Integration](docs/SUPER-SIMPLE.md)** — the absolute minimum code to use RGX
-- **[Migration Guide](docs/MIGRATION.md)** — moving from Ace3, LibSharedMedia, or standalone implementations
+- **[Super Simple Integration](docs/SUPER-SIMPLE.md)** â€” the absolute minimum code to use RGX
+- **[Migration Guide](docs/MIGRATION.md)** â€” moving from Ace3, LibSharedMedia, or standalone implementations
 
 ### Core Systems
 
-- **[Architecture](docs/ARCHITECTURE.md)** — load order, module registration, `...` varargs pattern, lifecycle, timer driver, event dispatch, combat queue
-- **[API Reference](docs/API.md)** — complete public API by module (every method, every parameter)
-- **[Troubleshooting](docs/TROUBLESHOOTING.md)** — common issues and fixes
+- **[Architecture](docs/ARCHITECTURE.md)** â€” load order, module registration, `...` varargs pattern, lifecycle, timer driver, event dispatch, combat queue
+- **[API Reference](docs/API.md)** â€” complete public API by module (every method, every parameter)
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** â€” common issues and fixes
 
 ### Module Deep-Dives
 
-- **[Fonts System](docs/FONTS.md)** — registry, blocklist, style objects, dropdown schemas, UI controls, flag helpers, dual-schema design
-- **[Dropdowns System](docs/DROPDOWNS.md)** — nested menus, auto-width, inline buttons, item normalization, MenuUtil vs legacy compat
-- **[Theming & Design](docs/THEMING.md)** — color palette, font styling conventions, texture system, consistent UI patterns
+- **[Fonts System](docs/FONTS.md)** â€” registry, blocklist, style objects, dropdown schemas, UI controls, flag helpers, dual-schema design
+- **[Dropdowns System](docs/DROPDOWNS.md)** â€” nested menus, auto-width, inline buttons, item normalization, MenuUtil vs legacy compat
+- **[Theming & Design](docs/THEMING.md)** â€” color palette, font styling conventions, texture system, consistent UI patterns
 
 ### Design & Philosophy
 
-- **[Foundation Decisions](docs/FOUNDATION.md)** — what RGX keeps vs drops from Ace3, and why
-- **[Ace3 Analysis](docs/ACE3-ANALYSIS.md)** — how each Ace3 piece maps to RGX, and where RGX aims to be better
-- **[Roadmap](docs/ROADMAP.md)** — profile/database system, SharedMedia drop-in, pack system, localization, longer-term plans
+- **[Foundation Decisions](docs/FOUNDATION.md)** â€” what RGX keeps vs drops from Ace3, and why
+- **[Ace3 Analysis](docs/ACE3-ANALYSIS.md)** â€” how each Ace3 piece maps to RGX, and where RGX aims to be better
+- **[Roadmap](docs/ROADMAP.md)** â€” profile/database system, SharedMedia drop-in, pack system, localization, longer-term plans
 
 ### Other
 
-- **[Changelog](docs/CHANGES.md)** — current version release notes
-- **[Font Sources & Licenses](docs/FONT-SOURCES.md)** — attribution for all bundled fonts
-- **[PetBuddy2 Integration](docs/USAGE-PB2.md)** — PB2-specific usage notes
+- **[Changelog](docs/CHANGES.md)** â€” current version release notes
+- **[Font Sources & Licenses](docs/FONT-SOURCES.md)** â€” attribution for all bundled fonts
+- **[BattlePetUtility Integration](docs/USAGE-BPU.md)** â€” BPU-specific usage notes
 
 ---
 
@@ -170,4 +192,4 @@ Full documentation lives in the [`docs/`](docs/) directory:
 
 ## License
 
-MIT for framework code. Bundled fonts retain their own open licenses — see [docs/FONT-SOURCES.md](docs/FONT-SOURCES.md) for attribution.
+MIT for framework code. Bundled fonts retain their own open licenses â€” see [docs/FONT-SOURCES.md](docs/FONT-SOURCES.md) for attribution.

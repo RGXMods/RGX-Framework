@@ -275,105 +275,187 @@ function RGX:TableCount(tbl)
     return count
 end
 
--- ── RGX.Addon — one call to set up an addon ──────────────────────────────────
+-- ── RGX.Addon — one call spins up an addon ────────────────────────────────────
 
---[[
-        local MyAddon = RGX.Addon("MyAddon", {
-            db    = { enabled = true },
-            slash = "myaddon",
-            brand = "05dffa",
-            options = {
-                General = {
-                    { toggle   = "enabled" },
-                    { slider   = "volume", min = 0, max = 100 },
-                    { dropdown = "sound", items = { "Fanfare", "Chime", "None" } },
-                    { section  = "Advanced" },
-                    { toggle   = "debugMode" },
-                    { button   = "Reset", action = function() addon.db:ResetProfile() end },
-                },
-            },
-            onInit = function(self)
-                self:Print("Ready!")          -- product behavior starts here
-                local Combat = RGX:GetCombat()
-                Combat:OnEnter(function() ... end)
-            end,
-        })
-
-    Framework owns:            addon owns (in onInit):
-      db, slash, minimap        event wiring (Combat:OnEnter, LevelUp:OnLevelUp)
-      brand, welcome            module init (sound registry, shared media)
-      options panel chrome      slash subcommands, feature toggles
-      Print/Warn/Error          product-specific logic
-
-    opts:
-      db      → true = empty defaults, or { key = val } = with defaults
-      dbName  → override DB name (default: "<Name>DB")
-      global  → cross-character defaults for db.global
-      slash   → "cmd" or { "cmd1", "cmd2" } — registers /cmd
-      minimap → "path/to/icon.tga" — simple string, not a table
-      brand   → "hexcolor" — string, not a table.  Default "58be81"
-      welcome → "message" — printed on ADDON_LOADED
-
-    No onInit.  Anything beyond these basics uses modules directly:
-        local Combat = RGX:GetCombat()
-        Combat:OnEnter(function() ... end)
---]]
 function RGX.Addon(name, opts)
     if type(name) ~= "string" or name == "" then return end
     opts = opts or {}
+    local RGX = _G.RGXFramework
 
     local addon = opts.table or {}
     addon.name = name
-    addon.framework = self
+    addon._rgxEventIds = addon._rgxEventIds or {}
+    addon._rgxUnitEventIds = addon._rgxUnitEventIds or {}
+    addon._rgxMessageIds = addon._rgxMessageIds or {}
 
-    -- Brand: hex string or default green
+    -- Brand
     local color = type(opts.brand) == "string" and opts.brand or "58be81"
-    local tag = name:upper()
-    local prefix = "|cff" .. color .. "[" .. tag .. "]|r "
+    local prefix = "|cff" .. color .. "[" .. name:upper() .. "]|r "
     function addon:Print(msg)  print(prefix .. msg) end
     function addon:Warn(msg)   print("|cffffcc00" .. prefix .. msg .. "|r") end
     function addon:Error(msg)  print("|cffff4444" .. prefix .. msg .. "|r") end
 
-    -- Deferred init
-    self:RegisterEvent("ADDON_LOADED", function(_, loaded)
+    local function defaultScopedId(kind, eventName)
+        return string.format("%s_%s_%s", tostring(name), tostring(kind), tostring(eventName))
+    end
+
+    function addon:RegisterEvent(eventName, callback, id)
+        if type(eventName) ~= "string" or eventName == "" then return false end
+        local handlerId = id or defaultScopedId("event", eventName)
+        local registered = RGX:RegisterEvent(eventName, callback, handlerId, self)
+        if registered then
+            self._rgxEventIds[eventName] = self._rgxEventIds[eventName] or {}
+            self._rgxEventIds[eventName][handlerId] = true
+        end
+        return registered
+    end
+
+    function addon:UnregisterEvent(eventName, id)
+        if type(eventName) ~= "string" or eventName == "" then return false end
+        if id then
+            local removed = RGX:UnregisterEvent(eventName, id)
+            if self._rgxEventIds[eventName] then
+                self._rgxEventIds[eventName][id] = nil
+                if not next(self._rgxEventIds[eventName]) then
+                    self._rgxEventIds[eventName] = nil
+                end
+            end
+            return removed
+        end
+        local ids = self._rgxEventIds[eventName]
+        if not ids then return false end
+        local removed = false
+        for handlerId in pairs(ids) do
+            if RGX:UnregisterEvent(eventName, handlerId) then
+                removed = true
+            end
+        end
+        self._rgxEventIds[eventName] = nil
+        return removed
+    end
+
+    function addon:RegisterUnitEvent(eventName, unit, callback, id)
+        if type(eventName) ~= "string" or eventName == "" then return false end
+        local handlerId = id or defaultScopedId("unit", eventName)
+        local registered = RGX:RegisterUnitEvent(eventName, unit, callback, handlerId, self)
+        if registered then
+            self._rgxUnitEventIds[eventName] = self._rgxUnitEventIds[eventName] or {}
+            self._rgxUnitEventIds[eventName][handlerId] = true
+        end
+        return registered
+    end
+
+    function addon:UnregisterUnitEvent(eventName, id)
+        if type(eventName) ~= "string" or eventName == "" then return false end
+        if id then
+            local removed = RGX:UnregisterUnitEvent(eventName, id)
+            if self._rgxUnitEventIds[eventName] then
+                self._rgxUnitEventIds[eventName][id] = nil
+                if not next(self._rgxUnitEventIds[eventName]) then
+                    self._rgxUnitEventIds[eventName] = nil
+                end
+            end
+            return removed
+        end
+        local ids = self._rgxUnitEventIds[eventName]
+        if not ids then return false end
+        local removed = false
+        for handlerId in pairs(ids) do
+            if RGX:UnregisterUnitEvent(eventName, handlerId) then
+                removed = true
+            end
+        end
+        self._rgxUnitEventIds[eventName] = nil
+        return removed
+    end
+
+    function addon:RegisterMessage(message, callback, id)
+        if type(message) ~= "string" or message == "" then return false end
+        local handlerId = id or defaultScopedId("message", message)
+        local registered = RGX:RegisterMessage(message, callback, handlerId, self)
+        if registered then
+            self._rgxMessageIds[message] = self._rgxMessageIds[message] or {}
+            self._rgxMessageIds[message][handlerId] = true
+        end
+        return registered
+    end
+
+    function addon:UnregisterMessage(message, id)
+        if type(message) ~= "string" or message == "" then return false end
+        if id then
+            local removed = RGX:UnregisterMessage(message, id)
+            if self._rgxMessageIds[message] then
+                self._rgxMessageIds[message][id] = nil
+                if not next(self._rgxMessageIds[message]) then
+                    self._rgxMessageIds[message] = nil
+                end
+            end
+            return removed
+        end
+        local ids = self._rgxMessageIds[message]
+        if not ids then return false end
+        local removed = false
+        for handlerId in pairs(ids) do
+            if RGX:UnregisterMessage(message, handlerId) then
+                removed = true
+            end
+        end
+        self._rgxMessageIds[message] = nil
+        return removed
+    end
+
+    function addon:SendMessage(...)
+        return RGX:SendMessage(...)
+    end
+
+    addon.Emit = addon.SendMessage
+
+    function addon:After(...)
+        return RGX:After(...)
+    end
+
+    function addon:Every(...)
+        return RGX:Every(...)
+    end
+
+    function addon:CancelTimer(...)
+        return RGX:CancelTimer(...)
+    end
+
+    -- Slash — register at file scope, no ADDON_LOADED needed
+    if opts.slash then
+        local cmds = type(opts.slash) == "table" and opts.slash or { opts.slash }
+        for _, cmd in ipairs(cmds) do
+            RGX:RegisterSlashCommand(cmd, function(msg)
+                if addon.panel then addon.panel:Open() return end
+                addon:Print(cmd .. " v?" )
+            end, name:upper())
+        end
+    end
+
+    -- Minimap — true uses default icon, string uses custom path
+    if opts.minimap then
+        local icon = type(opts.minimap) == "string" and opts.minimap or "Interface\\Icons\\inv_misc_questionmark"
+        local MM = RGX:GetMinimap()
+        if MM then MM:Create({ name = name, icon = icon }) end
+    end
+
+    -- Database + options deferred to ADDON_LOADED
+    RGX:RegisterEvent("ADDON_LOADED", function(_, loaded)
         if loaded ~= name then return end
 
-        -- Database: opts.db = true  → empty defaults;  { key = val } → with defaults
         if opts.db ~= nil then
             local defaults = type(opts.db) == "table" and opts.db or {}
             local dbName = opts.dbName or (name .. "DB")
-            addon.db = self:NewDatabase(dbName, defaults, {
-                global = opts.global,
-            })
-        end
-
-        -- Minimap: string = icon path
-        if type(opts.minimap) == "string" then
-            local MM = self:GetMinimap()
-            if MM then
-                MM:CreateButton(name, { icon = opts.minimap })
+            if not addon.db then
+                addon.db = RGX:NewDatabase(dbName, defaults, { global = opts.global, onSwitch = opts.onSwitch })
             end
         end
 
-        -- Slash commands
-        if opts.slash then
-            local cmds = type(opts.slash) == "table" and opts.slash or { opts.slash }
-            for _, cmd in ipairs(cmds) do
-                self:RegisterSlashCommand(cmd, function(msg)
-                    if addon.OpenOptions then
-                        addon:OpenOptions()
-                    else
-                        addon:Print(name .. " v" .. (addon.tocVersion or "?"))
-                    end
-                end, name:upper())
-            end
-        end
-
-        -- Options panel — declarative { General = { { toggle = "key" } } }
         if type(opts.options) == "table" and addon.db then
-            local UI = self:GetUI()
+            local UI = RGX:GetUI()
+            local Drops = RGX:GetDropdowns()
             if UI and UI.CreateOptionsPanel then
-                local Drops = self:GetDropdowns()
                 local tabs = {}
                 for tabName, controls in pairs(opts.options) do
                     tabs[#tabs + 1] = {
@@ -382,63 +464,30 @@ function RGX.Addon(name, opts)
                             for _, ctrl in ipairs(controls) do
                                 if type(ctrl) == "table" then
                                     if type(ctrl.toggle) == "string" then
-                                        UI:CreateToggle(frame, {
-                                            key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper),
-                                            storage = addon.db, default = ctrl.default })
+                                        UI:CreateToggle(frame, { key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default })
                                     elseif type(ctrl.slider) == "string" then
-                                        UI:CreateSlider(frame, {
-                                            key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper),
-                                            storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100,
-                                            step = ctrl.step or 1, suffix = ctrl.suffix or "" })
-                                    elseif type(ctrl.dropdown) == "string" then
+                                        UI:CreateSlider(frame, { key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper), storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100, step = ctrl.step or 1 })
+                                    elseif type(ctrl.dropdown) == "string" and Drops then
                                         local items = {}
-                                        for _, v in ipairs(ctrl.items or {}) do
-                                            items[#items + 1] = { text = type(v) == "string" and v or v.text or tostring(v), value = v }
-                                        end
-                                        if Drops then
-                                            Drops:CreateNestedDropdown(frame, {
-                                                label = ctrl.label or ctrl.dropdown:gsub("^%l", string.upper),
-                                                items = items,
-                                                width = ctrl.width or 260,
-                                                onChange = function(value)
-                                                    addon.db[ctrl.dropdown] = value
-                                                end,
-                                            })
-                                        end
+                                        for _, v in ipairs(ctrl.items or {}) do items[#items+1] = { text = tostring(v), value = v } end
+                                        Drops:CreateNestedDropdown(frame, { label = ctrl.label or ctrl.dropdown:gsub("^%l", string.upper), items = items, width = ctrl.width or 260, onChange = function(v) addon.db[ctrl.dropdown] = v end })
                                     elseif type(ctrl.button) == "string" and type(ctrl.action) == "function" then
                                         UI:CreateButton(frame, ctrl.button, ctrl.width or 120, ctrl.height or 22, ctrl.action)
                                     elseif type(ctrl.section) == "string" then
                                         UI:CreateSection(frame, ctrl.section)
-                                    elseif type(ctrl.label) == "string" then
-                                        UI:CreateLabel(frame, { text = ctrl.label, size = ctrl.size or "small" })
                                     end
                                 end
                             end
                         end,
                     }
                 end
-                addon.panel = UI:CreateOptionsPanel({
-                    addonName = name,
-                    title    = opts.title or name,
-                    subtitle = opts.subtitle,
-                    icon     = opts.icon,
-                    tabs     = tabs,
-                })
-                addon.OpenOptions = function() addon.panel:Open() end
-            end
-        end
+                addon.panel = UI:CreateOptionsPanel({ addonName = name, title = opts.title or name, tabs = tabs })
+            end -- UI check
+        end -- addon.db check
 
-        -- Welcome message
-        if opts.welcome then
-            addon:Print(opts.welcome)
-        end
-
-        -- Product behavior — addon owns this
-        if opts.onInit then
-            opts.onInit(addon)
-        end
-
-        self:UnregisterEvent("ADDON_LOADED", name .. "_RGXAddon")
+        if opts.welcome then addon:Print(opts.welcome) end
+        if opts.onInit then opts.onInit(addon) end
+        RGX:UnregisterEvent("ADDON_LOADED", name .. "_RGXAddon")
     end, name .. "_RGXAddon")
 
     return addon

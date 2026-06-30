@@ -13,6 +13,18 @@ local addonName, RGX = ...
 RGX.events = RGX.events or {}
 RGX.unitEvents = RGX.unitEvents or {}
 RGX.messages = RGX.messages or {}
+RGX.pendingFrameEvents = RGX.pendingFrameEvents or {}
+RGX.registeredFrameEvents = RGX.registeredFrameEvents or {}
+RGX.allFrameEventsRegistered = RGX.allFrameEventsRegistered or false
+RGX.wakeFrameEvents = RGX.wakeFrameEvents or {
+    PLAYER_LOGIN = true,
+    PLAYER_ENTERING_WORLD = true,
+    PLAYER_REGEN_ENABLED = true,
+    PET_BATTLE_CLOSE = true,
+}
+
+local canRegisterFrameEventsNow
+local flushPendingFrameEvents
 
 local function reportDispatchError(channel, name, id, err)
     local message = string.format(
@@ -52,10 +64,67 @@ local function safeRegisterFrameEvent(frame, event)
         return false
     end
 
-    local ok = pcall(function()
-        frame:RegisterEvent(event)
-    end)
+    if RGX.allFrameEventsRegistered then
+        RGX.registeredFrameEvents[event] = true
+        return true
+    end
+
+    if RGX.registeredFrameEvents[event] then
+        return true
+    end
+
+    if not canRegisterFrameEventsNow() then
+        return false
+    end
+
+    local ok = pcall(frame.RegisterEvent, frame, event)
+    if ok then
+        RGX.registeredFrameEvents[event] = true
+    end
     return ok
+end
+
+local function hasAnyEventHandlers(rgx, event)
+    return (rgx.events and rgx.events[event] and next(rgx.events[event]) ~= nil)
+        or (rgx.unitEvents and rgx.unitEvents[event] and next(rgx.unitEvents[event]) ~= nil)
+end
+
+local function queuePendingFrameEvent(rgx, event)
+    if type(event) ~= "string" or event == "" then
+        return
+    end
+
+    rgx.pendingFrameEvents[event] = true
+end
+
+local function unqueuePendingFrameEvent(rgx, event)
+    if rgx.pendingFrameEvents then
+        rgx.pendingFrameEvents[event] = nil
+    end
+end
+
+canRegisterFrameEventsNow = function()
+    if (RGX._dispatchDepth or 0) > 0 then
+        return false
+    end
+
+    if (RGX._timerDispatchDepth or 0) > 0 then
+        return false
+    end
+
+    if type(InCombatLockdown) == "function" and InCombatLockdown() then
+        return false
+    end
+
+    if type(UnitAffectingCombat) == "function" and UnitAffectingCombat("player") then
+        return false
+    end
+
+    if C_PetBattles and type(C_PetBattles.IsInBattle) == "function" and C_PetBattles.IsInBattle() then
+        return false
+    end
+
+    return true
 end
 
 local function safeUnregisterFrameEvent(frame, event)
@@ -63,9 +132,19 @@ local function safeUnregisterFrameEvent(frame, event)
         return false
     end
 
-    local ok = pcall(function()
-        frame:UnregisterEvent(event)
-    end)
+    if RGX.allFrameEventsRegistered then
+        RGX.registeredFrameEvents[event] = nil
+        return true
+    end
+
+    if RGX.wakeFrameEvents and RGX.wakeFrameEvents[event] then
+        return true
+    end
+
+    local ok = pcall(frame.UnregisterEvent, frame, event)
+    if ok then
+        RGX.registeredFrameEvents[event] = nil
+    end
     return ok
 end
 
@@ -181,22 +260,75 @@ local function dispatchHandlers(container, channel, key, ...)
     return #queued
 end
 
-RGX.eventFrame = RGX.eventFrame or _G.RGXFrameworkEventFrame or CreateFrame("Frame", "RGXFrameworkEventFrame")
+RGX.eventFrame = RGX.eventFrame or CreateFrame("Frame")
+
+flushPendingFrameEvents = function(rgx)
+    if not rgx or not rgx.pendingFrameEvents or not next(rgx.pendingFrameEvents) then
+        return
+    end
+
+    if not canRegisterFrameEventsNow() then
+        return
+    end
+
+    for event in pairs(RGX.pendingFrameEvents) do
+        if not hasAnyEventHandlers(rgx, event) then
+            rgx.pendingFrameEvents[event] = nil
+        elseif safeRegisterFrameEvent(rgx.eventFrame, event) then
+            rgx.pendingFrameEvents[event] = nil
+        end
+    end
+end
+
+local function registerWakeFrameEvents(frame)
+    if not frame then return end
+    for event in pairs(RGX.wakeFrameEvents) do
+        if not RGX.registeredFrameEvents[event] then
+            local ok = pcall(frame.RegisterEvent, frame, event)
+            if ok then
+                RGX.registeredFrameEvents[event] = true
+            end
+        end
+    end
+end
+
+local function registerAllFrameEvents(frame)
+    if not frame or RGX.allFrameEventsRegistered then
+        return RGX.allFrameEventsRegistered == true
+    end
+
+    local ok = pcall(frame.RegisterAllEvents, frame)
+    if ok then
+        RGX.allFrameEventsRegistered = true
+        return true
+    end
+
+    return false
+end
+
+if not registerAllFrameEvents(RGX.eventFrame) then
+    registerWakeFrameEvents(RGX.eventFrame)
+end
+
 RGX.eventFrame:SetScript("OnEvent", function(_, event, ...)
     RGX:FireEvent(event, ...)
 end)
 
 function RGX:RegisterEvent(event, callback, id, owner)
-    local created = not self.events[event]
+    local created = not hasAnyEventHandlers(self, event)
     local handlerId = registerHandler(self.events, event, callback, id, owner, self)
     if not handlerId then
         return false
     end
 
-    if created and not safeRegisterFrameEvent(self.eventFrame, event) then
-        -- Frame registration failed (e.g. combat lockdown).
-        -- The handler is already registered; events will fire once the frame
-        -- registration succeeds on a subsequent addon init pass.
+    if created then
+        if canRegisterFrameEventsNow() then
+            if not safeRegisterFrameEvent(self.eventFrame, event) then
+                queuePendingFrameEvent(self, event)
+            end
+        else
+            queuePendingFrameEvent(self, event)
+        end
     end
 
     return handlerId
@@ -204,7 +336,8 @@ end
 
 function RGX:UnregisterEvent(event, id)
     local removed = unregisterHandler(self.events, event, id)
-    if removed and not self.events[event] then
+    if removed and not hasAnyEventHandlers(self, event) then
+        unqueuePendingFrameEvent(self, event)
         safeUnregisterFrameEvent(self.eventFrame, event)
     end
 
@@ -220,8 +353,9 @@ function RGX:UnregisterAllEvents(id)
       removed = true
     end
 
-    if not next(bucket) then
+    if not hasAnyEventHandlers(self, event) then
       self.events[event] = nil
+      unqueuePendingFrameEvent(self, event)
       safeUnregisterFrameEvent(self.eventFrame, event)
     end
   end
@@ -250,17 +384,20 @@ function RGX:RegisterUnitEvent(event, unit, callback, id, owner)
     return false
   end
 
+  local created = not hasAnyEventHandlers(self, event)
   local handlerId = registerHandler(self.unitEvents, event, callback, id, owner, self)
   if not handlerId then return false end
 
   local entry = self.unitEvents[event][handlerId]
   entry.units = units
 
-  local created = not self.events[event]
   if created then
-    if not safeRegisterFrameEvent(self.eventFrame, event) then
-      unregisterHandler(self.unitEvents, event, handlerId)
-      return false
+    if canRegisterFrameEventsNow() then
+      if not safeRegisterFrameEvent(self.eventFrame, event) then
+        queuePendingFrameEvent(self, event)
+      end
+    else
+      queuePendingFrameEvent(self, event)
     end
   end
 
@@ -276,6 +413,8 @@ function RGX:UnregisterAllUnitEvents(id)
 end
 
 function RGX:FireEvent(event, ...)
+  self._dispatchDepth = (self._dispatchDepth or 0) + 1
+
   local count = dispatchHandlers(self.events, "event", event, ...)
 
   local unitBucket = self.unitEvents[event]
@@ -305,6 +444,8 @@ function RGX:FireEvent(event, ...)
       end
     end
   end
+
+  self._dispatchDepth = math.max(0, (self._dispatchDepth or 1) - 1)
 
   return count
 end
@@ -365,8 +506,9 @@ local function reportActionBlock(event, blockedAddon, blockedFunction)
     ))
 end
 
-RGX:RegisterEvent("ADDON_ACTION_BLOCKED", reportActionBlock, "RGX_ActionBlockedDiag")
-RGX:RegisterEvent("ADDON_ACTION_FORBIDDEN", reportActionBlock, "RGX_ActionForbiddenDiag")
+-- Do not auto-register ADDON_ACTION_BLOCKED/FORBIDDEN diagnostics here.
+-- Subscribing to those diagnostics can itself be attributed to RGX during
+-- restricted startup/reload phases, creating recursive BugGrabber noise.
 
 function RGX:CreateEmitter(name)
     local emitter = {

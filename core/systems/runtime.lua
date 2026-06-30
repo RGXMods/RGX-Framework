@@ -21,7 +21,10 @@ RGX._timerCounter = RGX._timerCounter or 0
 RGX.timerBudget = RGX.timerBudget or {
     maxPerFrame = 256,
     maxSeconds = 0.033,
-    slowSeconds = 0.050,
+    slowSeconds = 0.250,
+    slowByLabel = {
+        ["SharedMedia:QueueScan"] = 0.500,
+    },
 }
 
 local unpackFunc = unpack or table.unpack
@@ -338,7 +341,8 @@ function RGX:UpdateTimers(elapsed)
     local budget = self.timerBudget or {}
     local maxPerFrame = tonumber(budget.maxPerFrame) or 120
     local maxSeconds = tonumber(budget.maxSeconds) or 0.008
-    local slowSeconds = tonumber(budget.slowSeconds) or 0.050
+    local slowSeconds = tonumber(budget.slowSeconds) or 0.250
+    local slowByLabel = type(budget.slowByLabel) == "table" and budget.slowByLabel or nil
     local started = nowSeconds()
     local processed = 0
     local index = #self.timers
@@ -366,12 +370,23 @@ function RGX:UpdateTimers(elapsed)
             if timer.elapsed >= timer.duration then
                 processed = processed + 1
                 local callbackStarted = nowSeconds()
+                self._timerDispatchDepth = (self._timerDispatchDepth or 0) + 1
                 local ok, err = pcall(timer.callback, timer)
+                self._timerDispatchDepth = math.max(0, (self._timerDispatchDepth or 1) - 1)
                 local callbackElapsed = nowSeconds() - callbackStarted
+                local timerSlowSeconds = slowSeconds
+                local timerLabel = tostring(timer.label or "")
+
+                if slowByLabel and timerLabel ~= "" then
+                    local override = tonumber(slowByLabel[timerLabel])
+                    if override and override > 0 then
+                        timerSlowSeconds = override
+                    end
+                end
 
                 if not ok then
                     reportRuntimeError("timer", err)
-                elseif callbackElapsed >= slowSeconds then
+                elseif callbackElapsed >= timerSlowSeconds then
                     reportRuntimeError("timer-slow", string.format(
                         "%s took %.1fms",
                         tostring(timer.label or timer.id or timer.callback),
