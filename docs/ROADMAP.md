@@ -14,7 +14,7 @@ Reusable patterns discovered in consumer addons move into RGX. Addon-specific pr
 
 ## Consumer Integration Levels
 
-Current state as of v2.0.0:
+Current state as of v2.1.0:
 
 | Addon | RGX Dep | Systems Used | Level |
 |---|---|---|---|
@@ -79,31 +79,32 @@ Current state as of v2.0.0:
 | Trading Post activity callbacks | RGXTradingPost | Done |
 | Prey hunt callbacks | RGXPrey | Done |
 
-### Dormant Modules (in-tree, not loaded by XML)
+### Recently Enabled Modules
 
-Complete implementations waiting to be enabled. One-line XML change each.
+As of **v2.1.0**, every in-tree module is loaded by the XML loader. There are no dormant modules. The modules below were the last to be enabled — they are now Active (listed in the table above) and available to every consumer.
 
-| Module | Global | What it provides | Primary consumer |
-|---|---|---|---|
-| SharedMedia | RGXSharedMedia | Sound/font/texture registry, KittyPack hook, DBM registrar scan, known-addon compat, generic global scan | BLU (drops 901-line local file) |
-| PetBattles | RGXPetBattles | OnLevelUp, OnCapture, OnBattleStart/End, IsInBattle, GetPetLevel, ScanPetLevels | BattlePetUtility |
-| Combat | RGXCombat | OnEnter, OnLeave, OnKill, OnPlayerDied, OnCrit, OnLowHealth, OnExecuteWindow, OnEncounterEnd/Victory | BLU Combat module, rgx-mod triggers |
-| Reputation | RGXReputation | Reputation and renown tracking callbacks | ReputationLevelUp migration |
+| Module | Global | What it provides | Enabled | Primary consumer |
+|---|---|---|---|---|
+| SharedMedia | RGXSharedMedia | Sound/font/texture registry, DBM registrar scan, known-addon compat, generic addon-global scan | v2.0.0 | BLU (will drop local sharedmedia.lua) |
+| PetBattles | RGXPetBattles | OnLevelUp, OnCapture, OnBattleStart/End, IsInBattle, GetPetLevel, ScanPetLevels | v2.0.0 | BattlePetUtility |
+| Reputation | RGXReputation | Reputation and renown tracking callbacks | v2.0.0 | ReputationLevelUp migration |
+| Combat | RGXCombat | OnEnter, OnLeave, OnKill, OnPlayerDied, OnCrit, OnLowHealth, OnExecuteWindow, OnEncounterEnd/Victory | v2.1.0 | BLU Combat module, rgx-mod triggers |
+| Achievement, LevelUp, Quest, Honor, Delves, Housing, TradingPost, Prey | various | Event callback modules for milestone/progression triggers | v2.1.0 | BLU v8 modules, sound packs |
 
 ---
 
 ## Priority Work Order
 
-### Tier 1 — Enable dormant modules (immediate, zero new code)
+### Tier 1 — Enable dormant modules ✅ DONE (v2.0.0 + v2.1.0)
 
-All four modules are complete. Enabling = adding `<Script>` entries to `RGX-Framework.xml` + verifying `TryInit` wiring in `initialization.lua` + version bump + release.
+All previously-dormant modules are now loaded by the XML loader. No dormant code remains in-tree.
 
-1. **Enable RGXSharedMedia** — BLU drops its 901-line local `core/sounds/sharedmedia.lua`
-2. **Enable RGXPetBattles** — BattlePetUtility replaces raw `C_PetBattles.*` calls
-3. **Enable RGXCombat** — BLU Combat module simplifies to `OnEnter/OnLeave` callbacks
-4. **Enable RGXReputation** — enables ReputationLevelUp migration from 0%
+1. ✅ **RGXSharedMedia enabled** (v2.0.0)
+2. ✅ **RGXPetBattles enabled** (v2.0.0)
+3. ✅ **RGXReputation enabled** (v2.0.0)
+4. ✅ **RGXCombat + 8 event callback modules enabled** (v2.1.0)
 
-### Tier 2 — Wire existing shipped modules into consumers
+### Tier 2 — Wire existing shipped modules into consumers ← CURRENT FOCUS
 
 Framework already has these. Addons just haven't adopted them yet.
 
@@ -193,7 +194,7 @@ Named theme presets (Dark, Light, brand-specific). Central widget registry for `
 ### BLU v8.0.1 — 100%
 
 Migrated: events, timers, hooks, slash, DB/profiles, combat protection, dropdowns, utility functions, sound muting.
-Remaining: `core/sounds/sharedmedia.lua` (901 lines) — drops entirely when RGXSharedMedia is enabled.
+Remaining: `core/sounds/sharedmedia.lua` (~830 lines, after dead Kitty-API removal) — RGXSharedMedia is now enabled (v2.0.0), so this local file can be dropped in the Tier 2 wire-up (#5).
 
 ### BattlePetUtility v2.3.20 — 65%
 
@@ -210,7 +211,16 @@ Small utility addon. Needs: TOC RequiredDeps, basic event/timer/slash wiring.
 
 ---
 
-## Completed This Cycle (v2.0.0)
+## Completed This Cycle (v2.1.0)
+
+| Feature | Description |
+|---|---|
+| All modules enabled | RGXCombat + 8 event callback modules (Achievement, LevelUp, Quest, Honor, Delves, Housing, TradingPost, Prey) loaded by XML — no dormant code remains |
+| Dead-code removal | Removed fictional KittyGetSoundPacks/KittyRegisterSoundPack scan/hook from RGXSharedMedia (and BLU's local copy) |
+| Timer-rule enforcement | Delves + Honor modules switched from raw `C_Timer.After` to `RGX:After` for budget/diagnostics consistency |
+| Taint audit | Verified framework + BLU + BPU clean: only `hooksecurefunc`, no protected calls, combat-lockdown handling correct |
+
+## Completed Earlier (v2.0.0)
 
 | Feature | Description |
 |---|---|

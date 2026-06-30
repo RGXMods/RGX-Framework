@@ -108,12 +108,22 @@ Core-only APIs (events, timers, hooks, slash commands) are available immediately
 | Design | `RGXDesign` | `GetDesign()` | Active |
 | DataBroker | `RGXDataBroker` | `GetDataBroker()` | Active |
 | Sound | `RGXSound` | `GetSound()` | Active |
-| PetBattles | `RGXPetBattles` | `GetPetBattles()` | Dormant |
-| SharedMedia | `RGXSharedMedia` | `GetSharedMedia()` | Dormant |
-| Combat | `RGXCombat` | `GetCombat()` | Dormant |
-| Reputation | `RGXReputation` | `GetReputation()` | Dormant |
+| SharedMedia | `RGXSharedMedia` | `GetSharedMedia()` | Active |
+| PetBattles | `RGXPetBattles` | `GetPetBattles()` | Active |
+| Combat | `RGXCombat` | `GetCombat()` | Active |
+| Reputation | `RGXReputation` | `GetReputation()` | Active |
+| Achievement | `RGXAchievement` | â€” | Active |
+| LevelUp | `RGXLevelUp` | â€” | Active |
+| Collectibles | `RGXCollectibles` | â€” | Active |
+| Loot | `RGXLoot` | â€” | Active |
+| Quest | `RGXQuest` | â€” | Active |
+| Honor | `RGXHonor` | â€” | Active |
+| Delves | `RGXDelves` | â€” | Active |
+| Housing | `RGXHousing` | â€” | Active |
+| TradingPost | `RGXTradingPost` | â€” | Active |
+| Prey | `RGXPrey` | â€” | Active |
 
-Dormant modules are in-tree and fully implemented but not loaded by the XML loader (removed from the XML loader at v1.5.18 to reduce runtime surface). Their `Get*()` accessors return `nil`. Re-enabling is a one-line XML change per module.
+As of **v2.1.0**, every in-tree module is loaded by the XML loader. There are no dormant modules.
 
 ---
 
@@ -175,7 +185,7 @@ Full documentation lives in the [`docs/`](docs/) directory:
 ## Compatibility
 
 - **WoW Retail only**
-- Interface version: `120005`
+- Interface version: `120007`
 - `C_AddOns.GetAddOnMetadata` and `GetAddOnMetadata` both handled
 - `ColorPickerFrame` old API and `ColorPickerInteraction` new API both handled
 - `Settings.RegisterCanvasLayoutCategory` and `InterfaceOptions_AddCategory` both handled

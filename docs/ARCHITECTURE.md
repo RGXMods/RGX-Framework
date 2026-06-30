@@ -50,12 +50,28 @@ WoW loads files in the order declared in `RGX-Framework.xml`. The framework uses
 26. modules/ui/controls.lua         â€” UI control factory (slider, toggle, label, dropdown, etc.)
 27. modules/ui/options.lua          â€” CreateOptionsPanel (tabbed settings window)
 28. modules/minimap/minimap.lua     â€” circular-drag minimap button
-29. modules/databroker/databroker.lua â€” NewDataObject, LDB bridge
-30. modules/sound/sound.lua         â€” Sound:Register, variant playback, SavedVar integration
+29. modules/sharedmedia/sharedmedia.lua â€” multi-type media registry, DBM/known-addon/generic scanners
+30. modules/combat/combat.lua       â€” combat enter/leave/kill/crit/low-health/encounter callbacks
+31. modules/petbattles/petbattles.lua â€” pet battle level/capture/state callbacks
+32. modules/reputation/reputation.lua â€” reputation and renown tracking callbacks
+33. modules/databroker/databroker.lua â€” NewDataObject, LDB bridge
+34. modules/sound/sound.lua         â€” Sound:Register, variant playback, SavedVar integration
+35. modules/achievement/achievement.lua â€” achievement unlock callbacks
+36. modules/levelup/levelup.lua     â€” level-up callbacks
+37. modules/quest/quest.lua         â€” quest lifecycle and progress callbacks
+38. modules/honor/honor.lua         â€” honor level callbacks
+39. modules/delves/delves.lua       â€” delve companion/lives callbacks
+40. modules/housing/housing.lua     â€” housing progression/decor callbacks
+41. modules/tradingpost/tradingpost.lua â€” Trading Post activity callbacks
+42. modules/prey/prey.lua           â€” prey hunt callbacks
+43. modules/collectibles/collectibles.lua â€” mount/pet/toy unlock callbacks
+44. modules/loot/loot.lua           â€” loot and currency callbacks
 
-31. core/commands.lua        â€” /rgx slash command handler (modules, fonts, debug)
-32. core/initialization.lua  â€” ADDON_LOADED handler, database init, module TryInit, OnReady lifecycle
+45. core/commands.lua        â€” /rgx slash command handler (modules, fonts, debug)
+46. core/initialization.lua  â€” ADDON_LOADED handler, database init, module TryInit, OnReady lifecycle
 ```
+
+> Load order is authoritatively defined by `RGX-Framework.xml`. As of v2.1.0 every in-tree module is loaded — there are no dormant modules.
 
 Consumer addons with `RequiredDeps: RGX-Framework` are guaranteed to load after step 32 completes.
 

@@ -2,6 +2,12 @@
 
 ## Current Development Release
 
+### Unreleased (on `main`, not yet tagged)
+
+- Removed dead `KittyGetSoundPacks` / `KittyRegisterSoundPack` scan and hook from `RGXSharedMedia` — these globals never existed in any real addon; the generic addon-global scan already covers third-party sound packs.
+- Enforced the framework's own "no `C_Timer`" rule: `RGXDelves:QueueLivesRefresh` and `RGXHonor:QueueCheck` now use `RGX:After` so deferred work is budgeted and diagnosable by the framework timer driver.
+- Documented the design thesis in `CLAUDE.md`: the framework prevents taint and deprecated-API bugs by construction. Verified by audit that the framework (and consumers BLU, BPU) use only `hooksecurefunc`, no protected-function calls, with correct combat-lockdown handling.
+
 ### [v2.1.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.1.0.md) - 2026-06-30
 
 - Enabled RGXCombat — combat enter/leave/kill/crit/low-health/execute/encounter callbacks now active for all consumers.
