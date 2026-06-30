@@ -37,7 +37,6 @@ SM._seenPaths = {}
 -- Scanner state
 SM._pendingScan  = false
 SM._pendingFullScan = false
-SM._kittyHooked  = false
 SM._invokedDBM   = {}
 SM._didGenericScan = false
 
@@ -420,45 +419,6 @@ local function CollectAudioPaths(value, found, visited, state, depth)
     end)
 end
 
-function SM:_ScanKitty()
-    if type(_G.KittyGetSoundPacks) ~= "function" then return 0 end
-    local ok, packs = pcall(_G.KittyGetSoundPacks)
-    if not ok or type(packs) ~= "table" then return 0 end
-
-    local found = {}
-    local state = { total = 0, tables = 0 }
-    CollectAudioPaths(packs, found, {}, state, 0)
-
-    local count = 0
-    for _, p in pairs(found) do
-        if self:_BridgePath(p) then count = count + 1 end
-    end
-    return count
-end
-
-function SM:_HookKitty()
-    if self._kittyHooked then return end
-    local orig = _G.KittyRegisterSoundPack
-    if type(orig) ~= "function" then return end
-
-    self._kittyHooked = true
-    _G.KittyRegisterSoundPack = function(name, opts, ...)
-        local result = { pcall(orig, name, opts, ...) }
-        local ok = table.remove(result, 1)
-        if not ok then error(result[1]) end
-
-        if type(opts) == "table" then
-            local found = {}
-            local state = { total = 0, tables = 0 }
-            CollectAudioPaths(opts, found, {}, state, 0)
-            for _, p in pairs(found) do self:_BridgePath(p) end
-        end
-
-        self:QueueScan(0.05)
-        return SafeUnpack(result)
-    end
-end
-
 function SM:_InvokeDBMRegistrars()
     local dbmKeys = {
         "X-DBM-CountPack-GlobalName",
@@ -580,21 +540,18 @@ function SM:Scan(includeGeneric)
         end
     end
 
-    self:_HookKitty()
-
-    local n1 = self:_ScanKitty()
-    local n2 = self:_InvokeDBMRegistrars()
-    local n3 = self:_ScanKnownAddons()
-    local n4 = 0
+    local n1 = self:_InvokeDBMRegistrars()
+    local n2 = self:_ScanKnownAddons()
+    local n3 = 0
 
     if includeGeneric then
-        n4 = self:_ScanAddonGlobals()
+        n3 = self:_ScanAddonGlobals()
         self._didGenericScan = true
     end
 
     RGX:Debug(string.format(
-        "[RGXSharedMedia] Scan complete — Kitty:%d DBM:%d Compat:%d Generic:%d",
-        n1, n2, n3, n4
+        "[RGXSharedMedia] Scan complete — DBM:%d Compat:%d Generic:%d",
+        n1, n2, n3
     ))
 end
 
@@ -633,7 +590,6 @@ end
 
 function SM:OnAddonLoaded(name)
     if IsLikelyMediaProvider(name) then
-        self:_HookKitty()
         self:QueueScan(0.25, false)
     end
 end
@@ -647,8 +603,6 @@ end
 -- ── Init ──────────────────────────────────────────────────────────────────────
 
 function SM:Init()
-    self:_HookKitty()
-
     RGX:RegisterEvent("ADDON_LOADED", function(_, name)
         SM:OnAddonLoaded(name)
     end)
