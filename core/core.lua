@@ -284,6 +284,9 @@ function RGX.Addon(name, opts)
 
     local addon = opts.table or {}
     addon.name = name
+    addon._rgxEventIds = addon._rgxEventIds or {}
+    addon._rgxUnitEventIds = addon._rgxUnitEventIds or {}
+    addon._rgxMessageIds = addon._rgxMessageIds or {}
 
     -- Brand
     local color = type(opts.brand) == "string" and opts.brand or "58be81"
@@ -291,6 +294,133 @@ function RGX.Addon(name, opts)
     function addon:Print(msg)  print(prefix .. msg) end
     function addon:Warn(msg)   print("|cffffcc00" .. prefix .. msg .. "|r") end
     function addon:Error(msg)  print("|cffff4444" .. prefix .. msg .. "|r") end
+
+    local function defaultScopedId(kind, eventName)
+        return string.format("%s_%s_%s", tostring(name), tostring(kind), tostring(eventName))
+    end
+
+    function addon:RegisterEvent(eventName, callback, id)
+        if type(eventName) ~= "string" or eventName == "" then return false end
+        local handlerId = id or defaultScopedId("event", eventName)
+        local registered = RGX:RegisterEvent(eventName, callback, handlerId, self)
+        if registered then
+            self._rgxEventIds[eventName] = self._rgxEventIds[eventName] or {}
+            self._rgxEventIds[eventName][handlerId] = true
+        end
+        return registered
+    end
+
+    function addon:UnregisterEvent(eventName, id)
+        if type(eventName) ~= "string" or eventName == "" then return false end
+        if id then
+            local removed = RGX:UnregisterEvent(eventName, id)
+            if self._rgxEventIds[eventName] then
+                self._rgxEventIds[eventName][id] = nil
+                if not next(self._rgxEventIds[eventName]) then
+                    self._rgxEventIds[eventName] = nil
+                end
+            end
+            return removed
+        end
+        local ids = self._rgxEventIds[eventName]
+        if not ids then return false end
+        local removed = false
+        for handlerId in pairs(ids) do
+            if RGX:UnregisterEvent(eventName, handlerId) then
+                removed = true
+            end
+        end
+        self._rgxEventIds[eventName] = nil
+        return removed
+    end
+
+    function addon:RegisterUnitEvent(eventName, unit, callback, id)
+        if type(eventName) ~= "string" or eventName == "" then return false end
+        local handlerId = id or defaultScopedId("unit", eventName)
+        local registered = RGX:RegisterUnitEvent(eventName, unit, callback, handlerId, self)
+        if registered then
+            self._rgxUnitEventIds[eventName] = self._rgxUnitEventIds[eventName] or {}
+            self._rgxUnitEventIds[eventName][handlerId] = true
+        end
+        return registered
+    end
+
+    function addon:UnregisterUnitEvent(eventName, id)
+        if type(eventName) ~= "string" or eventName == "" then return false end
+        if id then
+            local removed = RGX:UnregisterUnitEvent(eventName, id)
+            if self._rgxUnitEventIds[eventName] then
+                self._rgxUnitEventIds[eventName][id] = nil
+                if not next(self._rgxUnitEventIds[eventName]) then
+                    self._rgxUnitEventIds[eventName] = nil
+                end
+            end
+            return removed
+        end
+        local ids = self._rgxUnitEventIds[eventName]
+        if not ids then return false end
+        local removed = false
+        for handlerId in pairs(ids) do
+            if RGX:UnregisterUnitEvent(eventName, handlerId) then
+                removed = true
+            end
+        end
+        self._rgxUnitEventIds[eventName] = nil
+        return removed
+    end
+
+    function addon:RegisterMessage(message, callback, id)
+        if type(message) ~= "string" or message == "" then return false end
+        local handlerId = id or defaultScopedId("message", message)
+        local registered = RGX:RegisterMessage(message, callback, handlerId, self)
+        if registered then
+            self._rgxMessageIds[message] = self._rgxMessageIds[message] or {}
+            self._rgxMessageIds[message][handlerId] = true
+        end
+        return registered
+    end
+
+    function addon:UnregisterMessage(message, id)
+        if type(message) ~= "string" or message == "" then return false end
+        if id then
+            local removed = RGX:UnregisterMessage(message, id)
+            if self._rgxMessageIds[message] then
+                self._rgxMessageIds[message][id] = nil
+                if not next(self._rgxMessageIds[message]) then
+                    self._rgxMessageIds[message] = nil
+                end
+            end
+            return removed
+        end
+        local ids = self._rgxMessageIds[message]
+        if not ids then return false end
+        local removed = false
+        for handlerId in pairs(ids) do
+            if RGX:UnregisterMessage(message, handlerId) then
+                removed = true
+            end
+        end
+        self._rgxMessageIds[message] = nil
+        return removed
+    end
+
+    function addon:SendMessage(...)
+        return RGX:SendMessage(...)
+    end
+
+    addon.Emit = addon.SendMessage
+
+    function addon:After(...)
+        return RGX:After(...)
+    end
+
+    function addon:Every(...)
+        return RGX:Every(...)
+    end
+
+    function addon:CancelTimer(...)
+        return RGX:CancelTimer(...)
+    end
 
     -- Slash — register at file scope, no ADDON_LOADED needed
     if opts.slash then

@@ -2,6 +2,16 @@
 
 ## Current Development Release
 
+### [v2.0.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0.md) - 2026-06-30
+
+- Stable RGX 2.0 framework release for retail 12.0.7.
+- Promotes the RGX.Addon, NewDatabase, event, timer, and runtime integration work out of alpha.
+- Keeps unfinished callback modules out of the XML loader for a clean live load.
+- Includes combat-safe event/runtime hardening and SharedMedia scan coalescing from the alpha cycle.
+
+Full notes:
+- [v2.0.0 changelog](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0.md)
+
 ### [v2.0.0-alpha.2](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0-alpha.2.md) - 2026-06-28
 
 - SharedMedia startup scan now coalesces light/full rescans instead of doing the expensive generic pass immediately.
