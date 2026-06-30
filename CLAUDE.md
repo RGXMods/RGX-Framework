@@ -16,9 +16,23 @@ The framework is **not** embedded into addons and has **no LibStub**. It is a ha
 
 ---
 
+## Design thesis — make the bug unrepresentable
+
+The framework's core value is **prevention, not remediation.** Most WoW addon maintenance is reactive: hunting deprecated API and taint (protected-frame security-context violations) in code that already shipped them. RGX-Framework is built so consumer addons **cannot introduce that class of bug in the first place.**
+
+- **No manual event frames** — everything routes through `RGX:RegisterEvent` / `RGX:RegisterUnitEvent`. Consumers never touch `CreateFrame` + `SetScript("OnEvent")` by hand.
+- **No raw `C_Timer`** — the framework runs its own tick driver; consumers use `RGX:After` / `RGX:Every`.
+- **No raw `SLASH_X`** — `RGX:RegisterSlashCommand` handles registration.
+- **All dispatch is pcall-wrapped** — one consumer handler can never crash the dispatch frame.
+- **Combat-lockdown guards** — frame registration is deferred during lockdown and queued via `PLAYER_REGEN_ENABLED`, so consumers can't trigger taint by mutating protected frames mid-combat.
+
+A consumer addon that writes against the framework API gets taint-safety and current-API usage **by construction.** When designing any new subsystem, the test is not "is this convenient" but "does this make a whole class of WoW-specific bug impossible for the consumer to write." That is the same north star as rgx-mod: a clean, human-friendly authoring surface that emits correct, safe behavior underneath.
+
+---
+
 ## Current version
 
-- **Version:** `2.0.0`
+- **Version:** `2.1.0`
 - **Interface:** `120007` (WoW Retail Midnight 12.0.7)
 - **TOC:** `RGX-Framework.toc`
 - **Loader:** `RGX-Framework.xml` — this is the single source of truth for what modules are loaded
