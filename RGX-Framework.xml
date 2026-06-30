@@ -34,19 +34,19 @@
 <Script file="modules/ui/options.lua" />
 <Script file="modules/minimap/minimap.lua" />
   <Script file="modules/sharedmedia/sharedmedia.lua" />
-  <!-- <Script file="modules/combat/combat.lua"/> -->
+  <Script file="modules/combat/combat.lua" />
   <Script file="modules/petbattles/petbattles.lua" />
   <Script file="modules/reputation/reputation.lua" />
   <Script file="modules/databroker/databroker.lua" />
   <Script file="modules/sound/sound.lua" />
-  <!-- <Script file="modules/achievement/achievement.lua" />
+  <Script file="modules/achievement/achievement.lua" />
   <Script file="modules/levelup/levelup.lua" />
   <Script file="modules/quest/quest.lua" />
   <Script file="modules/honor/honor.lua" />
   <Script file="modules/delves/delves.lua" />
   <Script file="modules/housing/housing.lua" />
   <Script file="modules/tradingpost/tradingpost.lua" />
-  <Script file="modules/prey/prey.lua" /> -->
+  <Script file="modules/prey/prey.lua" />
   <Script file="modules/collectibles/collectibles.lua" />
   <Script file="modules/loot/loot.lua" />
 

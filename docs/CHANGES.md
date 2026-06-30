@@ -2,6 +2,19 @@
 
 ## Current Development Release
 
+### [v2.1.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.1.0.md) - 2026-06-30
+
+- Enabled RGXCombat — combat enter/leave/kill/crit/low-health/execute/encounter callbacks now active for all consumers.
+- Enabled 8 event callback modules that were dormant since v1.8.0: Achievement, LevelUp, Quest, Honor, Delves, Housing, TradingPost, Prey.
+- All modules are now active in the XML loader. No dormant code remains in-tree.
+- `TryInit("RGXCombat")` wired into initialization.lua between RGXSharedMedia and RGXPetBattles.
+- Removed stale comment in initialization.lua that described RGXCombat as blocked during load screen (its Init() already defers via PLAYER_REGEN_ENABLED).
+
+Full notes:
+- [v2.1.0 changelog](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.1.0.md)
+
+## Production Releases
+
 ### [v2.0.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0.md) - 2026-06-30
 
 - Stable RGX 2.0 framework release for retail 12.0.7.
@@ -33,8 +46,6 @@ Full notes:
 
 Full notes:
 - [v2.0.0-alpha.1 changelog](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0-alpha.1.md)
-
-## Production Releases
 
 ### [v1.9.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/1.9.0.md) - 2026-06-09
 

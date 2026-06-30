@@ -1,4 +1,4 @@
-# RGX-Framework Architecture
+﻿# RGX-Framework Architecture
 
 Internals, load order, module registration, and conventions.
 
@@ -117,16 +117,17 @@ RGX:GetSound()      -- "sound" â†’ RGXSound
 
 ### Dormant Modules
 
-These modules exist in-tree but are not loaded by the XML loader (removed from the XML loader at v1.5.18 to reduce runtime surface during testing):
+As of v2.1.0, there are no dormant modules. All in-tree modules are loaded by the XML loader.
 
-| Module | Global | Status |
+Previously dormant modules and when they were re-enabled:
+
+| Module | Global | Re-enabled |
 |---|---|---|
-| PetBattles | `RGXPetBattles` | In-tree, not in XML |
-| SharedMedia | `RGXSharedMedia` | In-tree, not in XML |
-| Combat | `RGXCombat` | In-tree, not in XML |
-| Reputation | `RGXReputation` | In-tree, not in XML |
-
-Their `Get*()` accessors return `nil`. Re-enabling is a one-line XML change per module.
+| SharedMedia | `RGXSharedMedia` | v2.0.0 |
+| PetBattles | `RGXPetBattles` | v2.0.0 |
+| Reputation | `RGXReputation` | v2.0.0 |
+| Combat | `RGXCombat` | v2.1.0 |
+| Achievement, LevelUp, Quest, Honor, Delves, Housing, TradingPost, Prey | various | v2.1.0 |
 
 ---
 
@@ -138,8 +139,8 @@ When WoW fires `ADDON_LOADED` for `"RGX-Framework"`:
 
 1. Initialize `_G.RGXFrameworkDB` (or reuse existing)
 2. Set `RGX.db = _G.RGXFrameworkDB`
-3. Call `TryInit("RGXFonts")` â€” runs `Fonts:Init()` if the module loaded
-4. Call `TryInit("RGXSharedMedia")` / `TryInit("RGXCombat")` / `TryInit("RGXReputation")` â€” no-ops since these are dormant
+3. Call `TryInit("RGXFonts")` — runs `Fonts:Init()`
+4. Call `TryInit` for each active module: SharedMedia, Combat, PetBattles, Reputation, Achievement, LevelUp, Quest, Honor, Delves, Housing, TradingPost, Prey, Collectibles, Loot
 5. Set `RGX._ready = true`
 6. Fire all queued `OnReady` callbacks
 7. Unregister the ADDON_LOADED handler
