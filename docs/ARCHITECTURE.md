@@ -213,7 +213,7 @@ The `Safe*` helpers (`SafeShow`, `SafeHide`, `SafeSetPoint`, `SafeSetSize`, `Saf
 
 ## Saved Variables
 
-Framework DB is `RGXFrameworkDB` (declared in TOC as `SavedVariables`). Consumer addons use their own SavedVariables â€” RGX does not manage them (yet; see roadmap for the profile/database system).
+Framework DB is `RGXFrameworkDB` (declared in TOC as `SavedVariables`). Consumer addons use their own SavedVariables managed via `RGX:NewDatabase(name, defaults, opts)`, which returns a profile-aware proxy with metamethod access (shipped in v1.9.0, hardened in v2.0.0).
 
 The framework's `config.lua` provides defaults:
 

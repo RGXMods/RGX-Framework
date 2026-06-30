@@ -22,7 +22,8 @@ Current reference consumers:
 | ETL | Lifecycle, Traveler's Log events, minimap, slash command reference |
 | SQP | Options UI, controls, fonts, nameplate event reference |
 | RND | Small utility addon reference for events, timers, minimap, slash command |
-| BLU v7 | Full sound/progression suite migration target |
+| BLU v8 | Full sound/progression suite — events, timers, DB, slash, hooks, dropdowns, sound muting migrated; SharedMedia scanning remaining |
+| BPU v2 | Battle pet HUD — events, timers, DB, slash, minimap, fonts, textures migrated; UI frames remaining |
 
 ---
 
@@ -284,10 +285,13 @@ AceConfig-style but without AceConfig's complexity. A table-driven panel builder
 Standardized enable/disable on all RGXUI widgets. Currently only dropdowns have `SetEnabled`. Add it to sliders, toggles, color pickers, and buttons so addon authors can grey out controls based on other settings.
 
 ### BLU Migration to RGX â€” Largely Complete
-BLU v8.0.0-alpha.1 has migrated: events, timers, hooks, slash commands, database/profiles, combat protection, dropdowns, utility functions, and sound muting to RGX. The remaining local system is `sharedmedia.lua` (sound pack scanning), which will move to `RGXSharedMedia` when the SharedMedia Drop-In is built.
+BLU v8.0.1 has migrated: events, timers, hooks, slash commands, database/profiles, combat protection, dropdowns, utility functions, and sound muting to RGX. The remaining local system is `core/sounds/sharedmedia.lua` (KittyPack hook, DBM registrars, known-addon compat, generic audio path scanner), which will be dropped entirely when `RGXSharedMedia` is enabled.
 
 Done: `RGX:RegisterEvent()`, `RGX:NewDatabase()`, `RGX:QueueForCombat()`, `RGX:GetDropdowns()`, `RGX:DeepCopy/Throttle/Debounce`, `RGX:GetSound():MuteList()`.
-Remaining: `RGX:GetSharedMedia()` (sound pack scanning).
+Remaining: `RGX:GetSharedMedia()` (sound pack scanning — replaces BLU's local sharedmedia.lua entirely).
+
+### BPU Migration to RGX â€” Core Complete
+BattlePetUtility v2.3.20 uses RGX for events, timers, DB, slash commands, minimap button, fonts (`RGXFonts`), and statusbar textures (`RGXTextures`). UI frames (main HUD, flyout buttons, zone tracker, context menus) remain raw `CreateFrame`. No further migration planned until RGX UI controls cover BPU's layout patterns.
 
 ### RGX-Mod
 WeakAuras-style aura engine. Starts as a copy of BLU, then grows into a configurable trigger/condition/display system. See [RGX-Mod docs](../../RGX-Mod/docs/) for full architecture.
