@@ -47,7 +47,7 @@ A consumer addon that writes against the framework API gets taint-safety and cur
 |---|---|---|
 | Core | `RGXFramework` | Events, timers, hooks, slash, DB/profiles, Mixin, utilities, `RGX.Addon()` factory |
 | Dropdowns | `RGXDropdowns` | Nested dropdown menus, auto-width, inline buttons |
-| Fonts | `RGXFonts` | 36 font definitions, registry, query, apply, style objects, dropdowns, selectors |
+| Fonts | `RGXFonts` | 40 font definitions, registry, query, apply, style objects, dropdowns, selectors |
 | Colors | `RGXColors` | Color palette, math, apply, picker |
 | ColorPicker | `RGXColorPicker` | HSV color picker widget |
 | Textures | `RGXTextures` | Statusbar texture registry |

@@ -80,7 +80,7 @@ Core-only APIs (events, timers, hooks, slash commands) are available immediately
 | **Hooks** | Post-hooks via `hooksecurefunc` â€” safe for Blizzard UI functions |
 | **Slash Commands** | `RegisterSlashCommand` â€” no raw SLASH_X boilerplate |
 | **Combat Queue** | `QueueForCombat`, `SafeShow`, `SafeHide`, `SafeSetPoint`, and more |
-| **Fonts** | 36 bundled + 8 WoW defaults (~44 total), 10 blocked in unavailableFonts, grouped dropdowns, style objects |
+| **Fonts** | 40 bundled + 4 WoW defaults (44 total), 10 blocked in unavailableFonts, grouped dropdowns, style objects |
 | **Colors** | Named palette, class/quality/power colors, color math, wrapping, picker integration |
 | **Textures** | Statusbar registry, LibSharedMedia import, dropdown controls |
 | **Dropdowns** | Nested UIDropDownMenu with auto-width, inline buttons, dual-schema items |
@@ -129,9 +129,9 @@ As of **v2.1.0**, every in-tree module is loaded by the XML loader. There are no
 
 ## Font Coverage
 
-**Available (14 families, 26 names):**
+**Available (19 families, 30 names):**
 
-Sans/UI: Inter, Ubuntu, Liberation Sans, DejaVu Sans, Lato, Poppins, Rajdhani
+Sans/UI: Inter, Ubuntu, Liberation Sans, DejaVu Sans, DejaVu Sans Condensed, Lato, Poppins, Rajdhani
 Serif: Crimson Text
 Monospace: IBM Plex Mono, JetBrains Mono
 Display: Bebas Neue, Bangers, Creepster, Anton
@@ -141,7 +141,7 @@ WoW defaults: Friz Quadrata, Arial Narrow, Morpheus, Skurri
 
 **Temporarily unavailable (10 fonts with corrupted assets):** Montserrat, Merriweather, Playfair Display, Oswald, Orbitron, Audiowide, Cinzel â€” blocked in `unavailableFonts` until asset files are replaced.
 
-Total: 36 bundled (26 available + 10 blocked) + 8 WoW defaults = ~44 registered, ~34 selectable.
+Total: 40 bundled (30 available + 10 blocked) + 4 WoW defaults (Friz Quadrata, Arial Narrow, Morpheus, Skurri) = 44 registered, 34 selectable.
 
 Font pack addons can extend the registry at runtime with `Fonts:RegisterFontPack(addonName, defs)`.
 
