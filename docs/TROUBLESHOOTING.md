@@ -72,11 +72,11 @@ Common issues and their fixes.
 
 ### `GetModule()` returns nil
 
-**Symptom:** `RGX:GetPetBattles()` returns nil.
+**Symptom:** `RGX:GetSound()` (or any `Get*()`) returns nil.
 
-**Cause:** PetBattles, SharedMedia, Combat, and Reputation are dormant modules â€” they are in-tree but not loaded by `RGX-Framework.xml` (removed from the XML loader at v1.5.18 to reduce runtime surface).
+**Cause:** As of **v2.1.0** every in-tree module is loaded by `RGX-Framework.xml`, so a nil accessor means the framework itself has not finished loading — you called `Get*()` before `OnReady`, or your addon lacks `RequiredDeps: RGX-Framework` so it loaded first.
 
-**Fix:** Add the module's `<Script>` tag to `RGX-Framework.xml` to re-enable it. The `TryInit` calls in `initialization.lua` already handle these modules gracefully (no-op if nil).
+**Fix:** Wrap module-dependent code in `RGX:OnReady(function() ... end)`, and confirm your TOC declares `## RequiredDeps: RGX-Framework`. Core-only APIs (events, timers, hooks, slash) are available immediately; module accessors need the framework fully loaded.
 
 ### Module method collision
 

@@ -43,10 +43,10 @@ Complete public API by module. See individual module docs for deeper detail:
 | `RGX:GetDesign()` | RGXDesign |
 | `RGX:GetDataBroker()` | RGXDataBroker |
 | `RGX:GetSound()` | RGXSound |
-| `RGX:GetPetBattles()` | RGXPetBattles (dormant â€” returns nil) |
-| `RGX:GetSharedMedia()` | RGXSharedMedia (dormant â€” returns nil) |
-| `RGX:GetCombat()` | RGXCombat (dormant â€” returns nil) |
-| `RGX:GetReputation()` | RGXReputation (dormant â€” returns nil) |
+| `RGX:GetPetBattles()` | RGXPetBattles |
+| `RGX:GetSharedMedia()` | RGXSharedMedia |
+| `RGX:GetCombat()` | RGXCombat |
+| `RGX:GetReputation()` | RGXReputation |
 
 ### Output
 
@@ -585,7 +585,7 @@ Sound:Register(name, opts)
 -- opts: { path, channel, variants, defaultSound, muteable }
 ```
 
-Level-up sound system with variant playback, default-sound muting, and SavedVar integration. Currently loaded by XML but primarily used by BattlePetUtility.
+Level-up sound system with variant playback, default-sound muting, and SavedVar integration. Used by BattlePetUtility and the LevelUp sound-pack addons.
 
 ---
 
@@ -595,41 +595,94 @@ Level-up sound system with variant playback, default-sound muting, and SavedVar 
 local dataObj = DB:NewDataObject(name, attrs)
 ```
 
-LibDataBroker-compatible proxy data source with optional LDB bridge. Currently loaded by XML but minimal external usage.
+LibDataBroker-compatible proxy data source with optional LDB bridge.
 
 ---
 
-## Dormant Modules
+## Combat (`RGXCombat`)
 
-The following modules are in-tree but not loaded by the current XML:
+Combat-state callback library. Every method registers a handler; all dispatch is pcall-wrapped.
 
-### PetBattles (`RGXPetBattles`)
+| Method | Fires when |
+|---|---|
+| `Combat:OnEnter(fn)` | Player enters combat |
+| `Combat:OnLeave(fn)` | Player leaves combat |
+| `Combat:OnKill(fn)` | Player gets a killing blow |
+| `Combat:OnPlayerDied(fn)` | Player dies |
+| `Combat:OnPlayerDamaged(fn)` / `OnPlayerHealed(fn)` | Player takes damage / is healed |
+| `Combat:OnCrit(fn)` / `OnCritHeal(fn)` | Player lands a crit / crit heal |
+| `Combat:OnLowHealth(fn)` | Player drops below low-health threshold |
+| `Combat:OnExecuteWindow(fn)` | Target enters execute range |
+| `Combat:OnResourceCapped(fn)` / `OnResourceLow(fn)` | Primary resource capped / low |
+| `Combat:OnTargetLost(fn)` / `OnProc(fn)` | Target lost / proc detected |
+| `Combat:IsInCombat()` / `Combat:GetDuration()` | Query current combat state |
+
+---
+
+## PetBattles (`RGXPetBattles`)
 
 | Method | Description |
 |---|---|
 | `PB:OnLevelUp(fn)` | Register level-up callback |
 | `PB:OnCapture(fn)` | Register capture callback |
-| `PB:OnBattleStart(fn)` | Register battle start callback |
-| `PB:OnBattleEnd(fn)` | Register battle end callback |
+| `PB:OnBattleStart(fn)` / `PB:OnBattleEnd(fn)` | Battle start / end callbacks |
 | `PB:OnPetChanged(fn)` | Register pet changed callback |
-| `PB:IsAvailable()` | Pet battle system accessible |
-| `PB:IsInBattle()` | In active battle |
+| `PB:IsAvailable()` / `PB:IsInBattle()` | System accessible / in active battle |
 | `PB:GetNumPets()` | Owned pet count |
-| `PB:GetPetInfoByIndex(i)` | C_PetJournal result table |
-| `PB:GetPetInfoByID(id)` | C_PetJournal result table |
+| `PB:GetPetInfoByIndex(i)` / `PB:GetPetInfoByID(id)` | C_PetJournal result table |
 | `PB:GetPetLevel(id)` | Cached level |
-| `PB:ScanPetLevels()` | Populate level cache |
-| `PB:CheckPetLevels()` | Diff scan, fire OnLevelUp |
+| `PB:ScanPetLevels()` / `PB:CheckPetLevels()` | Populate cache / diff scan → fire OnLevelUp |
 | `PB:SchedulePetLevelScan(delay)` | Delayed scan |
 
-### SharedMedia (`RGXSharedMedia`)
+---
 
-Sound/font/texture registry with pack scanner. Drop-in for LibSharedMedia scanning logic.
+## Reputation (`RGXReputation`)
 
-### Combat (`RGXCombat`)
+Reputation and renown tracking, normalized across expansions.
 
-Combat event library: enter/leave/kill/damage/heal/crit callbacks.
+| Method | Description |
+|---|---|
+| `Rep:OnRankUp(fn)` | Standing rank increases |
+| `Rep:OnGain(fn)` | Reputation gained |
+| `Rep:OnRenownUp(fn)` | Major-faction renown level up |
+| `Rep:Scan()` / `Rep:CheckChanges()` | Snapshot / diff scan |
+| `Rep:GetAll()` / `Rep:Get(factionID)` / `Rep:GetByName(name)` | Lookup |
+| `Rep:IsMaxed(factionID)` / `Rep:GetRenown()` | Query state |
 
-### Reputation (`RGXReputation`)
+---
 
-Reputation and renown tracking, cross-expansion normalized.
+## SharedMedia (`RGXSharedMedia`)
+
+Multi-type media registry (`sound`, `statusbar`, `font`) with an external-addon scanner. No LibStub / LibSharedMedia dependency. Replaces per-addon local scanning (e.g. BLU's local sharedmedia).
+
+```lua
+SM:Register(mediaType, name, path, opts)        -- register one entry
+SM:RegisterPack(mediaType, packName, entries)   -- register a batch under a pack
+SM:RegisterSoundPack(packName, entries)         -- convenience for "sound"
+SM:RegisterStatusBarPack(packName, entries)     -- convenience for "statusbar"
+SM:Fetch(mediaType, id) / SM:Find(mediaType, name) / SM:GetPath(mediaType, id)
+SM:List(mediaType, filter) / SM:ListPacks(mediaType)
+SM:Scan(includeGeneric)                         -- re-run scanners (DBM registrars, known-addon compat, generic addon-global scan)
+SM:QueueScan(delay, includeGeneric)             -- deduped delayed scan
+```
+
+---
+
+## Event Callback Modules
+
+Milestone/progression modules. Each method registers a pcall-wrapped callback. Used by BLU v8 feature modules and the LevelUp sound-pack addons.
+
+| Module (`Global`) | Callbacks |
+|---|---|
+| Achievement (`RGXAchievement`) | `OnEarned(fn)`, `OnCriteriaEarned(fn)` |
+| LevelUp (`RGXLevelUp`) | `OnLevelUp(fn)` |
+| Collectibles (`RGXCollectibles`) | `OnMount(fn)`, `OnToy(fn)`, `OnTransmog(fn)`, `OnHeirloom(fn)` |
+| Loot (`RGXLoot`) | `OnRareLoot(fn)`, `OnCurrencyGained(fn)` |
+| Quest (`RGXQuest`) | `OnAccepted(fn)`, `OnComplete(fn)`, `OnTurnedIn(fn)`, `OnProgress(fn)` |
+| Honor (`RGXHonor`) | `OnLevelUp(fn)` |
+| Delves (`RGXDelves`) | `OnCompanionLevelUp(fn)`, `OnLifeLost(fn)`, `OnLifeGained(fn)`, `GetCompanionLevel()`, `GetLivesRemaining()` |
+| Housing (`RGXHousing`) | `OnFavorGained(fn)`, `OnLevelUp(fn)`, `OnRewards(fn)`, `OnDecorCollected(fn)` |
+| TradingPost (`RGXTradingPost`) | `OnPurchase(fn)`, `OnCurrencyGained(fn)`, `GetCurrencyAmount()` |
+| Prey (`RGXPrey`) | `OnHuntStarted(fn)`, `OnAmbush(fn)`, `OnCapped(fn)`, `OnComplete(fn)` |
+
+As of **v2.1.0** every module above is loaded by the XML loader. There are no dormant modules.
