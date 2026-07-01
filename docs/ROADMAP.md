@@ -136,6 +136,20 @@ Build when a current addon needs it AND it serves rgx-mod. WoW UI dump is the AP
     - BLU Combat module, BPU pet capture events
     - Core rgx-mod event trigger primitive
 
+### Tier 4 — Declarative authoring layer
+
+Full design: `docs/DECLARATIVE-DSL.md` on the `dsl` branch. The declarative Lua table is the canonical foundation — any future `.rgx` syntax compiles to it.
+
+13. **Harden `RGX.Addon({...})`** — one declarative table defines events, unit events, timers, slash, minimap, and DB defaults
+14. **Grid/matrix options UI** — declarative 1/2/3-column card layouts, flexible element rows, every control bound to `addon.db` with automatic save/restore (also fixes the live BLU/SQP hand-rolled-slider persistence bug class at the framework level)
+
+### Tier 5 — Schema + rgx-mcp (separate repo)
+
+15. **`docs/DECLARATIVE-API.md` + `schemas/rgx-addon.schema.json`** — machine-checkable contract for the declarative shape
+16. **`rgx-mcp`** — external developer/agent tool, read-only first: validate declarative addons, audit consumers for unsafe patterns, generate declarative tables. Dependency rule: rgx-mcp depends on RGX docs/schema; the framework never depends on rgx-mcp.
+
+**Why this order:** modules complete the runtime → the declarative layer gives one stable authoring surface → the schema/MCP make it machine-checkable. After Tier 5, wiring existing consumers and building brand-new addons becomes near-trivial for humans and agents alike.
+
 ---
 
 ## rgx-mod Foundation Phases

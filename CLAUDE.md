@@ -105,34 +105,43 @@ Current state as of v2.1.0:
 
 Build subsystems that benefit **current addons first**, then rgx-mod. Do not build abstract framework modules that no current addon uses.
 
-### Immediate (enable dormant modules — zero new code)
+**The strategic sequence is: finish runtime modules → declarative authoring layer → schema + MCP tooling.** Each stage makes the next one cheaper: modules complete the runtime, the declarative layer gives one stable authoring surface, and the schema/MCP make that surface machine-checkable — after which consumer integration and brand-new addons become near-trivial for humans and agents alike.
 
-1. **Enable RGXSharedMedia** → BLU drops 901 lines of local scanning code
-2. **Enable RGXPetBattles** → BattlePetUtility uses it for pet battle state
-3. **Enable RGXCombat** → BLU Combat module simplifies to callbacks
-4. **Enable RGXReputation** → enables ReputationLevelUp migration
+### Tier 1 — Enable dormant modules ✅ DONE (v2.0.0 + v2.1.0)
 
-### Near-term (wire existing modules into addons)
+All in-tree modules are loaded by the XML loader. No dormant code remains.
 
-5. **Wire BLU → RGXSharedMedia** — drop `core/sounds/sharedmedia.lua` from BLU
+### Tier 2 — Wire consumers to shipped modules (IN FLIGHT)
+
+5. **Wire BLU → RGXSharedMedia** — IN PROGRESS on BLU branch `rgxsharedmedia-migration`: local scanner replaced by a ~190-line bridge (imports on `RGX_SHAREDMEDIA_UPDATED`). Pending in-game test before merge. Open design question on that branch: own-folder exclusion vs dedup-on-import (owner prefers picking up all folders; dedup against already-registered paths is the likely resolution).
 6. **Wire BPU → RGXPetBattles** — replace raw `C_PetBattles.*` calls
 7. **Wire BLU Combat → RGXCombat** — simplify to `Combat:OnEnter/OnLeave` callbacks
 8. **Wire BPU → RGXDropdowns** — replace `EasyMenu`/`UIDropDownMenu` in BPU options
 
-### Next build (new modules, guided by WoW UI dump)
+### Tier 3 — Last runtime primitives (NEXT BUILD)
 
-9. **RGXAuras** — taint-safe aura scanning: `HasAura(spellId)`, `GetAura(spellId)`, unit filtering, pcall guards. Generalizes BPU's `PlayerHasAuraSpellID` pattern. Also a core rgx-mod trigger primitive.
+9. **RGXAuras** — taint-safe aura scanning. API surface verified against Blizzard's generated 12.0.7 docs (`Blizzard_APIDocumentationGenerated/UnitAuraDocumentation.lua` in the wow-ui-source mirror): `C_UnitAuras.GetPlayerAuraBySpellID`, `GetAuraDataByIndex/BySlot/ByAuraInstanceID/BySpellName`, `GetAuraSlots`, plus `UNIT_AURA` incremental `UnitAuraUpdateInfo`. Generalizes BPU's `PlayerHasAuraSpellID` pattern; core rgx-mod trigger primitive.
 10. **RGXTooltip** — `GameTooltip` hook registry, structured composition, `AddLine`/`AddDoubleLine` helpers. BPU hooks GameTooltip in 5 files today. Also needed by rgx-mod display types.
 11. **RGXCombatLog** — structured `COMBAT_LOG_EVENT_UNFILTERED` dispatch: parse subevent, source/dest GUIDs, spellId. Needed by BLU Combat, BPU capture events, and is the core rgx-mod event trigger.
 
-### rgx-mod foundation phases (after above)
+### Tier 4 — Declarative authoring layer (see `docs/DECLARATIVE-DSL.md` on the `dsl` branch)
 
-12. **Frame pooling** — `CreatePool(frameType, parent, resetFunc)` for rgx-mod's dynamic display regions
-13. **Bucket events** — `RegisterBucketEvent(event, delay, callback)` for throttling `UNIT_AURA` spam
-14. **Animation/tween helpers** — lerp utilities for smooth display transitions
-15. **RGXTriggers** — trigger evaluation engine (aura, event, status, custom) — rgx-mod Phase 2
-16. **RGXDisplays** — dynamic frame/texture/text/progressbar display regions — rgx-mod Phase 3
-17. **RGXConditions** — boolean condition evaluator for trigger logic — rgx-mod Phase 3
+12. **Harden `RGX.Addon({...})`** to the full declarative shape — events, unit events, timers, slash, minimap, DB defaults all from one table. The declarative Lua table is the canonical foundation; any future `.rgx` syntax compiles to it, never to raw Lua.
+13. **Grid/matrix options UI** — declarative 1/2/3-column card layouts with flexible element rows, every control bound to `addon.db` with automatic save/restore. This also kills a live cross-addon bug class: BLU and SQP hand-roll sliders that do not restore their values on reload; framework-owned bound controls fix all of them at once.
+
+### Tier 5 — Schema + rgx-mcp (separate repo; framework never depends on it)
+
+14. **`docs/DECLARATIVE-API.md` + `schemas/rgx-addon.schema.json`** — the machine-checkable contract for the declarative shape.
+15. **`rgx-mcp`** — external dev tool (read-only first): validate declarative addons, audit consumers for raw `C_Timer`/event-frame/slash patterns, generate declarative tables from intent. Dependency direction: rgx-mcp depends on RGX docs/schema; consumers depend on RGX-Framework; the framework depends on nothing.
+
+### Tier 6 — rgx-mod engine phases (after above)
+
+16. **Frame pooling** — `CreatePool(frameType, parent, resetFunc)` for rgx-mod's dynamic display regions
+17. **Bucket events** — `RegisterBucketEvent(event, delay, callback)` for throttling `UNIT_AURA` spam
+18. **Animation/tween helpers** — lerp utilities for smooth display transitions
+19. **RGXTriggers** — trigger evaluation engine (aura, event, status, custom) — rgx-mod Phase 2
+20. **RGXDisplays** — dynamic frame/texture/text/progressbar display regions — rgx-mod Phase 3
+21. **RGXConditions** — boolean condition evaluator for trigger logic — rgx-mod Phase 3
 
 ---
 
