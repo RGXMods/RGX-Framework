@@ -553,6 +553,12 @@ function SM:Scan(includeGeneric)
         "[RGXSharedMedia] Scan complete — DBM:%d Compat:%d Generic:%d",
         n1, n2, n3
     ))
+
+    -- Notify consumers that the sound registry changed so they can re-import
+    -- bridge entries and refresh any media pickers. Payload is the media type.
+    if type(RGX.SendMessage) == "function" then
+        RGX:SendMessage("RGX_SHAREDMEDIA_UPDATED", "sound")
+    end
 end
 
 function SM:QueueScan(delay, includeGeneric)

@@ -666,6 +666,14 @@ SM:Scan(includeGeneric)                         -- re-run scanners (DBM registra
 SM:QueueScan(delay, includeGeneric)             -- deduped delayed scan
 ```
 
+After every scan, RGXSharedMedia fires an internal message so consumers can re-import results and refresh media pickers:
+
+```lua
+RGX:RegisterMessage("RGX_SHAREDMEDIA_UPDATED", function(_, mediaType)
+    -- mediaType == "sound"; pull entries with SM:List("sound")
+end)
+```
+
 ---
 
 ## Event Callback Modules
