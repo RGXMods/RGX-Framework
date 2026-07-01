@@ -664,6 +664,14 @@ SM:Fetch(mediaType, id) / SM:Find(mediaType, name) / SM:GetPath(mediaType, id)
 SM:List(mediaType, filter) / SM:ListPacks(mediaType)
 SM:Scan(includeGeneric)                         -- re-run scanners (DBM registrars, known-addon compat, generic addon-global scan)
 SM:QueueScan(delay, includeGeneric)             -- deduped delayed scan
+SM:ExcludeFolder(addonFolderName)               -- don't bridge sounds from this AddOn folder (see below)
+```
+
+**`SM:ExcludeFolder(name)`** — a consumer that registers its own bundled/user sounds directly should exclude its AddOn folder so the generic addon-global scan does not re-discover and duplicate those paths as bridge entries. Call it before the generic scan runs (e.g. in `OnReady` or module init). The framework's own folder is always excluded.
+
+```lua
+local SM = RGX:GetSharedMedia()
+SM:ExcludeFolder("MyAddon")   -- Interface\AddOns\MyAddon\ sounds won't be bridged back in
 ```
 
 After every scan, RGXSharedMedia fires an internal message so consumers can re-import results and refresh media pickers:
