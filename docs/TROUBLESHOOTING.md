@@ -78,6 +78,14 @@ Common issues and their fixes.
 
 **Fix:** Wrap module-dependent code in `RGX:OnReady(function() ... end)`, and confirm your TOC declares `## RequiredDeps: RGX-Framework`. Core-only APIs (events, timers, hooks, slash) are available immediately; module accessors need the framework fully loaded.
 
+### `LUA_WARNING: Error loading RGX-Framework/modules/...`
+
+**Symptom:** Login warnings like `Error loading RGX-Framework/modules/achievement/achievement.lua` (and the same for levelup, quest, honor, delves, housing, tradingpost, prey).
+
+**Cause:** v1.9.0-era packages referenced module files that were not shipped. Those `<Script>` entries were removed during the 1.x cycle and the modules were completed and re-enabled in **v2.1.0**, where every referenced file ships in the zip.
+
+**Fix:** Update RGX-Framework to v2.1.0 or later. If the warning persists after updating, the install is stale â€” delete the `Interface/AddOns/RGX-Framework` folder and reinstall.
+
 ### Module method collision
 
 **Symptom:** Two module files define the same method (e.g. `Init`) and the second overwrites the first.
@@ -105,6 +113,14 @@ Common issues and their fixes.
 **Cause:** Too many timer callbacks ran in a single frame, exceeding `timerBudget.maxPerFrame` (256) or `maxSeconds` (0.033s). The remaining timers are deferred to the next frame.
 
 **Fix:** Reduce the number of concurrent timers or increase the budget in `RGX.timerBudget`. This is typically only an issue with many `Every(0, ...)` tickers.
+
+### `[RGX:timer-slow] SharedMedia:QueueScan took NNNms`
+
+**Symptom:** A `timer-slow` diagnostic in chat or in an error grabber (BugSack/Bugtraq), often at login.
+
+**Cause:** This is a **diagnostic, not an error** â€” the framework reports timer callbacks that exceed their slow threshold. The media scan reads addon tables at login and legitimately takes 100â€“500ms; that is normal I/O, not a fault.
+
+**Fix:** Nothing to fix on current versions. The global threshold is 250ms (raised from 50ms in v2.0.0-alpha.1) and `SharedMedia:QueueScan` has a per-label override of 500ms via `timerBudget.slowByLabel`, so routine scans no longer report. If you see this for your own timer label, either make the callback cheaper or add a `slowByLabel` override for it.
 
 ---
 

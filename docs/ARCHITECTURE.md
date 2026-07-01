@@ -188,7 +188,7 @@ timer = {
 - `RGX:Every(dur, cb)` â€” repeating, cb receives `timer` as first arg so it can cancel itself
 - `RGX:CancelTimer(timer)` â€” marks `timer.active = false`; removed on next tick
 
-**Budget:** `timerBudget = { maxPerFrame = 256, maxSeconds = 0.033, slowSeconds = 0.050 }`. Slow callbacks (>50ms) are reported. The driver pauses `OnUpdate` when no active timers remain.
+**Budget:** `timerBudget = { maxPerFrame = 256, maxSeconds = 0.033, slowSeconds = 0.250, slowByLabel = { ["SharedMedia:QueueScan"] = 0.500 } }`. Slow callbacks (>250ms by default) are reported via `[RGX:timer-slow]`; known-heavy labels get per-label overrides instead of raising the global threshold. The driver pauses `OnUpdate` when no active timers remain. (The threshold was raised from 50ms in v2.0.0-alpha.1 â€” media scanning is normal I/O, not a fault.)
 
 ---
 

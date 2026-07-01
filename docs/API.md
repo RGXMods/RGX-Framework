@@ -112,7 +112,7 @@ local prefix = RGX:CreateChatPrefix({
 | `RGX.db` | table | `RGXFrameworkDB` SavedVar reference |
 | `RGX.timers` | array | Active timer table |
 | `RGX.combatQueue` | array | Pending combat-locked operations |
-| `RGX.timerBudget` | table | `{ maxPerFrame=256, maxSeconds=0.033, slowSeconds=0.050 }` |
+| `RGX.timerBudget` | table | `{ maxPerFrame=256, maxSeconds=0.033, slowSeconds=0.250, slowByLabel={ ["SharedMedia:QueueScan"]=0.500 } }` |
 
 ---
 

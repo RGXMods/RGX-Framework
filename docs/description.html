@@ -97,11 +97,19 @@ It stays quiet for players and useful for authors. If another addon requires RGX
 
 local RGX = assert(_G.RGXFramework, "MyAddon: RGX not loaded")
 
-RGX:OnReady(function()
-  local Fonts = RGX:GetFonts()
-  local path = Fonts:GetPath("Inter-Regular")
-  myFontString:SetFont(path, 12, "OUTLINE")
-end)</pre>
+RGX.Addon("MyAddon", {
+  slash   = "myaddon",
+  minimap = true,
+  db      = { enabled = true, volume = 80 },
+  options = {
+    General = {
+      { toggle = "enabled", label = "Enable Addon" },
+      { slider = "volume",  label = "Volume", min = 0, max = 100 },
+    },
+  },
+  welcome = "loaded &mdash; /myaddon for options",
+})</pre>
+<div style="margin-top:8px;color:#c7d0db;font-size:13px">One call = saved settings, options panel, slash command, minimap button &mdash; all routed through taint-safe framework paths.</div>
 </td>
 <td style="width:42%;vertical-align:top">
 <div style="padding:12px 14px;background-color:#1b1520;border:1px solid #4a3147;margin-bottom:12px">

@@ -1,6 +1,6 @@
 # SUPER SIMPLE RGX Integration
 
-## The Absolute Minimum Code
+## A Complete Addon In One Call
 
 ### 1. Add RequiredDeps
 
@@ -8,7 +8,42 @@
 ## RequiredDeps: RGX-Framework
 ```
 
-### 2. Get Font Path
+### 2. Declare the addon
+
+```lua
+-- MyAddon.lua — this is the whole addon
+local RGX = assert(_G.RGXFramework, "MyAddon: RGX-Framework not loaded")
+
+RGX.Addon("MyAddon", {
+    slash   = "myaddon",                        -- /myaddon opens options
+    minimap = true,                             -- minimap button (default icon)
+    db      = { enabled = true, volume = 80 },  -- saved settings on addon.db
+    options = {
+        General = {
+            { toggle = "enabled", label = "Enable Addon" },
+            { slider = "volume",  label = "Volume", min = 0, max = 100 },
+        },
+    },
+    welcome = "loaded — /myaddon for options",
+})
+```
+
+Saved variables, profile support, a tabbed options panel with db-bound controls, a slash command, a minimap button, and branded output — no event frames, no `C_Timer`, no `SLASH_X` globals, no SavedVariables boilerplate. The framework owns all of the unsafe plumbing.
+
+Add behavior inside `onInit`:
+
+```lua
+    onInit = function(self)
+        self:RegisterEvent("PLAYER_LOGIN", function()
+            self:Print("Ready!")
+        end)
+        self:Every(30, function() self:Print("tick") end)
+    end,
+```
+
+## Just Want Fonts?
+
+### Get Font Path
 
 ```lua
 local path = _G.RGXFonts:GetPath("Inter-Regular")
