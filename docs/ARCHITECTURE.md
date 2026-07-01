@@ -24,6 +24,7 @@ WoW loads files in the order declared in `RGX-Framework.xml`. The framework uses
 1. core/core.lua            â€” global object, module registry, Mixin, CopyTable, Clamp, Lerp, TableCount, Print/Warn/Error/Debug
 2. core/systems/config.lua  â€” framework defaults (debugMode, default font, size, flags)
 3. core/systems/database.luaâ€” RGX:DB(name, defaults), RGX:InitDatabase()
+3b. core/systems/database_test.lua â€” RGX:RunDBTests() harness; intentionally shipped, runs only via /rgx dbtest
 4. core/systems/events.lua  â€” RegisterEvent, RegisterMessage, CreateEmitter, ADDON_ACTION_BLOCKED monitor
 5. core/systems/runtime.lua â€” After, Every, CancelTimer, Hook, RegisterSlashCommand, combat queue, Safe* helpers
 6. core/systems/utils.lua   â€” Trim, Split, TableKeys/Values/Contains/Map/Filter/Find, MergeTable, Round, Format, Clamp, StartsWith, EndsWith
@@ -272,7 +273,7 @@ Core (events, runtime, utils, config, database)
 
 ## Key Conventions
 
-1. **No C_Timer** â€” all deferred work uses `RGX:After` / `RGX:Every`
+1. **No C_Timer** â€” all deferred work uses `RGX:After` / `RGX:Every`. Inside the framework itself, four call sites keep a guarded `elseif C_Timer.After` fallback for the edge case where the timer driver is unavailable (options.lua x2, sharedmedia.lua, reputation.lua); consumer-facing code has no such exception.
 2. **No manual event frames** â€” use `RGX:RegisterEvent`
 3. **No raw SLASH_X patterns** â€” use `RGX:RegisterSlashCommand`
 4. **`assert(_G.RGXFramework, ...)`** â€” consumer addons fail fast if RGX is missing

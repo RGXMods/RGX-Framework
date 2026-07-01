@@ -84,7 +84,7 @@ These are complete and tested. Re-enabling is a one-line addition to `RGX-Framew
 
 ## Consumer addon integration levels
 
-Current state as of v2.0.0:
+Current state as of v2.1.0:
 
 | Addon | RGX Dep | Systems Used | Level |
 |---|---|---|---|

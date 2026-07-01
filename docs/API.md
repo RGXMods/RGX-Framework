@@ -47,6 +47,16 @@ Complete public API by module. See individual module docs for deeper detail:
 | `RGX:GetSharedMedia()` | RGXSharedMedia |
 | `RGX:GetCombat()` | RGXCombat |
 | `RGX:GetReputation()` | RGXReputation |
+| `RGX:GetAchievement()` | RGXAchievement |
+| `RGX:GetLevelUp()` | RGXLevelUp |
+| `RGX:GetCollectibles()` | RGXCollectibles |
+| `RGX:GetLoot()` | RGXLoot |
+| `RGX:GetQuest()` | RGXQuest |
+| `RGX:GetHonor()` | RGXHonor |
+| `RGX:GetDelves()` | RGXDelves |
+| `RGX:GetHousing()` | RGXHousing |
+| `RGX:GetTradingPost()` | RGXTradingPost |
+| `RGX:GetPrey()` | RGXPrey |
 
 ### Output
 

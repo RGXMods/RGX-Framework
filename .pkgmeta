@@ -1,34 +1,26 @@
 # RGX-Framework Package Metadata
-# Used by BigWigs Packager
+# Used by BigWigsMods packager (GitHub Actions release workflow)
 
 package-as: RGX-Framework
 
-# License file
-license:
-  - LICENSE.txt
+# License file (LICENSE.txt at repo root; TOC declares X-License: MIT)
+license: LICENSE.txt
 
-# Font sources to download (manual - see scripts/download-fonts.*)
-# Fonts must be downloaded before packaging:
-#   PowerShell: .\scripts\download-fonts.ps1
-#   Bash: ./scripts/download-fonts.sh
-
-# Files to ignore
+# Files and folders excluded from the packaged zip.
+# Fonts are committed under media/fonts/ — no download step is required.
 ignore:
-  - scripts/
   - .git/
   - .github/
   - .gitignore
+  - .agents/
+  - .claude/
+  - graphify-out/
+  - CLAUDE.md
+  - Home.md
   - README.md
-  - ROADMAP.md
   - docs/
 
-# External repositories (if any)
-externals:
-  # None - we package fonts directly
-
-# Move files (if needed)
-move-folders:
-
-# Changelog
-changelog:
-  - CHANGES.md
+# Release notes come from the canonical changelog summary.
+manual-changelog:
+  filename: docs/CHANGES.md
+  markup-type: markdown

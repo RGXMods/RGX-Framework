@@ -112,16 +112,16 @@ Core-only APIs (events, timers, hooks, slash commands) are available immediately
 | PetBattles | `RGXPetBattles` | `GetPetBattles()` | Active |
 | Combat | `RGXCombat` | `GetCombat()` | Active |
 | Reputation | `RGXReputation` | `GetReputation()` | Active |
-| Achievement | `RGXAchievement` | â€” | Active |
-| LevelUp | `RGXLevelUp` | â€” | Active |
-| Collectibles | `RGXCollectibles` | â€” | Active |
-| Loot | `RGXLoot` | â€” | Active |
-| Quest | `RGXQuest` | â€” | Active |
-| Honor | `RGXHonor` | â€” | Active |
-| Delves | `RGXDelves` | â€” | Active |
-| Housing | `RGXHousing` | â€” | Active |
-| TradingPost | `RGXTradingPost` | â€” | Active |
-| Prey | `RGXPrey` | â€” | Active |
+| Achievement | `RGXAchievement` | `GetAchievement()` | Active |
+| LevelUp | `RGXLevelUp` | `GetLevelUp()` | Active |
+| Collectibles | `RGXCollectibles` | `GetCollectibles()` | Active |
+| Loot | `RGXLoot` | `GetLoot()` | Active |
+| Quest | `RGXQuest` | `GetQuest()` | Active |
+| Honor | `RGXHonor` | `GetHonor()` | Active |
+| Delves | `RGXDelves` | `GetDelves()` | Active |
+| Housing | `RGXHousing` | `GetHousing()` | Active |
+| TradingPost | `RGXTradingPost` | `GetTradingPost()` | Active |
+| Prey | `RGXPrey` | `GetPrey()` | Active |
 
 As of **v2.1.0**, every in-tree module is loaded by the XML loader. There are no dormant modules.
 
