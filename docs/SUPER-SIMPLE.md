@@ -74,7 +74,7 @@ _G.RGXFonts:AttachFontSelector(parent, db, "titleFont")
 
 ```lua
 -- .toc file
-## Interface: 120005
+## Interface: 120007
 ## Title: MyAddon
 ## RequiredDeps: RGX-Framework
 
