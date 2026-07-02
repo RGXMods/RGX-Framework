@@ -2,8 +2,11 @@
 
 ## Current Development Release
 
-### Unreleased (on `main`, not yet tagged)
+### [v2.2.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.2.0.md) - 2026-07-02
 
+- **rgx-mcp ships in-tree** at `tools/rgx-mcp/` — read-only MCP server (validate/audit/generate against the Simplicity Contract), excluded from the player zip; anyone with the checkout has the tool. Registered in `.mcp.json`.
+- **CI: Discord notifications fixed** — the notify step now fails loudly on webhook rejection instead of silently succeeding (`curl` without `--fail` treated 4xx as success); avatar URL corrected; empty-secret guard added.
+- Repaired double-encoded UTF-8 (mojibake) across 11 documentation files; deleted `docs/USAGE-BPU.md` in favor of the Tier 2 work item it described.
 - **New module: RGXAuras** — taint-safe aura scanning and watching (`HasPlayerAura`/`GetPlayerAura` fast path, `HasAura`/`GetAura`/`IterateAuras` for any unit, `WatchUnit` incremental `UNIT_AURA` cache with `OnApplied`/`OnRemoved`/`OnUpdated` callbacks). Designed around Midnight's secret-aura restrictions: every potentially-secret field comparison stays behind an internal pcall boundary, so restricted units yield nil/false instead of taint. Generalizes BPU's `PlayerHasAuraSpellID` pattern; first rgx-mod trigger primitive.
 - **`RGXAddon` global entry point** — line 1 of a consumer addon is the addon: `RGXAddon "MyAddon" { ... }` (curried form supported). Wraps `RGX.Addon`; per the frozen Simplicity Contract (`docs/DECLARATIVE-DSL.md`, `dsl` branch), the `local RGX = assert(...)` form is now the documented escape hatch, not the front door.
 - **Declarative API contract shipped** — `schemas/rgx-addon.schema.json` (machine-checkable shape of the `RGXAddon` opts table; keys annotated `x-rgx-ships: today|tier4`, trigger vocabulary + control grammar encoded) and `docs/DECLARATIVE-API.md` (human reference for the shipped surface, verified against `core/core.lua`). This is Tier 5 #14 and the contract the external `rgx-mcp` tool validates against. Schema excluded from the packaged zip.

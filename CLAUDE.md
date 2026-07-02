@@ -32,7 +32,7 @@ A consumer addon that writes against the framework API gets taint-safety and cur
 
 ## Current version
 
-- **Version:** `2.1.0`
+- **Version:** `2.2.0`
 - **Interface:** `120007` (WoW Retail Midnight 12.0.7)
 - **TOC:** `RGX-Framework.toc`
 - **Loader:** `RGX-Framework.xml` — this is the single source of truth for what modules are loaded
