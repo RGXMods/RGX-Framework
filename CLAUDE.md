@@ -138,10 +138,10 @@ All in-tree modules are loaded by the XML loader. No dormant code remains.
 12. **Harden `RGX.Addon({...})`** to the full contract shape — `on = {}` human trigger vocabulary, `every = {}`, string control grammar, label inference. The declarative Lua table is the canonical foundation; any future `.rgx` syntax compiles to it, never to raw Lua.
 13. **Grid/matrix options UI** — declarative 1/2/3-column card layouts with flexible element rows, every control bound to `addon.db` with automatic save/restore. This also kills a live cross-addon bug class: BLU and SQP hand-roll sliders that do not restore their values on reload; framework-owned bound controls fix all of them at once.
 
-### Tier 5 — Schema + rgx-mcp (separate repo; framework never depends on it)
+### Tier 5 — Schema + rgx-mcp ✅ SHIPPED (v0.1)
 
-14. **`docs/DECLARATIVE-API.md` + `schemas/rgx-addon.schema.json`** — the machine-checkable contract for the declarative shape.
-15. **`rgx-mcp`** — external dev tool (read-only first): validate declarative addons, audit consumers for raw `C_Timer`/event-frame/slash patterns, generate declarative tables from intent. Dependency direction: rgx-mcp depends on RGX docs/schema; consumers depend on RGX-Framework; the framework depends on nothing.
+14. ✅ **`docs/DECLARATIVE-API.md` + `schemas/rgx-addon.schema.json`** — shipped on main. Schema keys annotated `x-rgx-ships: today|tier4`; trigger vocabulary and control grammar encoded; excluded from the packaged zip.
+15. ✅ **`rgx-mcp` v0.1.0** — separate repo (`DonnieDice/rgx-mcp`, `../rgx-mcp` locally). Read-only stdio MCP server, verified over live JSON-RPC: `rgx_validate_addon` (reads the schema live from the framework checkout — one source of truth), `rgx_audit_lua` (deterministic unsafe-pattern detectors), `rgx_generate_addon` (shipped keys only), `rgx_get_contract` + `rgx://` resources. Dependency direction enforced: rgx-mcp depends on RGX docs/schema; the framework never depends on rgx-mcp. Tier 4 implementation should update the schema annotations (`tier4` → `today`) as each key lands — nothing else changes.
 
 ### Tier 6 — rgx-mod engine phases (after above)
 
