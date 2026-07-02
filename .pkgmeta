@@ -7,21 +7,22 @@ package-as: RGX-Framework
 license: LICENSE.txt
 
 # Files and folders excluded from the packaged zip.
+# NOTE: directory entries must NOT have a trailing slash — the packager's
+# matcher treats "docs/" and "docs" differently, and the slash form silently
+# fails (verified against the v2.2.0 zip, which leaked docs/schemas/tools).
 # Fonts are committed under media/fonts/ — no download step is required.
 ignore:
-  - .git/
-  - .github/
   - .gitignore
-  - .agents/
-  - .claude/
   - .mcp.json
-  - graphify-out/
   - CLAUDE.md
   - Home.md
   - README.md
-  - docs/
-  - schemas/
-  - tools/
+  - docs
+  - schemas
+  - tools
+  - graphify-out
+  - .agents
+  - .claude
 
 # Release notes come from the canonical changelog summary.
 manual-changelog:

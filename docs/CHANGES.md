@@ -2,6 +2,10 @@
 
 ## Current Development Release
 
+### [v2.2.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.2.1.md) - 2026-07-02
+
+- Packaging hotfix: the v2.2.0 zip leaked `docs/`, `schemas/`, and `tools/` — the packager's ignore matcher silently fails on directory entries with trailing slashes. Entries normalized; the zip now contains only the runtime (TOC, XML, core, modules, media, LICENSE).
+
 ### [v2.2.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.2.0.md) - 2026-07-02
 
 - **rgx-mcp ships in-tree** at `tools/rgx-mcp/` — read-only MCP server (validate/audit/generate against the Simplicity Contract), excluded from the player zip; anyone with the checkout has the tool. Registered in `.mcp.json`.
