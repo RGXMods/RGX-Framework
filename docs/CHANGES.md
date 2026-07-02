@@ -4,6 +4,7 @@
 
 ### Unreleased (on `main`, not yet tagged)
 
+- **New module: RGXAuras** — taint-safe aura scanning and watching (`HasPlayerAura`/`GetPlayerAura` fast path, `HasAura`/`GetAura`/`IterateAuras` for any unit, `WatchUnit` incremental `UNIT_AURA` cache with `OnApplied`/`OnRemoved`/`OnUpdated` callbacks). Designed around Midnight's secret-aura restrictions: every potentially-secret field comparison stays behind an internal pcall boundary, so restricted units yield nil/false instead of taint. Generalizes BPU's `PlayerHasAuraSpellID` pattern; first rgx-mod trigger primitive.
 - `RGXSharedMedia` now fires the internal message `RGX_SHAREDMEDIA_UPDATED` after every scan so consumers can re-import bridge entries and refresh media pickers.
 - Added `SM:ExcludeFolder(addonFolderName)` — consumers that manage their own media can exclude their AddOn folder from the generic scan so their paths are not re-bridged as duplicates. The framework's own folder is excluded by default.
 - Packaging fixes: added missing `LICENSE.txt` (TOC already declared `X-License: MIT`); `.pkgmeta` now excludes agent/tool files (`CLAUDE.md`, `Home.md`, `.agents/`, `.claude/`, `graphify-out/`) from the zip, uses the valid `manual-changelog` key pointing at `docs/CHANGES.md`, and drops stale font-download instructions (fonts are committed under `media/fonts/`).

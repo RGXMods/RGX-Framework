@@ -170,6 +170,7 @@ function RGX:GetSharedMedia()  return self:GetModule("sharedmedia")  end
 function RGX:GetDesign()       return self:GetModule("design")       end
 function RGX:GetCombat()       return self:GetModule("combat")       end
 function RGX:GetReputation()   return self:GetModule("reputation")   end
+function RGX:GetAuras()        return self:GetModule("auras")        end
 function RGX:GetDataBroker() return self:GetModule("databroker") end
 function RGX:GetSound()        return self:GetModule("sound")        end
 function RGX:GetCollectibles() return self:GetModule("collectibles") end
