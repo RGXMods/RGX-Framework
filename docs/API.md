@@ -127,6 +127,16 @@ local prefix = RGX:CreateChatPrefix({
 | `RGX:UnregisterAllEvents(id)` | Remove all handlers for an ID |
 | `RGX:FireEvent(event, ...)` | Manually dispatch into the event registry |
 
+### Unit Events
+
+| Method | Description |
+|---|---|
+| `RGX:RegisterUnitEvent(event, unit, callback, id, owner)` | Per-unit event filtering; `unit` is a token or a table of tokens (`"player"`, `{"player","target"}`) |
+| `RGX:UnregisterUnitEvent(event, id)` | Remove a specific unit-event handler |
+| `RGX:UnregisterAllUnitEvents(id)` | Remove all unit-event handlers for an ID |
+
+Callback signature: `function(event, unit, ...)` â€” the unit token is always the second argument, matching WoW's native unit event signature.
+
 ### Messages
 
 | Method | Description |
@@ -200,6 +210,10 @@ Callback signature: `function(original, self, ...) return original(self, ...) en
 | `RGX:SafeUIDropDownMenu_DisableDropDown(dd)` | Combat-safe dropdown disable |
 | `RGX:SafeToggleDropDownMenu(...)` | Combat-safe ToggleDropDownMenu |
 | `RGX:SafeCloseDropDownMenus(...)` | Combat-safe CloseDropDownMenus |
+| `RGX:SafeEnable(button)` / `RGX:SafeDisable(button)` | Combat-safe Enable/Disable |
+| `RGX:SafeSetChecked(checkbox, checked)` | Combat-safe SetChecked |
+| `RGX:SafeSetValue(slider, value)` | Combat-safe SetValue |
+| `RGX:SafeSetMinMaxValues(slider, min, max)` | Combat-safe SetMinMaxValues |
 
 ---
 
@@ -209,6 +223,35 @@ Callback signature: `function(original, self, ...) return original(self, ...) en
 |---|---|
 | `RGX:RegisterSlashCommand(commands, callback, id)` | Register; commands: string or table; returns token |
 | `RGX:Slash(command, callback)` | Shorthand for single-command registration |
+
+---
+
+## Database & Profiles
+
+| Method | Description |
+|---|---|
+| `RGX:NewDatabase(name, defaults, opts)` | Profile-aware SavedVariables proxy with metamethod access; `opts`: `{ global, onSwitch }` |
+| `RGX:DB(name, defaults)` | Simple (non-profile) SavedVariables table with deep-merged defaults |
+| `RGX:GetDB()` | The framework's own `RGXFrameworkDB` reference |
+| `RGX:DBGet(db, path, fallback)` / `RGX:DBSet(db, path, value)` | Dotted-path get/set (`"a.b.c"`) |
+| `RGX:MigrateDB(db, name, currentVersion, migrations)` | Ordered version-based migrations |
+| `RGX:SerializeTable(t)` / `RGX:DeserializeTable(str)` | Table â†” string for import/export |
+| `RGX:ShowExportDialog(title, data)` / `RGX:ShowImportDialog(title, onImport)` | Copy-paste dialogs |
+
+The proxy returned by `NewDatabase` carries profile CRUD (verified against `core/systems/database.lua`):
+
+| Proxy method | Description |
+|---|---|
+| `db:GetProfile()` / `db:GetActiveProfile()` | Active profile table / name |
+| `db:GetChar()` | Per-character storage table |
+| `db:ListProfiles()` / `db:GetProfiles()` | Profile names / tables |
+| `db:CreateProfile(name)` / `db:LoadProfile(name)` / `db:DeleteProfile(name)` | Profile CRUD |
+| `db:RenameProfile(old, new)` / `db:CopyProfile(src, dst)` / `db:ResetProfile(name)` | Profile management |
+| `db:OnProfileChanged(callback)` | Switch notification |
+| `db:Get(path, fallback)` / `db:Set(path, value)` | Dotted-path access on the active profile |
+| `db:SerializeProfile(name)` | Export one profile as a string |
+
+Never overwrite the proxy (`db = something`) â€” internal fields are metamethod-guarded.
 
 ---
 
@@ -243,6 +286,14 @@ Callback signature: `function(original, self, ...) return original(self, ...) en
 | `RGX:Round(num, decimals)` | Round to N decimal places |
 | `RGX:Clamp(val, min, max)` | Number clamp |
 | `RGX:Lerp(a, b, t)` | Linear interpolation, t âˆˆ [0,1] |
+
+### Function Helpers
+
+| Method | Description |
+|---|---|
+| `RGX:DeepCopy(value)` | Recursive copy (cycle-safe) |
+| `RGX:Throttle(key, seconds, func)` | Run `func` at most once per `seconds` for this key |
+| `RGX:Debounce(key, seconds, func)` | Run `func` only after `seconds` of quiet for this key |
 
 ### WoW Version
 
@@ -480,6 +531,15 @@ See [docs/DROPDOWNS.md](DROPDOWNS.md) for complete documentation.
 | `Drops:ShortenLabel(text, maxChars)` | Truncate with "..." |
 | `Drops:CopyItem(item)` | Normalize single item |
 | `Drops:NormalizeItems(items)` | Normalize item array in place |
+
+---
+
+## Theme Setters (core wrappers)
+
+| Method | Description |
+|---|---|
+| `RGX:SetTheme(config)` | Forwarded to `RGXDesign:SetTheme` when Design is loaded |
+| `RGX:SetHighlightColor(color, accent)` | Forwarded to `RGXDesign:SetHighlightColor` |
 
 ---
 

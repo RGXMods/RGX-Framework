@@ -8,7 +8,7 @@
 - Every API should work with **one or two lines of code** for the common case.
 - Complexity lives inside the framework. The consumer surface stays simple.
 - New features are extracted from real addon usage (BLU, ETL, SQP, RND), not designed in isolation.
-- Dormant code that causes errors in production is disabled until a safe load path exists.
+- As of v2.1.0 every in-tree module ships active — no dormant code.
 
 When adding or changing anything in RGX-Framework, ask: _does this make addon building easier for the next author?_
 
@@ -23,26 +23,38 @@ One `RequiredDeps` entry, everything included. No embedding, no version conflict
 ```
 
 ```lua
-local addonName, addonTable = ...
-local RGX = _G.RGXFramework
-assert(RGX, "RGX-Framework is required")
+local RGX = assert(_G.RGXFramework, "RGX-Framework is required")
 
--- Database with profile support
+-- A complete addon in one declarative call: saved settings with profiles,
+-- a tabbed options panel with db-bound controls, slash command, minimap
+-- button, branded output — all routed through taint-safe framework paths.
+local addon = RGX.Addon("MyAddon", {
+    slash   = "myaddon",
+    minimap = "Interface\\Icons\\inv_misc_questionmark",
+    db      = { enabled = true, volume = 80 },
+    options = {
+        General = {
+            { toggle = "enabled", label = "Enable Addon" },
+            { slider = "volume",  label = "Volume", min = 0, max = 100 },
+            { dropdown = "sound", label = "Choose Sound", items = { "Fanfare", "Chime" } },
+        },
+    },
+    welcome = "loaded — /myaddon for options",
+    onInit  = function(self)
+        self:RegisterEvent("PLAYER_LOGIN", function() self:Print("Hello!") end)
+    end,
+})
+```
+
+À la carte — the same systems individually:
+
+```lua
 addonTable.db = RGX:NewDatabase("MyAddonDB", { enabled = true, volume = 1.0 })
-
--- Events
 RGX:RegisterEvent("PLAYER_LOGIN", function() print("Hello!") end)
+RGX:CreateMinimapButton({ name = "MyAddon", icon = "Interface\\Icons\\inv_misc_questionmark" })
+RGX:RegisterSlashCommand("myaddon", function(msg) print("/myaddon:", msg) end)
 
--- Minimap button
-local minimap = RGX:GetMinimap()
-minimap:CreateButton("MyAddon", { icon = "Interface\\Icons\\inv_misc_questionmark" })
-
--- Slash command
-RGX:RegisterSlashCommand("myaddon", function() print("Options opened") end)
-
--- Dropdown with nested menus
-local Drops = RGX:GetDropdowns()
-local dd = Drops:CreateNestedDropdown(parent, {
+local dd = RGX:GetDropdowns():CreateNestedDropdown(parent, {
     label = "Choose Sound",
     items = {
         { text = "Fanfare", value = "fanfare" },
@@ -51,13 +63,13 @@ local dd = Drops:CreateNestedDropdown(parent, {
     onChange = function(value) print("selected:", value) end,
 })
 
--- Options panel
-local Options = RGX:GetOptions()
-Options:CreatePanel("MyAddon", {
+local panel = RGX:Options({
+    addonName = "MyAddon",
+    title = "MyAddon",
     tabs = {
-        { label = "General", create = function(parent)
-            Options:Toggle(parent, { label = "Enabled", get = function() return MyAddon.db.enabled end, set = function(v) MyAddon.db.enabled = v end })
-        end},
+        { text = "General", content = function(frame)
+            RGX:Toggle(frame, { key = "enabled", label = "Enabled", storage = addonTable.db })
+        end },
     },
 })
 ```
