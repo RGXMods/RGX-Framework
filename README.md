@@ -17,9 +17,9 @@ RGX-Framework is a modern, self-contained WoW Retail addon framework â€” an
 **2. Declare your addon — one call:**
 
 ```lua
-local RGX = assert(_G.RGXFramework, "MyAddon: RGX-Framework not loaded")
-
-local addon = RGX.Addon("MyAddon", {
+-- Line 1 of MyAddon.lua is the addon. RGXAddon is a framework-provided
+-- global; RequiredDeps guarantees it exists. No local, no assert.
+local addon = RGXAddon("MyAddon", {
     slash   = "myaddon",              -- /myaddon opens the options panel
     minimap = "Interface\\AddOns\\MyAddon\\media\\logo.tga",
     db      = { enabled = true, volume = 80 },   -- SavedVariables proxy on addon.db

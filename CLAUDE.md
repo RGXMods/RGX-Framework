@@ -126,7 +126,16 @@ All in-tree modules are loaded by the XML loader. No dormant code remains.
 
 ### Tier 4 — Declarative authoring layer (see `docs/DECLARATIVE-DSL.md` on the `dsl` branch)
 
-12. **Harden `RGX.Addon({...})`** to the full declarative shape — events, unit events, timers, slash, minimap, DB defaults all from one table. The declarative Lua table is the canonical foundation; any future `.rgx` syntax compiles to it, never to raw Lua.
+**THE SIMPLICITY CONTRACT is frozen** in that doc — it binds all authoring-surface work so the docs never get rewritten again. The seven rules, condensed:
+1. Zero boilerplate — line 1 of a consumer addon is the addon (`RGXAddon "Name" { }`, a framework global; shipped, PR #3). `local RGX = assert(...)` is the escape hatch, never the front door.
+2. Human vocabulary — trigger names are plain words (`login`, `levelup`, `quest.turnin`, `combat.start`); the framework, never the author, knows WoW event names.
+3. One line per concept — each control is one string, each trigger one key. If a common concept costs more, grow the framework, not author code.
+4. Infer everything inferable — labels from keys, dbName/title/slash from addon name; explicit always wins.
+5. Strings first, functions when needed — every string form has a long-form; long-form never required for the common case.
+6. Additive forever — keys and grammars never change meaning; old addons never break. Tier 5 schema freezes this mechanically.
+7. Errors teach — bad input raises an error listing valid options.
+
+12. **Harden `RGX.Addon({...})`** to the full contract shape — `on = {}` human trigger vocabulary, `every = {}`, string control grammar, label inference. The declarative Lua table is the canonical foundation; any future `.rgx` syntax compiles to it, never to raw Lua.
 13. **Grid/matrix options UI** — declarative 1/2/3-column card layouts with flexible element rows, every control bound to `addon.db` with automatic save/restore. This also kills a live cross-addon bug class: BLU and SQP hand-roll sliders that do not restore their values on reload; framework-owned bound controls fix all of them at once.
 
 ### Tier 5 — Schema + rgx-mcp (separate repo; framework never depends on it)
