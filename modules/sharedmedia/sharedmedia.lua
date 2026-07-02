@@ -40,6 +40,13 @@ SM._pendingFullScan = false
 SM._invokedDBM   = {}
 SM._didGenericScan = false
 
+-- AddOn folders whose sounds must NOT be bridged by the generic scan. A consumer
+-- that manages its own media (registers its bundled/user sounds directly) excludes
+-- its folder so the generic addon-global crawl does not re-discover and duplicate
+-- those paths. Keyed by lowercased folder name. The framework's own folder is
+-- always excluded.
+SM.excludedFolders = SM.excludedFolders or { ["rgx-framework"] = true }
+
 -- ── Constants ─────────────────────────────────────────────────────────────────
 
 local MAX_SOUNDS_PER_SCAN   = 3000
@@ -360,6 +367,23 @@ end
 -- ── Sound bridge scanner ──────────────────────────────────────────────────────
 
 -- Register a bridge sound path (auto-detected; not persisted)
+-- Register an AddOn folder whose sounds should not be bridged by the generic
+-- scan. Call this before the generic scan runs (e.g. from a consumer's OnReady).
+-- Idempotent. folderName is the AddOn folder name, e.g. "BLU".
+function SM:ExcludeFolder(folderName)
+    if type(folderName) ~= "string" or folderName == "" then return end
+    self.excludedFolders[string.lower(folderName)] = true
+end
+
+function SM:_IsExcludedPath(lowerPath)
+    for folder in pairs(self.excludedFolders) do
+        if string.find(lowerPath, "interface\\addons\\" .. folder .. "\\", 1, true) then
+            return true
+        end
+    end
+    return false
+end
+
 function SM:_BridgePath(path, preferredPackName, preferredDisplayName)
     if not IsAudioPath(path) then return false end
 
@@ -369,6 +393,9 @@ function SM:_BridgePath(path, preferredPackName, preferredDisplayName)
     -- Skip loose user-custom paths (bare Interface\AddOns\file.ogg)
     if string.match(lowerPath, "^interface\\addons\\[^\\]+%.[^\\]+$") then return false end
     if string.match(lowerPath, "^interface\\addons\\sounds\\[^\\]+%.[^\\]+$") then return false end
+
+    -- Skip consumer-owned folders (they manage their own media directly)
+    if self:_IsExcludedPath(lowerPath) then return false end
 
     local packName = preferredPackName or ExtractAddonFolder(normalizedPath)
     local lowerPack = string.lower(packName)
@@ -553,6 +580,12 @@ function SM:Scan(includeGeneric)
         "[RGXSharedMedia] Scan complete — DBM:%d Compat:%d Generic:%d",
         n1, n2, n3
     ))
+
+    -- Notify consumers that the sound registry changed so they can re-import
+    -- bridge entries and refresh any media pickers. Payload is the media type.
+    if type(RGX.SendMessage) == "function" then
+        RGX:SendMessage("RGX_SHAREDMEDIA_UPDATED", "sound")
+    end
 end
 
 function SM:QueueScan(delay, includeGeneric)

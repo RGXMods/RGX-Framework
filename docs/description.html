@@ -30,7 +30,7 @@ It stays quiet for players and useful for authors. If another addon requires RGX
 <div style="margin-top:10px;color:#e6edf3;line-height:1.7">
 &bull; <strong>Events &amp; Messages</strong> &mdash; Blizzard event registration + internal message bus<br/>
 &bull; <strong>Timers</strong> &mdash; <code>RGX:After</code> / <code>RGX:Every</code>, native OnUpdate driver<br/>
-&bull; <strong>Fonts</strong> &mdash; 36 bundled + 8 WoW defaults (~44 total, 10 blocked), grouped dropdowns, style objects<br/>
+&bull; <strong>Fonts</strong> &mdash; 40 bundled + 4 WoW defaults (44 total, 10 blocked), grouped dropdowns, style objects<br/>
 &bull; <strong>Colors</strong> &mdash; named palette, class/quality colors, color picker<br/>
 &bull; <strong>Textures</strong> &mdash; statusbar registry, LibSharedMedia import<br/>
 &bull; <strong>Dropdowns</strong> &mdash; nested menus, auto-width, inline buttons<br/>
@@ -58,8 +58,13 @@ It stays quiet for players and useful for authors. If another addon requires RGX
 &bull; <strong>RGXDesign</strong> &mdash; visual building blocks, brand palette<br/>
 &bull; <strong>RGXDataBroker</strong> &mdash; data object registry, LDB bridge<br/>
 &bull; <strong>RGXSound</strong> &mdash; level-up sounds, variant playback<br/>
+&bull; <strong>RGXSharedMedia</strong> &mdash; sound/font/texture registry + external pack scanner<br/>
+&bull; <strong>RGXCombat</strong> &mdash; enter/leave/kill/crit/low-health callbacks<br/>
+&bull; <strong>RGXPetBattles</strong> &mdash; pet level-up, capture, battle state<br/>
+&bull; <strong>RGXReputation</strong> &mdash; reputation + renown tracking<br/>
+&bull; <strong>Event Callbacks</strong> &mdash; Achievement, LevelUp, Quest, Honor, Delves, Housing, TradingPost, Prey, Collectibles, Loot<br/>
 <br/>
-<span style="color:#ff8fab"><em>Dormant (in-tree, not loaded):</em></span> PetBattles, SharedMedia, Combat, Reputation
+<span style="color:#4ecdc4"><em>As of v2.1.0 every module ships active &mdash; no dormant code.</em></span>
 </div>
 </td>
 </tr>
@@ -92,18 +97,26 @@ It stays quiet for players and useful for authors. If another addon requires RGX
 
 local RGX = assert(_G.RGXFramework, "MyAddon: RGX not loaded")
 
-RGX:OnReady(function()
-  local Fonts = RGX:GetFonts()
-  local path = Fonts:GetPath("Inter-Regular")
-  myFontString:SetFont(path, 12, "OUTLINE")
-end)</pre>
+RGX.Addon("MyAddon", {
+  slash   = "myaddon",
+  minimap = true,
+  db      = { enabled = true, volume = 80 },
+  options = {
+    General = {
+      { toggle = "enabled", label = "Enable Addon" },
+      { slider = "volume",  label = "Volume", min = 0, max = 100 },
+    },
+  },
+  welcome = "loaded &mdash; /myaddon for options",
+})</pre>
+<div style="margin-top:8px;color:#c7d0db;font-size:13px">One call = saved settings, options panel, slash command, minimap button &mdash; all routed through taint-safe framework paths.</div>
 </td>
 <td style="width:42%;vertical-align:top">
 <div style="padding:12px 14px;background-color:#1b1520;border:1px solid #4a3147;margin-bottom:12px">
 <div style="font-size:18px;font-weight:700;color:#ff8fab">Compatibility</div>
 <div style="margin-top:10px;color:#e6edf3;line-height:1.7">
 &bull; WoW Retail only<br/>
-&bull; Interface version: <span style="color:#58a6ff">120005</span><br/>
+&bull; Interface version: <span style="color:#58a6ff">120007</span><br/>
 &bull; Full Ace3 alternative &mdash; no LibStub required
 </div>
 </div>

@@ -9,7 +9,7 @@ Complete documentation for the font registry, blocked fonts, dropdown schemas, s
 The Fonts module (`RGXFonts`) provides:
 
 - A **font registry** with named entries, metadata, and availability checks
-- A **blocklist** of 10 in-tree fonts with corrupted assets (not selectable; 36 bundled + 8 WoW defaults = ~44 total, 10 blocked, ~34 available)
+- A **blocklist** of 10 in-tree fonts with corrupted assets (not selectable; 40 bundled + 4 WoW defaults = 44 total, 10 blocked, 34 available)
 - **Style objects** â€” normalized tables describing a complete text appearance
 - **Apply helpers** â€” one-call font application to FontStrings and frame trees
 - **Dropdown schemas** â€” dual-schema menu items for both RGX and legacy BPU consumers
@@ -398,7 +398,7 @@ Montserrat-Regular, Montserrat-Bold, Merriweather-Regular, Merriweather-Bold, Pl
 
 ```
 modules/fonts/
-â”œâ”€â”€ definitions.lua   â€” 36 font definitions + unavailableFonts blocklist
+â”œâ”€â”€ definitions.lua   â€” 40 font definitions + unavailableFonts blocklist
 â”œâ”€â”€ init.lua          â€” Fonts:Init() + RegisterModule("fonts")
 â”œâ”€â”€ registry.lua      â€” Register, RegisterAddonFont, RegisterFontPack
 â”œâ”€â”€ query.lua         â€” GetPath, Get, Exists, IsAvailable, List, ListAvailable, etc.

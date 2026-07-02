@@ -227,14 +227,14 @@ These can be read by `Fonts:ResolveName(db.fontFamily)` which handles both name 
 
 ## From BLU's Systems
 
-**Note:** BLU is not yet migrated. This section is future reference.
+**Note:** BLU is ~100% migrated to RGX-Framework (v8.0.1). The one remaining local piece is `core/sounds/sharedmedia.lua`, which will be replaced by `RGXSharedMedia` in the Tier 2 wire-up. This table maps each BLU system to its RGX equivalent.
 
-| BLU System | RGX Equivalent |
-|---|---|
-| `core/systems/database.lua` | `RGX:DB(name, defaults)` (basic); full profile system planned |
-| `core/sharedmedia.lua` | `RGXSharedMedia` (dormant) + `Textures:ImportLibSharedMedia()` |
-| `core/events.lua` | `RGX:RegisterEvent` / `RGX:RegisterMessage` |
-| `core/runtime.lua` | `RGX:After` / `RGX:Every` / `RGX:Hook` |
+| BLU System | RGX Equivalent | Status |
+|---|---|---|
+| `core/systems/database.lua` | `RGX:NewDatabase(name, defaults, opts)` — profile-aware proxy | Done |
+| `core/sounds/sharedmedia.lua` | `RGXSharedMedia` (enabled v2.0.0) + `Textures:ImportLibSharedMedia()` | Ready to wire |
+| `core/events.lua` | `RGX:RegisterEvent` / `RGX:RegisterMessage` | Done |
+| `core/runtime.lua` | `RGX:After` / `RGX:Every` / `RGX:Hook` | Done |
 
 ---
 

@@ -1,6 +1,6 @@
 # SUPER SIMPLE RGX Integration
 
-## The Absolute Minimum Code
+## A Complete Addon In One Call
 
 ### 1. Add RequiredDeps
 
@@ -8,7 +8,42 @@
 ## RequiredDeps: RGX-Framework
 ```
 
-### 2. Get Font Path
+### 2. Declare the addon
+
+```lua
+-- MyAddon.lua — this is the whole addon
+local RGX = assert(_G.RGXFramework, "MyAddon: RGX-Framework not loaded")
+
+RGX.Addon("MyAddon", {
+    slash   = "myaddon",                        -- /myaddon opens options
+    minimap = true,                             -- minimap button (default icon)
+    db      = { enabled = true, volume = 80 },  -- saved settings on addon.db
+    options = {
+        General = {
+            { toggle = "enabled", label = "Enable Addon" },
+            { slider = "volume",  label = "Volume", min = 0, max = 100 },
+        },
+    },
+    welcome = "loaded — /myaddon for options",
+})
+```
+
+Saved variables, profile support, a tabbed options panel with db-bound controls, a slash command, a minimap button, and branded output — no event frames, no `C_Timer`, no `SLASH_X` globals, no SavedVariables boilerplate. The framework owns all of the unsafe plumbing.
+
+Add behavior inside `onInit`:
+
+```lua
+    onInit = function(self)
+        self:RegisterEvent("PLAYER_LOGIN", function()
+            self:Print("Ready!")
+        end)
+        self:Every(30, function() self:Print("tick") end)
+    end,
+```
+
+## Just Want Fonts?
+
+### Get Font Path
 
 ```lua
 local path = _G.RGXFonts:GetPath("Inter-Regular")
@@ -74,7 +109,7 @@ _G.RGXFonts:AttachFontSelector(parent, db, "titleFont")
 
 ```lua
 -- .toc file
-## Interface: 120005
+## Interface: 120007
 ## Title: MyAddon
 ## RequiredDeps: RGX-Framework
 
@@ -82,15 +117,26 @@ MyAddon.lua
 ```
 
 ```lua
--- MyAddon.lua
--- Get a font path
-local fontPath = _G.RGXFonts:GetPath("Inter-Regular")
+-- MyAddon.lua — a whole working addon
+local RGX = assert(_G.RGXFramework, "MyAddon: RGX-Framework not loaded")
 
--- Create text with RGX font
-local text = UIParent:CreateFontString(nil, "OVERLAY")
-text:SetFont(fontPath, 14, "OUTLINE")
-text:SetPoint("CENTER")
-text:SetText("Hello with Inter font!")
+RGX.Addon("MyAddon", {
+    slash   = "myaddon",
+    db      = { enabled = true },
+    options = {
+        General = {
+            { toggle = "enabled", label = "Enable Addon" },
+        },
+    },
+    onInit = function(self)
+        -- Framework fonts, one line each
+        local fontPath = _G.RGXFonts:GetPath("Inter-Regular")
+        local text = UIParent:CreateFontString(nil, "OVERLAY")
+        text:SetFont(fontPath, 14, "OUTLINE")
+        text:SetPoint("CENTER")
+        text:SetText("Hello with Inter font!")
+    end,
+})
 ```
 
 ## BPU Example
@@ -108,6 +154,13 @@ myText:SetFont(path, 12, "OUTLINE")
 
 ## What Addon Authors Should Actually Use
 
+**For the addon itself:**
+
+- `RGX.Addon(name, opts)` — the front door: slash, minimap, db, options tabs, welcome, onInit in one call
+- `addon:RegisterEvent` / `addon:After` / `addon:Every` / `addon:Print` — scoped plumbing on the returned object
+
+**For fonts specifically:**
+
 - `GetPath(fontName)` when you only need a path
 - `CreateStyle(styleTable)` when you want one normalized style object
 - `ApplyTextStyle(fontString, style)` when you want one-call application
@@ -119,7 +172,7 @@ myText:SetFont(path, 12, "OUTLINE")
 ## Why This Works
 
 1. `## RequiredDeps: RGX-Framework` ensures RGX loads first
-2. `_G.RGXFonts` is created by RGX-Framework
-3. The simple path is just `_G.RGXFonts`, `CreateStyle`, `ApplyTextStyle`, and the selector helpers
+2. `RGX.Addon()` maps your declarative table onto the framework's taint-safe paths — no event frames, no `C_Timer`, no `SLASH_X`, no SavedVariables boilerplate
+3. Module globals like `_G.RGXFonts` are created by RGX-Framework, so à la carte helpers are one line each
 
-No bridge layer, no per-addon font plumbing, and no need to rebuild dropdowns by hand.
+No bridge layer, no per-addon plumbing, and no need to rebuild dropdowns by hand.

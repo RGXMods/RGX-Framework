@@ -43,10 +43,20 @@ Complete public API by module. See individual module docs for deeper detail:
 | `RGX:GetDesign()` | RGXDesign |
 | `RGX:GetDataBroker()` | RGXDataBroker |
 | `RGX:GetSound()` | RGXSound |
-| `RGX:GetPetBattles()` | RGXPetBattles (dormant â€” returns nil) |
-| `RGX:GetSharedMedia()` | RGXSharedMedia (dormant â€” returns nil) |
-| `RGX:GetCombat()` | RGXCombat (dormant â€” returns nil) |
-| `RGX:GetReputation()` | RGXReputation (dormant â€” returns nil) |
+| `RGX:GetPetBattles()` | RGXPetBattles |
+| `RGX:GetSharedMedia()` | RGXSharedMedia |
+| `RGX:GetCombat()` | RGXCombat |
+| `RGX:GetReputation()` | RGXReputation |
+| `RGX:GetAchievement()` | RGXAchievement |
+| `RGX:GetLevelUp()` | RGXLevelUp |
+| `RGX:GetCollectibles()` | RGXCollectibles |
+| `RGX:GetLoot()` | RGXLoot |
+| `RGX:GetQuest()` | RGXQuest |
+| `RGX:GetHonor()` | RGXHonor |
+| `RGX:GetDelves()` | RGXDelves |
+| `RGX:GetHousing()` | RGXHousing |
+| `RGX:GetTradingPost()` | RGXTradingPost |
+| `RGX:GetPrey()` | RGXPrey |
 
 ### Output
 
@@ -102,7 +112,7 @@ local prefix = RGX:CreateChatPrefix({
 | `RGX.db` | table | `RGXFrameworkDB` SavedVar reference |
 | `RGX.timers` | array | Active timer table |
 | `RGX.combatQueue` | array | Pending combat-locked operations |
-| `RGX.timerBudget` | table | `{ maxPerFrame=256, maxSeconds=0.033, slowSeconds=0.050 }` |
+| `RGX.timerBudget` | table | `{ maxPerFrame=256, maxSeconds=0.033, slowSeconds=0.250, slowByLabel={ ["SharedMedia:QueueScan"]=0.500 } }` |
 
 ---
 
@@ -116,6 +126,16 @@ local prefix = RGX:CreateChatPrefix({
 | `RGX:UnregisterEvent(event, id)` | Remove a specific handler |
 | `RGX:UnregisterAllEvents(id)` | Remove all handlers for an ID |
 | `RGX:FireEvent(event, ...)` | Manually dispatch into the event registry |
+
+### Unit Events
+
+| Method | Description |
+|---|---|
+| `RGX:RegisterUnitEvent(event, unit, callback, id, owner)` | Per-unit event filtering; `unit` is a token or a table of tokens (`"player"`, `{"player","target"}`) |
+| `RGX:UnregisterUnitEvent(event, id)` | Remove a specific unit-event handler |
+| `RGX:UnregisterAllUnitEvents(id)` | Remove all unit-event handlers for an ID |
+
+Callback signature: `function(event, unit, ...)` â€” the unit token is always the second argument, matching WoW's native unit event signature.
 
 ### Messages
 
@@ -190,6 +210,10 @@ Callback signature: `function(original, self, ...) return original(self, ...) en
 | `RGX:SafeUIDropDownMenu_DisableDropDown(dd)` | Combat-safe dropdown disable |
 | `RGX:SafeToggleDropDownMenu(...)` | Combat-safe ToggleDropDownMenu |
 | `RGX:SafeCloseDropDownMenus(...)` | Combat-safe CloseDropDownMenus |
+| `RGX:SafeEnable(button)` / `RGX:SafeDisable(button)` | Combat-safe Enable/Disable |
+| `RGX:SafeSetChecked(checkbox, checked)` | Combat-safe SetChecked |
+| `RGX:SafeSetValue(slider, value)` | Combat-safe SetValue |
+| `RGX:SafeSetMinMaxValues(slider, min, max)` | Combat-safe SetMinMaxValues |
 
 ---
 
@@ -199,6 +223,35 @@ Callback signature: `function(original, self, ...) return original(self, ...) en
 |---|---|
 | `RGX:RegisterSlashCommand(commands, callback, id)` | Register; commands: string or table; returns token |
 | `RGX:Slash(command, callback)` | Shorthand for single-command registration |
+
+---
+
+## Database & Profiles
+
+| Method | Description |
+|---|---|
+| `RGX:NewDatabase(name, defaults, opts)` | Profile-aware SavedVariables proxy with metamethod access; `opts`: `{ global, onSwitch }` |
+| `RGX:DB(name, defaults)` | Simple (non-profile) SavedVariables table with deep-merged defaults |
+| `RGX:GetDB()` | The framework's own `RGXFrameworkDB` reference |
+| `RGX:DBGet(db, path, fallback)` / `RGX:DBSet(db, path, value)` | Dotted-path get/set (`"a.b.c"`) |
+| `RGX:MigrateDB(db, name, currentVersion, migrations)` | Ordered version-based migrations |
+| `RGX:SerializeTable(t)` / `RGX:DeserializeTable(str)` | Table â†” string for import/export |
+| `RGX:ShowExportDialog(title, data)` / `RGX:ShowImportDialog(title, onImport)` | Copy-paste dialogs |
+
+The proxy returned by `NewDatabase` carries profile CRUD (verified against `core/systems/database.lua`):
+
+| Proxy method | Description |
+|---|---|
+| `db:GetProfile()` / `db:GetActiveProfile()` | Active profile table / name |
+| `db:GetChar()` | Per-character storage table |
+| `db:ListProfiles()` / `db:GetProfiles()` | Profile names / tables |
+| `db:CreateProfile(name)` / `db:LoadProfile(name)` / `db:DeleteProfile(name)` | Profile CRUD |
+| `db:RenameProfile(old, new)` / `db:CopyProfile(src, dst)` / `db:ResetProfile(name)` | Profile management |
+| `db:OnProfileChanged(callback)` | Switch notification |
+| `db:Get(path, fallback)` / `db:Set(path, value)` | Dotted-path access on the active profile |
+| `db:SerializeProfile(name)` | Export one profile as a string |
+
+Never overwrite the proxy (`db = something`) â€” internal fields are metamethod-guarded.
 
 ---
 
@@ -233,6 +286,14 @@ Callback signature: `function(original, self, ...) return original(self, ...) en
 | `RGX:Round(num, decimals)` | Round to N decimal places |
 | `RGX:Clamp(val, min, max)` | Number clamp |
 | `RGX:Lerp(a, b, t)` | Linear interpolation, t âˆˆ [0,1] |
+
+### Function Helpers
+
+| Method | Description |
+|---|---|
+| `RGX:DeepCopy(value)` | Recursive copy (cycle-safe) |
+| `RGX:Throttle(key, seconds, func)` | Run `func` at most once per `seconds` for this key |
+| `RGX:Debounce(key, seconds, func)` | Run `func` only after `seconds` of quiet for this key |
 
 ### WoW Version
 
@@ -473,6 +534,15 @@ See [docs/DROPDOWNS.md](DROPDOWNS.md) for complete documentation.
 
 ---
 
+## Theme Setters (core wrappers)
+
+| Method | Description |
+|---|---|
+| `RGX:SetTheme(config)` | Forwarded to `RGXDesign:SetTheme` when Design is loaded |
+| `RGX:SetHighlightColor(color, accent)` | Forwarded to `RGXDesign:SetHighlightColor` |
+
+---
+
 ## Design (`RGXDesign`)
 
 ### Static Color Palette
@@ -585,7 +655,7 @@ Sound:Register(name, opts)
 -- opts: { path, channel, variants, defaultSound, muteable }
 ```
 
-Level-up sound system with variant playback, default-sound muting, and SavedVar integration. Currently loaded by XML but primarily used by BattlePetUtility.
+Level-up sound system with variant playback, default-sound muting, and SavedVar integration. Used by BattlePetUtility and the LevelUp sound-pack addons.
 
 ---
 
@@ -595,41 +665,110 @@ Level-up sound system with variant playback, default-sound muting, and SavedVar 
 local dataObj = DB:NewDataObject(name, attrs)
 ```
 
-LibDataBroker-compatible proxy data source with optional LDB bridge. Currently loaded by XML but minimal external usage.
+LibDataBroker-compatible proxy data source with optional LDB bridge.
 
 ---
 
-## Dormant Modules
+## Combat (`RGXCombat`)
 
-The following modules are in-tree but not loaded by the current XML:
+Combat-state callback library. Every method registers a handler; all dispatch is pcall-wrapped.
 
-### PetBattles (`RGXPetBattles`)
+| Method | Fires when |
+|---|---|
+| `Combat:OnEnter(fn)` | Player enters combat |
+| `Combat:OnLeave(fn)` | Player leaves combat |
+| `Combat:OnKill(fn)` | Player gets a killing blow |
+| `Combat:OnPlayerDied(fn)` | Player dies |
+| `Combat:OnPlayerDamaged(fn)` / `OnPlayerHealed(fn)` | Player takes damage / is healed |
+| `Combat:OnCrit(fn)` / `OnCritHeal(fn)` | Player lands a crit / crit heal |
+| `Combat:OnLowHealth(fn)` | Player drops below low-health threshold |
+| `Combat:OnExecuteWindow(fn)` | Target enters execute range |
+| `Combat:OnResourceCapped(fn)` / `OnResourceLow(fn)` | Primary resource capped / low |
+| `Combat:OnTargetLost(fn)` / `OnProc(fn)` | Target lost / proc detected |
+| `Combat:IsInCombat()` / `Combat:GetDuration()` | Query current combat state |
+
+---
+
+## PetBattles (`RGXPetBattles`)
 
 | Method | Description |
 |---|---|
 | `PB:OnLevelUp(fn)` | Register level-up callback |
 | `PB:OnCapture(fn)` | Register capture callback |
-| `PB:OnBattleStart(fn)` | Register battle start callback |
-| `PB:OnBattleEnd(fn)` | Register battle end callback |
+| `PB:OnBattleStart(fn)` / `PB:OnBattleEnd(fn)` | Battle start / end callbacks |
 | `PB:OnPetChanged(fn)` | Register pet changed callback |
-| `PB:IsAvailable()` | Pet battle system accessible |
-| `PB:IsInBattle()` | In active battle |
+| `PB:IsAvailable()` / `PB:IsInBattle()` | System accessible / in active battle |
 | `PB:GetNumPets()` | Owned pet count |
-| `PB:GetPetInfoByIndex(i)` | C_PetJournal result table |
-| `PB:GetPetInfoByID(id)` | C_PetJournal result table |
+| `PB:GetPetInfoByIndex(i)` / `PB:GetPetInfoByID(id)` | C_PetJournal result table |
 | `PB:GetPetLevel(id)` | Cached level |
-| `PB:ScanPetLevels()` | Populate level cache |
-| `PB:CheckPetLevels()` | Diff scan, fire OnLevelUp |
+| `PB:ScanPetLevels()` / `PB:CheckPetLevels()` | Populate cache / diff scan → fire OnLevelUp |
 | `PB:SchedulePetLevelScan(delay)` | Delayed scan |
 
-### SharedMedia (`RGXSharedMedia`)
+---
 
-Sound/font/texture registry with pack scanner. Drop-in for LibSharedMedia scanning logic.
+## Reputation (`RGXReputation`)
 
-### Combat (`RGXCombat`)
+Reputation and renown tracking, normalized across expansions.
 
-Combat event library: enter/leave/kill/damage/heal/crit callbacks.
+| Method | Description |
+|---|---|
+| `Rep:OnRankUp(fn)` | Standing rank increases |
+| `Rep:OnGain(fn)` | Reputation gained |
+| `Rep:OnRenownUp(fn)` | Major-faction renown level up |
+| `Rep:Scan()` / `Rep:CheckChanges()` | Snapshot / diff scan |
+| `Rep:GetAll()` / `Rep:Get(factionID)` / `Rep:GetByName(name)` | Lookup |
+| `Rep:IsMaxed(factionID)` / `Rep:GetRenown()` | Query state |
 
-### Reputation (`RGXReputation`)
+---
 
-Reputation and renown tracking, cross-expansion normalized.
+## SharedMedia (`RGXSharedMedia`)
+
+Multi-type media registry (`sound`, `statusbar`, `font`) with an external-addon scanner. No LibStub / LibSharedMedia dependency. Replaces per-addon local scanning (e.g. BLU's local sharedmedia).
+
+```lua
+SM:Register(mediaType, name, path, opts)        -- register one entry
+SM:RegisterPack(mediaType, packName, entries)   -- register a batch under a pack
+SM:RegisterSoundPack(packName, entries)         -- convenience for "sound"
+SM:RegisterStatusBarPack(packName, entries)     -- convenience for "statusbar"
+SM:Fetch(mediaType, id) / SM:Find(mediaType, name) / SM:GetPath(mediaType, id)
+SM:List(mediaType, filter) / SM:ListPacks(mediaType)
+SM:Scan(includeGeneric)                         -- re-run scanners (DBM registrars, known-addon compat, generic addon-global scan)
+SM:QueueScan(delay, includeGeneric)             -- deduped delayed scan
+SM:ExcludeFolder(addonFolderName)               -- don't bridge sounds from this AddOn folder (see below)
+```
+
+**`SM:ExcludeFolder(name)`** — a consumer that registers its own bundled/user sounds directly should exclude its AddOn folder so the generic addon-global scan does not re-discover and duplicate those paths as bridge entries. Call it before the generic scan runs (e.g. in `OnReady` or module init). The framework's own folder is always excluded.
+
+```lua
+local SM = RGX:GetSharedMedia()
+SM:ExcludeFolder("MyAddon")   -- Interface\AddOns\MyAddon\ sounds won't be bridged back in
+```
+
+After every scan, RGXSharedMedia fires an internal message so consumers can re-import results and refresh media pickers:
+
+```lua
+RGX:RegisterMessage("RGX_SHAREDMEDIA_UPDATED", function(_, mediaType)
+    -- mediaType == "sound"; pull entries with SM:List("sound")
+end)
+```
+
+---
+
+## Event Callback Modules
+
+Milestone/progression modules. Each method registers a pcall-wrapped callback. Used by BLU v8 feature modules and the LevelUp sound-pack addons.
+
+| Module (`Global`) | Callbacks |
+|---|---|
+| Achievement (`RGXAchievement`) | `OnEarned(fn)`, `OnCriteriaEarned(fn)` |
+| LevelUp (`RGXLevelUp`) | `OnLevelUp(fn)` |
+| Collectibles (`RGXCollectibles`) | `OnMount(fn)`, `OnToy(fn)`, `OnTransmog(fn)`, `OnHeirloom(fn)` |
+| Loot (`RGXLoot`) | `OnRareLoot(fn)`, `OnCurrencyGained(fn)` |
+| Quest (`RGXQuest`) | `OnAccepted(fn)`, `OnComplete(fn)`, `OnTurnedIn(fn)`, `OnProgress(fn)` |
+| Honor (`RGXHonor`) | `OnLevelUp(fn)` |
+| Delves (`RGXDelves`) | `OnCompanionLevelUp(fn)`, `OnLifeLost(fn)`, `OnLifeGained(fn)`, `GetCompanionLevel()`, `GetLivesRemaining()` |
+| Housing (`RGXHousing`) | `OnFavorGained(fn)`, `OnLevelUp(fn)`, `OnRewards(fn)`, `OnDecorCollected(fn)` |
+| TradingPost (`RGXTradingPost`) | `OnPurchase(fn)`, `OnCurrencyGained(fn)`, `GetCurrencyAmount()` |
+| Prey (`RGXPrey`) | `OnHuntStarted(fn)`, `OnAmbush(fn)`, `OnCapped(fn)`, `OnComplete(fn)` |
+
+As of **v2.1.0** every module above is loaded by the XML loader. There are no dormant modules.

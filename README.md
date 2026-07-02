@@ -14,42 +14,60 @@ RGX-Framework is a modern, self-contained WoW Retail addon framework â€” an
 ## RequiredDeps: RGX-Framework
 ```
 
-**2. Get the framework:**
+**2. Declare your addon — one call:**
 
 ```lua
 local RGX = assert(_G.RGXFramework, "MyAddon: RGX-Framework not loaded")
+
+local addon = RGX.Addon("MyAddon", {
+    slash   = "myaddon",              -- /myaddon opens the options panel
+    minimap = "Interface\\AddOns\\MyAddon\\media\\logo.tga",
+    db      = { enabled = true, volume = 80 },   -- SavedVariables proxy on addon.db
+    options = {
+        General = {
+            { section = "Settings" },
+            { toggle = "enabled", label = "Enable Addon" },
+            { slider = "volume",  label = "Volume", min = 0, max = 100 },
+        },
+    },
+    welcome = "loaded â€” /myaddon for options",
+    onInit  = function(self)
+        self:RegisterEvent("PLAYER_LOGIN", function()
+            self:Print("Ready!")
+        end)
+    end,
+})
 ```
 
-**3. Use it:**
+That is a **complete addon**: profile-aware saved settings, a tabbed options panel with db-bound controls, a slash command, a minimap button, and branded chat output â€” with every event, timer, and control routed through the framework's taint-safe paths automatically. The `addon` object carries scoped `RegisterEvent` / `RegisterUnitEvent` / `RegisterMessage` / `After` / `Every` / `Print` / `Warn` / `Error` so you never touch raw WoW plumbing.
+
+> The declarative surface grows each release (framework roadmap Tier 4 adds declarative `events`/`timers` tables and grid card layouts). Anything not yet declarative is available Ã  la carte below.
+
+**3. Ã€ la carte â€” individual systems when you need them:**
 
 ```lua
--- Events
+-- Events (id string enables targeted unregistration)
 RGX:RegisterEvent("PLAYER_LOGIN", function() print("logged in") end, "myAddon-login")
 
 -- Timers
 RGX:After(1.0, function() print("one second later") end)
 
--- Fonts
+-- Fonts â€” one-line DB-bound style UI, one-line application
 local Fonts = RGX:GetFonts()
-local path = Fonts:GetPath("Inter-Regular")
-myFontString:SetFont(path, 14, "OUTLINE")
-
--- Or the one-line style path:
 Fonts:AttachStyleSelector(parent, db, "titleText")
 Fonts:ApplyStyle(myLabel, db.titleText)
 
 -- Colors
-local Colors = RGX:GetColors()
-myFontString:SetTextColor(Colors:GetRGB("primary"))
+myFontString:SetTextColor(RGX:GetColors():GetRGB("primary"))
 
--- Minimap button
+-- Minimap button with custom click handling
 RGX:CreateMinimapButton({
     name = "MyAddonMinimap",
     icon = "Interface\\AddOns\\MyAddon\\media\\logo.tga",
     onLeftClick = function() myPanel:Open() end,
 })
 
--- Slash command
+-- Slash command with a custom handler
 RGX:RegisterSlashCommand("myaddon", function(msg) print("/myaddon:", msg) end, "MYADDON")
 ```
 
@@ -80,7 +98,7 @@ Core-only APIs (events, timers, hooks, slash commands) are available immediately
 | **Hooks** | Post-hooks via `hooksecurefunc` â€” safe for Blizzard UI functions |
 | **Slash Commands** | `RegisterSlashCommand` â€” no raw SLASH_X boilerplate |
 | **Combat Queue** | `QueueForCombat`, `SafeShow`, `SafeHide`, `SafeSetPoint`, and more |
-| **Fonts** | 36 bundled + 8 WoW defaults (~44 total), 10 blocked in unavailableFonts, grouped dropdowns, style objects |
+| **Fonts** | 40 bundled + 4 WoW defaults (44 total), 10 blocked in unavailableFonts, grouped dropdowns, style objects |
 | **Colors** | Named palette, class/quality/power colors, color math, wrapping, picker integration |
 | **Textures** | Statusbar registry, LibSharedMedia import, dropdown controls |
 | **Dropdowns** | Nested UIDropDownMenu with auto-width, inline buttons, dual-schema items |
@@ -112,16 +130,16 @@ Core-only APIs (events, timers, hooks, slash commands) are available immediately
 | PetBattles | `RGXPetBattles` | `GetPetBattles()` | Active |
 | Combat | `RGXCombat` | `GetCombat()` | Active |
 | Reputation | `RGXReputation` | `GetReputation()` | Active |
-| Achievement | `RGXAchievement` | â€” | Active |
-| LevelUp | `RGXLevelUp` | â€” | Active |
-| Collectibles | `RGXCollectibles` | â€” | Active |
-| Loot | `RGXLoot` | â€” | Active |
-| Quest | `RGXQuest` | â€” | Active |
-| Honor | `RGXHonor` | â€” | Active |
-| Delves | `RGXDelves` | â€” | Active |
-| Housing | `RGXHousing` | â€” | Active |
-| TradingPost | `RGXTradingPost` | â€” | Active |
-| Prey | `RGXPrey` | â€” | Active |
+| Achievement | `RGXAchievement` | `GetAchievement()` | Active |
+| LevelUp | `RGXLevelUp` | `GetLevelUp()` | Active |
+| Collectibles | `RGXCollectibles` | `GetCollectibles()` | Active |
+| Loot | `RGXLoot` | `GetLoot()` | Active |
+| Quest | `RGXQuest` | `GetQuest()` | Active |
+| Honor | `RGXHonor` | `GetHonor()` | Active |
+| Delves | `RGXDelves` | `GetDelves()` | Active |
+| Housing | `RGXHousing` | `GetHousing()` | Active |
+| TradingPost | `RGXTradingPost` | `GetTradingPost()` | Active |
+| Prey | `RGXPrey` | `GetPrey()` | Active |
 
 As of **v2.1.0**, every in-tree module is loaded by the XML loader. There are no dormant modules.
 
@@ -129,9 +147,9 @@ As of **v2.1.0**, every in-tree module is loaded by the XML loader. There are no
 
 ## Font Coverage
 
-**Available (14 families, 26 names):**
+**Available (19 families, 30 names):**
 
-Sans/UI: Inter, Ubuntu, Liberation Sans, DejaVu Sans, Lato, Poppins, Rajdhani
+Sans/UI: Inter, Ubuntu, Liberation Sans, DejaVu Sans, DejaVu Sans Condensed, Lato, Poppins, Rajdhani
 Serif: Crimson Text
 Monospace: IBM Plex Mono, JetBrains Mono
 Display: Bebas Neue, Bangers, Creepster, Anton
@@ -141,7 +159,7 @@ WoW defaults: Friz Quadrata, Arial Narrow, Morpheus, Skurri
 
 **Temporarily unavailable (10 fonts with corrupted assets):** Montserrat, Merriweather, Playfair Display, Oswald, Orbitron, Audiowide, Cinzel â€” blocked in `unavailableFonts` until asset files are replaced.
 
-Total: 36 bundled (26 available + 10 blocked) + 8 WoW defaults = ~44 registered, ~34 selectable.
+Total: 40 bundled (30 available + 10 blocked) + 4 WoW defaults (Friz Quadrata, Arial Narrow, Morpheus, Skurri) = 44 registered, 34 selectable.
 
 Font pack addons can extend the registry at runtime with `Fonts:RegisterFontPack(addonName, defs)`.
 
