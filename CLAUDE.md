@@ -117,6 +117,7 @@ All in-tree modules are loaded by the XML loader. No dormant code remains.
 6. **Wire BPU → RGXPetBattles** — replace raw `C_PetBattles.*` calls
 7. **Wire BLU Combat → RGXCombat** — simplify to `Combat:OnEnter/OnLeave` callbacks
 8. **Wire BPU → RGXDropdowns** — replace `EasyMenu`/`UIDropDownMenu` in BPU options
+8b. **Wire BPU fonts → RGXFonts** — replace BPU's local `RegisterMedia("font", ...)` system with the shared registry (`Fonts:GetPath`, `AttachFontSelector`, `CreateFontMenuItems`). This replaces the former `docs/USAGE-BPU.md`, which described the migration instead of implementing it — the doc is deleted; the work item lives here.
 
 ### Tier 3 — Last runtime primitives (NEXT BUILD)
 

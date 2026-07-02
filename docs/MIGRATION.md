@@ -43,7 +43,7 @@ The intended migration is incremental: keep the addon working, move one repeated
 | `:OnEnable()` / `:OnDisable()` | `RGX:RegisterEvent("PLAYER_LOGIN", fn)` / manual cleanup |
 | Embedding mixins | `RGX:Mixin(target, source)` |
 
-RGX does not use `LibStub` or embedding. Your addon is a plain Lua table â€” no framework base class required.
+RGX does not use `LibStub` or embedding. Your addon is a plain Lua table — no framework base class required.
 
 ### Events
 
@@ -53,7 +53,7 @@ RGX does not use `LibStub` or embedding. Your addon is a plain Lua table â€�
 | `self:UnregisterEvent("EVENT")` | `RGX:UnregisterEvent("EVENT", id)` |
 | `self:RegisterMessage("MSG", handler)` | `RGX:RegisterMessage("MSG", handler, id)` |
 
-RGX requires an `id` string for targeted unregistration. This is a deliberate choice â€” it makes cleanup explicit and avoids the "which addon leaked this handler?" problem.
+RGX requires an `id` string for targeted unregistration. This is a deliberate choice — it makes cleanup explicit and avoids the "which addon leaked this handler?" problem.
 
 ### Timers
 
@@ -63,14 +63,14 @@ RGX requires an `id` string for targeted unregistration. This is a deliberate ch
 | `self:ScheduleRepeatingTimer(fn, interval)` | `RGX:Every(interval, fn)` |
 | `self:CancelTimer(timer)` | `RGX:CancelTimer(timer)` |
 
-RGX timers use a native `OnUpdate` driver â€” no `C_Timer` dependency. The `Every` callback receives the timer reference as its first argument for self-cancellation.
+RGX timers use a native `OnUpdate` driver — no `C_Timer` dependency. The `Every` callback receives the timer reference as its first argument for self-cancellation.
 
 ### Hooks
 
 | Ace3 | RGX |
 |---|---|
 | `self:Hook(target, "Method", handler)` | `RGX:Hook(target, "Method", handler)` |
-| `self:Unhook(target, "Method")` | Not supported â€” RGX uses `hooksecurefunc` (unhookable) |
+| `self:Unhook(target, "Method")` | Not supported — RGX uses `hooksecurefunc` (unhookable) |
 
 RGX hooks are post-only and permanent. If you need pre-hooks or unhooking, use your own wrapper.
 
@@ -85,7 +85,7 @@ RGX hooks are post-only and permanent. If you need pre-hooks or unhooking, use y
 | Ace3 | RGX |
 |---|---|
 | `LibStub("AceDB-3.0"):New("MyAddonDB", defaults)` | `RGX:DB("MyAddonDB", defaults)` (basic) |
-| Profiles, namespaces, char/realm scopes | Not yet available â€” see roadmap |
+| Profiles, namespaces, char/realm scopes | Not yet available — see roadmap |
 
 RGX's current DB is simpler than AceDB. Profile support is planned (see [docs/ROADMAP.md](ROADMAP.md)).
 
@@ -193,7 +193,7 @@ local Fonts = RGX:GetFonts()
 local path = Fonts:GetPath(selectedFont)
 ```
 
-No per-addon font registration needed â€” RGX fonts are already available.
+No per-addon font registration needed — RGX fonts are already available.
 
 ### Context Menu Fonts
 
@@ -216,10 +216,10 @@ local fontItems = Fonts:CreateFontMenuItems({
 
 BPU's saved variable keys are preserved:
 
-- `fontFamily` â€” font name string
-- `killFontFamily` â€” font name string
-- `lootFontFamily` â€” font name string
-- `percentFontFamily` â€” font name string
+- `fontFamily` — font name string
+- `killFontFamily` — font name string
+- `lootFontFamily` — font name string
+- `percentFontFamily` — font name string
 
 These can be read by `Fonts:ResolveName(db.fontFamily)` which handles both name and path values.
 

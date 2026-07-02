@@ -2,7 +2,7 @@
 
 **One dependency. Everything your addon suite needs.**
 
-RGX-Framework is a modern, self-contained WoW Retail addon framework â€” an alternative to Ace3 covering events, timers, hooks, slash commands, minimap buttons, options panels, database, and data broker, plus a full media stack (fonts, colors, textures, sound), dropdown menus, UI controls, and a visual design system. It is not a player-facing addon â€” it loads silently and exposes an API.
+RGX-Framework is a modern, self-contained WoW Retail addon framework — an alternative to Ace3 covering events, timers, hooks, slash commands, minimap buttons, options panels, database, and data broker, plus a full media stack (fonts, colors, textures, sound), dropdown menus, UI controls, and a visual design system. It is not a player-facing addon — it loads silently and exposes an API.
 
 ---
 
@@ -30,7 +30,7 @@ local addon = RGXAddon("MyAddon", {
             { slider = "volume",  label = "Volume", min = 0, max = 100 },
         },
     },
-    welcome = "loaded â€” /myaddon for options",
+    welcome = "loaded — /myaddon for options",
     onInit  = function(self)
         self:RegisterEvent("PLAYER_LOGIN", function()
             self:Print("Ready!")
@@ -39,11 +39,11 @@ local addon = RGXAddon("MyAddon", {
 })
 ```
 
-That is a **complete addon**: profile-aware saved settings, a tabbed options panel with db-bound controls, a slash command, a minimap button, and branded chat output â€” with every event, timer, and control routed through the framework's taint-safe paths automatically. The `addon` object carries scoped `RegisterEvent` / `RegisterUnitEvent` / `RegisterMessage` / `After` / `Every` / `Print` / `Warn` / `Error` so you never touch raw WoW plumbing.
+That is a **complete addon**: profile-aware saved settings, a tabbed options panel with db-bound controls, a slash command, a minimap button, and branded chat output — with every event, timer, and control routed through the framework's taint-safe paths automatically. The `addon` object carries scoped `RegisterEvent` / `RegisterUnitEvent` / `RegisterMessage` / `After` / `Every` / `Print` / `Warn` / `Error` so you never touch raw WoW plumbing.
 
 > The declarative surface grows each release (framework roadmap Tier 4 adds declarative `events`/`timers` tables and grid card layouts). Anything not yet declarative is available Ã  la carte below.
 
-**3. Ã€ la carte â€” individual systems when you need them:**
+**3. À la carte — individual systems when you need them:**
 
 ```lua
 -- Events (id string enables targeted unregistration)
@@ -52,7 +52,7 @@ RGX:RegisterEvent("PLAYER_LOGIN", function() print("logged in") end, "myAddon-lo
 -- Timers
 RGX:After(1.0, function() print("one second later") end)
 
--- Fonts â€” one-line DB-bound style UI, one-line application
+-- Fonts — one-line DB-bound style UI, one-line application
 local Fonts = RGX:GetFonts()
 Fonts:AttachStyleSelector(parent, db, "titleText")
 Fonts:ApplyStyle(myLabel, db.titleText)
@@ -84,7 +84,7 @@ RGX:OnReady(function()
 end)
 ```
 
-Core-only APIs (events, timers, hooks, slash commands) are available immediately â€” no `OnReady` needed.
+Core-only APIs (events, timers, hooks, slash commands) are available immediately — no `OnReady` needed.
 
 ---
 
@@ -94,9 +94,9 @@ Core-only APIs (events, timers, hooks, slash commands) are available immediately
 |---|---|
 | **Lifecycle** | `OnReady`, `OnLogin`, module readiness tracking |
 | **Events & Messages** | Blizzard event registration + internal message bus + module-local emitters |
-| **Timers** | `After`, `Every`, `CancelTimer` â€” native OnUpdate driver, no C_Timer |
-| **Hooks** | Post-hooks via `hooksecurefunc` â€” safe for Blizzard UI functions |
-| **Slash Commands** | `RegisterSlashCommand` â€” no raw SLASH_X boilerplate |
+| **Timers** | `After`, `Every`, `CancelTimer` — native OnUpdate driver, no C_Timer |
+| **Hooks** | Post-hooks via `hooksecurefunc` — safe for Blizzard UI functions |
+| **Slash Commands** | `RegisterSlashCommand` — no raw SLASH_X boilerplate |
 | **Combat Queue** | `QueueForCombat`, `SafeShow`, `SafeHide`, `SafeSetPoint`, and more |
 | **Fonts** | 40 bundled + 4 WoW defaults (44 total), 10 blocked in unavailableFonts, grouped dropdowns, style objects |
 | **Colors** | Named palette, class/quality/power colors, color math, wrapping, picker integration |
@@ -115,7 +115,7 @@ Core-only APIs (events, timers, hooks, slash commands) are available immediately
 
 | Module | Global | `RGX:Get*()` | Status |
 |---|---|---|---|
-| Core | `RGXFramework` | â€” | Active |
+| Core | `RGXFramework` | — | Active |
 | Fonts | `RGXFonts` | `GetFonts()` | Active |
 | Colors | `RGXColors` | `GetColors()` | Active |
 | Textures | `RGXTextures` | `GetTextures()` | Active |
@@ -157,7 +157,7 @@ Pixel: Press Start 2P, Silkscreen, VT323
 Fantasy: Uncial Antiqua
 WoW defaults: Friz Quadrata, Arial Narrow, Morpheus, Skurri
 
-**Temporarily unavailable (10 fonts with corrupted assets):** Montserrat, Merriweather, Playfair Display, Oswald, Orbitron, Audiowide, Cinzel â€” blocked in `unavailableFonts` until asset files are replaced.
+**Temporarily unavailable (10 fonts with corrupted assets):** Montserrat, Merriweather, Playfair Display, Oswald, Orbitron, Audiowide, Cinzel — blocked in `unavailableFonts` until asset files are replaced.
 
 Total: 40 bundled (30 available + 10 blocked) + 4 WoW defaults (Friz Quadrata, Arial Narrow, Morpheus, Skurri) = 44 registered, 34 selectable.
 
@@ -171,32 +171,31 @@ Full documentation lives in the [`docs/`](docs/) directory:
 
 ### Getting Started
 
-- **[Super Simple Integration](docs/SUPER-SIMPLE.md)** â€” the absolute minimum code to use RGX
-- **[Migration Guide](docs/MIGRATION.md)** â€” moving from Ace3, LibSharedMedia, or standalone implementations
+- **[Super Simple Integration](docs/SUPER-SIMPLE.md)** — the absolute minimum code to use RGX
+- **[Migration Guide](docs/MIGRATION.md)** — moving from Ace3, LibSharedMedia, or standalone implementations
 
 ### Core Systems
 
-- **[Architecture](docs/ARCHITECTURE.md)** â€” load order, module registration, `...` varargs pattern, lifecycle, timer driver, event dispatch, combat queue
-- **[API Reference](docs/API.md)** â€” complete public API by module (every method, every parameter)
-- **[Troubleshooting](docs/TROUBLESHOOTING.md)** â€” common issues and fixes
+- **[Architecture](docs/ARCHITECTURE.md)** — load order, module registration, `...` varargs pattern, lifecycle, timer driver, event dispatch, combat queue
+- **[API Reference](docs/API.md)** — complete public API by module (every method, every parameter)
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** — common issues and fixes
 
 ### Module Deep-Dives
 
-- **[Fonts System](docs/FONTS.md)** â€” registry, blocklist, style objects, dropdown schemas, UI controls, flag helpers, dual-schema design
-- **[Dropdowns System](docs/DROPDOWNS.md)** â€” nested menus, auto-width, inline buttons, item normalization, MenuUtil vs legacy compat
-- **[Theming & Design](docs/THEMING.md)** â€” color palette, font styling conventions, texture system, consistent UI patterns
+- **[Fonts System](docs/FONTS.md)** — registry, blocklist, style objects, dropdown schemas, UI controls, flag helpers, dual-schema design
+- **[Dropdowns System](docs/DROPDOWNS.md)** — nested menus, auto-width, inline buttons, item normalization, MenuUtil vs legacy compat
+- **[Theming & Design](docs/THEMING.md)** — color palette, font styling conventions, texture system, consistent UI patterns
 
 ### Design & Philosophy
 
-- **[Foundation Decisions](docs/FOUNDATION.md)** â€” what RGX keeps vs drops from Ace3, and why
-- **[Ace3 Analysis](docs/ACE3-ANALYSIS.md)** â€” how each Ace3 piece maps to RGX, and where RGX aims to be better
-- **[Roadmap](docs/ROADMAP.md)** â€” profile/database system, SharedMedia drop-in, pack system, localization, longer-term plans
+- **[Foundation Decisions](docs/FOUNDATION.md)** — what RGX keeps vs drops from Ace3, and why
+- **[Ace3 Analysis](docs/ACE3-ANALYSIS.md)** — how each Ace3 piece maps to RGX, and where RGX aims to be better
+- **[Roadmap](docs/ROADMAP.md)** — profile/database system, SharedMedia drop-in, pack system, localization, longer-term plans
 
 ### Other
 
-- **[Changelog](docs/CHANGES.md)** â€” current version release notes
-- **[Font Sources & Licenses](docs/FONT-SOURCES.md)** â€” attribution for all bundled fonts
-- **[BattlePetUtility Integration](docs/USAGE-BPU.md)** â€” BPU-specific usage notes
+- **[Changelog](docs/CHANGES.md)** — current version release notes
+- **[Font Sources & Licenses](docs/FONT-SOURCES.md)** — attribution for all bundled fonts
 
 ---
 
@@ -220,4 +219,4 @@ Full documentation lives in the [`docs/`](docs/) directory:
 
 ## License
 
-MIT for framework code. Bundled fonts retain their own open licenses â€” see [docs/FONT-SOURCES.md](docs/FONT-SOURCES.md) for attribution.
+MIT for framework code. Bundled fonts retain their own open licenses — see [docs/FONT-SOURCES.md](docs/FONT-SOURCES.md) for attribution.

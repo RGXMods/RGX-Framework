@@ -20,7 +20,7 @@ Common issues and their fixes.
 
 **Cause:** The font file on disk is corrupted or is an HTML placeholder (the same issue as the unavailableFonts blocklist fonts). Font files in this state should be added to the `unavailableFonts` list if not already there. `SetFont` in WoW silently fails with invalid font files.
 
-**Fix:** Same as above â€” replace the file with a valid font asset.
+**Fix:** Same as above — replace the file with a valid font asset.
 
 ### `Fonts:GetPath()` returns nil
 
@@ -84,15 +84,15 @@ Common issues and their fixes.
 
 **Cause:** v1.9.0-era packages referenced module files that were not shipped. Those `<Script>` entries were removed during the 1.x cycle and the modules were completed and re-enabled in **v2.1.0**, where every referenced file ships in the zip.
 
-**Fix:** Update RGX-Framework to v2.1.0 or later. If the warning persists after updating, the install is stale â€” delete the `Interface/AddOns/RGX-Framework` folder and reinstall.
+**Fix:** Update RGX-Framework to v2.1.0 or later. If the warning persists after updating, the install is stale — delete the `Interface/AddOns/RGX-Framework` folder and reinstall.
 
 ### Module method collision
 
 **Symptom:** Two module files define the same method (e.g. `Init`) and the second overwrites the first.
 
-**Cause:** WoW passes the same addon table to every file via `...`. `local _, MyModule = ...` does **not** create a new table â€” `MyModule` is the same reference as `_G.RGXFramework`.
+**Cause:** WoW passes the same addon table to every file via `...`. `local _, MyModule = ...` does **not** create a new table — `MyModule` is the same reference as `_G.RGXFramework`.
 
-**Fix:** Use unique method names across split-module files. The fonts sub-modules avoid this by using specific names (`Init`, `Register`, `GetPath`, etc.) â€” only `init.lua` defines `Fonts:Init()`.
+**Fix:** Use unique method names across split-module files. The fonts sub-modules avoid this by using specific names (`Init`, `Register`, `GetPath`, etc.) — only `init.lua` defines `Fonts:Init()`.
 
 ---
 
@@ -118,7 +118,7 @@ Common issues and their fixes.
 
 **Symptom:** A `timer-slow` diagnostic in chat or in an error grabber (BugSack/Bugtraq), often at login.
 
-**Cause:** This is a **diagnostic, not an error** â€” the framework reports timer callbacks that exceed their slow threshold. The media scan reads addon tables at login and legitimately takes 100â€“500ms; that is normal I/O, not a fault.
+**Cause:** This is a **diagnostic, not an error** — the framework reports timer callbacks that exceed their slow threshold. The media scan reads addon tables at login and legitimately takes 100–500ms; that is normal I/O, not a fault.
 
 **Fix:** Nothing to fix on current versions. The global threshold is 250ms (raised from 50ms in v2.0.0-alpha.1) and `SharedMedia:QueueScan` has a per-label override of 500ms via `timerBudget.slowByLabel`, so routine scans no longer report. If you see this for your own timer label, either make the callback cheaper or add a `slowByLabel` override for it.
 
@@ -132,7 +132,7 @@ Common issues and their fixes.
 
 **Cause:** WoW rejected the event name (unknown event), or the handler ID collided with an existing registration.
 
-**Fix:** Check the return value of `RegisterEvent` â€” it returns `false` on failure. Enable `RGX.debugMode = true` to see "RegisterEvent unknown event" messages for invalid event names.
+**Fix:** Check the return value of `RegisterEvent` — it returns `false` on failure. Enable `RGX.debugMode = true` to see "RegisterEvent unknown event" messages for invalid event names.
 
 ### Handler fires multiple times
 
@@ -152,7 +152,7 @@ Common issues and their fixes.
 
 **Cause:** The SavedVariable name in the TOC doesn't match the global table the code is reading/writing. WoW only persists globals that match TOC `## SavedVariables:` entries.
 
-**Fix:** Ensure the TOC `## SavedVariables:` declaration matches the table your code uses. For framework consumers, this means your own addon's TOC must declare its own SavedVariables â€” RGX's `RGXFrameworkDB` is for the framework itself.
+**Fix:** Ensure the TOC `## SavedVariables:` declaration matches the table your code uses. For framework consumers, this means your own addon's TOC must declare its own SavedVariables — RGX's `RGXFrameworkDB` is for the framework itself.
 
 ---
 
