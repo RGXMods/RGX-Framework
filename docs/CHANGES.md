@@ -4,6 +4,7 @@
 
 ### Unreleased (on `main`, not yet tagged)
 
+- **New module: RGXAuras** — taint-safe aura scanning and watching (`HasPlayerAura`/`GetPlayerAura` fast path, `HasAura`/`GetAura`/`IterateAuras` for any unit, `WatchUnit` incremental `UNIT_AURA` cache with `OnApplied`/`OnRemoved`/`OnUpdated` callbacks). Designed around Midnight's secret-aura restrictions: every potentially-secret field comparison stays behind an internal pcall boundary, so restricted units yield nil/false instead of taint. Generalizes BPU's `PlayerHasAuraSpellID` pattern; first rgx-mod trigger primitive.
 - **`RGXAddon` global entry point** — line 1 of a consumer addon is the addon: `RGXAddon "MyAddon" { ... }` (curried form supported). Wraps `RGX.Addon`; per the frozen Simplicity Contract (`docs/DECLARATIVE-DSL.md`, `dsl` branch), the `local RGX = assert(...)` form is now the documented escape hatch, not the front door.
 - **Declarative API contract shipped** — `schemas/rgx-addon.schema.json` (machine-checkable shape of the `RGXAddon` opts table; keys annotated `x-rgx-ships: today|tier4`, trigger vocabulary + control grammar encoded) and `docs/DECLARATIVE-API.md` (human reference for the shipped surface, verified against `core/core.lua`). This is Tier 5 #14 and the contract the external `rgx-mcp` tool validates against. Schema excluded from the packaged zip.
 - `RGXSharedMedia` now fires the internal message `RGX_SHAREDMEDIA_UPDATED` after every scan so consumers can re-import bridge entries and refresh media pickers.

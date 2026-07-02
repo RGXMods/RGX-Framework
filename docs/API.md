@@ -47,6 +47,7 @@ Complete public API by module. See individual module docs for deeper detail:
 | `RGX:GetSharedMedia()` | RGXSharedMedia |
 | `RGX:GetCombat()` | RGXCombat |
 | `RGX:GetReputation()` | RGXReputation |
+| `RGX:GetAuras()` | RGXAuras |
 | `RGX:GetAchievement()` | RGXAchievement |
 | `RGX:GetLevelUp()` | RGXLevelUp |
 | `RGX:GetCollectibles()` | RGXCollectibles |
@@ -720,6 +721,25 @@ Reputation and renown tracking, normalized across expansions.
 | `Rep:Scan()` / `Rep:CheckChanges()` | Snapshot / diff scan |
 | `Rep:GetAll()` / `Rep:Get(factionID)` / `Rep:GetByName(name)` | Lookup |
 | `Rep:IsMaxed(factionID)` / `Rep:GetRenown()` | Query state |
+
+---
+
+## Auras (`RGXAuras`)
+
+Taint-safe aura scanning and watching, built against the Midnight 12.0.7 generated API docs. Midnight's **secret auras** make comparing aura fields on restricted units a taint vector — this module keeps every such comparison behind an internal pcall boundary, so on restricted units queries simply return `nil`/`false` instead of tainting.
+
+| Method | Description |
+|---|---|
+| `Auras:HasPlayerAura(spellId)` / `GetPlayerAura(spellId)` | Player fast path via `C_UnitAuras.GetPlayerAuraBySpellID` (AllowedWhenTainted — always safe) |
+| `Auras:HasAura(spellId, unit)` / `GetAura(spellId, unit)` | Any unit (`unit` defaults `"player"`); returns nil/false on secret-restricted units by design |
+| `Auras:IterateAuras(unit, filter, fn)` | Enumerate via `GetAuraDataByIndex`; `filter` is an AuraFilters string or nil for HELPFUL+HARMFUL; return `false` from `fn` to stop |
+| `Auras:WatchUnit(unit)` / `UnwatchUnit(unit)` | Maintain an incremental `UNIT_AURA` cache for a unit (instance IDs are never secret). Player is watched by default |
+| `Auras:GetAuraByInstanceID(unit, id)` | Cached lookup for watched units, live lookup otherwise |
+| `Auras:OnApplied(fn)` | `fn(unit, auraData)` — fires for watched units |
+| `Auras:OnRemoved(fn)` | `fn(unit, auraInstanceID)` |
+| `Auras:OnUpdated(fn)` | `fn(unit, auraData)` |
+
+All `On*` registrars return an unsubscribe closure.
 
 ---
 
