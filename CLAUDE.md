@@ -113,7 +113,7 @@ All in-tree modules are loaded by the XML loader. No dormant code remains.
 
 ### Tier 2 — Wire consumers to shipped modules (IN FLIGHT)
 
-5. **Wire BLU → RGXSharedMedia** — IN PROGRESS on BLU branch `rgxsharedmedia-migration`: local scanner replaced by a ~190-line bridge (imports on `RGX_SHAREDMEDIA_UPDATED`). Pending in-game test before merge. Open design question on that branch: own-folder exclusion vs dedup-on-import (owner prefers picking up all folders; dedup against already-registered paths is the likely resolution).
+5. **Wire BLU → RGXSharedMedia** — IN PROGRESS on BLU branch `rgxsharedmedia-migration`: local scanner replaced by a ~215-line bridge (imports on `RGX_SHAREDMEDIA_UPDATED`). Design resolved: the shared registry scans ALL folders (including BLU's own, so other consumers can use BLU's media); BLU's bridge dedups on import against paths it already registered. Pending in-game test before merge.
 6. **Wire BPU → RGXPetBattles** — replace raw `C_PetBattles.*` calls
 7. **Wire BLU Combat → RGXCombat** — simplify to `Combat:OnEnter/OnLeave` callbacks
 8. **Wire BPU → RGXDropdowns** — replace `EasyMenu`/`UIDropDownMenu` in BPU options
