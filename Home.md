@@ -23,12 +23,11 @@ One `RequiredDeps` entry, everything included. No embedding, no version conflict
 ```
 
 ```lua
-local RGX = assert(_G.RGXFramework, "RGX-Framework is required")
-
 -- A complete addon in one declarative call: saved settings with profiles,
 -- a tabbed options panel with db-bound controls, slash command, minimap
 -- button, branded output — all routed through taint-safe framework paths.
-local addon = RGX.Addon("MyAddon", {
+-- RGXAddon is a framework-provided global; RequiredDeps guarantees it exists.
+local addon = RGXAddon("MyAddon", {
     slash   = "myaddon",
     minimap = "Interface\\Icons\\inv_misc_questionmark",
     db      = { enabled = true, volume = 80 },

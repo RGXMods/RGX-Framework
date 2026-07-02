@@ -102,6 +102,8 @@ local prefix = RGX:CreateChatPrefix({
 | `RGX:Section(parent, opts)` | Shortcut for `UI:CreateSection` |
 | `RGX:Label(parent, opts)` | Shortcut for `UI:CreateLabel` |
 | `RGX:PlaySound(id, channel)` | Lookup path via SharedMedia and play |
+| `RGXAddon(name, opts)` / `RGXAddon "Name" { }` | Global addon factory (wraps `RGX.Addon`; curried form supported). The front door per the Simplicity Contract |
+| `RGX.Addon(name, opts)` | The factory itself — `slash`, `minimap`, `db`, `options`, `welcome`, `onInit`; returns the addon object with scoped event/timer/print methods |
 
 ### Properties
 
