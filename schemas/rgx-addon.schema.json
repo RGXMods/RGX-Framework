@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/DonnieDice/RGX-Framework/schemas/rgx-addon.schema.json",
+  "title": "RGXAddon declarative options table",
+  "description": "The opts table accepted by RGXAddon(name, opts) / RGXAddon \"Name\" { }. Governed by THE SIMPLICITY CONTRACT (docs/DECLARATIVE-DSL.md, dsl branch): evolution is additive-only — keys and grammars never change meaning. Keys marked x-rgx-ships:\"today\" are implemented in core/core.lua RGX.Addon; keys marked \"tier4\" are the frozen contract target, not yet implemented. Lua functions cannot be expressed in JSON; they are modeled as {\"$lua\":\"function\"} placeholders for validation purposes.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "table": {
+      "x-rgx-ships": "today",
+      "description": "Optional pre-existing table to become the addon object (RGX.Addon augments it in place).",
+      "type": "object"
+    },
+    "brand": {
+      "x-rgx-ships": "today",
+      "description": "Hex color (no #) for the chat prefix. Default 58be81.",
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{6}$"
+    },
+    "slash": {
+      "x-rgx-ships": "today",
+      "description": "Slash command(s) without the leading slash. Default handler opens the options panel. Contract rule 4: Tier 4 defaults this to the lowercase addon name when omitted.",
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 }
+      ]
+    },
+    "minimap": {
+      "x-rgx-ships": "today",
+      "description": "true = minimap button with default icon; string = icon texture path.",
+      "oneOf": [
+        { "type": "boolean" },
+        { "type": "string", "minLength": 1 }
+      ]
+    },
+    "db": {
+      "x-rgx-ships": "today",
+      "description": "Profile defaults table. Creates addon.db (RGX:NewDatabase proxy) on ADDON_LOADED. SavedVariables name defaults to <Name>DB (contract rule 4).",
+      "type": "object"
+    },
+    "dbName": {
+      "x-rgx-ships": "today",
+      "description": "Override the SavedVariables name (default <Name>DB). Must match a ## SavedVariables entry in the consumer TOC.",
+      "type": "string",
+      "minLength": 1
+    },
+    "global": {
+      "x-rgx-ships": "today",
+      "description": "Passed through to RGX:NewDatabase opts.global (cross-character storage).",
+      "type": "boolean"
+    },
+    "onSwitch": {
+      "x-rgx-ships": "today",
+      "description": "Profile-switch callback, passed to RGX:NewDatabase.",
+      "$ref": "#/$defs/luaFunction"
+    },
+    "title": {
+      "x-rgx-ships": "today",
+      "description": "Options panel title. Defaults to the addon name (contract rule 4).",
+      "type": "string"
+    },
+    "options": {
+      "x-rgx-ships": "today",
+      "description": "Tab name -> array of controls. Requires db. Every control binds to addon.db with automatic save AND restore. Tier 4 adds the reserved key 'columns' (1|2|3 card grid) and one-line string controls per the contract grammar.",
+      "type": "object",
+      "properties": {
+        "columns": {
+          "x-rgx-ships": "tier4",
+          "description": "Card-grid column count for all tabs.",
+          "enum": [1, 2, 3]
+        }
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": { "$ref": "#/$defs/control" }
+      }
+    },
+    "welcome": {
+      "x-rgx-ships": "today",
+      "description": "Message printed with the addon's branded prefix on load.",
+      "type": "string"
+    },
+    "onInit": {
+      "x-rgx-ships": "today",
+      "description": "function(addon) called on ADDON_LOADED after db/options are ready. The escape hatch for imperative setup.",
+      "$ref": "#/$defs/luaFunction"
+    },
+    "on": {
+      "x-rgx-ships": "tier4",
+      "description": "Human trigger vocabulary -> handler. Trigger names are plain words mapped 1:1 to framework modules (contract rule 2); any UPPER_CASE key passes through as a raw WoW event (escape hatch). See the contract's trigger table.",
+      "type": "object",
+      "propertyNames": {
+        "anyOf": [
+          { "$ref": "#/$defs/triggerName" },
+          { "pattern": "^[A-Z][A-Z0-9_]+$" }
+        ]
+      },
+      "additionalProperties": { "$ref": "#/$defs/luaFunction" }
+    },
+    "every": {
+      "x-rgx-ships": "tier4",
+      "description": "Named repeating timers: name -> { seconds, handler }.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "prefixItems": [
+          { "type": "number", "exclusiveMinimum": 0 },
+          { "$ref": "#/$defs/luaFunction" }
+        ],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    }
+  },
+  "$defs": {
+    "luaFunction": {
+      "description": "A Lua function. JSON representation for tooling: {\"$lua\": \"function\"}.",
+      "type": "object",
+      "properties": { "$lua": { "const": "function" } },
+      "required": ["$lua"],
+      "additionalProperties": false
+    },
+    "triggerName": {
+      "description": "The frozen trigger vocabulary (contract: additive-only — this enum only grows).",
+      "enum": [
+        "login",
+        "levelup",
+        "achievement", "achievement.criteria",
+        "quest.accepted", "quest.complete", "quest.turnin", "quest.progress",
+        "combat.start", "combat.stop", "combat.kill", "combat.died", "combat.crit", "combat.lowhealth",
+        "pet.levelup", "pet.capture", "pet.battlestart", "pet.battleend",
+        "rep.gain", "rep.rankup", "rep.renown",
+        "honor",
+        "delve.companion", "delve.lifelost", "delve.lifegained",
+        "housing.favor", "housing.levelup", "housing.rewards", "housing.decor",
+        "tradingpost.purchase", "tradingpost.currency",
+        "prey.start", "prey.ambush", "prey.capped", "prey.complete",
+        "collect.mount", "collect.toy", "collect.transmog", "collect.heirloom",
+        "loot.rare", "loot.currency",
+        "aura.applied", "aura.removed", "aura.updated",
+        "media.updated"
+      ]
+    },
+    "control": {
+      "description": "One options control. Today: table forms. Tier 4 adds one-line string forms per the contract grammar.",
+      "oneOf": [
+        { "$ref": "#/$defs/controlString" },
+        { "$ref": "#/$defs/toggleControl" },
+        { "$ref": "#/$defs/sliderControl" },
+        { "$ref": "#/$defs/dropdownControl" },
+        { "$ref": "#/$defs/buttonControl" },
+        { "$ref": "#/$defs/sectionControl" }
+      ]
+    },
+    "controlString": {
+      "x-rgx-ships": "tier4",
+      "description": "One-line control string, contract grammar: \"toggle <key> ['Label']\" | \"slider <key> <min>-<max> [step] ['Label']\" | \"dropdown <key> a|b|c ['Label']\" | \"color <key> ['Label']\" | \"font <key> ['Label']\" | \"button 'Text' <method>\" | \"header 'Text'\" | \"label 'Text'\". Labels inferred from keys when omitted.",
+      "type": "string",
+      "pattern": "^(toggle|slider|dropdown|color|font|button|header|label)\\s+.+$"
+    },
+    "toggleControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["toggle"],
+      "properties": {
+        "toggle": { "type": "string", "description": "db key" },
+        "label": { "type": "string" },
+        "default": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "sliderControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["slider"],
+      "properties": {
+        "slider": { "type": "string", "description": "db key" },
+        "label": { "type": "string" },
+        "min": { "type": "number", "default": 0 },
+        "max": { "type": "number", "default": 100 },
+        "step": { "type": "number", "default": 1 }
+      },
+      "additionalProperties": false
+    },
+    "dropdownControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["dropdown"],
+      "properties": {
+        "dropdown": { "type": "string", "description": "db key" },
+        "label": { "type": "string" },
+        "items": { "type": "array", "items": {} },
+        "width": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "buttonControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["button", "action"],
+      "properties": {
+        "button": { "type": "string", "description": "button text" },
+        "action": { "$ref": "#/$defs/luaFunction" },
+        "width": { "type": "number", "default": 120 },
+        "height": { "type": "number", "default": 22 }
+      },
+      "additionalProperties": false
+    },
+    "sectionControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["section"],
+      "properties": {
+        "section": { "type": "string", "description": "section header text" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

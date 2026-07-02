@@ -19,6 +19,7 @@ ignore:
   - Home.md
   - README.md
   - docs/
+  - schemas/
 
 # Release notes come from the canonical changelog summary.
 manual-changelog:
