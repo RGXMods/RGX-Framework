@@ -492,3 +492,15 @@ function RGX.Addon(name, opts)
 
     return addon
 end
+
+-- Global entry point per the Simplicity Contract (docs/DECLARATIVE-DSL.md):
+-- line 1 of a consumer addon is the addon — RequiredDeps guarantees this
+-- global exists. Supports both call forms:
+--   RGXAddon("MyAddon", { ... })
+--   RGXAddon "MyAddon" { ... }     -- curried; plain Lua sugar
+function _G.RGXAddon(name, opts)
+    if opts == nil then
+        return function(tbl) return RGX.Addon(name, tbl) end
+    end
+    return RGX.Addon(name, opts)
+end
