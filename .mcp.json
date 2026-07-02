@@ -2,10 +2,7 @@
   "mcpServers": {
     "rgx": {
       "command": "node",
-      "args": ["C:/Users/Joey/Projects/warcraft/rgx-mcp/src/server.js"],
-      "env": {
-        "RGX_FRAMEWORK_PATH": "C:/Users/Joey/Projects/warcraft/wow-addons/RGX-Framework"
-      }
+      "args": ["tools/rgx-mcp/src/server.js"]
     }
   }
 }

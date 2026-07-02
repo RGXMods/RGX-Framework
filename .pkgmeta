@@ -21,6 +21,7 @@ ignore:
   - README.md
   - docs/
   - schemas/
+  - tools/
 
 # Release notes come from the canonical changelog summary.
 manual-changelog:
