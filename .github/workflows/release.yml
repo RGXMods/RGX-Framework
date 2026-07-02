@@ -21,20 +21,20 @@ jobs:
       contents: write
 
     steps:
-      - name: 🛠️ Clone Project
+      - name: Clone Project
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: 🧰 Install jq
+      - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: 🧑‍🔧 Configure Git User
+      - name: Configure Git User
         run: |
           git config --global user.name "donniedice"
           git config --global user.email "60427166+donniedice@users.noreply.github.com"
 
-      - name: 🧭 Determine Release Type
+      - name: Determine Release Type
         id: release_type
         run: |
           case "${{ github.ref }}" in
@@ -58,7 +58,7 @@ jobs:
               ;;
           esac
 
-      - name: 📦 Extract Version from TOC
+      - name: Extract Version from TOC
         id: version
         run: |
           version=$(grep -oP '^## Version: \K(.*)' RGX-Framework.toc)
@@ -106,7 +106,7 @@ jobs:
             fi
           fi
 
-      - name: 📝 Extract Latest Changelog
+      - name: Extract Latest Changelog
         id: changelog
         shell: bash
         run: |
@@ -144,15 +144,15 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - name: 📦 Package and Release
+      - name: Package and Release
         uses: BigWigsMods/packager@master
 
-      - name: ℹ️ Upload Notes
+      - name: Upload Notes
         run: |
           echo "CurseForge, Wago, and WoWInterface uploads are handled by BigWigsMods/packager."
           echo "Project IDs come from X-Curse-Project-ID, X-Wago-ID, and X-WoWI-ID in RGX-Framework.toc."
 
-      - name: 📢 Send Discord Notification
+      - name: Send Discord Notification
         if: success()
         shell: bash
         env:
@@ -161,6 +161,11 @@ jobs:
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
           RELEASE_TIMESTAMP: ${{ steps.version.outputs.timestamp }}
         run: |
+          if [[ -z "${DISCORD_WEBHOOK:-}" ]]; then
+            echo "::warning::DISCORD_WEBHOOK secret is empty - skipping Discord notification."
+            exit 0
+          fi
+
           summary="${DISCORD_SUMMARY}"
           release_type="${RELEASE_TYPE}"
           version="${RELEASE_VERSION}"
@@ -215,7 +220,7 @@ jobs:
 
           jq -n \
             --arg username "RGX-Framework Releases" \
-            --arg avatar_url "https://raw.githubusercontent.com/DonnieDice/RGX-Framework/main/media/kiwi.gif" \
+            --arg avatar_url "https://raw.githubusercontent.com/DonnieDice/RGX-Framework/main/media/logo.png" \
             --arg title "$title" \
             --arg url "$release_url" \
             --arg description "$description" \
@@ -244,34 +249,48 @@ jobs:
               }]
             }' > payload.json
 
-          curl -s -o /dev/null -w "%{http_code}" \
+          http_code=$(curl -s -o /tmp/discord_resp.txt -w "%{http_code}" \
             -H "Content-Type: application/json" \
-            -X POST -d @payload.json "$DISCORD_WEBHOOK"
+            -X POST -d @payload.json "$DISCORD_WEBHOOK")
+          echo "Discord webhook HTTP status: $http_code"
+          if [[ "$http_code" != 2* ]]; then
+            echo "::error::Discord notification failed (HTTP $http_code):"
+            cat /tmp/discord_resp.txt
+            exit 1
+          fi
 
-      - name: ❌ Send Failure Notification
+      - name: Send Failure Notification
         if: failure()
+        shell: bash
         run: |
+          if [[ -z "${DISCORD_WEBHOOK:-}" ]]; then
+            echo "::warning::DISCORD_WEBHOOK secret is empty - skipping failure notification."
+            exit 0
+          fi
+          version="${{ steps.version.outputs.version }}"
+          run_id="${{ github.run_id }}"
+          timestamp="${{ steps.version.outputs.timestamp }}"
           jq -n \
-            --arg version "${{ steps.version.outputs.version || 'Unknown' }}" \
-            --arg run_id "${{ github.run_id }}" \
-            --arg timestamp "${{ steps.version.outputs.timestamp }}" \
+            --arg version "${version:-Unknown}" \
+            --arg run_id "$run_id" \
+            --arg timestamp "$timestamp" \
             '{
               username: "RGX-Framework Build Failed",
-              avatar_url: "https://raw.githubusercontent.com/DonnieDice/RGX-Framework/main/media/kiwi.gif",
+              avatar_url: "https://raw.githubusercontent.com/DonnieDice/RGX-Framework/main/media/logo.png",
               embeds: [{
-                title: "❌ RGX-Framework Build Failed",
+                title: "RGX-Framework Build Failed",
                 description: "The release workflow encountered an error",
-                url: "https://github.com/DonnieDice/RGX-Framework/actions/runs/\($run_id)",
+                url: ("https://github.com/DonnieDice/RGX-Framework/actions/runs/" + $run_id),
                 color: 15158332,
                 fields: [
-                  { "name": "Version", "value": $version, "inline": true },
-                  { "name": "Workflow", "value": "[View Logs](https://github.com/DonnieDice/RGX-Framework/actions/runs/\($run_id))", "inline": true }
+                  { name: "Version", value: $version, inline: true },
+                  { name: "Workflow", value: ("https://github.com/DonnieDice/RGX-Framework/actions/runs/" + $run_id), inline: true }
                 ],
                 footer: {
-                  "text": "RGX Mods - Build System",
-                  "icon_url": "https://raw.githubusercontent.com/donniedice/SimpleQuestPlates/main/media/kiwi.gif"
+                  text: "RGX Mods - Build System",
+                  icon_url: "https://raw.githubusercontent.com/DonnieDice/RGX-Framework/main/media/logo.png"
                 },
                 timestamp: $timestamp
               }]
             }' > payload.json
-          curl -H "Content-Type: application/json" -X POST -d @payload.json $DISCORD_WEBHOOK
+          curl -s -H "Content-Type: application/json" -X POST -d @payload.json "$DISCORD_WEBHOOK"
