@@ -20,6 +20,134 @@ Easy for humans **is** easy for agents. Same goal, one surface.
 
 ---
 
+## THE SIMPLICITY CONTRACT — frozen
+
+This is the binding contract for the authoring surface. Every future change to
+`RGX.Addon`, the docs, the Tier 5 schema, and the MCP validates against it.
+**We do not renegotiate this per pass — that is why docs kept getting
+rewritten. Evolution is additive-only from here.**
+
+### The target shape (what a whole addon looks like)
+
+```lua
+-- MyAddon.lua — this is the entire addon. Line 1 is the addon.
+RGXAddon "MyAddon" {
+    slash   = "myaddon",                 -- optional; defaults to lowercase name
+    minimap = true,                      -- true = default icon, or "path\\to\\icon.tga"
+    db      = { enabled = true, volume = 80 },
+
+    on = {
+        login    = function(self) self:Print("Ready!") end,
+        levelup  = function(self, level) self:Play("fanfare") end,
+        ["quest.turnin"] = function(self) self:Play("questdone") end,
+        ["combat.start"] = function(self) self:Hide() end,
+    },
+
+    every = {
+        scan = { 30, function(self) self:Scan() end },
+    },
+
+    options = {
+        columns = 2,                     -- 1 / 2 / 3 column card grid
+        General = {
+            "header Settings",
+            "toggle enabled",            -- label inferred: "Enabled"
+            "slider volume 0-100",       -- label inferred: "Volume"
+            "dropdown theme dark|light|system",
+        },
+        About = {
+            "label 'Made with RGX-Framework'",
+        },
+    },
+}
+```
+
+No `local`, no `assert`, no `ADDON_LOADED`, no frames, no WoW event names, no
+SavedVariables plumbing. The heavy machinery lives in the framework; the
+author file reads like a config with behavior attached.
+
+### The seven rules (non-negotiable)
+
+1. **Zero boilerplate.** Line 1 of the addon file is the addon. `_G.RGXAddon`
+   is a global provided by the framework — `RequiredDeps` guarantees it exists.
+   Any example that opens with `local RGX = assert(...)` is documenting the
+   escape hatch, not the surface.
+2. **Human vocabulary, never WoW internals.** Trigger names are plain words
+   (`login`, `levelup`, `quest.turnin`, `combat.start`, `pet.capture`,
+   `aura.applied`). The framework — never the author — knows the WoW event
+   names and which RGX module serves each trigger. If an author has to look up
+   an event name on Wowpedia, the surface has failed.
+3. **One line per concept.** Each option control is one string. Each trigger is
+   one key. Each timer is one entry. If a common concept costs more than one
+   line, the framework grows until it doesn't; author code never compensates.
+4. **Infer everything inferable.** Labels from keys (`enabled` → "Enabled"),
+   `dbName` from addon name (`MyAddonDB`), panel title from name, slash from
+   name. Explicit values always win, but omission always works.
+5. **Strings first, functions when needed.** Every string form has a table/
+   function long-form for edge cases (`{ toggle = "enabled", label = "...",
+   tooltip = "..." }`). The long-form is never required for the common case,
+   and the à la carte imperative API remains underneath for anything the
+   declarative surface doesn't cover yet.
+6. **Additive forever.** Existing keys and string grammars never change
+   meaning. New capability = new keys / new grammar; old addons never break,
+   docs never rewrite. The Tier 5 JSON schema freezes this mechanically.
+7. **Errors teach.** An unknown trigger name or malformed control string raises
+   a clear error listing the valid options — the surface is self-documenting
+   at the point of failure, for humans and agents alike.
+
+### Control-string grammar (options)
+
+```
+"header 'Text'"                          section header
+"label 'Text'"                           static text
+"toggle <key> ['Label']"                 checkbox bound to db[key]
+"slider <key> <min>-<max> [step] ['Label']"
+"dropdown <key> a|b|c ['Label']"         values from the pipe list
+"color <key> ['Label']"                  color swatch bound to db[key]
+"font <key> ['Label']"                   db-bound font style selector
+"button 'Text' <method>"                 calls addon:<method>() on click
+```
+
+Quoted `'Label'` is always optional; omitted labels are inferred from the key.
+Every control binds to `addon.db` with automatic save AND restore — the
+BLU/SQP slider-persistence bug class becomes impossible by construction.
+
+### Trigger vocabulary (`on = { ... }`)
+
+Maps 1:1 onto shipped framework modules — this table only grows:
+
+| Trigger | Backed by |
+|---|---|
+| `login` | PLAYER_LOGIN |
+| `levelup` | RGXLevelUp |
+| `achievement`, `achievement.criteria` | RGXAchievement |
+| `quest.accepted` / `quest.complete` / `quest.turnin` / `quest.progress` | RGXQuest |
+| `combat.start` / `combat.stop` / `combat.kill` / `combat.died` / `combat.crit` / `combat.lowhealth` | RGXCombat |
+| `pet.levelup` / `pet.capture` / `pet.battlestart` / `pet.battleend` | RGXPetBattles |
+| `rep.gain` / `rep.rankup` / `rep.renown` | RGXReputation |
+| `honor` | RGXHonor |
+| `delve.companion` / `delve.lifelost` / `delve.lifegained` | RGXDelves |
+| `housing.favor` / `housing.levelup` / `housing.rewards` / `housing.decor` | RGXHousing |
+| `tradingpost.purchase` / `tradingpost.currency` | RGXTradingPost |
+| `prey.start` / `prey.ambush` / `prey.capped` / `prey.complete` | RGXPrey |
+| `collect.mount` / `collect.toy` / `collect.transmog` / `collect.heirloom` | RGXCollectibles |
+| `loot.rare` / `loot.currency` | RGXLoot |
+| `aura.applied` / `aura.removed` / `aura.updated` | RGXAuras |
+| `media.updated` | RGX_SHAREDMEDIA_UPDATED |
+| any `UPPER_CASE_NAME` | passed through as a raw WoW event (escape hatch) |
+
+### What ships when
+
+- **Today (v2.1.x):** `RGXAddon` global alias; `slash` / `minimap` / `db` /
+  `options` (table-form controls) / `welcome` / `onInit`; scoped
+  `addon:RegisterEvent` etc.
+- **Tier 4:** `on = {}` trigger vocabulary, `every = {}`, string control
+  grammar, label inference, `columns` card grid, `RGXAddon "Name" { }`
+  curried-call form.
+- **Tier 5:** the schema that mechanically freezes rules 1–7.
+
+---
+
 ## The layered architecture (dependency direction matters)
 
 ```
