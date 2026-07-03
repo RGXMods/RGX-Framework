@@ -2,9 +2,11 @@
 
 ## Current Development Release
 
-### Unreleased (on `main`, not yet tagged)
+### [v2.3.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.3.0.md) - 2026-07-03
 
 - **New module: RGXTooltip** — tooltip composition (`Show`/`Attach`) replacing the `SetOwner → ClearLines → AddLine × N → Show` boilerplate found across 71 GameTooltip call sites in BattlePetUtility alone, plus a safe wrapper (`HookNative`) over Blizzard's `TooltipDataProcessor` for augmenting native item/spell/unit/aura/pet/mount/macro tooltips. Blizzard does not pcall-wrap `TooltipDataProcessor` dispatch, so `HookNative` pcall-guards every registered callback — one addon's tooltip hook can no longer break tooltip rendering for every other addon.
+- **RGXColorPicker actually renders now.** `Show()` silently failed since the module was introduced — six frames called `:SetBackdrop()` without the required `BackdropTemplate` mixin, throwing partway through construction so the frame was never cached. With that fixed, two more stub features were exposed: the hue bar never had a rainbow (a hardcoded flat red — the original code's own comment admitted it was left unfinished), and the saturation/value box never had a saturation axis (only value/brightness worked). Both replaced with real gradients (a 6-segment hue rainbow, and a reactive white→hue `SetGradient` for saturation).
+- **New dev tool: `tools/rgx-visual-test/`** — an in-tree QA harness for manually testing RGX's UI controls in-game (`/rgxvisual` full panel, `/rgxcolor` picker only). Not player-facing, excluded from the packaged zip.
 - Documented the in-tree `tools/rgx-mcp/` MCP server and the Declarative API in README.md and description.html (shipped in v2.2.0, previously undocumented in either entry point).
 
 ### [v2.2.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.2.1.md) - 2026-07-02
