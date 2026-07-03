@@ -187,7 +187,7 @@ end
 
 function ColorPicker:CreateSVBox(f)
     -- Saturation/Value box - the main gradient square
-    local box = CreateFrame("Frame", nil, f)
+    local box = CreateFrame("Frame", nil, f, "BackdropTemplate")
     box:SetSize(200, 160)
     box:SetPoint("TOPLEFT", f, "TOPLEFT", 20, -45)
     box:SetBackdrop({
@@ -233,7 +233,7 @@ end
 
 function ColorPicker:CreateHueBar(f)
     -- Horizontal hue rainbow bar
-    local bar = CreateFrame("Frame", nil, f)
+    local bar = CreateFrame("Frame", nil, f, "BackdropTemplate")
     bar:SetSize(200, 20)
     bar:SetPoint("TOP", f.svBox, "BOTTOM", 0, -15)
     bar:SetBackdrop({
@@ -279,7 +279,7 @@ function ColorPicker:CreatePreview(f)
     f.preview:SetColorTexture(1, 0, 0, 1)
     
     -- Preview border
-    f.previewBorder = CreateFrame("Frame", nil, f)
+    f.previewBorder = CreateFrame("Frame", nil, f, "BackdropTemplate")
     f.previewBorder:SetPoint("TOPLEFT", f.preview, "TOPLEFT", -2, 2)
     f.previewBorder:SetPoint("BOTTOMRIGHT", f.preview, "BOTTOMRIGHT", 2, -2)
     f.previewBorder:SetBackdrop({
@@ -311,7 +311,7 @@ function ColorPicker:CreatePreview(f)
     hexLabel:SetText("HEX")
     hexLabel:SetTextColor(0.7, 0.7, 0.7)
     
-    f.hexInput = CreateFrame("EditBox", nil, f)
+    f.hexInput = CreateFrame("EditBox", nil, f, "BackdropTemplate")
     f.hexInput:SetSize(70, 22)
     f.hexInput:SetPoint("TOP", hexLabel, "BOTTOM", 0, -5)
     f.hexInput:SetFontObject("GameFontNormal")
@@ -348,7 +348,7 @@ function ColorPicker:CreateRGBInputs(f)
         lbl:SetText(label)
         lbl:SetTextColor(0.7, 0.7, 0.7)
         
-        local input = CreateFrame("EditBox", nil, f)
+        local input = CreateFrame("EditBox", nil, f, "BackdropTemplate")
         input:SetSize(50, 22)
         input:SetPoint("TOPLEFT", lbl, "BOTTOMLEFT", 0, -5)
         input:SetFontObject("GameFontNormal")
@@ -403,7 +403,7 @@ function ColorPicker:CreatePresets(f)
     for paletteIdx, palette in ipairs(self.presets) do
         local row = 0
         for colorIdx, color in ipairs(palette.colors) do
-            local btn = CreateFrame("Button", nil, f)
+            local btn = CreateFrame("Button", nil, f, "BackdropTemplate")
             btn:SetSize(22, 22)
             
             local col = (colorIdx - 1) % 8
