@@ -196,11 +196,11 @@ function ColorPicker:CreateSVBox(f)
     })
     box:SetBackdropBorderColor(0.3, 0.3, 0.35, 1)
     
-    -- Create gradient texture
+    -- Saturation gradient: white (left, s=0) -> pure hue color (right, s=1).
+    -- Recolored reactively in UpdateUI() as the selected hue changes.
     box.bg = box:CreateTexture(nil, "BACKGROUND")
     box.bg:SetAllPoints()
-    -- White to transparent gradient (saturation)
-    box.bg:SetColorTexture(1, 1, 1, 1)
+    box.bg:SetGradient("HORIZONTAL", CreateColor(1, 1, 1, 1), CreateColor(1, 0, 0, 1))
     
     -- Overlay gradient for value (black gradient)
     box.overlay = box:CreateTexture(nil, "ARTWORK")
@@ -242,11 +242,24 @@ function ColorPicker:CreateHueBar(f)
     })
     bar:SetBackdropBorderColor(0.3, 0.3, 0.35, 1)
     
-    -- Create rainbow gradient texture
-    bar.bg = bar:CreateTexture(nil, "BACKGROUND")
-    bar.bg:SetAllPoints()
-    -- We'll update this with the hue gradient
-    bar.bg:SetColorTexture(1, 0, 0, 1)
+    -- Rainbow gradient: SetGradient only does a 2-color linear blend, so a
+    -- true 0-360 hue rainbow needs six segments, one per 60-degree hue stop
+    -- (red->yellow->green->cyan->blue->magenta->red). This is static -- the
+    -- rainbow itself never changes, only the cursor position does.
+    local HUE_STOPS = {
+        {1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {0, 1, 1}, {0, 0, 1}, {1, 0, 1}, {1, 0, 0},
+    }
+    bar.segments = {}
+    for i = 1, 6 do
+        local seg = bar:CreateTexture(nil, "BACKGROUND")
+        seg:SetPoint("TOP", bar, "TOP", 0, 0)
+        seg:SetPoint("BOTTOM", bar, "BOTTOM", 0, 0)
+        seg:SetPoint("LEFT", bar, "LEFT", (i - 1) / 6 * 200, 0)
+        seg:SetWidth(200 / 6)
+        local c1, c2 = HUE_STOPS[i], HUE_STOPS[i + 1]
+        seg:SetGradient("HORIZONTAL", CreateColor(c1[1], c1[2], c1[3], 1), CreateColor(c2[1], c2[2], c2[3], 1))
+        bar.segments[i] = seg
+    end
     
     -- Hue cursor
     bar.cursor = bar:CreateTexture(nil, "OVERLAY")
@@ -523,12 +536,10 @@ function ColorPicker:UpdateUI()
     local hueX = (c.h or 0) * f.hueBar:GetWidth()
     f.hueBar.cursor:SetPoint("CENTER", f.hueBar, "LEFT", hueX, 0)
     
-    -- Update SV box background (pure hue color)
+    -- Recolor the SV box saturation gradient's right stop (s=1) to the
+    -- currently selected pure hue; white(s=0) -> hue(s=1) stays intact.
     local hr, hg, hb = self:HSVToRGB(c.h or 0, 1, 1)
-    f.svBox.bg:SetColorTexture(hr, hg, hb, 1)
-    
-    -- Update hue bar gradient
-    -- (In WoW we'd need a texture, simplified here)
+    f.svBox.bg:SetGradient("HORIZONTAL", CreateColor(1, 1, 1, 1), CreateColor(hr, hg, hb, 1))
 end
 
 --[[============================================================================
