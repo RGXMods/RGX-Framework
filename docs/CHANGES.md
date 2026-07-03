@@ -2,6 +2,11 @@
 
 ## Current Development Release
 
+### Unreleased (on `main`, not yet tagged)
+
+- **New module: RGXTooltip** — tooltip composition (`Show`/`Attach`) replacing the `SetOwner → ClearLines → AddLine × N → Show` boilerplate found across 71 GameTooltip call sites in BattlePetUtility alone, plus a safe wrapper (`HookNative`) over Blizzard's `TooltipDataProcessor` for augmenting native item/spell/unit/aura/pet/mount/macro tooltips. Blizzard does not pcall-wrap `TooltipDataProcessor` dispatch, so `HookNative` pcall-guards every registered callback — one addon's tooltip hook can no longer break tooltip rendering for every other addon.
+- Documented the in-tree `tools/rgx-mcp/` MCP server and the Declarative API in README.md and description.html (shipped in v2.2.0, previously undocumented in either entry point).
+
 ### [v2.2.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.2.1.md) - 2026-07-02
 
 - Packaging hotfix: the v2.2.0 zip leaked `docs/`, `schemas/`, and `tools/` — the packager's ignore matcher silently fails on directory entries with trailing slashes. Entries normalized; the zip now contains only the runtime (TOC, XML, core, modules, media, LICENSE).
