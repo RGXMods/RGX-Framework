@@ -41,12 +41,15 @@ Behavior goes in `onInit`:
 
 ## Just Want Fonts?
 
-### Get Font Path
+### Apply a Font
 
 ```lua
-local path = _G.RGXFonts:GetPath("Inter-Regular")
-myText:SetFont(path, 12, "OUTLINE")
+RGX:Font(myText)                      -- framework default font/size/flags
+RGX:Font(myText, "Inter-Regular")     -- named font, default size/flags
+RGX:Font(myText, "Inter-Regular", 16, "OUTLINE")  -- everything explicit
 ```
+
+`RGX:Font` never requires more than the one thing you actually want to change — name, size, and flags all default to the framework's own settings when omitted.
 
 ## That's It!
 
@@ -83,7 +86,7 @@ RGXAddon "MyAddon" {
     },
     onInit = function(self)
         local text = UIParent:CreateFontString(nil, "OVERLAY")
-        text:SetFont(_G.RGXFonts:GetPath("Inter-Regular"), 14, "OUTLINE")
+        RGX:Font(text, "Inter-Regular", 14, "OUTLINE")
         text:SetPoint("CENTER")
         text:SetText("Hello with Inter font!")
     end,
@@ -99,8 +102,7 @@ for _, info in ipairs(_G.RGXFonts:ListAvailable()) do
 end
 
 -- Use RGX font (one line!)
-local path = _G.RGXFonts:GetPath(selectedFont)
-myText:SetFont(path, 12, "OUTLINE")
+RGX:Font(myText, selectedFont)
 ```
 
 ## What Addon Authors Should Actually Use
