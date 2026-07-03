@@ -48,6 +48,7 @@ Complete public API by module. See individual module docs for deeper detail:
 | `RGX:GetCombat()` | RGXCombat |
 | `RGX:GetReputation()` | RGXReputation |
 | `RGX:GetAuras()` | RGXAuras |
+| `RGX:GetTooltip()` | RGXTooltip |
 | `RGX:GetAchievement()` | RGXAchievement |
 | `RGX:GetLevelUp()` | RGXLevelUp |
 | `RGX:GetCollectibles()` | RGXCollectibles |
@@ -740,6 +741,21 @@ Taint-safe aura scanning and watching, built against the Midnight 12.0.7 generat
 | `Auras:OnUpdated(fn)` | `fn(unit, auraData)` |
 
 All `On*` registrars return an unsubscribe closure.
+
+---
+
+## Tooltip (`RGXTooltip`)
+
+Tooltip composition and native-tooltip augmentation. Generalizes the `SetOwner → ClearLines → AddLine/AddDoubleLine × N → Show` boilerplate found across every consumer that hand-builds hover tooltips (BattlePetUtility alone has 71 such call sites), and safely wraps Blizzard's `TooltipDataProcessor` — whose dispatch is **not** pcall-wrapped by Blizzard, so one addon's uncaught error can otherwise break tooltip rendering for every addon.
+
+| Method | Description |
+|---|---|
+| `Tip:Show(anchorFrame, opts)` | Compose and show a tooltip in one call. `opts`: `anchor` (default `"ANCHOR_RIGHT"`), `offsetX`/`offsetY`, `title`, `lines` (array of `string` \| `{ text, r, g, b, wrap }` \| `{ left, right }` for a double-line) |
+| `Tip:Hide()` | `GameTooltip:Hide()` |
+| `Tip:Attach(frame, builder)` | Wires `OnEnter`/`OnLeave` in one call; `builder(frame)` returns the `opts` table for `Show`, or `nil` to skip |
+| `Tip:HookNative(typeName, callback)` | Append to Blizzard's native item/spell/unit/aura/pet/mount/macro tooltip. `typeName` is a human word, never `Enum.TooltipDataType`; `callback(tooltip, data)` is pcall-wrapped, and each type registers with Blizzard exactly once no matter how many consumers hook it |
+
+Valid `HookNative` type names: `item`, `spell`, `unit`, `aura`, `pet`, `mount`, `macro`.
 
 ---
 
