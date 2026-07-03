@@ -2,6 +2,13 @@
 
 ## Current Development Release
 
+### [v2.4.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.4.0.md) - 2026-07-03
+
+- **RGXColorPicker redesigned** with a modern circular control vocabulary (ring-and-fill drag handles on the SV box and hue bar, circular swatches and preview, hover feedback on presets, primary-themed focus states on the hex/RGB inputs) built on `RGXDesign` tokens instead of hardcoded colors, replacing the borrowed Blizzard minimize-button icon that was standing in for a cursor.
+- **`UI:CreateLabel` fixed to actually wrap long text.** FontStrings with no explicit width auto-size to a single line and silently overflow their parent frame's edge instead of breaking — every multi-sentence label (e.g. the visual test harness's "What to test" hints) rendered past its panel. `CreateLabel` now accepts an opt-in `options.width` that enables `SetWordWrap` and justification; short labels are unaffected.
+- **`tools/rgx-visual-test/` moved to the `RGX-Hello` repo**, merged into that addon rather than shipped as a separate in-tree dev tool — RGX-Hello is now both the minimal reference addon and the visual QA harness.
+- **`tools/rgx-mcp/` now ships inside the packaged addon zip** (previously excluded). Addon authors who install RGX-Framework and want to build on it should already have the framework's MCP server on hand instead of needing a separate download.
+
 ### [v2.3.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.3.0.md) - 2026-07-03
 
 - **New module: RGXTooltip** — tooltip composition (`Show`/`Attach`) replacing the `SetOwner → ClearLines → AddLine × N → Show` boilerplate found across 71 GameTooltip call sites in BattlePetUtility alone, plus a safe wrapper (`HookNative`) over Blizzard's `TooltipDataProcessor` for augmenting native item/spell/unit/aura/pet/mount/macro tooltips. Blizzard does not pcall-wrap `TooltipDataProcessor` dispatch, so `HookNative` pcall-guards every registered callback — one addon's tooltip hook can no longer break tooltip rendering for every other addon.

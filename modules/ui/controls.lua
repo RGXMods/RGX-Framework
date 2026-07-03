@@ -562,6 +562,18 @@ function UI:CreateLabel(parent, options)
     end
     
     label:SetText(text)
+
+    -- Long text (descriptions, help text) needs an explicit width to wrap at
+    -- -- a FontString with no width auto-sizes to fit everything on one line
+    -- and silently overflows the parent frame's edge instead of breaking.
+    -- Short labels ("Enable Addon", "R"/"G"/"B") should keep their natural
+    -- single-line width, so wrapping is opt-in via options.width.
+    if options.width then
+        label:SetWidth(options.width)
+        label:SetWordWrap(true)
+        label:SetJustifyH(options.justify or "LEFT")
+    end
+
     return label
 end
 

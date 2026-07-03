@@ -19,10 +19,14 @@ ignore:
   - README.md
   - docs
   - schemas
-  - tools
   - graphify-out
   - .agents
   - .claude
+
+# tools/rgx-mcp intentionally ships in the packaged zip: addon authors who
+# install RGX-Framework and want to build their own addon on it should
+# already have the framework's MCP server (validate/audit/generate against
+# schemas/rgx-addon.schema.json) on hand, not need a separate download.
 
 # Release notes come from the canonical changelog summary.
 manual-changelog:
