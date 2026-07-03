@@ -196,6 +196,22 @@ Full documentation lives in the [`docs/`](docs/) directory:
 
 - **[Changelog](docs/CHANGES.md)** — current version release notes
 - **[Font Sources & Licenses](docs/FONT-SOURCES.md)** — attribution for all bundled fonts
+- **[Declarative API](docs/DECLARATIVE-API.md)** — the `RGXAddon` authoring surface, verified against source
+
+---
+
+## MCP Server (rgx-mcp)
+
+RGX-Framework ships an [MCP](https://modelcontextprotocol.io) server at [`tools/rgx-mcp/`](tools/rgx-mcp/) — anyone with this repo checked out has it. It gives AI coding agents (Claude Code, etc.) four tools that read the framework's own schema and docs, so agent-authored addons stay congruent with the Simplicity Contract:
+
+| Tool | What it does |
+|---|---|
+| `rgx_validate_addon` | Validate an `RGXAddon` opts table against `schemas/rgx-addon.schema.json` |
+| `rgx_audit_lua` | Scan Lua for unsafe patterns the framework prevents (raw `C_Timer`, manual event frames, `SLASH_` globals, unguarded `SetAttribute`, secret-aura comparisons, raw hook reassignment) |
+| `rgx_generate_addon` | Emit a complete addon file using only shipped keys |
+| `rgx_get_contract` | Return the schema + declarative API reference for agent context |
+
+Read-only by design — it never edits repos, commits, or touches the game. Registered automatically for Claude Code sessions in this repo via `.mcp.json` (run `npm install` once in `tools/rgx-mcp/`). Excluded from the packaged addon zip. See [`tools/rgx-mcp/README.md`](tools/rgx-mcp/README.md) for setup elsewhere.
 
 ---
 
@@ -206,6 +222,7 @@ Full documentation lives in the [`docs/`](docs/) directory:
 - `C_AddOns.GetAddOnMetadata` and `GetAddOnMetadata` both handled
 - `ColorPickerFrame` old API and `ColorPickerInteraction` new API both handled
 - `Settings.RegisterCanvasLayoutCategory` and `InterfaceOptions_AddCategory` both handled
+- **Developer tooling:** an in-tree MCP server (`tools/rgx-mcp/`) for validating/auditing/generating addons — see above
 
 ---
 
