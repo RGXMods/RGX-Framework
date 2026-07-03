@@ -1,0 +1,9 @@
+## Interface: 120007
+## Title: RGX Visual Test
+## Notes: Dev/debug visual QA harness for RGX-Framework UI controls -- not for players
+## Author: RGX
+## Version: 1.0.0
+## RequiredDeps: RGX-Framework
+## SavedVariables: RGXVisualTestDB
+
+RGXVisualTest.lua
