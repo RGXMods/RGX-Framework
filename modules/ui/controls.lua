@@ -69,6 +69,18 @@ UI.CreateTextureDropdown = UI.CreateStatusBarDropdown
     COLOR PICKER CONTROL
 ============================================================================]]
 
+-- Embeddable color-picker card: the full SV-box + hue-bar picker inline in an
+-- options tab (not the popup swatch), bound to storage[key] = {r,g,b}. Returns
+-- the widget frame (with :SetColor/:GetColor), or a label if the module is
+-- missing. See ColorPicker:CreateEmbedded for opts.
+function UI:CreateColorPickerCard(parent, options)
+    local CP = RGX:GetColorPicker()
+    if not CP or not CP.CreateEmbedded then
+        return self:CreateLabel(parent, { text = "RGX ColorPicker not loaded", color = "red" })
+    end
+    return CP:CreateEmbedded(parent, options or {})
+end
+
 function UI:CreateColorPicker(parent, options)
     options = options or {}
     local key = options.key or "color"

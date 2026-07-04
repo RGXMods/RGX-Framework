@@ -690,6 +690,168 @@ function ColorPicker:AddToHistory(r, g, b)
 end
 
 --[[============================================================================
+    EMBEDDABLE WIDGET
+
+    A self-contained color-picker card for placing directly inside an options
+    tab, bound to storage[key] = {r,g,b} with an onChange(r,g,b) callback.
+    Unlike Show(), it is multi-instance (its own local state, no singleton) and
+    carries no dialog chrome (title/close/OK/Cancel). Same SV-box + hue-bar
+    picking model as the dialog, so click-and-drag selects the shown color.
+
+    Usage (or via UI:CreateColorPickerCard(parent, opts)):
+        RGX:GetColorPicker():CreateEmbedded(parent, {
+            key = "accent", storage = MyDB, default = { r = 1, g = 0, b = 0 },
+            width = 220,
+            onChange = function(r, g, b) MyAddon:SetAccent(r, g, b) end,
+        })
+============================================================================]]
+
+function ColorPicker:CreateEmbedded(parent, opts)
+    opts = opts or {}
+    local CP = self
+    local Design = RGX:GetDesign()
+    local width   = opts.width or 220
+    local key     = opts.key
+    local storage = opts.storage or {}
+    local default = opts.default or { r = 1, g = 1, b = 1 }
+    local onChange = opts.onChange or function() end
+    local boxW    = width - 40
+
+    local init = (key and storage[key]) or default
+    local st = { r = init.r or 1, g = init.g or 1, b = init.b or 1 }
+    st.h, st.s, st.v = CP:RGBToHSV(st.r, st.g, st.b)
+
+    local w = CreateFrame("Frame", nil, parent)
+    w:SetSize(width, 150)
+
+    -- Saturation/Value box
+    local sv = CreateFrame("Frame", nil, w, "BackdropTemplate")
+    sv:SetPoint("TOPLEFT", 0, 0)
+    sv:SetSize(boxW, 96)
+    sv:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    sv:SetBackdropBorderColor(Design:Unpack("border"))
+    sv.bg = sv:CreateTexture(nil, "BACKGROUND")
+    sv.bg:SetAllPoints()
+    sv.bg:SetColorTexture(1, 1, 1, 1)
+    sv.bg:SetGradient("HORIZONTAL", CreateColor(1, 1, 1, 1), CreateColor(1, 0, 0, 1))
+    sv.overlay = sv:CreateTexture(nil, "ARTWORK")
+    sv.overlay:SetAllPoints()
+    sv.overlay:SetColorTexture(0, 0, 0, 1)
+    sv.overlay:SetGradient("VERTICAL", CreateColor(0, 0, 0, 1), CreateColor(0, 0, 0, 0))
+    sv.cursor = CreateFrame("Frame", nil, sv)
+    sv.cursor:SetSize(10, 10)
+    sv.cursorTex = sv.cursor:CreateTexture(nil, "OVERLAY")
+    sv.cursorTex:SetAllPoints()
+    sv.cursorTex:SetTexture("Interface\\Buttons\\WHITE8x8")
+
+    -- Hue bar (six segments -> full 0-360 rainbow)
+    local hue = CreateFrame("Frame", nil, w, "BackdropTemplate")
+    hue:SetPoint("TOPLEFT", sv, "BOTTOMLEFT", 0, -8)
+    hue:SetSize(boxW, 12)
+    hue:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    hue:SetBackdropBorderColor(Design:Unpack("border"))
+    local HUE_STOPS = { {1,0,0}, {1,1,0}, {0,1,0}, {0,1,1}, {0,0,1}, {1,0,1}, {1,0,0} }
+    for i = 1, 6 do
+        local seg = hue:CreateTexture(nil, "BACKGROUND")
+        seg:SetPoint("TOP", hue, "TOP", 0, 0)
+        seg:SetPoint("BOTTOM", hue, "BOTTOM", 0, 0)
+        seg:SetPoint("LEFT", hue, "LEFT", (i - 1) / 6 * boxW, 0)
+        seg:SetWidth(boxW / 6)
+        seg:SetColorTexture(1, 1, 1, 1)
+        local c1, c2 = HUE_STOPS[i], HUE_STOPS[i + 1]
+        seg:SetGradient("HORIZONTAL", CreateColor(c1[1], c1[2], c1[3], 1), CreateColor(c2[1], c2[2], c2[3], 1))
+    end
+    hue.cursor = hue:CreateTexture(nil, "OVERLAY")
+    hue.cursor:SetSize(3, 16)
+    hue.cursor:SetTexture("Interface\\Buttons\\WHITE8x8")
+
+    -- Preview swatch + hex entry
+    local preview = w:CreateTexture(nil, "ARTWORK")
+    preview:SetSize(26, 26)
+    preview:SetPoint("TOPLEFT", hue, "BOTTOMLEFT", 0, -10)
+
+    local hex = CreateFrame("EditBox", nil, w, "BackdropTemplate")
+    hex:SetSize(boxW - 34, 22)
+    hex:SetPoint("LEFT", preview, "RIGHT", 8, 0)
+    hex:SetFontObject("GameFontNormal")
+    hex:SetTextColor(1, 1, 1)
+    hex:SetAutoFocus(false)
+    hex:SetMaxLetters(6)
+    hex:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1, insets = { left = 4, right = 4, top = 0, bottom = 0 } })
+    hex:SetBackdropColor(Design:Unpack("background"))
+    hex:SetBackdropBorderColor(Design:Unpack("border"))
+
+    local function refresh(writeHex)
+        preview:SetColorTexture(st.r, st.g, st.b, 1)
+        sv.cursor:ClearAllPoints()
+        sv.cursor:SetPoint("CENTER", sv, "BOTTOMLEFT", st.s * sv:GetWidth(), st.v * sv:GetHeight())
+        hue.cursor:ClearAllPoints()
+        hue.cursor:SetPoint("CENTER", hue, "LEFT", st.h * hue:GetWidth(), 0)
+        local hr, hg, hb = CP:HSVToRGB(st.h, 1, 1)
+        sv.bg:SetGradient("HORIZONTAL", CreateColor(1, 1, 1, 1), CreateColor(hr, hg, hb, 1))
+        if writeHex ~= false then hex:SetText(CP:RGBToHex(st.r, st.g, st.b):upper()) end
+    end
+
+    local function applyHSV(h, s, v, writeHex)
+        st.h, st.s, st.v = h, s, v
+        st.r, st.g, st.b = CP:HSVToRGB(h, s, v)
+        refresh(writeHex)
+        if key then storage[key] = { r = st.r, g = st.g, b = st.b } end
+        onChange(st.r, st.g, st.b)
+    end
+
+    -- SV box click + drag
+    local function svFromMouse()
+        local x, y = GetCursorPosition()
+        local scale = sv:GetEffectiveScale()
+        local rx = (x / scale - sv:GetLeft()) / sv:GetWidth()
+        local ry = (y / scale - sv:GetBottom()) / sv:GetHeight()
+        applyHSV(st.h, math.max(0, math.min(1, rx)), math.max(0, math.min(1, ry)))
+    end
+    sv:EnableMouse(true)
+    sv:SetScript("OnMouseDown", function(self, btn) if btn == "LeftButton" then self.drag = true; svFromMouse() end end)
+    sv:SetScript("OnMouseUp", function(self) self.drag = false end)
+    sv:SetScript("OnUpdate", function(self) if self.drag then if IsMouseButtonDown("LeftButton") then svFromMouse() else self.drag = false end end end)
+
+    -- Hue bar click + drag
+    local function hueFromMouse()
+        local x = GetCursorPosition()
+        local scale = hue:GetEffectiveScale()
+        local rx = (x / scale - hue:GetLeft()) / hue:GetWidth()
+        applyHSV(math.max(0, math.min(1, rx)), st.s, st.v)
+    end
+    hue:EnableMouse(true)
+    hue:SetScript("OnMouseDown", function(self, btn) if btn == "LeftButton" then self.drag = true; hueFromMouse() end end)
+    hue:SetScript("OnMouseUp", function(self) self.drag = false end)
+    hue:SetScript("OnUpdate", function(self) if self.drag then if IsMouseButtonDown("LeftButton") then hueFromMouse() else self.drag = false end end end)
+
+    -- Hex entry
+    hex:SetScript("OnEnterPressed", function(box)
+        local t = box:GetText()
+        if #t == 6 then
+            local r, g, b = CP:HexToRGB(t)
+            st.h, st.s, st.v = CP:RGBToHSV(r, g, b)
+            applyHSV(st.h, st.s, st.v, false)
+        end
+        box:ClearFocus()
+    end)
+
+    -- Public setter so callers can push a value in programmatically.
+    function w:SetColor(r, g, b)
+        local h, s, v = CP:RGBToHSV(r, g, b)
+        applyHSV(h, s, v)
+    end
+    function w:GetColor() return st.r, st.g, st.b end
+
+    -- Position everything once geometry is valid (frames are usually hidden at
+    -- build time); OnShow re-runs so the cursors land correctly on first open.
+    w:SetScript("OnShow", function() refresh() end)
+    refresh()
+
+    return w
+end
+
+--[[============================================================================
     EYEDROPPER TOOL
 ============================================================================]]
 

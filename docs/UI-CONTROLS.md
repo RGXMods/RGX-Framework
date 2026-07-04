@@ -117,6 +117,32 @@ local cp = UI:CreateColorPicker(parent, {
 
 ---
 
+### `UI:CreateColorPickerCard(parent, opts)` → `Frame`
+
+The **embeddable** color picker — the full SV-box + hue-bar + preview + hex
+inline as a card, for placing directly in an options tab (instead of the popup
+swatch). Multi-instance with its own state; bound to `storage[key] = {r,g,b}`.
+Click or **drag** the SV box and hue bar to pick.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `opts.key` | string | No | — | Storage key holding `{r,g,b}` |
+| `opts.storage` | table | No | `{}` | Table the widget reads/writes |
+| `opts.default` | table | No | white | `{r,g,b}` when storage is empty |
+| `opts.width` | number | No | 220 | Card width |
+| `opts.onChange` | function | No | — | `onChange(r, g, b)` on every change |
+
+Returns the widget frame, with `:SetColor(r,g,b)` / `:GetColor()`.
+
+```lua
+local card = UI:CreateColorPickerCard(container, {
+    key = "accent", storage = MyAddonDB, default = { r = 1, g = 0, b = 0 },
+    onChange = function(r, g, b) MyAddon:SetAccent(r, g, b) end,
+})
+```
+
+---
+
 ### `UI:CreateColorSettingControl(parent, opts)` → `table`
 
 Color swatch + label bound to a saved variable. Changes write directly to `storage[key]`.
