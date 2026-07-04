@@ -23,7 +23,12 @@ Create a horizontal slider control bound to a storage table — it saves **and r
 | `opts.default` | number | No | min | Value when storage is empty; Reset target |
 | `opts.suffix` | string | No | `""` | Appended to the displayed value, e.g. `"%"` |
 | `opts.width` | number | No | 200 | Track width |
+| `opts.progress` | boolean | No | `true` | Show the brand-colored fill behind the thumb; `false` for a bare track |
 | `opts.onChange` | function | No | — | `onChange(value)` |
+
+> The thumb re-positions itself on `OnShow`, so a slider built on a panel that
+> is still hidden (login/load) lands at the correct spot the first time the
+> panel opens — no set/reset needed.
 
 ```lua
 local slider = UI:CreateSlider(parent, {
@@ -205,25 +210,43 @@ Create a full options panel with tab system, scroll container, and header.
 
 ### Panel Methods
 
-#### `panel:AddTab(name, buildFn)`
+#### Providing tabs
 
-Add a tab to the panel. `buildFn(container)` is called once when the tab is first shown.
+Tabs are supplied at creation through `opts.tabs`; each `content(container)`
+builder runs once, the first time its tab is shown:
 
 ```lua
-panel:AddTab("General", function(container)
-    UI:CreateToggle(container, { label = "Enabled", value = true })
-    UI:CreateSlider(container, { label = "Scale", min = 0.5, max = 2.0, step = 0.1, value = 1.0 })
-end)
-
-panel:AddTab("Fonts", function(container)
-    UI:CreateFontDropdown(container, { label = "Header Font" })
-    UI:CreateFontDropdown(container, { label = "Body Font" })
-end)
-
-panel:AddTab("Colors", function(container)
-    UI:CreateColorPicker(container, { label = "Primary Color" })
-end)
+local panel = UI:CreateOptionsPanel({
+    addonName = "MyAddon",
+    tabs = {
+        { text = "General", content = function(container)
+            UI:CreateToggle(container, { key = "enabled", label = "Enabled", storage = MyAddonDB })
+            UI:CreateSlider(container, { key = "scale", label = "Scale", min = 50, max = 150, storage = MyAddonDB })
+        end },
+        { text = "Colors", content = function(container)
+            UI:CreateColorPicker(container, { key = "primary", label = "Primary Color", storage = MyAddonDB })
+        end },
+    },
+})
 ```
+
+#### Extending another addon's panel — `RGX:AddOptionsTab(addonName, text, builder[, geom])`
+
+Register extra tabs onto an addon's panel **by name, before it is built** (i.e.
+at file-parse time, from a second file). The declarative panel builder appends
+them after the addon's own `options` tabs, so a bundled dev/test suite can live
+on the addon's own panel instead of a separate window. `geom` optionally hints
+panel `width`/`height`/`maxPerRow`; the largest hint across all registrations
+wins. Panels are not rebuilt after creation, so this must run before the addon's
+`ADDON_LOADED`.
+
+```lua
+RGX:AddOptionsTab("MyAddon", "Debug", function(container)
+    UI:CreateButton(container, "Dump State", 120, 24, DumpState)
+end, { maxPerRow = 5 })
+```
+
+`RGX:GetAddon(name)` returns the addon object (with `.panel`) if you need it.
 
 #### `panel:Open()`
 
