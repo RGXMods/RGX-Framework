@@ -379,7 +379,10 @@ function ColorPicker:CreatePreview(f)
     hexLabel:SetTextColor(sr, sg, sb)
 
     f.hexInput = CreateFrame("EditBox", nil, f, "BackdropTemplate")
-    f.hexInput:SetSize(CONTENT_W - previewSize - 14, 26)
+    -- Width spans from the hex label (right of the 60px preview ring) to the
+    -- content's right margin; use the ring size (previewSize + 4), not the raw
+    -- previewSize, so it doesn't overhang the panel edge.
+    f.hexInput:SetSize(CONTENT_W - (previewSize + 4) - 14, 26)
     f.hexInput:SetPoint("TOPLEFT", hexLabel, "BOTTOMLEFT", 0, -6)
     f.hexInput:SetFontObject("GameFontNormal")
     f.hexInput:SetTextColor(1, 1, 1)
@@ -416,8 +419,12 @@ function ColorPicker:CreateRGBInputs(f)
     local labels = {"R", "G", "B"}
     local colW = (CONTENT_W - 20) / 3 -- 2 gaps of 10px between 3 columns
 
+    -- Full-width row anchored at the left content margin, below the preview
+    -- circle. Anchoring to hexInput's bottom-left (indented beside the preview)
+    -- but giving it full CONTENT_W width pushed the B channel off the panel's
+    -- right edge and overlapped the preview -- anchor to the preview instead.
     f.rgbRow = CreateFrame("Frame", nil, f)
-    f.rgbRow:SetPoint("TOPLEFT", f.hexInput, "BOTTOMLEFT", 0, -14)
+    f.rgbRow:SetPoint("TOPLEFT", f.previewRing, "BOTTOMLEFT", 0, -14)
     f.rgbRow:SetSize(CONTENT_W, 46)
 
     for i, label in ipairs(labels) do
