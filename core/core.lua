@@ -185,6 +185,36 @@ function RGX:GetHousing()      return self:GetModule("housing")      end
 function RGX:GetTradingPost()  return self:GetModule("tradingpost")  end
 function RGX:GetPrey()         return self:GetModule("prey")         end
 
+-- Addon registry -- every RGX.Addon is recorded here so other files (or the
+-- same addon's advanced-pattern files) can reach its object and panel by name.
+RGX._addons = RGX._addons or {}
+function RGX:GetAddon(name) return self._addons and self._addons[name] end
+
+-- Extra options tabs registered against an addon *by name*, before its panel is
+-- built. The declarative panel builder in RGX.Addon appends these after the
+-- addon's own `options` tabs, so a second file (e.g. a bundled dev/test suite)
+-- can extend the same panel instead of standing up a separate window.
+--   RGX:AddOptionsTab("RGX-Hello", "Colors", function(frame) ... end,
+--                     { maxPerRow = 5, width = 820, height = 640 })
+-- The optional 4th arg carries panel-geometry hints; the largest hint across
+-- all registrations wins, so the host addon's minimal example need not know the
+-- suite exists. Must be called before the addon's ADDON_LOADED (i.e. at file
+-- parse time) to be picked up -- panels are not rebuilt after creation.
+RGX._pendingTabs = RGX._pendingTabs or {}
+RGX._pendingPanelOpts = RGX._pendingPanelOpts or {}
+function RGX:AddOptionsTab(addonName, text, builder, geom)
+    if type(addonName) ~= "string" or type(text) ~= "string" or type(builder) ~= "function" then return end
+    self._pendingTabs[addonName] = self._pendingTabs[addonName] or {}
+    table.insert(self._pendingTabs[addonName], { text = text, content = builder })
+    if type(geom) == "table" then
+        local g = self._pendingPanelOpts[addonName] or {}
+        g.width     = math.max(g.width     or 0, geom.width     or 0)
+        g.height    = math.max(g.height    or 0, geom.height    or 0)
+        g.maxPerRow = math.max(g.maxPerRow or 0, geom.maxPerRow or 0)
+        self._pendingPanelOpts[addonName] = g
+    end
+end
+
 function RGX:SetTheme(config)
     local Design = self:GetDesign()
     if Design and type(Design.SetTheme) == "function" then
@@ -286,6 +316,8 @@ function RGX.Addon(name, opts)
 
     local addon = opts.table or {}
     addon.name = name
+    RGX._addons = RGX._addons or {}
+    RGX._addons[name] = addon
     addon._rgxEventIds = addon._rgxEventIds or {}
     addon._rgxUnitEventIds = addon._rgxUnitEventIds or {}
     addon._rgxMessageIds = addon._rgxMessageIds or {}
@@ -510,7 +542,29 @@ function RGX.Addon(name, opts)
                         end,
                     }
                 end
-                addon.panel = UI:CreateOptionsPanel({ addonName = name, title = opts.title or name, tabs = tabs })
+                -- Append any tabs a second file registered via RGX:AddOptionsTab
+                -- (e.g. RGX-Hello's bundled visual-test suite) so they share this
+                -- one panel instead of opening a separate window.
+                local pend = RGX._pendingTabs and RGX._pendingTabs[name]
+                if pend then
+                    for _, t in ipairs(pend) do
+                        tabs[#tabs + 1] = { text = t.text, content = t.content }
+                    end
+                end
+                local geom = (RGX._pendingPanelOpts and RGX._pendingPanelOpts[name]) or {}
+                local function pick(explicit, hint)
+                    if explicit then return explicit end
+                    if hint and hint > 0 then return hint end
+                    return nil
+                end
+                addon.panel = UI:CreateOptionsPanel({
+                    addonName = name,
+                    title     = opts.title or name,
+                    tabs      = tabs,
+                    width     = pick(opts.panelWidth,  geom.width),
+                    height    = pick(opts.panelHeight, geom.height),
+                    maxPerRow = pick(opts.maxPerRow,   geom.maxPerRow),
+                })
             end -- UI check
         end -- addon.db check
 
