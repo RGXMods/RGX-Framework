@@ -1,0 +1,52 @@
+name: Sync Docs to Wiki
+
+# docs/ is the single source of truth; the GitHub wiki is generated from it.
+# On any push to main that touches docs/ (or the wiki tooling), regenerate the
+# wiki pages from tools/wiki/manifest.json and publish them. The wiki becomes a
+# pure render of docs/ -- edit docs/, never the wiki directly.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'tools/wiki/**'
+      - '.github/workflows/wiki-sync.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate wiki pages from docs/
+        run: node tools/wiki/build-wiki.mjs "${RUNNER_TEMP}/wiki-out"
+
+      - name: Publish to the GitHub wiki
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki
+          # The wiki is fully generated from docs/: drop existing top-level pages
+          # and replace them with the freshly generated set (no orphans left behind).
+          find wiki -maxdepth 1 -name '*.md' -delete
+          cp "${RUNNER_TEMP}"/wiki-out/*.md wiki/
+          cd wiki
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Wiki already up to date."
+          else
+            git commit -m "docs: sync wiki from docs/ @ ${GITHUB_SHA::7}"
+            git push
+          fi

@@ -36,6 +36,9 @@ jobs:
         working-directory: tools/ci
         run: npm run schema-check
 
+      - name: Wiki manifest gate (every mapped doc exists)
+        run: node tools/wiki/build-wiki.mjs "${RUNNER_TEMP}/wiki-out"
+
       - name: Install rgx-mcp
         working-directory: tools/rgx-mcp
         # rgx-mcp's lockfile is gitignored, so npm ci is not usable here.
