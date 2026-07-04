@@ -239,6 +239,34 @@ docs/ARCHITECTURE.md     — internals, load order, module registration conventi
 
 ---
 
+## Continuous integration & the tandem workflow
+
+The framework, its schema, `tools/rgx-mcp`, the docs, and the RGX-Hello
+reference addon are built **in tandem** — a change to one is expected to be
+validated against the others, not in isolation.
+
+- **`.github/workflows/ci.yml`** runs on every push and PR (not just release
+  tags), so a regression is caught before it can ship to the consumers that
+  depend on this framework. Three gates:
+  - **Lua syntax** — `tools/ci/lua-syntax-check.mjs` parses every `.lua` with
+    luaparse against WoW's Lua 5.1 dialect.
+  - **Schema** — `tools/ci/schema-check.mjs` compiles `schemas/rgx-addon.schema.json`
+    with the same `Ajv2020` build/options `tools/rgx-mcp/src/server.js` uses.
+  - **rgx-mcp end-to-end** — clones a fresh RGX-Hello and runs
+    `tools/rgx-mcp/test/test-rgx-hello.mjs` (generate/validate/audit the real
+    reference addon).
+- **RGX-Hello's own CI** clones this framework and runs the same Lua gate +
+  rgx-mcp e2e against the Hello checkout, keeping the pair in lockstep.
+- Run the gates locally before pushing:
+  `cd tools/ci && npm ci && npm run lua-check && npm run schema-check`, and
+  `cd tools/rgx-mcp && npm install && node test/test-rgx-hello.mjs /path/to/RGX-Hello`.
+- **Docs are canonical, the wiki publishes from them.** `docs/` (including
+  `description.html`) is the single source; the GitHub wiki is generated from
+  `docs/`, not maintained separately. Edit docs under `docs/`, never the wiki
+  directly.
+
+---
+
 ## What NOT to do
 
 - Do not add modules that no current addon needs
