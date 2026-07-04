@@ -28,6 +28,30 @@ The framework's core value is **prevention, not remediation.** Most WoW addon ma
 
 A consumer addon that writes against the framework API gets taint-safety and current-API usage **by construction.** When designing any new subsystem, the test is not "is this convenient" but "does this make a whole class of WoW-specific bug impossible for the consumer to write." That is the same north star as rgx-mod: a clean, human-friendly authoring surface that emits correct, safe behavior underneath.
 
+## Design thesis 2 — progressive disclosure, one vocabulary
+
+Every DSL key works **bare with assumed arguments** and accepts an **advanced
+form** when needed — simple addons stay one-liner simple, advanced addons are
+possible, and the DSL never grows a second API. `minimap = true` assumes an
+icon, a panel-opening left-click, and angle persistence to `addon.db`;
+`minimap = { icon = ..., onRightClick = ... }` unlocks the rest. `{ toggle =
+"enabled" }` infers its label; `{ slider = "volume", suffix = "%" }` layers
+detail on. When adding or changing a key, both questions must have answers:
+*what does the bare form assume?* and *what does the advanced form unlock?*
+If a caller needs an argument the bare form should have assumed, that's a
+framework bug.
+
+Options layout is **one composable vocabulary** (proven in BLU): panel → main
+page + tabs → tabs can be multi-paged → 1–2 column card grid → rows/cards
+holding the widgets. Tabs/pages/rows/columns/cards are all the same kind of
+thing — never separate systems.
+
+Positioning check: RGX fills Ace3's place by being *easier to consume*, not
+by matching it library-for-library — the audit and the "does this belong"
+standard live in `docs/ACE3-ANALYSIS.md`. The DSL, the schema+MCP loop, and
+the RGX-Hello test suite are the differentiators no Ace3 clone would have;
+every subsystem decision should reinforce them.
+
 ---
 
 ## Current version

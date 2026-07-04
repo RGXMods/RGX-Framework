@@ -19,23 +19,45 @@
     },
     "slash": {
       "x-rgx-ships": "today",
-      "description": "Slash command(s) without the leading slash. Default handler opens the options panel. Contract rule 4: Tier 4 defaults this to the lowercase addon name when omitted.",
+      "description": "Slash command(s) without the leading slash. Bare: string or array of aliases; the assumed handler opens the options panel. Advanced: the same table plus handler = function(addon, msg) when opening the panel is not the right default. Contract rule 4: Tier 4 defaults this to the lowercase addon name when omitted.",
       "oneOf": [
         { "type": "string", "minLength": 1 },
-        { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 }
+        { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+        {
+          "type": "object",
+          "description": "Advanced form. In JSON transcription the Lua table's array part (the aliases) becomes numeric-string keys.",
+          "properties": { "handler": { "$ref": "#/$defs/luaFunction" } },
+          "patternProperties": { "^[0-9]+$": { "type": "string", "minLength": 1 } },
+          "additionalProperties": false
+        }
       ]
     },
     "minimap": {
       "x-rgx-ships": "today",
-      "description": "true = minimap button with default icon; string = icon texture path.",
+      "description": "Bare: true = minimap button with default icon; string = icon texture path. The assumed left-click opens the options panel and the dragged angle persists to addon.db. Advanced: a full minimap-button opts table (tooltip, defaultAngle, onRightClick, onCtrlRight, angleKey, ...) passed through to the minimap module's Create.",
       "oneOf": [
         { "type": "boolean" },
-        { "type": "string", "minLength": 1 }
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "description": "Advanced passthrough form. Unlisted keys pass through to MM:Create.",
+          "properties": {
+            "icon": { "type": "string", "minLength": 1 },
+            "defaultAngle": { "type": "number" },
+            "angleKey": { "type": "string" },
+            "enabledKey": { "type": "string" },
+            "tooltip": { "type": "object" },
+            "onLeftClick": { "$ref": "#/$defs/luaFunction" },
+            "onRightClick": { "$ref": "#/$defs/luaFunction" },
+            "onCtrlRight": { "$ref": "#/$defs/luaFunction" }
+          },
+          "additionalProperties": true
+        }
       ]
     },
     "db": {
       "x-rgx-ships": "today",
-      "description": "Profile defaults table. Creates addon.db (RGX:NewDatabase proxy) on ADDON_LOADED. SavedVariables name defaults to <Name>DB (contract rule 4).",
+      "description": "Profile defaults table. Creates addon.db (RGX:NewDatabase proxy) on ADDON_LOADED. SavedVariables name defaults to <Name>DB with non-identifier characters stripped from the name (\"RGX-Hello\" -> RGXHelloDB, matching rgx_generate_addon); pass dbName to override (contract rule 4).",
       "type": "object"
     },
     "dbName": {
@@ -61,12 +83,12 @@
     },
     "options": {
       "x-rgx-ships": "today",
-      "description": "Tab name -> array of controls. Requires db. Every control binds to addon.db with automatic save AND restore. Tier 4 adds the reserved key 'columns' (1|2|3 card grid) and one-line string controls per the contract grammar.",
+      "description": "Tab name -> array of controls. Requires db. Every control binds to addon.db with automatic save AND restore. Layout model (one composable vocabulary, proven in BLU): panel -> main page + tabs -> tabs can be multi-paged -> 1-2 column card grid -> rows/cards holding the widgets. Tier 4 adds the reserved key 'columns' (1|2|3 card grid; 1-2 is the BLU-proven range), multi-page tab support, and one-line string controls per the contract grammar.",
       "type": "object",
       "properties": {
         "columns": {
           "x-rgx-ships": "tier4",
-          "description": "Card-grid column count for all tabs.",
+          "description": "Card-grid column count for all tabs. 1-2 proven in BLU; 3 contract-frozen.",
           "enum": [1, 2, 3]
         }
       },
@@ -147,6 +169,7 @@
         { "$ref": "#/$defs/controlString" },
         { "$ref": "#/$defs/toggleControl" },
         { "$ref": "#/$defs/sliderControl" },
+        { "$ref": "#/$defs/colorControl" },
         { "$ref": "#/$defs/dropdownControl" },
         { "$ref": "#/$defs/buttonControl" },
         { "$ref": "#/$defs/sectionControl" }
@@ -180,6 +203,26 @@
         "max": { "type": "number", "default": 100 },
         "step": { "type": "number", "default": 1 },
         "suffix": { "type": "string", "description": "appended to the displayed value, e.g. \"%\"" }
+      },
+      "additionalProperties": false
+    },
+    "colorControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["color"],
+      "properties": {
+        "color": { "type": "string", "description": "db key holding a {r,g,b} table" },
+        "label": { "type": "string" },
+        "default": {
+          "type": "object",
+          "description": "Assumed from the db defaults for the key when omitted.",
+          "properties": {
+            "r": { "type": "number" },
+            "g": { "type": "number" },
+            "b": { "type": "number" }
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     },

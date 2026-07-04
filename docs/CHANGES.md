@@ -2,6 +2,15 @@
 
 ## Current Development Release
 
+### [v2.5.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.5.0.md) - 2026-07-04
+
+- **Fixed: declarative `minimap` buttons forgot their dragged position.** `RGX.Addon` created the button without passing `storage`, so the angle never persisted; creation now happens after `addon.db` exists and persists there by default. The bare form also assumes a left-click that opens your options panel, and a new advanced table form passes through the full minimap opts (`tooltip`, `defaultAngle`, `onRightClick`, ...).
+- **Fixed: declarative `dropdown` controls saved but never visually restored their selection** — `value = addon.db[key]` was not passed, the exact save-without-restore bug class the framework exists to kill.
+- **New `{ color = "dbKey" }` control** — the DSL now reaches `UI:CreateColorPicker`; default color assumed from the db defaults.
+- **`slash` advanced form** — `slash = { "cmd", handler = function(addon, msg) ... end }` overrides the assumed open-the-panel handler.
+- **Auto-derived SavedVariables names now strip non-identifier characters** (`"RGX-Hello"` → `RGXHelloDB`), matching what `rgx_generate_addon` emits. Hyphenated-name addons relying on the old raw concatenation should set `dbName` explicitly (RGX-Hello always has).
+- **Progressive-disclosure principle and the BLU-proven layout model** (panel → tabs → multi-page tabs → 1–2 column cards → widgets) encoded in `CLAUDE.md`, `docs/DECLARATIVE-API.md`, and the schema; `docs/ACE3-ANALYSIS.md` gained a verified current-state parity map against Ace3.
+
 ### [v2.4.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.4.1.md) - 2026-07-03
 
 - **Fixed: declarative slider `suffix` was silently dropped.** `{ slider = "volume", suffix = "%" }` in an `RGXAddon` options table validated fine and ran with no error, but the options-table-to-UI mapper only forwarded `key`/`label`/`min`/`max`/`step` to `UI:CreateSlider` — `suffix` never reached it, so no addon using it (including RGX-Hello's own Volume slider) ever actually showed the suffix. Found by running `tools/rgx-mcp` end-to-end against RGX-Hello's real, shipped opts table instead of a synthetic fixture.

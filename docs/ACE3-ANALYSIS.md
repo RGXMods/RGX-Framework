@@ -345,3 +345,54 @@ When deciding whether a new RGX subsystem belongs in the framework, ask:
 If the answer is "faster and simpler for real addons," it belongs.
 
 If the answer is "Ace3 had one, so we should too," it probably does not.
+
+---
+
+## Where We Actually Stand (audited 2026-07-04)
+
+Everything below verified against shipped source, not aspiration.
+
+### Parity map
+
+| Ace3 piece | RGX today | Verdict |
+|---|---|---|
+| AceAddon (lifecycle/modules) | `RGXAddon` declarative front door + `RGX:RegisterModule` | **Better** — one call replaces the OnInitialize/OnEnable ceremony |
+| AceEvent + CallbackHandler | `RGX:RegisterEvent`/`RegisterUnitEvent`, messages, house `AddCb` pattern (returns unsubscribe closures) | **Parity, safer** — dispatch is pcall-wrapped |
+| AceTimer | `RGX:After`/`Every`/`CancelTimer` (`core/systems/runtime.lua`) | **Better** — labeled, budgeted, diagnosable |
+| AceConsole | `RGX:RegisterSlashCommand` + the `slash` key | **Better** — assumed handler opens the panel |
+| AceDB (profiles) | `core/systems/database.lua`: profiles, defaults fallback, `OnProfileChanged`, `Serialize/DeserializeProfile` | **Parity+** — serialize included; no namespaces (not needed yet) |
+| AceConfig/AceConfigDialog | `options` table → panel | **Better where it counts** — a fraction of the table weight; fewer control types so far (by design, growing with real need) |
+| AceGUI | RGXUI + **RGXDesign** | **Better** — Ace has no design system; AceGUI widgets are unstyled |
+| AceHook | `RGX:Hook` (`runtime.lua`) | Parity |
+| AceBucket | Tier 6 #17 | Planned, need-driven |
+| AceComm + AceSerializer | none (profile serialize only) | **Intentionally absent** until a real addon needs cross-client traffic (OmniCD-style sync is the likely first consumer) |
+| AceLocale | none | **Intentionally absent** until localization work begins (LibLocaleOverride's per-addon override pattern is the researched direction) |
+| LibSharedMedia | RGXSharedMedia | Parity |
+| LibDBIcon/LDB | RGXMinimap + databroker | **Better** — persistence and tooltip composed in |
+
+### What Ace3 cannot answer at all
+
+These are the reasons RGX is a replacement, not a clone — protect them:
+
+1. **The DSL** — `RGXAddon "Name" { }` with progressive disclosure: every key
+   works bare with assumed arguments and accepts an advanced form. Ace3's
+   equivalent is assembling five libraries and a config mega-table.
+2. **The machine-checkable contract** — `schemas/rgx-addon.schema.json` +
+   `tools/rgx-mcp` (validate/audit/generate) + an end-to-end test that runs
+   the real MCP server against the real reference addon. Ace3 has zero
+   tooling; its options tables fail at runtime or never.
+3. **Taint-safety by construction** — Midnight secret-aura handling
+   (RGXAuras), combat-lockdown-safe registration, pcall-guarded native
+   tooltip hooks. Ace3 predates all of it.
+4. **A shipped visual identity** — RGXDesign tokens/theming; AceGUI addons
+   all look like AceGUI.
+5. **A living test suite** — RGX-Hello's `/rgxvisual` covers every
+   user-facing module in-game.
+
+### The layout model (BLU-proven, Tier 4 target)
+
+Options panels are one composable vocabulary: **panel → main page + tabs →
+tabs can be multi-paged → 1–2 column card grid → rows/cards holding the
+widgets**. BLU built this to 1–2 columns with paged tabs
+(`COMBAT_TRIGGER_PAGES`); the contract freezes `columns = 1|2|3`. Tier 4
+implements it declaratively without changing anything authors write today.

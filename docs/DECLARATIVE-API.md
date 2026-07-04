@@ -23,22 +23,28 @@ RGX-Framework` guarantees it exists before your file runs. Returns the addon
 object. `local RGX = assert(_G.RGXFramework, ...)` remains available as the
 escape hatch for à la carte use; it is not the front door.
 
+## The rule: bare forms assume, advanced forms unlock
+
+Every key works bare with assumed arguments, and accepts an advanced form when
+you need more — one vocabulary, no second API. `minimap = true` assumes an
+icon, a left-click that opens your panel, and angle persistence to `addon.db`;
+`minimap = { icon = ..., onRightClick = ... }` unlocks the rest. If you find
+yourself needing an argument the bare form should have assumed, that is a
+framework bug — report it.
+
 ## Options table — shipped keys
 
-| Key | Type | Behavior |
+| Key | Bare form | Advanced form |
 |---|---|---|
-| `slash` | string \| string[] | Registers `/cmd`; default handler opens the options panel |
-| `minimap` | true \| string | Minimap button; `true` = default icon, string = icon path |
-| `db` | table | Profile defaults; creates `addon.db` (a `RGX:NewDatabase` proxy) on ADDON_LOADED. SavedVariables name defaults to `<Name>DB` — declare it in your TOC |
-| `dbName` | string | Override the SavedVariables name |
-| `global` | boolean | Passed to `NewDatabase` (cross-character storage) |
-| `onSwitch` | function | Profile-switch callback, passed to `NewDatabase` |
-| `options` | table | `TabName = { controls... }`; requires `db`; builds a tabbed panel with db-bound controls (automatic save **and** restore) |
-| `title` | string | Panel title; defaults to the addon name |
-| `welcome` | string | Printed with the branded prefix on load |
-| `onInit` | function(addon) | Runs on ADDON_LOADED after `db`/`options` exist — the imperative escape hatch |
-| `brand` | string | Hex color (no `#`) for the chat prefix; default `58be81` |
-| `table` | table | Use an existing table as the addon object |
+| `slash` | string \| string[] — registers `/cmd`; assumed handler opens the options panel | same table + `handler = function(addon, msg)` |
+| `minimap` | `true` (default icon) \| string (icon path) — assumed left-click opens the panel; dragged angle persists to `addon.db` | full opts table passed through to the minimap module (`tooltip`, `defaultAngle`, `onRightClick`, `onCtrlRight`, ...) |
+| `db` | table of profile defaults; creates `addon.db` on ADDON_LOADED. SavedVariables name assumes `<Name>DB` with non-identifier characters stripped (`"RGX-Hello"` → `RGXHelloDB`) — declare it in your TOC | `dbName` overrides the name; `global` (cross-character), `onSwitch` (profile-switch callback) |
+| `options` | `TabName = { controls... }`; requires `db`; builds a tabbed panel with db-bound controls (automatic save **and** restore) | per-control advanced keys below; Tier 4 adds `columns` and multi-page tabs |
+| `title` | — | Panel title; assumes the addon name |
+| `welcome` | string printed with the branded prefix on load | — |
+| `onInit` | function(addon), runs on ADDON_LOADED after `db`/`options` exist — the imperative escape hatch | — |
+| `brand` | — | Hex color (no `#`) for the chat prefix; assumes `58be81` |
+| `table` | — | Use an existing table as the addon object |
 
 ## Controls (table forms, shipped)
 
@@ -46,12 +52,24 @@ escape hatch for à la carte use; it is not the front door.
 { section = "Header Text" }
 { toggle = "dbKey", label = "Label", default = true }
 { slider = "dbKey", label = "Label", min = 0, max = 100, step = 1, suffix = "%" }
+{ color = "dbKey", label = "Label", default = { r = 1, g = 1, b = 1 } }
 { dropdown = "dbKey", label = "Label", items = { "a", "b" }, width = 260 }
 { button = "Button Text", action = function() ... end, width = 120, height = 22 }
 ```
 
-Labels default to the capitalized key. Every control reads its initial state
-from `addon.db` and writes changes back — persistence is not the author's job.
+Only the db key is required — labels assume the capitalized key, slider range
+assumes 0–100, color default assumes the db default for that key. Every
+control reads its initial state from `addon.db` and writes changes back —
+persistence *and visual restore* are not the author's job.
+
+## Layout model
+
+One composable vocabulary, top to bottom (proven in BLU): **panel → main page
++ tabs → tabs can be multi-paged → 1–2 column card grid → rows/cards holding
+the widgets**. What ships today is panel → tabs → a single column of controls;
+Tier 4 implements the rest of the hierarchy (`columns = 1|2|3` — 1–2 is the
+BLU-proven range — and multi-page tabs) without changing anything you write
+today.
 
 ## The addon object
 

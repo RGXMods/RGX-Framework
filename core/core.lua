@@ -425,32 +425,54 @@ function RGX.Addon(name, opts)
     end
 
     -- Slash — register at file scope, no ADDON_LOADED needed
+    -- Slash — bare: string or array of aliases, default handler opens the
+    -- options panel. Advanced: same table with a `handler` key
+    -- (handler(addon, msg)) when opening the panel isn't the right default.
     if opts.slash then
         local cmds = type(opts.slash) == "table" and opts.slash or { opts.slash }
-        for _, cmd in ipairs(cmds) do
-            RGX:RegisterSlashCommand(cmd, function(msg)
-                if addon.panel then addon.panel:Open() return end
-                addon:Print(cmd .. " v?" )
-            end, name:upper())
-        end
+        local customHandler = type(opts.slash) == "table" and type(opts.slash.handler) == "function"
+            and opts.slash.handler or nil
+        RGX:RegisterSlashCommand(cmds, function(msg)
+            if customHandler then customHandler(addon, msg) return end
+            if addon.panel then addon.panel:Open() return end
+            addon:Print((cmds[1] or "?") .. " v?")
+        end, name:upper())
     end
 
-    -- Minimap — true uses default icon, string uses custom path
-    if opts.minimap then
-        local icon = type(opts.minimap) == "string" and opts.minimap or "Interface\\Icons\\inv_misc_questionmark"
-        local MM = RGX:GetMinimap()
-        if MM then MM:Create({ name = name, icon = icon }) end
-    end
-
-    -- Database + options deferred to ADDON_LOADED
+    -- Database + options + minimap deferred to ADDON_LOADED
     RGX:RegisterEvent("ADDON_LOADED", function(_, loaded)
         if loaded ~= name then return end
 
         if opts.db ~= nil then
             local defaults = type(opts.db) == "table" and opts.db or {}
-            local dbName = opts.dbName or (name .. "DB")
+            -- Auto-derived SavedVariables name strips non-identifier characters
+            -- ("RGX-Hello" -> RGXHelloDB, matching what rgx_generate_addon
+            -- emits); pass dbName to use something else.
+            local dbName = opts.dbName or (name:gsub("[^%w_]", "") .. "DB")
             if not addon.db then
                 addon.db = RGX:NewDatabase(dbName, defaults, { global = opts.global, onSwitch = opts.onSwitch })
+            end
+        end
+
+        -- Minimap — bare: true (default icon) or an icon path string. Advanced:
+        -- a full MM:Create opts table (tooltip, onRightClick, defaultAngle, ...).
+        -- Runs after db creation so the dragged angle persists to addon.db by
+        -- default -- creating it earlier silently lost the position on reload.
+        if opts.minimap then
+            local MM = RGX:GetMinimap()
+            if MM then
+                local mmOpts = type(opts.minimap) == "table" and opts.minimap or {}
+                mmOpts.name = mmOpts.name or name
+                mmOpts.icon = mmOpts.icon
+                    or (type(opts.minimap) == "string" and opts.minimap)
+                    or "Interface\\Icons\\inv_misc_questionmark"
+                mmOpts.storage = mmOpts.storage or addon.db
+                if not mmOpts.onLeftClick then
+                    mmOpts.onLeftClick = function()
+                        if addon.panel then addon.panel:Open() end
+                    end
+                end
+                addon.minimapButton = MM:Create(mmOpts)
             end
         end
 
@@ -469,10 +491,15 @@ function RGX.Addon(name, opts)
                                         UI:CreateToggle(frame, { key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default })
                                     elseif type(ctrl.slider) == "string" then
                                         UI:CreateSlider(frame, { key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper), storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100, step = ctrl.step or 1, suffix = ctrl.suffix })
+                                    elseif type(ctrl.color) == "string" then
+                                        UI:CreateColorPicker(frame, { key = ctrl.color, label = ctrl.label or ctrl.color:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default or addon.db[ctrl.color], onChange = function(r, g, b) addon.db[ctrl.color] = { r = r, g = g, b = b } end })
                                     elseif type(ctrl.dropdown) == "string" and Drops then
                                         local items = {}
                                         for _, v in ipairs(ctrl.items or {}) do items[#items+1] = { text = tostring(v), value = v } end
-                                        Drops:CreateNestedDropdown(frame, { label = ctrl.label or ctrl.dropdown:gsub("^%l", string.upper), items = items, width = ctrl.width or 260, onChange = function(v) addon.db[ctrl.dropdown] = v end })
+                                        -- value restores the saved selection visually; without it the
+                                        -- dropdown saved but always reopened blank -- the exact
+                                        -- save-without-restore bug class this framework exists to kill.
+                                        Drops:CreateNestedDropdown(frame, { label = ctrl.label or ctrl.dropdown:gsub("^%l", string.upper), items = items, width = ctrl.width or 260, value = addon.db[ctrl.dropdown], onChange = function(v) addon.db[ctrl.dropdown] = v end })
                                     elseif type(ctrl.button) == "string" and type(ctrl.action) == "function" then
                                         UI:CreateButton(frame, ctrl.button, ctrl.width or 120, ctrl.height or 22, ctrl.action)
                                     elseif type(ctrl.section) == "string" then
