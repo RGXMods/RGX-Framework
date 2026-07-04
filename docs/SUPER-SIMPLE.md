@@ -19,7 +19,7 @@ RGXAddon "MyAddon" {
     options = {
         General = {
             { toggle = "enabled", label = "Enable Addon" },
-            { slider = "volume",  label = "Volume", min = 0, max = 100 },
+            { slider = "volume",  label = "Volume", min = 0, max = 100, suffix = "%" },
         },
     },
     welcome = "loaded — /myaddon for options",

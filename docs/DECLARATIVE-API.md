@@ -45,7 +45,7 @@ escape hatch for à la carte use; it is not the front door.
 ```lua
 { section = "Header Text" }
 { toggle = "dbKey", label = "Label", default = true }
-{ slider = "dbKey", label = "Label", min = 0, max = 100, step = 1 }
+{ slider = "dbKey", label = "Label", min = 0, max = 100, step = 1, suffix = "%" }
 { dropdown = "dbKey", label = "Label", items = { "a", "b" }, width = 260 }
 { button = "Button Text", action = function() ... end, width = 120, height = 22 }
 ```

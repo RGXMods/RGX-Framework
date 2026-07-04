@@ -582,9 +582,9 @@ Access via `Design.Colors.primary`, `Design.Colors.accent`, etc.
 | `UI:CreateTextureDropdown(parent, opts)` | Texture selector dropdown |
 | `UI:OpenFontMenu(anchor, opts)` | Pop-up font menu |
 | `UI:CreateColorPicker(parent, opts)` | Inline color swatch + picker |
-| `UI:CreateSlider(parent, opts)` | Numeric slider |
+| `UI:CreateSlider(parent, opts)` | Numeric slider (`suffix` appends to the displayed value, e.g. `"%"`) |
 | `UI:CreateToggle(parent, opts)` | Checkbox toggle |
-| `UI:CreateLabel(parent, opts)` | Text label |
+| `UI:CreateLabel(parent, opts)` | Text label (pass `width` to enable word wrap for long text; omit for single-line) |
 | `UI:CreateCheckBox(parent, opts)` | Checkbox with label |
 | `UI:CreateDropdown(parent, opts)` | Generic dropdown |
 | `UI:CreateResetButton(parent, callback)` | Reset button |
