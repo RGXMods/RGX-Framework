@@ -2,6 +2,13 @@
 
 ## Current Development Release
 
+### [v2.4.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.4.1.md) - 2026-07-03
+
+- **Fixed: declarative slider `suffix` was silently dropped.** `{ slider = "volume", suffix = "%" }` in an `RGXAddon` options table validated fine and ran with no error, but the options-table-to-UI mapper only forwarded `key`/`label`/`min`/`max`/`step` to `UI:CreateSlider` — `suffix` never reached it, so no addon using it (including RGX-Hello's own Volume slider) ever actually showed the suffix. Found by running `tools/rgx-mcp` end-to-end against RGX-Hello's real, shipped opts table instead of a synthetic fixture.
+- `schemas/rgx-addon.schema.json` now allows `suffix` on `sliderControl` (it was rejecting the same shipped, working key the schema itself hadn't caught up to).
+- `rgx_generate_addon` gained a `dbName` override and `label`/`suffix` passthrough on generated sliders. Without an override it was emitting `RGX-HelloDB` (hyphen intact) as the SavedVariables hint for a name like "RGX-Hello", which doesn't match what any hyphenated addon should actually ship — it now strips non-identifier characters for the default and lets callers override explicitly.
+- New `tools/rgx-mcp/test/test-rgx-hello.mjs` — drives the real server over the real MCP client SDK and points it at the actual RGX-Hello repo (generate/validate/audit), so future changes to the schema, the mapper, or the generator get checked against a real addon, not just synthetic input.
+
 ### [v2.4.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.4.0.md) - 2026-07-03
 
 - **RGXColorPicker redesigned** with a modern circular control vocabulary (ring-and-fill drag handles on the SV box and hue bar, circular swatches and preview, hover feedback on presets, primary-themed focus states on the hex/RGB inputs) built on `RGXDesign` tokens instead of hardcoded colors, replacing the borrowed Blizzard minimize-button icon that was standing in for a cursor.

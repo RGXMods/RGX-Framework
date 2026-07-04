@@ -468,7 +468,7 @@ function RGX.Addon(name, opts)
                                     if type(ctrl.toggle) == "string" then
                                         UI:CreateToggle(frame, { key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default })
                                     elseif type(ctrl.slider) == "string" then
-                                        UI:CreateSlider(frame, { key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper), storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100, step = ctrl.step or 1 })
+                                        UI:CreateSlider(frame, { key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper), storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100, step = ctrl.step or 1, suffix = ctrl.suffix })
                                     elseif type(ctrl.dropdown) == "string" and Drops then
                                         local items = {}
                                         for _, v in ipairs(ctrl.items or {}) do items[#items+1] = { text = tostring(v), value = v } end
