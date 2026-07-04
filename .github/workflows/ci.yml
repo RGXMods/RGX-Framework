@@ -1,0 +1,48 @@
+name: CI
+
+# Regression gate that runs on every push and PR (not just release tags), so
+# a syntax error, a broken schema, or an rgx-mcp regression is caught before it
+# can ship -- consumers depend on this framework, so a break here breaks their
+# addons too.
+on:
+  push:
+    branches: [main, dev, alpha]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install CI helpers
+        working-directory: tools/ci
+        run: npm ci
+
+      - name: Lua syntax gate (all .lua, WoW's 5.1 dialect)
+        working-directory: tools/ci
+        run: npm run lua-check
+
+      - name: Schema validation (rgx-addon.schema.json)
+        working-directory: tools/ci
+        run: npm run schema-check
+
+      - name: Install rgx-mcp
+        working-directory: tools/rgx-mcp
+        run: npm ci
+
+      - name: Clone a fresh RGX-Hello
+        run: git clone --depth 1 https://github.com/DonnieDice/RGX-Hello.git "${RUNNER_TEMP}/RGX-Hello"
+
+      - name: rgx-mcp end-to-end vs the real RGX-Hello
+        working-directory: tools/rgx-mcp
+        run: node test/test-rgx-hello.mjs "${RUNNER_TEMP}/RGX-Hello"
