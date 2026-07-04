@@ -38,7 +38,8 @@ jobs:
 
       - name: Install rgx-mcp
         working-directory: tools/rgx-mcp
-        run: npm ci
+        # rgx-mcp's lockfile is gitignored, so npm ci is not usable here.
+        run: npm install --no-audit --no-fund
 
       - name: Clone a fresh RGX-Hello
         run: git clone --depth 1 https://github.com/DonnieDice/RGX-Hello.git "${RUNNER_TEMP}/RGX-Hello"
