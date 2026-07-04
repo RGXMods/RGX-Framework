@@ -237,8 +237,12 @@ function ColorPicker:CreateSVBox(f)
 
     -- Saturation gradient: white (left, s=0) -> pure hue color (right, s=1).
     -- Recolored reactively in UpdateUI() as the selected hue changes.
+    -- SetGradient multiplies against the texture's existing content -- a bare
+    -- texture with no base renders nothing, so the white base is required
+    -- (same reason the value overlay below sets black before its gradient).
     box.bg = box:CreateTexture(nil, "BACKGROUND")
     box.bg:SetAllPoints()
+    box.bg:SetColorTexture(1, 1, 1, 1)
     box.bg:SetGradient("HORIZONTAL", CreateColor(1, 1, 1, 1), CreateColor(1, 0, 0, 1))
 
     -- Overlay gradient for value (black gradient)
@@ -256,7 +260,9 @@ function ColorPicker:CreateSVBox(f)
     box.cursorFill = CreateCircle(box.cursor, "OVERLAY", 1, 12, 1, 0, 0, 1)
     box.cursorFill:SetPoint("CENTER")
 
-    -- Mouse interaction
+    -- Mouse interaction. A plain Frame ignores OnMouseDown until EnableMouse
+    -- is set -- without this the SV box reads as "unclickable".
+    box:EnableMouse(true)
     box:SetScript("OnMouseDown", function(self, button)
         if button == "LeftButton" then
             self.dragging = true
@@ -300,6 +306,9 @@ function ColorPicker:CreateHueBar(f)
         seg:SetPoint("BOTTOM", bar, "BOTTOM", 0, 0)
         seg:SetPoint("LEFT", bar, "LEFT", (i - 1) / 6 * CONTENT_W, 0)
         seg:SetWidth(CONTENT_W / 6)
+        -- White base required: SetGradient modulates the texture's pixels, so a
+        -- bare texture renders nothing (same fix as the SV box.bg/overlay).
+        seg:SetColorTexture(1, 1, 1, 1)
         local c1, c2 = HUE_STOPS[i], HUE_STOPS[i + 1]
         seg:SetGradient("HORIZONTAL", CreateColor(c1[1], c1[2], c1[3], 1), CreateColor(c2[1], c2[2], c2[3], 1))
         bar.segments[i] = seg
@@ -314,7 +323,9 @@ function ColorPicker:CreateHueBar(f)
     bar.cursorFill = CreateCircle(bar.cursor, "OVERLAY", 1, 11, 1, 1, 1, 1)
     bar.cursorFill:SetPoint("CENTER")
 
-    -- Mouse interaction
+    -- Mouse interaction. Same as the SV box: enable mouse so the hue bar
+    -- receives clicks/drags.
+    bar:EnableMouse(true)
     bar:SetScript("OnMouseDown", function(self, button)
         if button == "LeftButton" then
             self.dragging = true
