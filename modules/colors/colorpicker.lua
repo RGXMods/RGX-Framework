@@ -249,7 +249,10 @@ function ColorPicker:CreateSVBox(f)
     box.overlay = box:CreateTexture(nil, "ARTWORK")
     box.overlay:SetAllPoints()
     box.overlay:SetColorTexture(0, 0, 0, 1)
-    box.overlay:SetGradient("VERTICAL", CreateColor(0,0,0,0), CreateColor(0,0,0,1))
+    -- Value overlay: opaque black at the bottom (value 0) fading to clear at the
+    -- top (value 1), so "up" is brighter -- matching the mouse mapping in
+    -- UpdateSVFromMouse and the cursor placement in UpdateUI.
+    box.overlay:SetGradient("VERTICAL", CreateColor(0, 0, 0, 1), CreateColor(0, 0, 0, 0))
 
     -- Cursor: a white ring with a live hue-colored center, like a real
     -- picker handle instead of a borrowed minimize-button icon.
@@ -573,13 +576,10 @@ function ColorPicker:UpdateSVFromMouse(box)
     
     relativeX = math.max(0, math.min(1, relativeX))
     relativeY = math.max(0, math.min(1, relativeY))
-    
-    local h = self.current.h or 0
-    local s = relativeX
-    local v = relativeY
-    
-    local r, g, b = self:HSVToRGB(h, s, v)
-    self:SetRGB(r, g, b, false)
+
+    -- Horizontal = saturation (left 0 -> right 1), vertical = value
+    -- (bottom 0 -> top 1). Keep the current hue.
+    self:ApplyHSV(self.current.h or 0, relativeX, relativeY)
 end
 
 function ColorPicker:UpdateHueFromMouse(bar)
@@ -589,12 +589,21 @@ function ColorPicker:UpdateHueFromMouse(bar)
     
     local relativeX = ((x / scale - left) / bar:GetWidth())
     relativeX = math.max(0, math.min(1, relativeX))
-    
-    local s = self.current.s or 1
-    local v = self.current.v or 1
-    
-    local r, g, b = self:HSVToRGB(relativeX, s, v)
-    self:SetRGB(r, g, b)
+
+    -- Horizontal position is the hue; keep the current saturation/value.
+    self:ApplyHSV(relativeX, self.current.s or 1, self.current.v or 1)
+end
+
+-- HSV is authoritative while picking from the SV box / hue bar: set h/s/v
+-- directly and derive RGB, so the hue survives the grayscale edges (s=0 or
+-- v=0) where an RGB->HSV round-trip would lose it. Always refreshes the UI so
+-- the preview, cursors, hex and RGB inputs follow the click/drag.
+function ColorPicker:ApplyHSV(h, s, v)
+    self.current.h = h
+    self.current.s = s
+    self.current.v = v
+    self.current.r, self.current.g, self.current.b = self:HSVToRGB(h, s, v)
+    self:UpdateUI()
 end
 
 function ColorPicker:SetRGB(r, g, b, updateUI)
