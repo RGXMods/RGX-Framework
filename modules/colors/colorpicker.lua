@@ -724,7 +724,7 @@ function ColorPicker:CreateEmbedded(parent, opts)
     st.h, st.s, st.v = CP:RGBToHSV(st.r, st.g, st.b)
 
     local w = CreateFrame("Frame", nil, parent)
-    w:SetSize(width, 150)
+    w:SetSize(width, 152)
 
     -- Saturation/Value box
     local sv = CreateFrame("Frame", nil, w, "BackdropTemplate")
