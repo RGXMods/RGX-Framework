@@ -626,7 +626,7 @@ function ColorPicker:UpdateUI()
     local f = self.frame
     
     -- Update preview
-    f.preview:SetColorTexture(c.r, c.g, c.b, 1)
+    f.preview:SetVertexColor(c.r, c.g, c.b, 1)
     
     -- Update hex
     f.hexInput:SetText(self:RGBToHex(c.r, c.g, c.b):upper())
@@ -636,16 +636,19 @@ function ColorPicker:UpdateUI()
     f.inputG:SetText(tostring(math.floor(c.g * 255 + 0.5)))
     f.inputB:SetText(tostring(math.floor(c.b * 255 + 0.5)))
     
-    -- Update SV box cursor position
+    -- Update SV box cursor position and color
     local cursorX = (c.s or 0) * f.svBox:GetWidth()
     local cursorY = (c.v or 0) * f.svBox:GetHeight()
     f.svBox.cursor:ClearAllPoints()
     f.svBox.cursor:SetPoint("CENTER", f.svBox, "BOTTOMLEFT", cursorX, cursorY)
+    f.svBox.cursorFill:SetVertexColor(c.r, c.g, c.b, 1)
     
-    -- Update hue bar cursor
+    -- Update hue bar cursor position and color
     local hueX = (c.h or 0) * f.hueBar:GetWidth()
     f.hueBar.cursor:ClearAllPoints()
     f.hueBar.cursor:SetPoint("CENTER", f.hueBar, "LEFT", hueX, 0)
+    local hr, hg, hb = self:HSVToRGB(c.h or 0, 1, 1)
+    f.hueBar.cursorFill:SetVertexColor(hr, hg, hb, 1)
     
     -- Recolor the SV box saturation gradient's right stop (s=1) to the
     -- currently selected pure hue; white(s=0) -> hue(s=1) stays intact.
