@@ -639,10 +639,12 @@ function ColorPicker:UpdateUI()
     -- Update SV box cursor position
     local cursorX = (c.s or 0) * f.svBox:GetWidth()
     local cursorY = (c.v or 0) * f.svBox:GetHeight()
+    f.svBox.cursor:ClearAllPoints()
     f.svBox.cursor:SetPoint("CENTER", f.svBox, "BOTTOMLEFT", cursorX, cursorY)
     
     -- Update hue bar cursor
     local hueX = (c.h or 0) * f.hueBar:GetWidth()
+    f.hueBar.cursor:ClearAllPoints()
     f.hueBar.cursor:SetPoint("CENTER", f.hueBar, "LEFT", hueX, 0)
     
     -- Recolor the SV box saturation gradient's right stop (s=1) to the
