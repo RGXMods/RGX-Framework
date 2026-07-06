@@ -55,6 +55,27 @@ function Fonts:ApplyChildren(frame, name, size, flags)
 	end
 end
 
+function Fonts:ChangeFontFamily(frame, name)
+	if not frame then return end
+
+	local path = self:Get(name)
+	if not path or path == "" then return end
+
+	local regions = {frame:GetRegions()}
+	for _, region in ipairs(regions) do
+		if region.SetFont and region.GetFont then
+			local _, s, f = region:GetFont()
+			if s and s > 0 then
+				region:SetFont(path, s, f or "")
+			end
+		end
+	end
+
+	for _, child in ipairs({frame:GetChildren()}) do
+		self:ChangeFontFamily(child, name)
+	end
+end
+
 function Fonts:CreateString(parent, fontName, size, flags, layer)
 	parent = parent or UIParent
 	layer = layer or "OVERLAY"
