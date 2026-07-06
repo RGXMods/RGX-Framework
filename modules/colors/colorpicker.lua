@@ -726,12 +726,15 @@ function ColorPicker:CreateEmbedded(parent, opts)
     local st = { r = init.r or 1, g = init.g or 1, b = init.b or 1 }
     st.h, st.s, st.v = CP:RGBToHSV(st.r, st.g, st.b)
 
-    local w = CreateFrame("Frame", nil, parent)
-    w:SetSize(width, 152)
+    local w = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    w:SetSize(width, 184)
+    Design:ApplyBackdrop(w, "panel", 0.6)
+
+    local boxW = width - 32
 
     -- Saturation/Value box
     local sv = CreateFrame("Frame", nil, w, "BackdropTemplate")
-    sv:SetPoint("TOPLEFT", 0, 0)
+    sv:SetPoint("TOPLEFT", 16, -16)
     sv:SetSize(boxW, 96)
     sv:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     sv:SetBackdropBorderColor(Design:Unpack("border"))
@@ -743,11 +746,13 @@ function ColorPicker:CreateEmbedded(parent, opts)
     sv.overlay:SetAllPoints()
     sv.overlay:SetColorTexture(0, 0, 0, 1)
     sv.overlay:SetGradient("VERTICAL", CreateColor(0, 0, 0, 1), CreateColor(0, 0, 0, 0))
+    
     sv.cursor = CreateFrame("Frame", nil, sv)
-    sv.cursor:SetSize(10, 10)
-    sv.cursorTex = sv.cursor:CreateTexture(nil, "OVERLAY")
-    sv.cursorTex:SetAllPoints()
-    sv.cursorTex:SetTexture("Interface\\Buttons\\WHITE8x8")
+    sv.cursor:SetSize(16, 16)
+    sv.cursorRing = CreateCircle(sv.cursor, "OVERLAY", 0, 16, 1, 1, 1, 1)
+    sv.cursorRing:SetPoint("CENTER")
+    sv.cursorTex = CreateCircle(sv.cursor, "OVERLAY", 1, 12, 1, 0, 0, 1)
+    sv.cursorTex:SetPoint("CENTER")
 
     -- Hue bar (six segments -> full 0-360 rainbow)
     local hue = CreateFrame("Frame", nil, w, "BackdropTemplate")
@@ -766,14 +771,19 @@ function ColorPicker:CreateEmbedded(parent, opts)
         local c1, c2 = HUE_STOPS[i], HUE_STOPS[i + 1]
         seg:SetGradient("HORIZONTAL", CreateColor(c1[1], c1[2], c1[3], 1), CreateColor(c2[1], c2[2], c2[3], 1))
     end
-    hue.cursor = hue:CreateTexture(nil, "OVERLAY")
-    hue.cursor:SetSize(3, 16)
-    hue.cursor:SetTexture("Interface\\Buttons\\WHITE8x8")
+    
+    hue.cursor = CreateFrame("Frame", nil, hue)
+    hue.cursor:SetSize(16, 16)
+    hue.cursorRing = CreateCircle(hue.cursor, "OVERLAY", 0, 16, 1, 1, 1, 1)
+    hue.cursorRing:SetPoint("CENTER")
+    hue.cursorTex = CreateCircle(hue.cursor, "OVERLAY", 1, 12, 1, 1, 1, 1)
+    hue.cursorTex:SetPoint("CENTER")
 
     -- Preview swatch + hex entry
-    local preview = w:CreateTexture(nil, "ARTWORK")
-    preview:SetSize(26, 26)
-    preview:SetPoint("TOPLEFT", hue, "BOTTOMLEFT", 0, -10)
+    local previewRing = CreateCircle(w, "ARTWORK", 0, 30, Design:Unpack("border"))
+    previewRing:SetPoint("TOPLEFT", hue, "BOTTOMLEFT", 0, -8)
+    local preview = CreateCircle(w, "ARTWORK", 1, 26, 1, 1, 1, 1)
+    preview:SetPoint("CENTER", previewRing, "CENTER")
 
     local hex = CreateFrame("EditBox", nil, w, "BackdropTemplate")
     hex:SetSize(boxW - 34, 22)
@@ -787,12 +797,17 @@ function ColorPicker:CreateEmbedded(parent, opts)
     hex:SetBackdropBorderColor(Design:Unpack("border"))
 
     local function refresh(writeHex)
-        preview:SetColorTexture(st.r, st.g, st.b, 1)
+        preview:SetVertexColor(st.r, st.g, st.b, 1)
+        
         sv.cursor:ClearAllPoints()
         sv.cursor:SetPoint("CENTER", sv, "BOTTOMLEFT", st.s * sv:GetWidth(), st.v * sv:GetHeight())
+        sv.cursorTex:SetVertexColor(st.r, st.g, st.b, 1)
+        
         hue.cursor:ClearAllPoints()
         hue.cursor:SetPoint("CENTER", hue, "LEFT", st.h * hue:GetWidth(), 0)
         local hr, hg, hb = CP:HSVToRGB(st.h, 1, 1)
+        hue.cursorTex:SetVertexColor(hr, hg, hb, 1)
+        
         sv.bg:SetGradient("HORIZONTAL", CreateColor(1, 1, 1, 1), CreateColor(hr, hg, hb, 1))
         if writeHex ~= false then hex:SetText(CP:RGBToHex(st.r, st.g, st.b):upper()) end
     end
