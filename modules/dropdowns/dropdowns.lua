@@ -627,6 +627,13 @@ function Dropdowns:CreateNestedDropdown_MenuUtil(parent, opts)
             end
 
         addItems(holder:GetItems(), rootDescription)
+        
+        if type(opts.menuHeight) == "number" and type(rootDescription.SetScrollMode) == "function" then
+            rootDescription:SetScrollMode(opts.menuHeight)
+        end
+        if type(opts.menuWidth) == "number" and type(rootDescription.SetMinimumWidth) == "function" then
+            rootDescription:SetMinimumWidth(opts.menuWidth)
+        end
     end
 
     holder.dropdown:SetupMenu(generator)
