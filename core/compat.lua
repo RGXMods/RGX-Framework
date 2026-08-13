@@ -342,3 +342,44 @@ function RGX:TryLoadModule(moduleName)
 end
 
 print("|cFF88FF88[RGX] Compat layer loaded: " .. RGX.wowVersion .. "|r")
+
+-- Secret value/table access helpers for addons
+function RGX.API.CanAccessValue(value)
+    if value == nil then return false end
+    if type(canaccessvalue) == "function" then
+        return canaccessvalue(value) == true
+    end
+    if type(issecretvalue) == "function" then
+        return not issecretvalue(value)
+    end
+    return true
+end
+
+function RGX.API.CanAccessTable(tbl)
+    if tbl == nil then return false end
+    if type(canaccesstable) == "function" then
+        return canaccesstable(tbl) == true
+    end
+    if type(issecrettable) == "function" then
+        return not issecrettable(tbl)
+    end
+    if type(issecretvalue) == "function" then
+        return not issecretvalue(tbl)
+    end
+    return type(tbl) == "table"
+end
+
+-- Safe iteration helper
+function RGX.API.SafeIterate(tbl, fn)
+    if not RGX.API.CanAccessTable(tbl) then return end
+    for k, v in pairs(tbl) do
+        fn(k, v)
+    end
+end
+
+function RGX.API.SafeIpairs(tbl, fn)
+    if not RGX.API.CanAccessTable(tbl) then return end
+    for i, v in ipairs(tbl) do
+        fn(i, v)
+    end
+end
