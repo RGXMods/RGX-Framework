@@ -2,7 +2,7 @@
   "name": "rgx-ci",
   "version": "0.1.0",
   "private": true,
-  "description": "CI helper scripts for RGX-Framework validation and deterministic artifacts",
+  "description": "CI helpers for RGX-Framework validation and deterministic package inspection",
   "type": "module",
   "scripts": {
     "lua-check": "node lua-syntax-check.mjs ../..",

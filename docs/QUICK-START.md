@@ -8,7 +8,7 @@ This page walks you through integrating RGX-Framework into a consumer addon, fro
 
 ## Prerequisites
 
-- World of Warcraft retail (Interface 120007+)
+- A supported Retail or Classic client
 - RGX-Framework installed in `Interface/AddOns/RGX-Framework/`
 - RGX-Framework is **load-on-demand: false** — it loads on startup if present
 
@@ -20,7 +20,7 @@ In your addon's `.toc` file, add RGX-Framework as a required dependency:
 
 ```toc
 ## Title: MyAddon
-## Dependencies: RGX-Framework
+## RequiredDeps: RGX-Framework
 ```
 
 This guarantees RGX-Framework loads **before** your addon. Alternatively, use `## OptionalDeps: RGX-Framework` and guard your code with availability checks.

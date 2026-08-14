@@ -38,9 +38,8 @@ Framework production readiness requires all of the following:
   UI save/restore, packaging, compatibility, and failure isolation
 - completed in-game validation for combat lockdown, taint, secret values,
   lifecycle, persistence, and rendering paths that automation cannot prove
-- a runtime-only reproducible player package and separately versioned developer
-  artifacts
-- a documented compatibility/deprecation policy and stable contract artifact
+- a runtime-only reproducible player package
+- a documented compatibility/deprecation policy and canonical source contract
 - no unresolved production blocker, unless explicitly accepted and documented
 
 ## Product Boundary
@@ -124,12 +123,11 @@ The contract must evolve as one tandem product:
 runtime + schema + docs + contract data + RGX-Hello + Studio tooling fixtures
 ```
 
-Framework CI publishes an immutable data-only contract SDK beside the runtime
-archive. The compatibility filename remains `RGX-Developer-X.Y.Z.zip`, but it
-contains canonical contract data, documentation, inventory, and provenance only.
-It contains no MCP server or executable tooling. Public API, MCP transport, and
-editor integrations belong to RGX Studio after production gate #30. The richer
-Studio-specific contract catalog remains an additive next step:
+RGX-Framework publishes only its WoW addon runtime. Canonical schemas and docs
+remain in Framework source, but Framework does not publish a second product,
+contract bundle, MCP service, or editor tooling. Those distributions belong to
+RGX Studio.
+The future Studio-specific contract catalog is:
 
 ```text
 rgx-contract-vX.Y.Z/
@@ -252,12 +250,11 @@ development:
 - prove UI controls save and visually restore state
 - verify combat-lockdown, taint, secret-value, and compatibility boundaries
 - make player packaging and release automation deterministic
-- publish stable, versioned contract/tooling artifacts
+- stabilize the source schema/docs that future Studio tooling will consume
 - complete required consumer and in-game production validation
 
-The terminal deliverable is production gate `#30`. A stable contract artifact
-alone is not enough to begin Studio while the framework itself remains
-pre-production.
+The terminal deliverable is production gate `#30`. Studio packaging and tooling
+do not begin while the framework itself remains pre-production.
 
 ### Future Milestone: RGX Studio
 
@@ -269,10 +266,10 @@ not because application work should start early.
 
 ### Prerequisite: Framework Contract Foundation
 
-- Keep player packaging strictly separate from developer tooling.
+- Keep Framework packaging strictly runtime-only.
 - Add an exact player-archive inventory test.
 - Track dependency lockfiles and use reproducible installs.
-- Define the contract bundle manifest and deterministic build.
+- Define Studio's future contract bundle manifest and deterministic build.
 - Add feature-introduction metadata to declarative keys.
 - Add the approved RGX API catalog.
 - Extract reusable pure contract validation/generation logic from MCP transport.
@@ -281,15 +278,14 @@ not because application work should start early.
   that replacement is operational.
 - Add deterministic runtime fixtures for behavior the Studio will simulate.
 
-Exit: one tagged framework revision produces a runtime archive and a separately
-verifiable contract artifact from the same canonical sources. This prerequisite
-is necessary but does not independently unblock Studio; all production criteria
-and gate `#30` must be complete.
+Exit: one tagged Framework revision produces its runtime archive and exposes a
+stable canonical source contract that Studio can consume after gate #30.
 
 ### Phase 1: Studio Shell And Contract Explorer
 
 - After gate `#30`, create the separate Tauri repository.
-- Load and verify bundled/pinned RGX contract artifacts.
+- Build, load, and verify Studio-owned pinned RGX contract bundles from the
+  canonical Framework source contract.
 - Implement Studio project-format versioning and migrations.
 - Browse the shipped schema, docs, APIs, modules, and preview capabilities.
 - Open incompatible projects read-only with a clear reason.
@@ -366,8 +362,8 @@ framework in this order:
 
 1. Complete one declarative vertical slice at a time across runtime, schema,
    docs, MCP, runtime tests, and RGX-Hello.
-2. Separate player packaging from contract/MCP artifacts.
-3. Publish deterministic contract metadata and approved APIs.
+2. Keep Framework packaging separate from future Studio API/MCP distributions.
+3. Let Studio publish deterministic contract metadata and approved API bundles.
 4. Harden ownership, teardown, ordering, state restoration, and diagnostics.
 5. Add display/layout primitives only when their runtime and preview semantics
    can be specified and tested together.
