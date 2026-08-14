@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/DonnieDice/RGX-Framework/schemas/rgx-addon.schema.json",
   "title": "RGXAddon declarative options table",
-  "description": "The opts table accepted by RGXAddon(name, opts) / RGXAddon \"Name\" { }. Governed by THE SIMPLICITY CONTRACT (docs/DECLARATIVE-DSL.md, dsl branch): evolution is additive-only — keys and grammars never change meaning. Keys marked x-rgx-ships:\"today\" are implemented in core/core.lua RGX.Addon; keys marked \"tier4\" are the frozen contract target, not yet implemented. Lua functions cannot be expressed in JSON; they are modeled as {\"$lua\":\"function\"} placeholders for validation purposes.",
+  "description": "The opts table accepted by RGXAddon(name, opts) / RGXAddon \"Name\" { }. Governed by the additive Simplicity Contract in docs/DECLARATIVE-API.md: keys and grammars never silently change meaning. Keys marked x-rgx-ships:\"today\" are implemented in core/core.lua RGX.Addon; keys marked \"tier4\" are frozen future targets, not yet implemented. Lua functions cannot be expressed in JSON; they are modeled as {\"$lua\":\"function\"} placeholders for validation purposes.",
   "type": "object",
   "additionalProperties": false,
   "properties": {

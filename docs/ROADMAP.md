@@ -114,17 +114,17 @@ Framework already has these. Addons just haven't adopted them yet.
 8. **Wire BPU to RGXDropdowns** — replace EasyMenu/UIDropDownMenu in BPU options
 9. **Migrate ReputationLevelUp** — add RequiredDeps, wire sound + events + slash + reputation
 
-### Tier 3 — New modules (guided by WoW UI dump)
+### Tier 3 — Runtime modules
 
-Build when a current addon needs it AND it serves rgx-mod. WoW UI dump is the API reference.
+These modules shipped; remaining hardening is tracked separately.
 
-10. **RGXAuras** — taint-safe aura scanning
-    - `HasAura(spellId, unit)`, `GetAura(spellId, unit)`, pcall guards
+10. **RGXAuras — SHIPPED; #36 HARDENING OPEN** — guaranteed player lookup and best-effort unrestricted-unit scanning
+    - `HasAura(spellId, unit)`, `GetAura(spellId, unit)`; `pcall` is failure isolation, not a taint boundary
     - Generalizes BPU's `PlayerHasAuraSpellID` pattern
     - Core rgx-mod aura trigger primitive
     - Uses `C_UnitAuras.GetPlayerAuraBySpellID` (taint-safe)
 
-11. **RGXTooltip** — GameTooltip hook registry and composition
+11. **RGXTooltip — SHIPPED** — GameTooltip hook registry and composition
     - Hook registration without taint: `RGXTooltip:Hook(fn)`
     - `AddLine`, `AddDoubleLine`, typed helpers
     - BPU hooks GameTooltip in 5 files today — standardize it
@@ -138,15 +138,15 @@ Build when a current addon needs it AND it serves rgx-mod. WoW UI dump is the AP
 
 ### Tier 4 — Declarative authoring layer
 
-Full design: `docs/DECLARATIVE-DSL.md` on the `dsl` branch. The declarative Lua table is the canonical foundation — any future `.rgx` syntax compiles to it.
+The canonical shipped/future boundary is [[Declarative API]]. The declarative Lua table is the foundation; any future syntax compiles to it.
 
 13. **Harden `RGX.Addon({...})`** — one declarative table defines events, unit events, timers, slash, minimap, and DB defaults
 14. **Grid/matrix options UI** — declarative 1/2/3-column card layouts, flexible element rows, every control bound to `addon.db` with automatic save/restore (also fixes the live BLU/SQP hand-rolled-slider persistence bug class at the framework level)
 
-### Tier 5 — Schema + rgx-mcp (separate repo)
+### Tier 5 — Schema + source conformance fixture
 
 15. **`docs/DECLARATIVE-API.md` + `schemas/rgx-addon.schema.json`** — machine-checkable contract for the declarative shape
-16. **`rgx-mcp`** — external developer/agent tool, read-only first: validate declarative addons, audit consumers for unsafe patterns, generate declarative tables. Dependency rule: rgx-mcp depends on RGX docs/schema; the framework never depends on rgx-mcp.
+16. **`rgx-mcp` transition fixture** — temporary read-only source-tree CI tool for validating declarative addons, auditing consumers, and generating shipped forms. It is not a Framework product. Public MCP/API/editor distribution belongs to RGX Studio after gate #30. Dependency rule: the fixture reads RGX docs/schema; the runtime never depends on it.
 
 **Why this order:** modules complete the runtime → the declarative layer gives one stable authoring surface → the schema/MCP make it machine-checkable. After Tier 5, wiring existing consumers and building brand-new addons becomes near-trivial for humans and agents alike.
 
@@ -159,7 +159,7 @@ Phases unlock as the framework subsystems above are built. The framework work an
 | Phase | rgx-mod Feature | Framework Dependency | Status |
 |---|---|---|---|
 | 1 | Baseline (BLU-derived sound triggers) | Core, DB, Events, Sound, Combat | Done (framework side) |
-| 2 | Multi-trigger auras | RegisterUnitEvent, RGXAuras | RegisterUnitEvent done; RGXAuras not built |
+| 2 | Multi-trigger auras | RegisterUnitEvent, RGXAuras | Framework primitives shipped; restricted-value hardening #36 open |
 | 3 | Display types + conditions | RGXDisplays (new), RGXConditions (new) | Not built |
 | 4 | Options editor + actions | RGXUI, RGXDropdowns | Done (framework side) |
 | 5 | Import/export + profiles | Serialization, Profiles, Bucket events | Profiles + Serialization done; Bucket events not built |

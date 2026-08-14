@@ -8,6 +8,7 @@
     "lua-check": "node lua-syntax-check.mjs ../..",
     "package-build": "node package-manifest-check.mjs ../.. --out ../../artifacts",
     "package-check": "node package-manifest-check.mjs ../..",
+    "docs-check": "node docs-congruence-check.mjs",
     "schema-check": "node schema-check.mjs ../../schemas/rgx-addon.schema.json",
     "flavor-check": "node flavor-toc-check.mjs && node flavor-compat-check.mjs && node flavor-package-check.mjs"
   },

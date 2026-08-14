@@ -4,6 +4,10 @@
 
 RGX-Framework is a single `RequiredDeps` entry that provides a declarative addon front door, events, timers, hooks, combat queueing, slash commands, saved-variable profiles, fonts, colors, a color picker, textures, dropdowns, UI controls, a theming system, tooltips, aura scanning, minimap buttons, sound playback, DataBroker support, and more. No embedding. No version conflicts. No library chains.
 
+Current release `v2.6.1` supports Retail `120100`, Classic Era `11509`, TBC
+`20506`, Wrath/Titan `38002`, Cataclysm `40402`, and Mists `50504` from one
+runtime-only addon package.
+
 > **Related:** [CurseForge](https://www.curseforge.com/wow/addons/rgx-framework) · [GitHub](https://github.com/DonnieDice/RGX-Framework) · [Issues](https://github.com/DonnieDice/RGX-Framework/issues) · [RGX-Hello (reference addon + test suite)](https://github.com/DonnieDice/RGX-Hello)
 
 ---
@@ -50,7 +54,7 @@ That gives you saved settings with profiles, a tabbed options panel with control
 | Version conflicts | LibStub arbitration at runtime | Single shared instance |
 | Addon setup | AceAddon + AceDB + AceConfig assembly | `RGXAddon "Name" { }` |
 | Options UI | AceConfig mega-tables → unstyled AceGUI | Small declarative tables → themed, db-bound controls |
-| Taint safety | Your problem | By construction — pcall-wrapped dispatch, lockdown guards, Midnight secret-aura handling |
+| Safety infrastructure | Your problem | Failure-isolated dispatch, lockdown guards, and documented restricted-value boundaries |
 | Tooling | None | Source-only schema/conformance fixture + in-game test suite; public tooling belongs to Studio |
 
 The full audited comparison lives in [`docs/ACE3-ANALYSIS.md`](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/ACE3-ANALYSIS.md).
@@ -94,7 +98,7 @@ All modules load from `RGX-Framework.xml`; the dormant tier was re-enabled in v2
 
 ### Module Deep-Dives
 
-- [[Fonts]] · [[Dropdowns]] · [[Colors]] · [[ColorPicker]] · [[UI Controls]] · [[Textures]] · [[Theming]] · [[Tooltip]] · [[Auras]] · [[Minimap]] · [[Sound]] · [[DataBroker]]
+- [[Fonts]] · [[Dropdowns]] · [[Colors]] · [[ColorPicker]] · [[UI Controls]] · [[Textures]] · [[Theming]] · [[Tooltip]] · [[Auras]] · [[Minimap]] · [[Sound]] · [DataBroker](API.md#databroker-rgxdatabroker)
 
 ### Tooling & Testing
 
@@ -105,9 +109,14 @@ All modules load from `RGX-Framework.xml`; the dormant tier was re-enabled in v2
 
 - [[Migration]] — from Ace3, LibSharedMedia, manual patterns
 - [[Troubleshooting]] — common issues, debug mode
+- [[Distribution]] — release assets, flavor metadata, package boundary, installation
+- [[Studio Roadmap]] — future product boundary and production gate
+- [[Changelog]] — current and historical releases
 
 ---
 
 ## Versions
 
-Framework releases are tagged `vX.Y.Z` and packaged to CurseForge automatically; the canonical changelog is [`docs/CHANGES.md`](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/CHANGES.md).
+Framework releases are tagged `vX.Y.Z`, published to GitHub, and uploaded to
+CurseForge when its project ID and secret are configured. The canonical
+changelog is [[Changelog]].

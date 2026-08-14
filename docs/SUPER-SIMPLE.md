@@ -6,6 +6,7 @@
 
 ```
 ## RequiredDeps: RGX-Framework
+## SavedVariables: MyAddonDB
 ```
 
 ### 2. Declare the addon
@@ -26,7 +27,10 @@ RGXAddon "MyAddon" {
 }
 ```
 
-No `local`, no `assert`, no event frames, no `C_Timer`, no `SLASH_X`, no SavedVariables plumbing. `RGXAddon` is a global the framework provides — `RequiredDeps` guarantees it exists. You get saved variables with profiles, a tabbed options panel with db-bound controls, a slash command, a minimap button, and branded output.
+No `local`, no `assert`, no event frames, no `C_Timer`, no `SLASH_X`, and no
+manual SavedVariables handling. Declare `MyAddonDB` once in the TOC; `RGXAddon`
+creates and manages its profile-aware proxy. `RequiredDeps` guarantees the
+framework global exists before your Lua loads.
 
 Behavior goes in `onInit`:
 
@@ -37,7 +41,7 @@ Behavior goes in `onInit`:
     end,
 ```
 
-> **This surface is governed by a frozen contract** — see `docs/DECLARATIVE-DSL.md` (dsl branch). Tier 4 adds human trigger words (`on = { levelup = fn }`), one-line control strings (`"slider volume 0-100"`), and grid card layouts. Everything is additive: what you write today keeps working forever.
+> **This surface is governed by the frozen [[Declarative API]] contract.** Tier 4 adds human trigger words (`on = { levelup = fn }`), named timers, one-line control strings (`"slider volume 0-100"`), and grid card layouts. Everything is additive: what you write today keeps working forever.
 
 ## Just Want Fonts?
 
@@ -70,6 +74,7 @@ Anything beyond one line (style objects, standalone selectors, previews) lives i
 ## Interface: 120100
 ## Title: MyAddon
 ## RequiredDeps: RGX-Framework
+## SavedVariables: MyAddonDB
 
 MyAddon.lua
 ```
@@ -125,7 +130,7 @@ RGX:Font(myText, selectedFont)
 ## Why This Works
 
 1. `## RequiredDeps: RGX-Framework` ensures RGX loads first
-2. `RGX.Addon()` maps your declarative table onto the framework's taint-safe paths — no event frames, no `C_Timer`, no `SLASH_X`, no SavedVariables boilerplate
+2. `RGX.Addon()` maps your declarative table onto framework-managed paths — no event frames, no `C_Timer`, no `SLASH_X`, no SavedVariables boilerplate
 3. Module globals like `_G.RGXFonts` are created by RGX-Framework, so à la carte helpers are one line each
 
 No bridge layer, no per-addon plumbing, and no need to rebuild dropdowns by hand.

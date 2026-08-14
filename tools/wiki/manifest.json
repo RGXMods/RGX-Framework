@@ -44,7 +44,9 @@
     {
       "title": "Project",
       "pages": [
+        { "doc": "DISTRIBUTION.md",    "wiki": "Distribution" },
         { "doc": "ROADMAP.md",         "wiki": "Roadmap" },
+        { "doc": "STUDIO-ROADMAP.md",  "wiki": "Studio-Roadmap" },
         { "doc": "MIGRATION.md",       "wiki": "Migration" },
         { "doc": "ACE3-ANALYSIS.md",   "wiki": "Ace3-Analysis" },
         { "doc": "FONT-SOURCES.md",    "wiki": "Font-Sources" },

@@ -1,6 +1,6 @@
-# rgx-mcp
+# rgx-mcp source conformance fixture
 
-MCP server for [RGX-Framework](https://github.com/DonnieDice/RGX-Framework) addon development. Lets AI agents (Claude Code, etc.) validate, audit, and generate declarative RGX addons against the framework's frozen **Simplicity Contract**.
+Temporary MCP fixture for [RGX-Framework](https://github.com/DonnieDice/RGX-Framework) source-tree CI. It lets contributors validate, audit, and generate declarative RGX addons against the framework's frozen **Simplicity Contract**. It is private package metadata, not a separately published product.
 
 **Read-only by design.** This tool inspects and generates — it never edits repos, never commits, never touches the game.
 
@@ -53,7 +53,7 @@ Only the framework source checkout ships `.mcp.json`; published artifacts do not
 
 ## Testing
 
-`test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK (stdio transport, no protocol reimplementation) and points it at the actual [RGX-Hello](https://github.com/DonnieDice/RGX-Hello) reference addon: generates a spec matching it, validates its real opts table, and audits its real Lua. This is how the `suffix` schema gap (sliders silently dropped it) and the generator's `dbName` blind spot on hyphenated names were both found and fixed.
+`test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK (stdio transport, no protocol reimplementation) against [RGX-Hello](https://github.com/DonnieDice/RGX-Hello). It parses and validates the actual curried `RGXAddon` table, generates the matching supported surface, and audits the actual Lua tree. Unknown or Tier 4 keys fail directly. This is how the `suffix` schema gap and generator `dbName` blind spot were found.
 
 ```bash
 node test/test-rgx-hello.mjs /path/to/RGX-Hello
@@ -61,7 +61,7 @@ node test/test-rgx-hello.mjs /path/to/RGX-Hello
 
 ## Status
 
-v0.1.0 — Tier 5 #15 of the framework roadmap. Verified over live stdio JSON-RPC: initialize handshake, `tools/list`, and all three tools exercised end-to-end against a real shipped addon (see Testing above). The audit detectors mirror the manual audits performed on the framework, BLU, and BPU.
+v0.1.0 — transition fixture for the framework roadmap. Verified over live stdio JSON-RPC: initialize handshake and `tools/list`; generate, validate, and audit are exercised end-to-end against RGX-Hello, while `rgx_get_contract` exposes the same schema/docs used by those checks.
 
 ## Distribution
 

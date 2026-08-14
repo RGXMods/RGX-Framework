@@ -26,6 +26,33 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate runtime, schema, flavors, and package boundary
+        working-directory: tools/ci
+        run: |
+          npm ci --no-audit --no-fund
+          npm run lua-check
+          npm run schema-check
+          npm run flavor-check
+          npm run package-check
+          npm run docs-check
+
+      - name: Validate canonical wiki sources
+        run: node tools/wiki/build-wiki.mjs "${RUNNER_TEMP}/wiki-out"
+
+      - name: Install source conformance fixture
+        working-directory: tools/rgx-mcp
+        run: npm ci --no-audit --no-fund
+
+      - name: Validate contract against RGX-Hello
+        run: |
+          git clone --depth 1 https://github.com/DonnieDice/RGX-Hello.git "${RUNNER_TEMP}/RGX-Hello"
+          node tools/rgx-mcp/test/test-rgx-hello.mjs "${RUNNER_TEMP}/RGX-Hello"
+
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
@@ -144,13 +171,71 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Build release archive for inspection
+        uses: BigWigsMods/packager@v2
+        with:
+          args: -d
+
+      - name: Inspect release archive before upload
+        id: preflight
+        working-directory: tools/ci
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          runtime_files="$(node -p "require('./release-snapshot.json').runtimeFiles")"
+          archive="../../.release/RGX-Framework-v${version}.zip"
+          node package-manifest-check.mjs ../.. --inspect "$archive" --expected-count "$runtime_files"
+
+          actual_sha="$(sha256sum "$archive" | awk '{ print toupper($1) }')"
+          echo "sha256=$actual_sha" >> "$GITHUB_OUTPUT"
+          echo "runtime_files=$runtime_files" >> "$GITHUB_OUTPUT"
+
       - name: Package and Release
-        uses: BigWigsMods/packager@master
+        uses: BigWigsMods/packager@v2
+        with:
+          # Reuse the inspected package directory instead of copying source again.
+          args: -c -o
 
       - name: Upload Notes
+        shell: bash
         run: |
-          echo "CurseForge, Wago, and WoWInterface uploads are handled by BigWigsMods/packager."
-          echo "Project IDs come from X-Curse-Project-ID, X-Wago-ID, and X-WoWI-ID in RGX-Framework.toc."
+          echo "GitHub release asset creation is handled by BigWigsMods/packager."
+          grep -q '^## X-Curse-Project-ID:' RGX-Framework.toc && echo "CurseForge: configured" || echo "CurseForge: skipped (no project ID)"
+          grep -q '^## X-Wago-ID:' RGX-Framework.toc && echo "Wago: configured" || echo "Wago: skipped (no project ID)"
+          grep -q '^## X-WoWI-ID:' RGX-Framework.toc && echo "WoWInterface: configured" || echo "WoWInterface: skipped (no project ID)"
+
+      - name: Verify published release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          published="${RUNNER_TEMP}/published-release"
+          mkdir -p "$published"
+          gh release download "${GITHUB_REF_NAME}" --pattern "RGX-Framework-v${version}.zip" --pattern "release.json" --dir "$published"
+
+          actual="$(gh release view "${GITHUB_REF_NAME}" --json assets --jq '.assets[].name' | sort)"
+          expected="$(printf '%s\n' "RGX-Framework-v${version}.zip" "release.json" | sort)"
+          if [[ "$actual" != "$expected" ]]; then
+            echo "::error::Unexpected published assets"
+            echo "Expected:"
+            echo "$expected"
+            echo "Actual:"
+            echo "$actual"
+            exit 1
+          fi
+
+          runtime_files="${{ steps.preflight.outputs.runtime_files }}"
+          node tools/ci/package-manifest-check.mjs . --inspect "$published/RGX-Framework-v${version}.zip" --expected-count "$runtime_files"
+          node tools/ci/release-metadata-check.mjs "$published/release.json"
+
+          expected_sha="${{ steps.preflight.outputs.sha256 }}"
+          actual_sha="$(sha256sum "$published/RGX-Framework-v${version}.zip" | awk '{ print toupper($1) }')"
+          if [[ "$actual_sha" != "$expected_sha" ]]; then
+            echo "::error::Published ZIP SHA-256 does not match the inspected preflight archive"
+            echo "Expected: $expected_sha"
+            echo "Actual:   $actual_sha"
+            exit 1
+          fi
 
       - name: Send Discord Notification
         if: success()
@@ -159,6 +244,7 @@ jobs:
           DISCORD_SUMMARY: ${{ steps.changelog.outputs.discord_summary }}
           RELEASE_TYPE: ${{ steps.release_type.outputs.type }}
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_TAG: ${{ github.ref_name }}
           RELEASE_TIMESTAMP: ${{ steps.version.outputs.timestamp }}
         run: |
           if [[ -z "${DISCORD_WEBHOOK:-}" ]]; then
@@ -169,6 +255,7 @@ jobs:
           summary="${DISCORD_SUMMARY}"
           release_type="${RELEASE_TYPE}"
           version="${RELEASE_VERSION}"
+          tag="${RELEASE_TAG}"
 
           case "$release_type" in
             "release")
@@ -176,7 +263,7 @@ jobs:
               color=385018
               footer="RGX Mods • Stable Release"
               description="A new stable release of the RGX shared library is live."
-              release_url="https://github.com/DonnieDice/RGX-Framework/releases/tag/${version}"
+              release_url="https://github.com/DonnieDice/RGX-Framework/releases/tag/${tag}"
               downloads="[CurseForge](https://www.curseforge.com/wow/addons/rgx-framework) • [GitHub](${release_url})"
               channel="Release"
               ;;
@@ -185,7 +272,7 @@ jobs:
               color=16744448
               footer="RGX Mods • Beta Build"
               description="Beta build available for testing."
-              release_url="https://github.com/DonnieDice/RGX-Framework/releases/tag/${version}"
+              release_url="https://github.com/DonnieDice/RGX-Framework/releases/tag/${tag}"
               downloads="[CurseForge](https://www.curseforge.com/wow/addons/rgx-framework) • [GitHub](${release_url})"
               channel="Beta"
               ;;
@@ -194,8 +281,8 @@ jobs:
               color=9109504
               footer="RGX Mods • Alpha Build"
               description="Alpha build available for testing."
-              release_url="https://github.com/DonnieDice/RGX-Framework/tree/alpha"
-              downloads="[GitHub Alpha Branch](${release_url})"
+              release_url="https://github.com/DonnieDice/RGX-Framework/releases/tag/${tag}"
+              downloads="[GitHub](${release_url})"
               channel="Alpha"
               ;;
             "dev")

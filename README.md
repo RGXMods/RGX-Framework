@@ -2,7 +2,11 @@
 
 **One dependency. Everything your addon suite needs.**
 
-RGX-Framework is a modern, self-contained WoW Retail addon framework — an alternative to Ace3 covering events, timers, hooks, slash commands, minimap buttons, options panels, database, and data broker, plus a full media stack (fonts, colors, textures, sound), dropdown menus, UI controls, and a visual design system. It is not a player-facing addon — it loads silently and exposes an API.
+RGX-Framework is a modern, self-contained WoW addon framework for Retail,
+Classic Era, TBC, Wrath/Titan, Cataclysm, and Mists. One shared dependency
+provides events, timers, hooks, slash commands, minimap buttons, options panels,
+database profiles, DataBroker, media, dropdowns, UI controls, and a visual design
+system. It is not a player-facing addon; it loads silently and exposes an API.
 
 ---
 
@@ -12,6 +16,7 @@ RGX-Framework is a modern, self-contained WoW Retail addon framework — an alte
 
 ```toc
 ## RequiredDeps: RGX-Framework
+## SavedVariables: MyAddonDB
 ```
 
 **2. Declare your addon — one call:**
@@ -23,12 +28,6 @@ RGXAddon "MyAddon" {
     slash   = "myaddon",              -- /myaddon opens the options panel
     minimap = "Interface\\AddOns\\MyAddon\\media\\logo.tga",
     db      = { enabled = true, volume = 80 },   -- SavedVariables proxy on addon.db
-    on      = {
-        login = function(self) self:Print("Ready!") end,
-    },
-    every   = {
-        heartbeat = { 30, function(self) self.heartbeatTicks = (self.heartbeatTicks or 0) + 1 end },
-    },
     options = {
         General = {
             { section = "Settings" },
@@ -36,11 +35,23 @@ RGXAddon "MyAddon" {
             { slider = "volume",  label = "Volume", min = 0, max = 100 },
         },
     },
+    onInit = function(self)
+        self:RegisterEvent("PLAYER_LOGIN", function()
+            self:Print("Ready!")
+        end)
+        self:Every(30, function()
+            self.heartbeatTicks = (self.heartbeatTicks or 0) + 1
+        end, "MyAddon:heartbeat")
+    end,
     welcome = "loaded — /myaddon for options",
 }
 ```
 
-That is a **complete addon**: profile-aware saved settings, a tabbed options panel with db-bound controls, a slash command, a minimap button, and branded chat output — with every event, timer, and control routed through the framework's taint-safe paths automatically. The `addon` object carries scoped `RegisterEvent` / `RegisterUnitEvent` / `RegisterMessage` / `After` / `Every` / `Print` / `Warn` / `Error` so you never touch raw WoW plumbing.
+That is a **complete addon**: profile-aware saved settings, a tabbed options
+panel with db-bound controls, a slash command, a minimap button, branded chat
+output, and lifecycle work routed through scoped framework methods. The `addon`
+object carries `RegisterEvent`, `RegisterUnitEvent`, `RegisterMessage`, `After`,
+`Every`, `Print`, `Warn`, and `Error`, so consumers do not need raw WoW plumbing.
 
 > Human `on` triggers, named `every` timers, one-line controls, and grid card
 > layouts remain frozen future contract forms. Use the addon's scoped event and
@@ -227,8 +238,9 @@ RGX Studio. RGX-Framework publishes only the framework addon package. See
 
 ## Compatibility
 
-- **WoW Retail, Classic Era, TBC Classic, Wrath/Titan, Cataclysm, and Mists Classic**
-- Flavor-specific Interface metadata is declared in the corresponding TOCs.
+- **Current release:** [`v2.6.1`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.6.1)
+- **Clients:** Retail `120100`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
+- **Distribution:** one runtime-only addon package; see [Distribution](docs/DISTRIBUTION.md)
 - `C_AddOns.GetAddOnMetadata` and `GetAddOnMetadata` both handled
 - `ColorPickerFrame` old API and `ColorPickerInteraction` new API both handled
 - `Settings.RegisterCanvasLayoutCategory` and `InterfaceOptions_AddCategory` both handled

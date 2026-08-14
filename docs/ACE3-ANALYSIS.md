@@ -381,9 +381,10 @@ These are the reasons RGX is a replacement, not a clone — protect them:
    `tools/rgx-mcp` (validate/audit/generate) + an end-to-end test that runs
    the real MCP server against the real reference addon. Ace3 has zero
    tooling; its options tables fail at runtime or never.
-3. **Taint-safety by construction** — Midnight secret-aura handling
-   (RGXAuras), combat-lockdown-safe registration, pcall-guarded native
-   tooltip hooks. Ace3 predates all of it.
+3. **Centralized WoW safety infrastructure** — a guaranteed player-aura fast
+   path, explicit restricted-value boundaries, combat-lockdown guards, and
+   failure-isolated native tooltip hooks. This does not make arbitrary secret
+   value reads safe; those values must remain opaque.
 4. **A shipped visual identity** — RGXDesign tokens/theming; AceGUI addons
    all look like AceGUI.
 5. **A living test suite** — RGX-Hello's `/rgxvisual` covers every

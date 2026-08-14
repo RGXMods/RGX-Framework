@@ -1,6 +1,6 @@
 # ColorPicker — `RGXColorPicker`
 
-A modern HSV color picker (`modules/colors/colorpicker.lua`) replacing WoW's default circular picker. Redesigned in v2.4.0 with a circular control vocabulary built on [[Theming|RGXDesign]] tokens: ring-and-fill drag handles, circular preset swatches and preview, themed focus states.
+A modern HSV color picker (`modules/colors/colorpicker.lua`) replacing WoW's default circular picker. Redesigned in v2.4.0 with a circular control vocabulary built on [[RGXDesign|Theming]] tokens: ring-and-fill drag handles, circular preset swatches and preview, themed focus states.
 
 ---
 

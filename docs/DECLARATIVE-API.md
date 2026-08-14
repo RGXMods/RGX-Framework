@@ -1,9 +1,9 @@
 # Declarative API — `RGXAddon`
 
-The authoring surface for RGX addons. Governed by **THE SIMPLICITY CONTRACT**
-(`docs/DECLARATIVE-DSL.md`, `dsl` branch): evolution is additive-only — what
-you write today keeps working forever. The machine-checkable shape lives in
-[`schemas/rgx-addon.schema.json`](../schemas/rgx-addon.schema.json); keys are
+The authoring surface and human-readable **Simplicity Contract** for RGX addons.
+Evolution is additive-only: what you write today keeps working forever. The
+machine-checkable shape lives in
+[`schemas/rgx-addon.schema.json`](https://github.com/DonnieDice/RGX-Framework/blob/main/schemas/rgx-addon.schema.json); keys are
 annotated `x-rgx-ships: "today"` (implemented) or `"tier4"` (frozen target).
 
 This page documents **what ships today**, verified against
@@ -74,7 +74,7 @@ today.
 ## The addon object
 
 Returned by `RGXAddon`. Everything is scoped to the addon (auto-generated
-handler ids) and routed through the framework's taint-safe paths:
+handler ids) and routed through framework-managed, failure-isolated paths:
 
 | Method | Notes |
 |---|---|
@@ -86,7 +86,7 @@ handler ids) and routed through the framework's taint-safe paths:
 | `addon.db` | The database proxy (after ADDON_LOADED) — see API.md → Database & Profiles |
 | `addon.panel` | The options panel (when `options` was given); `addon.panel:Open()` |
 
-## Coming in Tier 4 (frozen contract — see DECLARATIVE-DSL.md)
+## Coming in Tier 4 (frozen contract)
 
 - `on = { levelup = fn, ["quest.turnin"] = fn, ... }` — human trigger words, never WoW event names
 - `every = { scan = { 30, fn } }` — named repeating timers

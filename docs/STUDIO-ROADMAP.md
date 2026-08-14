@@ -24,11 +24,19 @@ RGX Studio milestone
 ```
 
 The GitLab gate is
-[`#30 Declare RGX-Framework production ready and unblock RGX Studio`](https://gitlab.dicematrix.cloud/rgxmods/warcraft/-/work_items/30).
+[`#30 Declare RGX-Framework production ready and unblock RGX Studio`](https://gitlab.dicematrix.cloud/rgxmods/warcraft/monorepo/-/work_items/30).
 Planning may be refined while blocked, but implementation, prototyping, and
 repository creation must not begin until that issue is completed. The Studio
 milestone intentionally has no due date and no implementation assignees while
 blocked.
+
+Public status snapshot, updated 2026-08-13: RGX-Framework `v2.6.1` is live as a
+runtime-only addon release, but the production gate remains open and declarative
+named timers remain in progress. The
+[`RGXAuras restricted-value boundary`](https://gitlab.dicematrix.cloud/rgxmods/warcraft/monorepo/-/work_items/36)
+is also an open production blocker. Studio is still blocked. GitLab is the
+authoritative tracker and may require sign-in; this page is the public roadmap
+snapshot.
 
 Framework production readiness requires all of the following:
 

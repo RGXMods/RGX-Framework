@@ -12,7 +12,6 @@ ignore:
   - .gitignore
   - .mcp.json
   - CLAUDE.md
-  - Home.md
   - README.md
   - docs
   - schemas
