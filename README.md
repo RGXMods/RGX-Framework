@@ -238,7 +238,7 @@ RGX Studio. RGX-Framework publishes only the framework addon package. See
 
 ## Compatibility
 
-- **Current release:** [`v2.6.1`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.6.1)
+- **Current release:** [`v2.6.2`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.6.2)
 - **Clients:** Retail `120100`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
 - **Distribution:** one runtime-only addon package; see [Distribution](docs/DISTRIBUTION.md)
 - `C_AddOns.GetAddOnMetadata` and `GetAddOnMetadata` both handled

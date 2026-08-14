@@ -2,6 +2,20 @@
 
 ## Current Release
 
+### [v2.6.2](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.6.2.md) - 2026-08-14
+
+- Synchronized the README, canonical docs, addon-service description source,
+  release metadata, and all 29 generated Wiki pages with the runtime-only
+  six-flavor distribution.
+- Added CI checks that keep versioned public surfaces, flavor metadata, package
+  inventory, Wiki mappings, and the real RGX-Hello declarative contract aligned.
+- Hardened tag publishing with an inspected BigWigs preflight archive, exact
+  asset validation, release metadata validation, and same-run SHA verification.
+- Corrected the documented restricted-aura boundary: `pcall` isolates errors but
+  does not prevent taint. This release does not claim a runtime aura-safety fix.
+- Published assets are exactly `RGX-Framework-v2.6.2.zip` and `release.json`;
+  the addon archive contains 100 runtime files and all six flavor TOCs.
+
 ### [v2.6.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.6.1.md) - 2026-08-13
 
 - Removed the mistaken secondary product concept. RGX-Framework releases only

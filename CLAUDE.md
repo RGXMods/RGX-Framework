@@ -56,7 +56,7 @@ every subsystem decision should reinforce them.
 
 ## Current version
 
-- **Version:** `2.6.1`
+- **Version:** `2.6.2`
 - **Interface:** `120100` (Retail; flavor-specific TOCs cover supported Classic clients)
 - **TOC:** `RGX-Framework.toc`
 - **Loader:** `RGX-Framework.xml` — this is the single source of truth for what modules are loaded
