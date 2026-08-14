@@ -7,7 +7,7 @@
 // synthetic fixtures, it's pointed at a real shipped addon and has to
 // produce a correct verdict about it.
 //
-// Usage: node test/test-rgx-hello.mjs <path-to-RGX-Hello-checkout>
+// Usage: node test/test-rgx-hello.mjs <path-to-RGX-Hello-checkout> [--allow-older-minimum]
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -21,10 +21,24 @@ const SERVER_ENTRY = join(HERE, "..", "src", "server.js");
 
 const helloPath = process.argv[2];
 if (!helloPath) {
-  console.error("Usage: node test/test-rgx-hello.mjs <path-to-RGX-Hello-checkout>");
+  console.error("Usage: node test/test-rgx-hello.mjs <path-to-RGX-Hello-checkout> [--allow-older-minimum]");
   process.exit(1);
 }
+const allowOlderMinimum = process.argv.includes("--allow-older-minimum");
 const realCore = readFileSync(join(helloPath, "data", "core.lua"), "utf8");
+const realToc = readFileSync(join(helloPath, "RGX-Hello.toc"), "utf8");
+const minimumFrameworkVersion = realToc.match(/^## X-RGX-Framework-MinVersion:\s*(\S+)/m)?.[1] ?? "0";
+const frameworkVersion = JSON.parse(readFileSync(join(HERE, "..", "..", "ci", "release-snapshot.json"), "utf8")).version;
+
+function compareVersions(left, right) {
+  const a = left.split(".").map(Number);
+  const b = right.split(".").map(Number);
+  for (let index = 0; index < Math.max(a.length, b.length); index++) {
+    const difference = (a[index] ?? 0) - (b[index] ?? 0);
+    if (difference) return difference;
+  }
+  return 0;
+}
 
 function optsValue(node) {
   if (["StringLiteral", "NumericLiteral", "BooleanLiteral"].includes(node.type)) return node.value;
@@ -61,6 +75,7 @@ const RGX_HELLO_GENERATE_SPEC = {
   dbName: "RGXHelloDB",
   slash: "rgxhello",
   minimap: true,
+  every: { heartbeat: 1 },
   db: { enabled: true, volume: 50 },
   toggles: ["enabled"],
   sliders: [{ key: "volume", label: "Volume", min: 0, max: 100, suffix: "%" }],
@@ -86,6 +101,21 @@ await client.connect(transport);
 try {
   console.log("== RGX-Hello source congruence ==");
   check("parsed the real RGX-Hello declaration", actualAddonName === "RGX-Hello");
+  const minimumComparison = compareVersions(minimumFrameworkVersion, frameworkVersion);
+  check(
+    "RGX-Hello targets this Framework source version",
+    minimumFrameworkVersion !== "0" && (minimumComparison === 0 || (allowOlderMinimum && minimumComparison < 0)),
+    JSON.stringify({ frameworkVersion, minimumFrameworkVersion, allowOlderMinimum })
+  );
+  const expectsDeclarativeEvery = compareVersions(frameworkVersion, "2.7.0") >= 0 && minimumComparison >= 0;
+  check(
+    "RGX-Hello declaration matches its minimum Framework contract",
+    !expectsDeclarativeEvery
+      || (Array.isArray(actualOpts.every?.heartbeat)
+        && actualOpts.every.heartbeat[0] === 1
+        && actualOpts.every.heartbeat[1]?.$lua === "function"),
+    JSON.stringify({ minimumFrameworkVersion, every: actualOpts.every })
+  );
 
   console.log("== rgx_generate_addon (RGX-Hello spec) ==");
   const gen = await client.callTool({ name: "rgx_generate_addon", arguments: RGX_HELLO_GENERATE_SPEC });
@@ -97,6 +127,31 @@ try {
     generatedLua.includes("RGXHelloDB") && !generatedLua.includes("RGX-HelloDB")
   );
   check("generator emits the slider's % suffix", generatedLua.includes('suffix = "%"'));
+  check("generator emits a named repeating timer", generatedLua.includes("every   = {") && generatedLua.includes("heartbeat = { 1, function(self, timer)"));
+  let generatedParses = true;
+  let generatedParseError = "";
+  try {
+    luaparse.parse(generatedLua, { luaVersion: "5.1" });
+  } catch (error) {
+    generatedParses = false;
+    generatedParseError = error.message;
+  }
+  check("generated addon parses as Lua 5.1", generatedParses, generatedParseError);
+
+  const namedTimerGen = await client.callTool({
+    name: "rgx_generate_addon",
+    arguments: { name: "TimerKeys", every: { end: 2, "cache.refresh": 30 } },
+  });
+  const namedTimerLua = namedTimerGen.content?.[0]?.text ?? "";
+  check("generator quotes punctuated timer names", namedTimerLua.includes('["cache.refresh"] = { 30'));
+  check("generator quotes reserved-word timer names", namedTimerLua.includes('["end"] = { 2'));
+  check("generator sorts timer names deterministically", namedTimerLua.indexOf('["cache.refresh"]') < namedTimerLua.indexOf('["end"]'));
+
+  const invalidTimerGen = await client.callTool({
+    name: "rgx_generate_addon",
+    arguments: { name: "InvalidTimer", every: { "   ": 0 } },
+  });
+  check("generator rejects invalid named timers", invalidTimerGen.isError === true, JSON.stringify(invalidTimerGen));
 
   console.log("\n== rgx_validate_addon (RGX-Hello's parsed opts) ==");
   const val = await client.callTool({ name: "rgx_validate_addon", arguments: { opts: actualOpts } });
@@ -104,6 +159,28 @@ try {
   console.log(JSON.stringify(report, null, 2));
   check("RGX-Hello's opts validate against the shipped schema", report.valid === true, JSON.stringify(report.errors));
   check("no tier4-only keys used", (report.tier4KeysUsed ?? []).length === 0, JSON.stringify(report.tier4KeysUsed));
+
+  const everyVal = await client.callTool({
+    name: "rgx_validate_addon",
+    arguments: { opts: { every: { heartbeat: [1, { $lua: "function" }] } } },
+  });
+  const everyReport = JSON.parse(everyVal.content[0].text);
+  check("declarative every validates as shipped", everyReport.valid === true, JSON.stringify(everyReport.errors));
+  check("declarative every is not reported as tier4", (everyReport.tier4KeysUsed ?? []).length === 0, JSON.stringify(everyReport));
+
+  const invalidEveryVal = await client.callTool({
+    name: "rgx_validate_addon",
+    arguments: { opts: { every: { "   ": [0, { $lua: "function" }, "extra"] } } },
+  });
+  const invalidEveryReport = JSON.parse(invalidEveryVal.content[0].text);
+  check("invalid declarative every definitions are rejected", invalidEveryReport.valid === false, JSON.stringify(invalidEveryReport.errors));
+
+  const onVal = await client.callTool({
+    name: "rgx_validate_addon",
+    arguments: { opts: { on: { login: { $lua: "function" } } } },
+  });
+  const onReport = JSON.parse(onVal.content[0].text);
+  check("declarative on remains reported as tier4", onReport.tier4KeysUsed?.includes("on"), JSON.stringify(onReport));
 
   const tier4String = await client.callTool({
     name: "rgx_validate_addon",

@@ -120,9 +120,13 @@
       "additionalProperties": { "$ref": "#/$defs/luaFunction" }
     },
     "every": {
-      "x-rgx-ships": "tier4",
-      "description": "Named repeating timers: name -> { seconds, handler }.",
+      "x-rgx-ships": "today",
+      "description": "Named repeating timers with printable names containing a non-space character. Each timer starts after the addon's ADDON_LOADED database/options/minimap setup, first fires after its interval, and calls function(addon, timer). Names provide deterministic same-declaration dispatch and stable diagnostic labels; handlers remain failure-isolated and may self-cancel with addon:CancelTimer(timer).",
       "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^(?=.*[^ ])[^\\u0000-\\u001f\\u007f]+$"
+      },
       "additionalProperties": {
         "type": "array",
         "prefixItems": [

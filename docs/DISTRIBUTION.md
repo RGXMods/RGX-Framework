@@ -23,6 +23,10 @@ gh release view v2.6.2 --repo DonnieDice/RGX-Framework --json assets \
   --jq '.assets[] | select(.name == "RGX-Framework-v2.6.2.zip") | .digest'
 ```
 
+The source tree currently targets the `v2.7.0` named-timer candidate. It is not
+the current distribution until required in-game verification is recorded and a
+matching tag completes the release workflow.
+
 CurseForge is the currently configured addon service. Wago and WoWInterface are
 skipped unless their project IDs and secrets are added to the release pipeline.
 

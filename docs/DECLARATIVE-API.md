@@ -9,6 +9,10 @@ annotated `x-rgx-ships: "today"` (implemented) or `"tier4"` (frozen target).
 This page documents **what ships today**, verified against
 `core/core.lua` (`RGX.Addon`, `_G.RGXAddon`).
 
+> **Candidate status:** this source targets `v2.7.0`. Declarative named `every`
+> timers are implemented here but are not in the latest published release,
+> `v2.6.2`, until the candidate passes its required in-game check and is tagged.
+
 ---
 
 ## Entry point
@@ -22,6 +26,10 @@ RGXAddon "MyAddon" { ... }     -- curried form; identical
 RGX-Framework` guarantees it exists before your file runs. Returns the addon
 object. `local RGX = assert(_G.RGXFramework, ...)` remains available as the
 escape hatch for à la carte use; it is not the front door.
+
+An addon name can be declared only once. A duplicate `RGXAddon` call is rejected
+before slash commands, events, timers, or registry entries can be replaced or
+leaked.
 
 ## The rule: bare forms assume, advanced forms unlock
 
@@ -43,8 +51,44 @@ framework bug — report it.
 | `title` | — | Panel title; assumes the addon name |
 | `welcome` | string printed with the branded prefix on load | — |
 | `onInit` | function(addon), runs on ADDON_LOADED after `db`/`options` exist — the imperative escape hatch | — |
+| `every` | `name = { seconds, function(addon, timer) }`; starts after ADDON_LOADED and first fires after the interval | multiple deterministically named repeating timers; handlers may self-cancel with `addon:CancelTimer(timer)` |
 | `brand` | — | Hex color (no `#`) for the chat prefix; assumes `58be81` |
 | `table` | — | Use an existing table as the addon object |
+
+## Named repeating timers
+
+```lua
+RGXAddon "MyAddon" {
+    every = {
+        heartbeat = { 1, function(self, timer)
+            self.ticks = (self.ticks or 0) + 1
+            if self.ticks == 3 then
+                self:CancelTimer(timer)
+            end
+        end },
+        ["cache.refresh"] = { 30, function(self)
+            self.cacheRefreshes = (self.cacheRefreshes or 0) + 1
+        end },
+    },
+}
+```
+
+Each entry is exactly `{ seconds, handler }`: the interval must be a finite
+number greater than zero, and the name must be printable and contain at least
+one non-space character.
+The complete declaration is validated before the addon registers any resource.
+
+Timers are created after the addon's matching `ADDON_LOADED`, once its database,
+options panel, and minimap button exist. The first run occurs after one full
+interval; there is no immediate call. Handlers receive the addon object followed
+by the timer reference.
+
+Names are sorted for deterministic same-update dispatch within one declaration
+and become diagnostic labels such as `MyAddon:every:cache.refresh`. Timer refs
+carry `owner`, `name`, and `declarativeName` metadata. One handler error is
+reported with its stable label and does not stop unrelated timers; a failing
+repeating timer remains active. Timers do not imply combat safety, so protected
+UI work must still use RGX's safe helpers.
 
 ## Controls (table forms, shipped)
 
@@ -82,14 +126,13 @@ handler ids) and routed through framework-managed, failure-isolated paths:
 | `addon:RegisterEvent(event, fn, id?)` / `UnregisterEvent(event, id?)` | Scoped WoW events |
 | `addon:RegisterUnitEvent(event, unit, fn, id?)` / `UnregisterUnitEvent(event, id?)` | Scoped unit events |
 | `addon:RegisterMessage(msg, fn, id?)` / `UnregisterMessage` / `SendMessage` (`Emit`) | Internal message bus |
-| `addon:After(sec, fn)` / `Every(sec, fn)` / `CancelTimer(t)` | Framework timers |
+| `addon:After(sec, fn)` / `Every(sec, fn)` / `CancelTimer(t)` | Framework timers; returned refs carry `owner = addon` |
 | `addon.db` | The database proxy (after ADDON_LOADED) — see API.md → Database & Profiles |
 | `addon.panel` | The options panel (when `options` was given); `addon.panel:Open()` |
 
 ## Coming in Tier 4 (frozen contract)
 
 - `on = { levelup = fn, ["quest.turnin"] = fn, ... }` — human trigger words, never WoW event names
-- `every = { scan = { 30, fn } }` — named repeating timers
 - One-line control strings: `"toggle enabled"`, `"slider volume 0-100"`
 - `options.columns = 1|2|3` — card-grid layouts
 - Inference: `slash` defaults to the lowercase addon name

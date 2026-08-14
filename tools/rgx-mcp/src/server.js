@@ -43,7 +43,7 @@ function getSchema() {
 let validatorCache = null;
 function getValidator() {
   if (!validatorCache) {
-    const ajv = new Ajv2020({ allErrors: true, strict: false });
+    const ajv = new Ajv2020({ allErrors: true, strict: false, strictNumbers: true });
     validatorCache = ajv.compile(getSchema());
   }
   return validatorCache;
@@ -129,7 +129,31 @@ function* walkLuaFiles(root) {
 // ── Addon generation (shipped keys only — contract-congruent) ────────────────
 
 function luaQuote(s) {
-  return '"' + String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"';
+  return '"' + String(s).replace(/[\\"\x00-\x1f\x7f]/g, (char) => {
+    if (char === "\\") return "\\\\";
+    if (char === '"') return '\\"';
+    return `\\${char.charCodeAt(0).toString().padStart(3, "0")}`;
+  }) + '"';
+}
+
+function luaComment(s) {
+  return String(s).replace(/[\x00-\x1f\x7f]/g, " ");
+}
+
+function compareUtf8(a, b) {
+  return Buffer.compare(Buffer.from(a, "utf8"), Buffer.from(b, "utf8"));
+}
+
+const LUA_RESERVED = new Set([
+  "and", "break", "do", "else", "elseif", "end", "false", "for", "function",
+  "if", "in", "local", "nil", "not", "or", "repeat", "return", "then", "true",
+  "until", "while",
+]);
+
+function luaKey(key) {
+  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(key) && !LUA_RESERVED.has(key)
+    ? key
+    : `[${luaQuote(key)}]`;
 }
 
 // A hyphen (or other non-identifier character) in the addon name is valid
@@ -159,6 +183,16 @@ function generateAddonLua(spec) {
       .map(([k, v]) => `${k} = ${typeof v === "string" ? luaQuote(v) : v}`)
       .join(", ");
     out.push(`    db      = { ${entries} },`);
+  }
+  const timers = Object.entries(spec.every ?? {}).sort(([a], [b]) => compareUtf8(a, b));
+  if (timers.length) {
+    out.push(`    every   = {`);
+    for (const [timerName, seconds] of timers) {
+      out.push(`        ${luaKey(timerName)} = { ${seconds}, function(self, timer)`);
+      out.push(`            -- Run ${luaComment(timerName)} every ${seconds} second${seconds === 1 ? "" : "s"}.`);
+      out.push(`        end },`);
+    }
+    out.push(`    },`);
   }
   const controls = [];
   for (const t of spec.toggles ?? []) {
@@ -194,7 +228,7 @@ server.tool(
   async ({ opts }) => {
     const validate = getValidator();
     const valid = validate(opts);
-    const tier4Used = ["on", "every"].filter((k) => k in opts);
+    const tier4Used = ["on"].filter((k) => k in opts);
     if (opts.options && typeof opts.options === "object" && "columns" in opts.options) {
       tier4Used.push("options.columns");
     }
@@ -256,6 +290,10 @@ server.tool(
       .describe("SavedVariables global override. Defaults to `${name}DB` with non-identifier characters stripped (e.g. \"RGX-Hello\" -> \"RGXHelloDB\") -- only pass this to use something else."),
     slash: z.string().optional().describe("Slash command (default: lowercase name)"),
     minimap: z.boolean().optional(),
+    every: z.record(
+      z.string().regex(/^(?=.*[^ ])[^\x00-\x1f\x7f]+$/, "timer name must be printable and contain a non-space character"),
+      z.number().positive().finite()
+    ).optional().describe("Named repeating timers as timer name -> seconds"),
     db: z.record(z.union([z.string(), z.number(), z.boolean()])).optional()
       .describe("Saved-setting defaults"),
     toggles: z.array(z.string()).optional().describe("db keys to expose as toggles"),
@@ -269,9 +307,26 @@ server.tool(
       }))
       .optional(),
   },
-  async (spec) => ({
-    content: [{ type: "text", text: generateAddonLua(spec) }],
-  })
+  async (spec) => {
+    const validate = getValidator();
+    const opts = {};
+    if (spec.every) {
+      opts.every = Object.fromEntries(
+        Object.entries(spec.every).map(([name, seconds]) => [name, [seconds, { $lua: "function" }]])
+      );
+    }
+    if (!validate(opts)) {
+      return {
+        isError: true,
+        content: [{
+          type: "text",
+          text: "Generation spec is not supported by the shipped RGX contract:\n" + JSON.stringify(validate.errors, null, 2),
+        }],
+      };
+    }
+
+    return { content: [{ type: "text", text: generateAddonLua(spec) }] };
+  }
 );
 
 server.tool(

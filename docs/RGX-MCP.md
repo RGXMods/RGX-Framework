@@ -8,7 +8,7 @@
 |---|---|
 | `rgx_validate_addon` | Validate an `RGXAddon` opts table (as JSON; Lua functions as `{"$lua":"function"}`) against `schemas/rgx-addon.schema.json`; flags contract-frozen `tier4` keys that don't run yet |
 | `rgx_audit_lua` | Scan a `.lua` file or addon directory for the unsafe patterns the framework prevents: raw `C_Timer`, manual `OnEvent` frames, `SLASH_` globals, unguarded `SetAttribute`, secret-aura field comparisons, raw hook reassignment |
-| `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys |
+| `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys, including deterministically ordered named `every` timers |
 | `rgx_get_contract` | Return the schema + shipped-surface reference for agent context |
 
 ## Resources
@@ -48,7 +48,7 @@ MCP server. See [[Distribution]].
 
 ## The tandem loop
 
-`tools/rgx-mcp/test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK against the real [RGX-Hello](https://github.com/DonnieDice/RGX-Hello) repo. It parses the actual curried `RGXAddon` table as Lua 5.1, validates that complete options object, generates the matching supported surface, and audits the actual Lua tree. Unknown or Tier 4 keys therefore fail instead of hiding behind a hand-maintained transcription. This loop has caught real shipped bugs, including the dropped slider `suffix` and a hyphenated-name SavedVariables mismatch.
+`tools/rgx-mcp/test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK against the real [RGX-Hello](https://github.com/DonnieDice/RGX-Hello) repo. It parses the actual curried `RGXAddon` table as Lua 5.1, validates that complete options object, generates the matching supported surface including named timers, and audits the actual Lua tree. It also verifies that `every` is shipped while `on` remains Tier 4. Unknown or Tier 4 keys therefore fail instead of hiding behind a hand-maintained transcription. This loop has caught real shipped bugs, including the dropped slider `suffix` and a hyphenated-name SavedVariables mismatch.
 
 ```bash
 node test/test-rgx-hello.mjs /path/to/RGX-Hello

@@ -25,10 +25,17 @@
 | Auras | `IterateAuras` scan, `WatchUnit` + `OnApplied`/`OnRemoved` live log with unsubscribe |
 | Minimap | `MM:Create` (icon, tooltip, drag, persistent angle), `Toggle`/`IsShown` |
 | Design | `RGX:Font` one-call styling, `RGXDesign` primitives, theme tokens |
-| System | `RGX:After`, `RGX:Every`, `RGX:CancelTimer` |
+| System | declarative `every` self-cancellation, `RGX:After`, `RGX:Every`, `RGX:CancelTimer` |
 
 Sound is intentionally untested here — the sound module is a per-addon registry that [BLU](https://github.com/DonnieDice/BLU) exercises in production, which is a more honest test than a synthetic registration.
 
 ## The standing pattern
 
 When a framework module ships or changes, its test tab lands in RGX-Hello **in the same cycle**. Contract-side, the loop closes from the other direction too: the framework's [[RGX-MCP]] end-to-end test validates and audits RGX-Hello on every run.
+
+CI also executes focused declarative behavior in a real Lua 5.1 VM.
+`tools/ci/declarative-every-runtime-test.lua` verifies strict validation before
+resource registration, ADDON_LOADED setup ordering, deterministic dispatch,
+owner/name metadata, self-cancellation, duplicate rejection, and callback
+failure isolation. This headless fixture is not in-game validation and does not
+model Blizzard UI, combat lockdown, taint, or secret values.

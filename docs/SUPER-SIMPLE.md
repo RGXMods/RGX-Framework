@@ -1,5 +1,9 @@
 # SUPER SIMPLE RGX Integration
 
+> This page follows the unreleased `v2.7.0` candidate. The latest published
+> release is `v2.6.2`; named `every` timers become public only after candidate
+> in-game validation and release.
+
 ## A Complete Addon In One Call
 
 ### 1. Add RequiredDeps
@@ -17,6 +21,11 @@ RGXAddon "MyAddon" {
     slash   = "myaddon",
     minimap = true,
     db      = { enabled = true, volume = 80 },
+    every   = {
+        heartbeat = { 30, function(self, timer)
+            self.heartbeatTicks = (self.heartbeatTicks or 0) + 1
+        end },
+    },
     options = {
         General = {
             { toggle = "enabled", label = "Enable Addon" },
@@ -32,16 +41,26 @@ manual SavedVariables handling. Declare `MyAddonDB` once in the TOC; `RGXAddon`
 creates and manages its profile-aware proxy. `RequiredDeps` guarantees the
 framework global exists before your Lua loads.
 
-Behavior goes in `onInit`:
+Event setup goes in `onInit` while declarative `on` remains Tier 4:
 
 ```lua
     onInit = function(self)
         self:RegisterEvent("PLAYER_LOGIN", function() self:Print("Ready!") end)
-        self:Every(30, function() self:Scan() end)
     end,
 ```
 
-> **This surface is governed by the frozen [[Declarative API]] contract.** Tier 4 adds human trigger words (`on = { levelup = fn }`), named timers, one-line control strings (`"slider volume 0-100"`), and grid card layouts. Everything is additive: what you write today keeps working forever.
+Repeating work uses named `every` timers:
+
+```lua
+    every = {
+        scan = { 30, function(self, timer) self:Scan() end },
+    },
+```
+
+> **This surface is governed by the frozen [[Declarative API]] contract.** Named
+> timers ship today. Tier 4 adds human trigger words (`on = { levelup = fn }`),
+> one-line control strings (`"slider volume 0-100"`), and grid card layouts.
+> Everything is additive: what you write today keeps working forever.
 
 ## Just Want Fonts?
 
@@ -114,7 +133,7 @@ RGX:Font(myText, selectedFont)
 
 **For the addon itself:**
 
-- `RGX.Addon(name, opts)` — the front door: slash, minimap, db, options tabs, welcome, onInit in one call
+- `RGX.Addon(name, opts)` — the front door: slash, minimap, db, named timers, options tabs, welcome, onInit in one call
 - `addon:RegisterEvent` / `addon:After` / `addon:Every` / `addon:Print` — scoped plumbing on the returned object
 
 **For fonts specifically:**

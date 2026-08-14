@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "lua-check": "node lua-syntax-check.mjs ../..",
+    "lua-runtime-check": "node lua-runtime-check.mjs",
     "package-build": "node package-manifest-check.mjs ../.. --out ../../artifacts",
     "package-check": "node package-manifest-check.mjs ../..",
     "docs-check": "node docs-congruence-check.mjs",

@@ -24,9 +24,42 @@ try {
 }
 
 try {
-  const ajv = new Ajv2020({ allErrors: true, strict: false });
-  ajv.compile(schema);
-  console.log(`SCHEMA OK  ${path}  ($id: ${schema.$id || "none"})`);
+  const ajv = new Ajv2020({ allErrors: true, strict: false, strictNumbers: true });
+  const validate = ajv.compile(schema);
+  let vectors = 0;
+
+  if (schema.properties?.every) {
+    const luaFunction = { $lua: "function" };
+    const validCases = [
+      {},
+      { every: {} },
+      { every: { heartbeat: [1, luaFunction], "cache.refresh": [0.25, luaFunction], ["\u00a0"]: [2, luaFunction] } },
+    ];
+    const invalidCases = [
+      { every: true },
+      { every: { "": [1, luaFunction] } },
+      { every: { "   ": [1, luaFunction] } },
+      { every: { "tick\nname": [1, luaFunction] } },
+      { every: { heartbeat: [0, luaFunction] } },
+      { every: { heartbeat: [-1, luaFunction] } },
+      { every: { heartbeat: [Number.NaN, luaFunction] } },
+      { every: { heartbeat: [Number.POSITIVE_INFINITY, luaFunction] } },
+      { every: { heartbeat: [1] } },
+      { every: { heartbeat: [1, luaFunction, "extra"] } },
+      { every: { heartbeat: [1, { $lua: "not-a-function" }] } },
+    ];
+
+    for (const value of validCases) {
+      vectors++;
+      if (!validate(value)) throw new Error(`valid every fixture was rejected: ${JSON.stringify(validate.errors)}`);
+    }
+    for (const value of invalidCases) {
+      vectors++;
+      if (validate(value)) throw new Error(`invalid every fixture was accepted: ${JSON.stringify(value)}`);
+    }
+  }
+
+  console.log(`SCHEMA OK  ${path}  ($id: ${schema.$id || "none"}, ${vectors} behavior vectors)`);
 } catch (e) {
   console.error(`SCHEMA ERROR  ${path}  ->  ${e.message}`);
   process.exit(1);
