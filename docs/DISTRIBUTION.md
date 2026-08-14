@@ -1,23 +1,43 @@
 # Distribution
 
 RGX-Framework publishes one product: the WoW addon framework. Node tooling,
-schemas, documentation, references, and future Studio code never belong in its
+schemas, documentation, references, and future Studio code never belong in the
 World of Warcraft addon archive.
 
-## Release Assets
+## Current Release
 
-For framework version `X.Y.Z`, the release workflow publishes:
+[`v2.6.1`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.6.1)
+publishes exactly two GitHub assets:
 
-| Asset | Audience | Contents |
-|---|---|---|
-| BigWigs `RGX-Framework-*.zip` | Players | The only published product archive; uploaded to GitHub and addon services |
-| `release.json` | Automation | BigWigs packager release metadata |
+| Asset | Purpose |
+|---|---|
+| `RGX-Framework-v2.6.1.zip` | The only product archive; install this addon |
+| `release.json` | BigWigs packager metadata for automation |
 
-The BigWigs ZIP is the distribution-service payload and is built with
-`.pkgmeta`. CI independently enforces the exact runtime allowlist and can
-reproduce the same package boundary as `RGX-Framework-X.Y.Z.zip` plus an
-inventory manifest and checksums. These are verification sidecars, not a second
-product.
+The inspected `v2.6.1` ZIP contains one `RGX-Framework/` root and exactly 100
+runtime files. GitHub records the digest on the release asset. To query it with
+GitHub CLI:
+
+```bash
+gh release view v2.6.1 --repo DonnieDice/RGX-Framework --json assets \
+  --jq '.assets[] | select(.name == "RGX-Framework-v2.6.1.zip") | .digest'
+```
+
+CurseForge is the currently configured addon service. Wago and WoWInterface are
+skipped unless their project IDs and secrets are added to the release pipeline.
+
+## Flavor Metadata
+
+All flavor TOCs ship together and declare the same framework version:
+
+| Client | TOC | Interface |
+|---|---|---:|
+| Retail | `RGX-Framework.toc` | `120100` |
+| Classic Era | `RGX-Framework_Vanilla.toc` | `11509` |
+| TBC Classic | `RGX-Framework_TBC.toc` | `20506` |
+| Wrath/Titan | `RGX-Framework_Wrath.toc` | `38002` |
+| Cataclysm | `RGX-Framework_Cata.toc` | `40402` |
+| Mists Classic | `RGX-Framework_Mists.toc` | `50504` |
 
 ## Player Allowlist
 
@@ -44,35 +64,24 @@ It rejects JavaScript, TypeScript, JSON, Rust, Tauri, `node_modules`, `tools/`,
 `schemas/`, `docs/`, `.reference/`, and other non-runtime paths. Every Lua/XML
 load reference must exist in the inspected ZIP.
 
-Install the archive by extracting `RGX-Framework/` under the game's
-`Interface/AddOns/` directory.
+## Installation
 
-## Source Tooling
+Extract the archive so the game sees:
+
+```text
+World of Warcraft/<client>/Interface/AddOns/RGX-Framework/RGX-Framework.toc
+```
+
+Consumer addons declare `## RequiredDeps: RGX-Framework`. Do not copy source
+repository folders such as `tools/`, `schemas/`, or `docs/` into AddOns.
+
+## Source-Only Tooling
 
 Schemas, documentation, reference tools, and the temporary MCP conformance
 fixture remain available only in the source repository. Public API, MCP, editor,
 and contract-bundle distribution belongs to the future RGX Studio product.
 
-## Checksums
-
-On a POSIX shell:
-
-```bash
-sha256sum -c RGX-Framework-X.Y.Z.sha256
-```
-
-On PowerShell, compare each value with:
-
-```powershell
-Get-FileHash -Algorithm SHA256 .\RGX-Framework-X.Y.Z.zip
-```
-
-The JSON manifest also records a SHA-256 digest for every runtime source file.
-`sourceDirty` is `false` for release builds; local
-builds from an uncommitted worktree record `true` so the base commit is not
-mistaken for the exact artifact contents.
-
-## Local Build
+## Local Verification
 
 From a framework source checkout:
 
@@ -83,7 +92,24 @@ npm run package-check
 npm run package-build
 ```
 
-Generated files are written to `artifacts/`. The builder fixes ZIP timestamps,
-entry order, permissions, and compression settings, so repeated builds of the
-same source revision produce identical bytes. `artifacts/` and `.release/` are
-generated directories and are not committed.
+Generated files are written to `artifacts/`:
+
+```text
+RGX-Framework-X.Y.Z.zip
+RGX-Framework-X.Y.Z.manifest.json
+RGX-Framework-X.Y.Z.sha256
+```
+
+These are local/CI verification outputs, not GitHub release assets or a second
+product. The builder fixes ZIP timestamps, entry order, permissions, and
+compression settings. The manifest records every runtime source digest, source
+revision, and `sourceDirty` state. `artifacts/` and `.release/` are generated and
+ignored by Git.
+
+## Addon-Service Description
+
+`docs/description.html` is the canonical addon-service description source. The
+release workflow packages and uploads the addon but does not update service-page
+HTML. Description changes must be applied to the configured service separately
+and verified against this file; the GitHub Wiki is generated automatically from
+the Markdown pages listed in `tools/wiki/manifest.json`.

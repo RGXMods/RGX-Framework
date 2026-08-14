@@ -26,7 +26,7 @@ The framework's core value is **prevention, not remediation.** Most WoW addon ma
 - **All dispatch is pcall-wrapped** — one consumer handler can never crash the dispatch frame.
 - **Combat-lockdown guards** — frame registration is deferred during lockdown and queued via `PLAYER_REGEN_ENABLED`, so consumers can't trigger taint by mutating protected frames mid-combat.
 
-A consumer addon that writes against the framework API gets taint-safety and current-API usage **by construction.** When designing any new subsystem, the test is not "is this convenient" but "does this make a whole class of WoW-specific bug impossible for the consumer to write." That is the same north star as rgx-mod: a clean, human-friendly authoring surface that emits correct, safe behavior underneath.
+A consumer addon that writes against the framework API gets centralized current-API adapters, failure isolation, and combat-lockdown guards. Do not describe `pcall` or arbitrary restricted-value handling as taint safety. When designing any new subsystem, the test is not "is this convenient" but "does this make a whole class of WoW-specific bug impossible for the consumer to write." That is the same north star as rgx-mod: a clean, human-friendly authoring surface that emits correct behavior underneath.
 
 ## Design thesis 2 — progressive disclosure, one vocabulary
 
@@ -80,6 +80,10 @@ every subsystem decision should reinforce them.
 | Minimap | `RGXMinimap` | Circular-drag minimap button |
 | DataBroker | `RGXDataBroker` | LDB bridge |
 | Sound | `RGXSound` | Sound pack registration, variant playback, mute list, SavedVar integration |
+| SharedMedia | `RGXSharedMedia` | Shared sound/font/texture registry and external pack scanning |
+| PetBattles | `RGXPetBattles` | Pet battle state, level, and capture callbacks |
+| Combat | `RGXCombat` | Combat state, kill, crit, health, and encounter callbacks |
+| Reputation | `RGXReputation` | Reputation and renown tracking callbacks |
 | Achievement | `RGXAchievement` | Achievement unlock callbacks |
 | LevelUp | `RGXLevelUp` | Level-up event callbacks |
 | Collectibles | `RGXCollectibles` | Mount/pet/toy unlock callbacks |
@@ -90,19 +94,6 @@ every subsystem decision should reinforce them.
 | Housing | `RGXHousing` | Housing progression/decor callbacks |
 | TradingPost | `RGXTradingPost` | Trading Post activity callbacks |
 | Prey | `RGXPrey` | Prey hunt callbacks |
-
-### Dormant (in-tree, NOT loaded by XML)
-
-These are complete and tested. Re-enabling is a one-line addition to `RGX-Framework.xml` per module.
-
-| Module | Global | What it provides | Who needs it |
-|---|---|---|---|
-| SharedMedia | `RGXSharedMedia` | Sound/font/texture registry, KittyPack hook, DBM registrar scan, known-addon compat, generic global scan | BLU (drops 901-line local sharedmedia.lua) |
-| PetBattles | `RGXPetBattles` | `OnLevelUp`, `OnCapture`, `OnBattleStart/End`, `IsInBattle`, `GetPetLevel`, `ScanPetLevels` | BattlePetUtility |
-| Combat | `RGXCombat` | `OnEnter`, `OnLeave`, `OnKill`, `OnPlayerDied`, `OnCrit`, `OnLowHealth`, `OnExecuteWindow`, `OnEncounterEnd/Victory` | BLU Combat module, rgx-mod triggers |
-| Reputation | `RGXReputation` | Reputation and renown tracking callbacks | ReputationLevelUp migration |
-
-**To enable a dormant module:** add the `<Script>` entry in `RGX-Framework.xml` in load-order position, verify `TryInit` call in `core/initialization.lua` if needed, bump version, release.
 
 ---
 
@@ -143,13 +134,13 @@ All in-tree modules are loaded by the XML loader. No dormant code remains.
 8. **Wire BPU → RGXDropdowns** — replace `EasyMenu`/`UIDropDownMenu` in BPU options
 8b. **Wire BPU fonts → RGXFonts** — replace BPU's local `RegisterMedia("font", ...)` system with the shared registry (`Fonts:GetPath`, `AttachFontSelector`, `CreateFontMenuItems`). This replaces the former `docs/USAGE-BPU.md`, which described the migration instead of implementing it — the doc is deleted; the work item lives here.
 
-### Tier 3 — Last runtime primitives (NEXT BUILD)
+### Tier 3 — Runtime primitives
 
-9. **RGXAuras** — taint-safe aura scanning. API surface verified against Blizzard's generated 12.0.7 docs (`Blizzard_APIDocumentationGenerated/UnitAuraDocumentation.lua` in the wow-ui-source mirror): `C_UnitAuras.GetPlayerAuraBySpellID`, `GetAuraDataByIndex/BySlot/ByAuraInstanceID/BySpellName`, `GetAuraSlots`, plus `UNIT_AURA` incremental `UnitAuraUpdateInfo`. Generalizes BPU's `PlayerHasAuraSpellID` pattern; core rgx-mod trigger primitive.
-10. **RGXTooltip** — `GameTooltip` hook registry, structured composition, `AddLine`/`AddDoubleLine` helpers. BPU hooks GameTooltip in 5 files today. Also needed by rgx-mod display types.
+9. **RGXAuras — SHIPPED, RESTRICTED-VALUE HARDENING OPEN.** The player spell-ID path is guaranteed; arbitrary any-unit `auraData` remains best-effort and is tracked by production blocker #36. The original 12.0.7 generated-doc audit is historical provenance, not the current compatibility claim.
+10. **RGXTooltip — SHIPPED.** `GameTooltip` hook registry, structured composition, and failure-isolated native hooks.
 11. **RGXCombatLog** — structured `COMBAT_LOG_EVENT_UNFILTERED` dispatch: parse subevent, source/dest GUIDs, spellId. Needed by BLU Combat, BPU capture events, and is the core rgx-mod event trigger.
 
-### Tier 4 — Declarative authoring layer (see `docs/DECLARATIVE-DSL.md` on the `dsl` branch)
+### Tier 4 — Declarative authoring layer (see `docs/DECLARATIVE-API.md`)
 
 **THE SIMPLICITY CONTRACT is frozen** in that doc — it binds all authoring-surface work so the docs never get rewritten again. The seven rules, condensed:
 1. Zero boilerplate — line 1 of a consumer addon is the addon (`RGXAddon "Name" { }`, a framework global; shipped, PR #3). `local RGX = assert(...)` is the escape hatch, never the front door.
@@ -231,7 +222,7 @@ docs/ARCHITECTURE.md     — internals, load order, module registration conventi
 
 ## Version and release conventions
 
-- Version string lives in `RGX-Framework.toc` (`## Version:`)
+- Version string lives in all six `RGX-Framework*.toc` files; every flavor must match
 - `core/core.lua` reads it at runtime: `RGX.version = GetAddOnMetadataCompat(addonName, "Version")`
 - Keep `docs/CHANGES.md` as the current release summary
 - Add matching file in `docs/changelogs/<version>.md`
@@ -247,23 +238,30 @@ validated against the others, not in isolation.
 
 - **`.github/workflows/ci.yml`** runs on every push and PR (not just release
   tags), so a regression is caught before it can ship to the consumers that
-  depend on this framework. Three gates:
+  depend on this framework. Gates include:
   - **Lua syntax** — `tools/ci/lua-syntax-check.mjs` parses every `.lua` with
     luaparse against WoW's Lua 5.1 dialect.
   - **Schema** — `tools/ci/schema-check.mjs` compiles `schemas/rgx-addon.schema.json`
     with the same `Ajv2020` build/options `tools/rgx-mcp/src/server.js` uses.
+  - **Flavor compatibility** — validates all six Interface/version TOCs, mocked
+    runtime capabilities, and package inventory.
+  - **Package boundary** — builds the deterministic runtime allowlist and rejects
+    source tooling, docs, schemas, or unsupported file types.
+  - **Wiki** — generates every canonical Markdown page, rejects unmapped pages,
+    duplicate targets, and broken internal wiki links.
   - **rgx-mcp end-to-end** — clones a fresh RGX-Hello and runs
     `tools/rgx-mcp/test/test-rgx-hello.mjs` (generate/validate/audit the real
     reference addon).
 - **RGX-Hello's own CI** clones this framework and runs the same Lua gate +
   rgx-mcp e2e against the Hello checkout, keeping the pair in lockstep.
 - Run the gates locally before pushing:
-  `cd tools/ci && npm ci && npm run lua-check && npm run schema-check`, and
-  `cd tools/rgx-mcp && npm install && node test/test-rgx-hello.mjs /path/to/RGX-Hello`.
-- **Docs are canonical, the wiki publishes from them.** `docs/` (including
-  `description.html`) is the single source; the GitHub wiki is generated from
-  `docs/`, not maintained separately. Edit docs under `docs/`, never the wiki
-  directly.
+  `cd tools/ci && npm ci && npm run lua-check && npm run schema-check && npm run flavor-check && npm run package-check`,
+  `node tools/wiki/build-wiki.mjs /tmp/rgx-wiki-out`, and
+  `cd tools/rgx-mcp && npm ci && node test/test-rgx-hello.mjs /path/to/RGX-Hello`.
+- **Docs are canonical.** Markdown pages listed in `tools/wiki/manifest.json`
+  generate the GitHub Wiki; never edit the wiki directly. `docs/description.html`
+  is the canonical addon-service description, but service-page publication is a
+  separate manual step documented in `docs/DISTRIBUTION.md`.
 
 ---
 

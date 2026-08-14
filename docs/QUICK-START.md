@@ -1,6 +1,6 @@
 # Quick Start
 
-> **The fast path is the [[Declarative API]].** For most addons, `RGXAddon "MyAddon" { ... }` is the entire integration — saved settings, options panel, slash command, minimap button, events, all in one call. The rest of this page is the **à la carte** path: reaching individual modules directly through `_G.RGXFramework`, for addons that need to go beyond the declarative surface (see [RGX-Hello's](https://github.com/DonnieDice/RGX-Hello) `data/visualtest.lua` for a full worked example of this style).
+> **The fast path is the [[Declarative API]].** For most addons, `RGXAddon "MyAddon" { ... }` provides saved settings, an options panel, a slash command, and a minimap button in one call. Events and timers use the scoped methods on the returned addon until their Tier 4 declarative forms ship. The rest of this page is the **à la carte** path: reaching individual modules directly through `_G.RGXFramework`, for addons that need to go beyond the declarative surface (see [RGX-Hello's](https://github.com/DonnieDice/RGX-Hello) `data/visualtest.lua` for a full worked example of this style).
 
 This page walks you through integrating RGX-Framework into a consumer addon, from TOC setup to first font/color/module usage.
 
@@ -293,11 +293,11 @@ local myObj = DataBroker:NewDataObject("MyAddon", {
 ### MyAddon.toc
 
 ```toc
-## Interface: 120005
+## Interface: 120100
 ## Title: MyAddon
 ## Author: Me
 ## Version: 1.0.0
-## Dependencies: RGX-Framework
+## RequiredDeps: RGX-Framework
 ## SavedVariables: MyAddonDB
 
 MyAddon.lua

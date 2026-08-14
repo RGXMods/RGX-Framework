@@ -17,7 +17,7 @@
 RGX-Framework is a modern WoW addon framework for Retail and supported Classic clients. One dependency gives your addon suite events, timers, hooks, slash commands, fonts, colors, textures, dropdowns, UI controls, minimap buttons, options panels, a design system, and more. No embedding. No version conflicts. When the framework updates, every addon on the player's machine benefits automatically.
 </div>
 <div style="margin-top:8px;color:#c7d0db;line-height:1.5">
-It stays quiet for players and useful for authors. If another addon requires RGX-Framework, install it and leave it enabled. If you are building addons, use it as a single shared library with a clean API — no LibStub, no embedding tax, no legacy compat shims.
+It stays quiet for players and useful for authors. If another addon requires RGX-Framework, install it and leave it enabled. If you are building addons, use it as a single shared library with a clean API &mdash; no LibStub, no embedding tax, and no bundled dependency chain.
 </div>
 </div>
 
@@ -94,6 +94,7 @@ It stays quiet for players and useful for authors. If another addon requires RGX
 <td style="width:58%;vertical-align:top;padding:12px 14px;background-color:#141b20;border:1px solid #2f454d">
 <div style="font-size:18px;font-weight:700;color:#4ecdc4">Quick Start</div>
 <pre style="margin-top:10px;background-color:#0d1117;color:#c9d1d9;border:1px solid #30363d;padding:10px;white-space:pre-wrap">## RequiredDeps: RGX-Framework
+## SavedVariables: MyAddonDB
 
 RGXAddon "MyAddon" {
   slash   = "myaddon",
@@ -107,23 +108,29 @@ RGXAddon "MyAddon" {
   },
   welcome = "loaded &mdash; /myaddon for options",
 }</pre>
-<div style="margin-top:8px;color:#c7d0db;font-size:13px">One call = saved settings, options panel, slash command, minimap button &mdash; all routed through taint-safe framework paths.</div>
+<div style="margin-top:8px;color:#c7d0db;font-size:13px">One call = saved settings, options panel, slash command, minimap button &mdash; all routed through framework-managed paths.</div>
 </td>
 <td style="width:42%;vertical-align:top">
 <div style="padding:12px 14px;background-color:#1b1520;border:1px solid #4a3147;margin-bottom:12px">
 <div style="font-size:18px;font-weight:700;color:#ff8fab">Compatibility</div>
 <div style="margin-top:10px;color:#e6edf3;line-height:1.7">
-&bull; Retail, Classic Era, TBC, Wrath/Titan, Cataclysm, and Mists<br/>
-&bull; Retail Interface: <span style="color:#58a6ff">120100</span><br/>
-&bull; Full Ace3 alternative &mdash; no LibStub required
+&bull; Current release: <a href="https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.6.1" style="color:#58a6ff">v2.6.1</a><br/>
+&bull; Retail: <span style="color:#58a6ff">120100</span><br/>
+&bull; Classic Era: <span style="color:#58a6ff">11509</span><br/>
+&bull; TBC: <span style="color:#58a6ff">20506</span><br/>
+&bull; Wrath/Titan: <span style="color:#58a6ff">38002</span><br/>
+&bull; Cataclysm: <span style="color:#58a6ff">40402</span><br/>
+&bull; Mists: <span style="color:#58a6ff">50504</span><br/>
+&bull; Shared framework alternative to Ace3 &mdash; no LibStub required
 </div>
 </div>
 
 <div style="padding:12px 14px;background-color:#151a22;border:1px solid #30363d">
 <div style="font-size:18px;font-weight:700;color:#ffd166">Documentation</div>
 <div style="margin-top:10px;color:#e6edf3;line-height:1.7">
-&bull; <a href="https://github.com/DonnieDice/RGX-Framework#wiki" style="color:#58a6ff">Full Wiki</a><br/>
+&bull; <a href="https://github.com/DonnieDice/RGX-Framework/wiki" style="color:#58a6ff">Full Wiki</a><br/>
 &bull; <a href="https://github.com/DonnieDice/RGX-Framework/blob/main/docs/API.md" style="color:#58a6ff">API Reference</a><br/>
+&bull; <a href="https://github.com/DonnieDice/RGX-Framework/blob/main/docs/DISTRIBUTION.md" style="color:#58a6ff">Distribution</a><br/>
 &bull; <a href="https://github.com/DonnieDice/RGX-Framework/blob/main/docs/MIGRATION.md" style="color:#58a6ff">Migration Guide</a><br/>
 &bull; <a href="https://github.com/DonnieDice/RGX-Framework/blob/main/docs/SUPER-SIMPLE.md" style="color:#58a6ff">Super Simple Integration</a><br/>
 &bull; <a href="https://github.com/DonnieDice/RGX-Framework/blob/main/docs/DECLARATIVE-API.md" style="color:#58a6ff">Declarative API</a>
@@ -135,6 +142,15 @@ RGXAddon "MyAddon" {
 
 <div style="height:12px"></div>
 
+<div style="padding:12px 14px;background-color:#141b20;border:1px solid #2f454d">
+<div style="font-size:18px;font-weight:700;color:#4ecdc4">One Runtime-Only Product</div>
+<div style="margin-top:8px;color:#e6edf3;line-height:1.5">
+RGX-Framework publishes only the WoW addon archive. The v2.6.1 GitHub release contains <code>RGX-Framework-v2.6.1.zip</code> and automation metadata. Documentation, schemas, Node tooling, reference sources, and the temporary MCP conformance fixture are never included in player installs.
+</div>
+</div>
+
+<div style="height:12px"></div>
+
 <div style="padding:12px 14px;background-color:#1b1520;border:1px solid #4a3147">
 <div style="font-size:18px;font-weight:700;color:#ff8fab">Source Conformance Fixture</div>
 <div style="margin-top:8px;color:#e6edf3;line-height:1.5">
@@ -143,7 +159,8 @@ The source repository temporarily contains an <a href="https://modelcontextproto
 <div style="margin-top:8px;color:#c7d0db;line-height:1.7">
 &bull; <code>rgx_validate_addon</code> &mdash; schema-check an RGXAddon table &nbsp;
 &bull; <code>rgx_audit_lua</code> &mdash; scan for unsafe WoW patterns &nbsp;
-&bull; <code>rgx_generate_addon</code> &mdash; emit a contract-congruent addon
+&bull; <code>rgx_generate_addon</code> &mdash; emit a contract-congruent addon &nbsp;
+&bull; <code>rgx_get_contract</code> &mdash; expose the canonical source contract
 </div>
 </div>
 

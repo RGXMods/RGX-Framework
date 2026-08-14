@@ -1,4 +1,4 @@
-# RGX-MCP - temporary source conformance fixture
+# RGX-MCP - Temporary Source Conformance Fixture
 
 `tools/rgx-mcp/` is a temporary read-only [MCP](https://modelcontextprotocol.io) (Model Context Protocol) fixture used by source-tree CI to validate, audit, and generate declarative RGX addons against the framework's frozen Simplicity Contract. It is never part of the Lua/XML/media addon archive.
 
@@ -48,7 +48,7 @@ MCP server. See [[Distribution]].
 
 ## The tandem loop
 
-`tools/rgx-mcp/test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK against the real [RGX-Hello](https://github.com/DonnieDice/RGX-Hello) repo — generate, validate, audit. If the reference addon drifts from the contract, the framework's own test fails. This loop has caught real shipped bugs (the declarative slider's `suffix` being silently dropped; the generator's hyphenated-name SavedVariables mismatch).
+`tools/rgx-mcp/test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK against the real [RGX-Hello](https://github.com/DonnieDice/RGX-Hello) repo. It parses the actual curried `RGXAddon` table as Lua 5.1, validates that complete options object, generates the matching supported surface, and audits the actual Lua tree. Unknown or Tier 4 keys therefore fail instead of hiding behind a hand-maintained transcription. This loop has caught real shipped bugs, including the dropped slider `suffix` and a hyphenated-name SavedVariables mismatch.
 
 ```bash
 node test/test-rgx-hello.mjs /path/to/RGX-Hello
@@ -56,7 +56,7 @@ node test/test-rgx-hello.mjs /path/to/RGX-Hello
 
 Source: [`tools/rgx-mcp/`](https://github.com/DonnieDice/RGX-Framework/tree/main/tools/rgx-mcp).
 
-## Build MCP With The Runtime
+## Contract Congruence
 
 Easy for humans to write is easy for agents to generate. `RGXAddon` is the
 shared front door; the MCP must not invent a separate agent-only authoring

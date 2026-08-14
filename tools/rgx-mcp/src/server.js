@@ -78,9 +78,9 @@ const DETECTORS = [
   },
   {
     id: "secret_aura_field_risk",
-    pattern: /UnitAura\s*\(|GetAuraDataByIndex[\s\S]{0,120}?\.spellId\s*==/,
+    pattern: /\b(?:isFullUpdate|addedAuras|removedAuraInstanceIDs|updatedAuraInstanceIDs)\b|UnitAura\s*\(|GetAuraDataByIndex[\s\S]{0,120}?\.spellId\s*==/,
     advice:
-      "Midnight secret auras: comparing aura fields on restricted units taints. Use RGXAuras (HasPlayerAura/GetAura keep comparisons behind an internal pcall boundary).",
+      "Midnight secret auras: payload fields and aura results can be restricted. Prefer RGXAuras player spell-ID helpers. For any other value, use Blizzard's supported secrecy predicates before boolean tests, comparison, indexing, iteration, formatting, or forwarding. pcall catches errors but does not prevent taint; RGXAuras any-unit hardening is tracked in #36.",
   },
   {
     id: "raw_hook_reassignment",
@@ -197,6 +197,14 @@ server.tool(
     const tier4Used = ["on", "every"].filter((k) => k in opts);
     if (opts.options && typeof opts.options === "object" && "columns" in opts.options) {
       tier4Used.push("options.columns");
+    }
+    if (opts.options && typeof opts.options === "object") {
+      for (const [tab, controls] of Object.entries(opts.options)) {
+        if (!Array.isArray(controls)) continue;
+        controls.forEach((control, index) => {
+          if (typeof control === "string") tier4Used.push(`options.${tab}[${index}]`);
+        });
+      }
     }
     const report = {
       valid,

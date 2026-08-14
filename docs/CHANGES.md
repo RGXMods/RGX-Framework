@@ -1,6 +1,6 @@
 # Changes
 
-## Current Development Release
+## Current Release
 
 ### [v2.6.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.6.1.md) - 2026-08-13
 
@@ -9,11 +9,19 @@
 - Deterministic runtime verification now includes all six flavor TOCs.
 - Corrected premature documentation claims: declarative `on` and `every` remain
   frozen future contract forms until their runtime implementation lands.
+- Published assets are exactly `RGX-Framework-v2.6.1.zip` and `release.json`;
+  the inspected addon archive contains 100 runtime files and all six flavor TOCs.
 
 ### [v2.6.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.6.0.md) - 2026-08-13
 
 - Added capability-gated support and verified TOCs for Retail, Classic Era,
   TBC, Wrath/Titan, Cataclysm, and Mists Classic.
+
+### [v2.5.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.5.1.md) - 2026-08-12
+
+- Added the cross-version compatibility layer later used by the six-flavor
+  release, hardened aura update payload access, and added pet-battle queries.
+- Shipped accumulated dropdown, font, color-picker, and options-panel fixes.
 
 ### [v2.5.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.5.0.md) - 2026-07-04
 
@@ -36,7 +44,7 @@
 - **RGXColorPicker redesigned** with a modern circular control vocabulary (ring-and-fill drag handles on the SV box and hue bar, circular swatches and preview, hover feedback on presets, primary-themed focus states on the hex/RGB inputs) built on `RGXDesign` tokens instead of hardcoded colors, replacing the borrowed Blizzard minimize-button icon that was standing in for a cursor.
 - **`UI:CreateLabel` fixed to actually wrap long text.** FontStrings with no explicit width auto-size to a single line and silently overflow their parent frame's edge instead of breaking — every multi-sentence label (e.g. the visual test harness's "What to test" hints) rendered past its panel. `CreateLabel` now accepts an opt-in `options.width` that enables `SetWordWrap` and justification; short labels are unaffected.
 - **`tools/rgx-visual-test/` moved to the `RGX-Hello` repo**, merged into that addon rather than shipped as a separate in-tree dev tool — RGX-Hello is now both the minimal reference addon and the visual QA harness.
-- **`tools/rgx-mcp/` now ships inside the packaged addon zip** (previously excluded). Addon authors who install RGX-Framework and want to build on it should already have the framework's MCP server on hand instead of needing a separate download.
+- **Historical v2.4.0 behavior:** `tools/rgx-mcp/` was intentionally added to the packaged addon ZIP. This was later reversed; as of v2.6.1 it is a temporary source-only CI fixture and never ships to players.
 
 ### [v2.3.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.3.0.md) - 2026-07-03
 
@@ -51,18 +59,18 @@
 
 ### [v2.2.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.2.0.md) - 2026-07-02
 
-- **rgx-mcp ships in-tree** at `tools/rgx-mcp/` — read-only MCP server (validate/audit/generate against the Simplicity Contract), excluded from the player zip; anyone with the checkout has the tool. Registered in `.mcp.json`.
+- **rgx-mcp ships in-tree** at `tools/rgx-mcp/` — read-only MCP server (validate/audit/generate against the Simplicity Contract). It was intended to be excluded from the player ZIP, but the v2.2.0 package leaked `tools/`, `docs/`, and `schemas/`; v2.2.1 corrected the packager rules. Registered in `.mcp.json` for source checkouts.
 - **CI: Discord notifications fixed** — the notify step now fails loudly on webhook rejection instead of silently succeeding (`curl` without `--fail` treated 4xx as success); avatar URL corrected; empty-secret guard added.
 - Repaired double-encoded UTF-8 (mojibake) across 11 documentation files; deleted `docs/USAGE-BPU.md` in favor of the Tier 2 work item it described.
-- **New module: RGXAuras** — taint-safe aura scanning and watching (`HasPlayerAura`/`GetPlayerAura` fast path, `HasAura`/`GetAura`/`IterateAuras` for any unit, `WatchUnit` incremental `UNIT_AURA` cache with `OnApplied`/`OnRemoved`/`OnUpdated` callbacks). Designed around Midnight's secret-aura restrictions: every potentially-secret field comparison stays behind an internal pcall boundary, so restricted units yield nil/false instead of taint. Generalizes BPU's `PlayerHasAuraSpellID` pattern; first rgx-mod trigger primitive.
-- **`RGXAddon` global entry point** — line 1 of a consumer addon is the addon: `RGXAddon "MyAddon" { ... }` (curried form supported). Wraps `RGX.Addon`; per the frozen Simplicity Contract (`docs/DECLARATIVE-DSL.md`, `dsl` branch), the `local RGX = assert(...)` form is now the documented escape hatch, not the front door.
+- **New module: RGXAuras** — player spell-ID fast paths, best-effort unrestricted-unit scans, and incremental `UNIT_AURA` watching. Later restricted-value audits clarified that arbitrary `auraData` is not a general secrecy boundary and `pcall` does not prevent taint; see the current Auras documentation.
+- **`RGXAddon` global entry point** — line 1 of a consumer addon is the addon: `RGXAddon "MyAddon" { ... }` (curried form supported). Wraps `RGX.Addon`; the `local RGX = assert(...)` form is the documented escape hatch, not the front door. The current human contract is `docs/DECLARATIVE-API.md`.
 - **Declarative API contract shipped** — `schemas/rgx-addon.schema.json` (machine-checkable shape of the `RGXAddon` opts table; keys annotated `x-rgx-ships: today|tier4`, trigger vocabulary + control grammar encoded) and `docs/DECLARATIVE-API.md` (human reference for the shipped surface, verified against `core/core.lua`). This is Tier 5 #14 and the contract the external `rgx-mcp` tool validates against. Schema excluded from the packaged zip.
 - `RGXSharedMedia` now fires the internal message `RGX_SHAREDMEDIA_UPDATED` after every scan so consumers can re-import bridge entries and refresh media pickers.
 - Added `SM:ExcludeFolder(addonFolderName)` — consumers that manage their own media can exclude their AddOn folder from the generic scan so their paths are not re-bridged as duplicates. The framework's own folder is excluded by default.
 - Packaging fixes: added missing `LICENSE.txt` (TOC already declared `X-License: MIT`); `.pkgmeta` now excludes agent/tool files (`CLAUDE.md`, `Home.md`, `.agents/`, `.claude/`, `graphify-out/`) from the zip, uses the valid `manual-changelog` key pointing at `docs/CHANGES.md`, and drops stale font-download instructions (fonts are committed under `media/fonts/`).
 - Removed dead `KittyGetSoundPacks` / `KittyRegisterSoundPack` scan and hook from `RGXSharedMedia` — these globals never existed in any real addon; the generic addon-global scan already covers third-party sound packs.
 - Enforced the framework's own "no `C_Timer`" rule: `RGXDelves:QueueLivesRefresh` and `RGXHonor:QueueCheck` now use `RGX:After` so deferred work is budgeted and diagnosable by the framework timer driver.
-- Documented the design thesis in `CLAUDE.md`: the framework prevents taint and deprecated-API bugs by construction. Verified by audit that the framework (and consumers BLU, BPU) use only `hooksecurefunc`, no protected-function calls, with correct combat-lockdown handling.
+- Documented the design thesis in `CLAUDE.md`: centralize current-API adapters, failure isolation, and combat-lockdown guards so consumers avoid unsafe plumbing. Restricted values remain opaque; `pcall` is not a taint boundary.
 
 ### [v2.1.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.1.0.md) - 2026-06-30
 

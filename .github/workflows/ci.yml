@@ -44,6 +44,10 @@ jobs:
         working-directory: tools/ci
         run: npm run package-check
 
+      - name: Documentation and distribution congruence
+        working-directory: tools/ci
+        run: npm run docs-check
+
       - name: Wiki manifest gate (every mapped doc exists)
         run: node tools/wiki/build-wiki.mjs "${RUNNER_TEMP}/wiki-out"
 

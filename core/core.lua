@@ -581,7 +581,7 @@ function RGX.Addon(name, opts)
     return addon
 end
 
--- Global entry point per the Simplicity Contract (docs/DECLARATIVE-DSL.md):
+-- Global entry point per the Simplicity Contract (docs/DECLARATIVE-API.md):
 -- line 1 of a consumer addon is the addon — RequiredDeps guarantees this
 -- global exists. Supports both call forms:
 --   RGXAddon("MyAddon", { ... })

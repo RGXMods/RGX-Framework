@@ -106,7 +106,7 @@ If no storage is provided, the angle is not persisted between sessions.
 
 ## DataBroker Integration
 
-Minimap buttons created via `RGXMinimap` are compatible with DataBroker display addons (like TitanPanel, ChocolateBar). For DataBroker-based minimap icons, see [[DataBroker]].
+Minimap buttons created via `RGXMinimap` are compatible with DataBroker display addons (like TitanPanel, ChocolateBar). For DataBroker APIs, see [DataBroker](API.md#databroker-rgxdatabroker).
 
 ---
 

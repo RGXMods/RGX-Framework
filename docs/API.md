@@ -728,18 +728,22 @@ Reputation and renown tracking, normalized across expansions.
 
 ## Auras (`RGXAuras`)
 
-Taint-safe aura scanning and watching, built against the Midnight 12.0.7 generated API docs. Midnight's **secret auras** make comparing aura fields on restricted units a taint vector — this module keeps every such comparison behind an internal pcall boundary, so on restricted units queries simply return `nil`/`false` instead of tainting.
+Aura scanning and watching first audited against the Midnight 12.0.7 generated
+API docs and compatibility-hardened through v2.6.0. The player spell-ID path and
+never-secret instance IDs are the guaranteed primitives. Any-unit `auraData`
+may contain restricted values and must remain opaque; `pcall` can isolate an
+error but cannot prevent or undo taint.
 
 | Method | Description |
 |---|---|
 | `Auras:HasPlayerAura(spellId)` / `GetPlayerAura(spellId)` | Player fast path via `C_UnitAuras.GetPlayerAuraBySpellID` (AllowedWhenTainted — always safe) |
-| `Auras:HasAura(spellId, unit)` / `GetAura(spellId, unit)` | Any unit (`unit` defaults `"player"`); returns nil/false on secret-restricted units by design |
-| `Auras:IterateAuras(unit, filter, fn)` | Enumerate via `GetAuraDataByIndex`; `filter` is an AuraFilters string or nil for HELPFUL+HARMFUL; return `false` from `fn` to stop |
+| `Auras:HasAura(spellId, unit)` / `GetAura(spellId, unit)` | Best-effort lookup for unrestricted units (`unit` defaults `"player"`); not a secret-value boundary |
+| `Auras:IterateAuras(unit, filter, fn)` | Enumerate unrestricted-unit data via `GetAuraDataByIndex`; returned fields may not be inspected when restricted |
 | `Auras:WatchUnit(unit)` / `UnwatchUnit(unit)` | Maintain an incremental `UNIT_AURA` cache for a unit (instance IDs are never secret). Player is watched by default |
 | `Auras:GetAuraByInstanceID(unit, id)` | Cached lookup for watched units, live lookup otherwise |
-| `Auras:OnApplied(fn)` | `fn(unit, auraData)` — fires for watched units |
+| `Auras:OnApplied(fn)` | `fn(unit, auraData)` — fires for watched units; treat restricted fields as opaque |
 | `Auras:OnRemoved(fn)` | `fn(unit, auraInstanceID)` |
-| `Auras:OnUpdated(fn)` | `fn(unit, auraData)` |
+| `Auras:OnUpdated(fn)` | `fn(unit, auraData)`; treat restricted fields as opaque |
 
 All `On*` registrars return an unsubscribe closure.
 

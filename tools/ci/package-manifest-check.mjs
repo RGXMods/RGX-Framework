@@ -28,16 +28,21 @@ const FORBIDDEN_PLAYER_SEGMENTS = new Set([
 ]);
 
 const args = process.argv.slice(2);
-const options = { root: resolve(join(process.cwd(), "..", "..")), out: null, inspect: null };
+const options = { root: resolve(join(process.cwd(), "..", "..")), out: null, inspect: null, expectedCount: null };
 for (let i = 0; i < args.length; i++) {
   const arg = args[i];
-  if (arg === "--out" || arg === "--inspect") {
+  if (arg === "--out" || arg === "--inspect" || arg === "--expected-count") {
     const value = args[++i];
     if (!value || value.startsWith("--")) throw new Error(`${arg} requires a path`);
-    options[arg.slice(2)] = value;
+    if (arg === "--expected-count") {
+      options.expectedCount = Number(value);
+      if (!Number.isInteger(options.expectedCount) || options.expectedCount < 1) throw new Error("--expected-count requires a positive integer");
+    } else {
+      options[arg.slice(2)] = value;
+    }
   }
   else if (arg === "-h" || arg === "--help") {
-    console.log("Usage: package-manifest-check.mjs [repo-root] [--out <dir>] [--inspect <runtime.zip>]");
+    console.log("Usage: package-manifest-check.mjs [repo-root] [--out <dir>] [--inspect <runtime.zip>] [--expected-count <n>]");
     process.exit(0);
   } else if (arg.startsWith("--")) {
     throw new Error(`unknown option: ${arg}`);
@@ -316,6 +321,9 @@ const failures = [
   ...validateSourceBoundary(runtimeFiles),
   ...validateRuntime(archiveEntries(runtimeZip), runtimeExpected),
 ];
+if (options.expectedCount !== null && runtimeFiles.length !== options.expectedCount) {
+  failures.push(`runtime inventory: expected ${options.expectedCount} files, got ${runtimeFiles.length}`);
+}
 if (options.inspect) failures.push(...inspectExternalRuntime(options.inspect, runtimeFiles));
 
 if (failures.length) {
