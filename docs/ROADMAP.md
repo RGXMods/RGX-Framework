@@ -140,7 +140,7 @@ These modules shipped; remaining hardening is tracked separately.
 
 The canonical shipped/future boundary is [[Declarative API]]. The declarative Lua table is the foundation; any future syntax compiles to it.
 
-13. **Harden `RGX.Addon({...})`** — one declarative table defines events, unit events, timers, slash, minimap, and DB defaults
+13. **Harden `RGX.Addon({...})`** — the v2.7.0 candidate (latest published release: v2.6.2) adds named `every` timers with strict validation, deterministic dispatch, lifecycle binding, metadata, and failure isolation; human `on` triggers and remaining forms stay additive future slices
 14. **Grid/matrix options UI** — declarative 1/2/3-column card layouts, flexible element rows, every control bound to `addon.db` with automatic save/restore (also fixes the live BLU/SQP hand-rolled-slider persistence bug class at the framework level)
 
 ### Tier 5 — Schema + source conformance fixture

@@ -180,13 +180,23 @@ RGX runs its own tick-based timer driver on a hidden `OnUpdate` frame. Timers ar
 
 ```lua
 timer = {
-    id, label, duration, callback, repeating, elapsed, active
+    id, label, duration, callback, repeating, elapsed, active,
+    owner?, name?, declarativeName?
 }
 ```
 
 - `RGX:After(dur, cb)` — one-shot, returns timer ref
 - `RGX:Every(dur, cb)` — repeating, cb receives `timer` as first arg so it can cancel itself
 - `RGX:CancelTimer(timer)` — marks `timer.active = false`; removed on next tick
+
+`RGXAddon` can declare `every = { name = { seconds, handler } }`. These timers
+start after the consumer's matching `ADDON_LOADED`, carry owner/name metadata,
+and use a stable `AddonName:every:name` label. Definitions are sorted and
+registered in reverse because the driver walks newest-to-oldest; timers from one
+declaration that become due on the same update therefore dispatch in lexical
+name order. A persistent scan cursor resumes budget-deferred work on the next
+update so a large due set cannot starve later names. Callback errors retain the
+timer label and remain failure-isolated.
 
 **Budget:** `timerBudget = { maxPerFrame = 256, maxSeconds = 0.033, slowSeconds = 0.250, slowByLabel = { ["SharedMedia:QueueScan"] = 0.500 } }`. Slow callbacks (>250ms by default) are reported via `[RGX:timer-slow]`; known-heavy labels get per-label overrides instead of raising the global threshold. The driver pauses `OnUpdate` when no active timers remain. (The threshold was raised from 50ms in v2.0.0-alpha.1 — media scanning is normal I/O, not a fault.)
 

@@ -36,6 +36,7 @@ jobs:
         run: |
           npm ci --no-audit --no-fund
           npm run lua-check
+          npm run lua-runtime-check
           npm run schema-check
           npm run flavor-check
           npm run package-check
@@ -121,9 +122,21 @@ jobs:
             tag="${GITHUB_REF#refs/tags/}"
             norm_tag="${tag#v}"
             norm_ver="${version#v}"
+            snapshot_version="$(node -p "require('./tools/ci/release-snapshot.json').version")"
+            published_version="$(node -p "require('./tools/ci/release-snapshot.json').publishedVersion || require('./tools/ci/release-snapshot.json').version")"
 
             if [[ "$norm_tag" != "$norm_ver" ]]; then
               echo "::error::Tag '$tag' does not match RGX-Framework.toc version '$version'."
+              exit 1
+            fi
+
+            if [[ "$norm_tag" != "${snapshot_version#v}" ]]; then
+              echo "::error::Tag '$tag' does not match release snapshot version '$snapshot_version'."
+              exit 1
+            fi
+
+            if [[ "$norm_tag" != "${published_version#v}" ]]; then
+              echo "::error::Tag '$tag' cannot publish while public surfaces still identify '$published_version' as the latest release."
               exit 1
             fi
 

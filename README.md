@@ -12,6 +12,10 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 
 ## Quick Start
 
+> This source branch targets the `v2.7.0` candidate. The named `every` form
+> below is not available in the latest published release, `v2.6.2`, until the
+> candidate completes its required in-game validation and is tagged.
+
 **1. Declare the dependency:**
 
 ```toc
@@ -28,6 +32,11 @@ RGXAddon "MyAddon" {
     slash   = "myaddon",              -- /myaddon opens the options panel
     minimap = "Interface\\AddOns\\MyAddon\\media\\logo.tga",
     db      = { enabled = true, volume = 80 },   -- SavedVariables proxy on addon.db
+    every   = {
+        heartbeat = { 30, function(self, timer)
+            self.heartbeatTicks = (self.heartbeatTicks or 0) + 1
+        end },
+    },
     options = {
         General = {
             { section = "Settings" },
@@ -39,9 +48,6 @@ RGXAddon "MyAddon" {
         self:RegisterEvent("PLAYER_LOGIN", function()
             self:Print("Ready!")
         end)
-        self:Every(30, function()
-            self.heartbeatTicks = (self.heartbeatTicks or 0) + 1
-        end, "MyAddon:heartbeat")
     end,
     welcome = "loaded — /myaddon for options",
 }
@@ -53,9 +59,9 @@ output, and lifecycle work routed through scoped framework methods. The `addon`
 object carries `RegisterEvent`, `RegisterUnitEvent`, `RegisterMessage`, `After`,
 `Every`, `Print`, `Warn`, and `Error`, so consumers do not need raw WoW plumbing.
 
-> Human `on` triggers, named `every` timers, one-line controls, and grid card
-> layouts remain frozen future contract forms. Use the addon's scoped event and
-> timer methods today; anything not yet declarative is available a la carte below.
+> Human `on` triggers, one-line controls, and grid card layouts remain frozen
+> future contract forms. Named `every` timers ship today; use scoped methods for
+> events and other behavior that is not yet declarative.
 
 **3. À la carte — individual systems when you need them:**
 
@@ -238,7 +244,8 @@ RGX Studio. RGX-Framework publishes only the framework addon package. See
 
 ## Compatibility
 
-- **Current release:** [`v2.6.2`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.6.2)
+- **Latest published release:** [`v2.6.2`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.6.2)
+- **Development candidate:** `v2.7.0` (declarative named timers; awaiting required in-game validation)
 - **Clients:** Retail `120100`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
 - **Distribution:** one runtime-only addon package; see [Distribution](docs/DISTRIBUTION.md)
 - `C_AddOns.GetAddOnMetadata` and `GetAddOnMetadata` both handled

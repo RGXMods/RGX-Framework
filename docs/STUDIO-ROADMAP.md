@@ -31,8 +31,9 @@ milestone intentionally has no due date and no implementation assignees while
 blocked.
 
 Public status snapshot, updated 2026-08-14: RGX-Framework `v2.6.2` is live as a
-runtime-only addon release, but the production gate remains open and declarative
-named timers remain in progress. The
+runtime-only addon release. A `v2.7.0` declarative named-timer candidate is under
+automated verification and still requires its in-game acceptance check. The
+production gate remains open. The
 [`RGXAuras restricted-value boundary`](https://gitlab.dicematrix.cloud/rgxmods/warcraft/monorepo/-/work_items/36)
 is also an open production blocker. Studio is still blocked. GitLab is the
 authoritative tracker and may require sign-in; this page is the public roadmap

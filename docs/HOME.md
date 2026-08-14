@@ -8,6 +8,10 @@ Current release `v2.6.2` supports Retail `120100`, Classic Era `11509`, TBC
 `20506`, Wrath/Titan `38002`, Cataclysm `40402`, and Mists `50504` from one
 runtime-only addon package.
 
+The source tree targets a `v2.7.0` candidate with declarative named timers. The
+example below describes that candidate and remains unreleased until its in-game
+acceptance check is complete.
+
 > **Related:** [CurseForge](https://www.curseforge.com/wow/addons/rgx-framework) · [GitHub](https://github.com/DonnieDice/RGX-Framework) · [Issues](https://github.com/DonnieDice/RGX-Framework/issues) · [RGX-Hello (reference addon + test suite)](https://github.com/DonnieDice/RGX-Hello)
 
 ---
@@ -30,6 +34,11 @@ RGXAddon "MyAddon" {
     slash   = "myaddon",
     minimap = true,
     db      = { enabled = true, volume = 80 },
+    every   = {
+        heartbeat = { 30, function(self, timer)
+            self.heartbeatTicks = (self.heartbeatTicks or 0) + 1
+        end },
+    },
     options = {
         General = {
             { toggle = "enabled" },
@@ -40,7 +49,7 @@ RGXAddon "MyAddon" {
 }
 ```
 
-That gives you saved settings with profiles, a tabbed options panel with controls that save **and restore**, a slash command, a minimap button whose position persists, and branded chat output. Every key works bare with assumed arguments and accepts an advanced form when you need more — see [[Declarative API]].
+That gives you saved settings with profiles, a tabbed options panel with controls that save **and restore**, a named repeating timer, a slash command, a minimap button whose position persists, and branded chat output. Every key works bare with assumed arguments and accepts an advanced form when you need more — see [[Declarative API]].
 
 `local RGX = _G.RGXFramework` remains available for à la carte use ([[Quick Start]]) — it is the escape hatch, not the front door.
 

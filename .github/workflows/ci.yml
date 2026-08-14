@@ -32,6 +32,10 @@ jobs:
         working-directory: tools/ci
         run: npm run lua-check
 
+      - name: Lua 5.1 runtime behavior gate
+        working-directory: tools/ci
+        run: npm run lua-runtime-check
+
       - name: Schema validation (rgx-addon.schema.json)
         working-directory: tools/ci
         run: npm run schema-check
@@ -61,4 +65,7 @@ jobs:
 
       - name: rgx-mcp end-to-end vs the real RGX-Hello
         working-directory: tools/rgx-mcp
-        run: node test/test-rgx-hello.mjs "${RUNNER_TEMP}/RGX-Hello"
+        # Branch CI preserves compatibility with the latest published Hello.
+        # The release workflow intentionally omits this flag and requires the
+        # reference addon's minimum version to match the Framework source.
+        run: node test/test-rgx-hello.mjs "${RUNNER_TEMP}/RGX-Hello" --allow-older-minimum

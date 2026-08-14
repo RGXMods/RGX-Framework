@@ -1,6 +1,9 @@
 # Quick Start
 
-> **The fast path is the [[Declarative API]].** For most addons, `RGXAddon "MyAddon" { ... }` provides saved settings, an options panel, a slash command, and a minimap button in one call. Events and timers use the scoped methods on the returned addon until their Tier 4 declarative forms ship. The rest of this page is the **à la carte** path: reaching individual modules directly through `_G.RGXFramework`, for addons that need to go beyond the declarative surface (see [RGX-Hello's](https://github.com/DonnieDice/RGX-Hello) `data/visualtest.lua` for a full worked example of this style).
+> **The fast path is the [[Declarative API]].** For most addons, `RGXAddon "MyAddon" { ... }` provides saved settings, named repeating timers, an options panel, a slash command, and a minimap button in one call. Events still use scoped methods on the returned addon until declarative `on` ships. The rest of this page is the **à la carte** path: reaching individual modules directly through `_G.RGXFramework`, for addons that need to go beyond the declarative surface (see [RGX-Hello's](https://github.com/DonnieDice/RGX-Hello) `data/visualtest.lua` for a full worked example of this style).
+
+> Named declarative timers describe the unreleased `v2.7.0` candidate. The
+> latest published release, `v2.6.2`, still requires scoped `addon:Every`.
 
 This page walks you through integrating RGX-Framework into a consumer addon, from TOC setup to first font/color/module usage.
 

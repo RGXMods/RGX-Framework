@@ -7,6 +7,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (path) => readFileSync(join(ROOT, path), "utf8");
 const failures = [];
 const releaseSnapshot = JSON.parse(read("tools/ci/release-snapshot.json"));
+const publishedVersion = releaseSnapshot.publishedVersion ?? releaseSnapshot.version;
 
 const flavorTocs = [
   ["retail", "Retail", "Retail", "RGX-Framework.toc", "120100"],
@@ -49,7 +50,45 @@ const currentSurfaces = [
 const surfaceText = Object.fromEntries(currentSurfaces.map((path) => [path, read(path)]));
 
 for (const path of ["README.md", "docs/HOME.md", "docs/DISTRIBUTION.md", "docs/description.html", "docs/CHANGES.md"]) {
-  if (!surfaceText[path].includes(`v${version}`)) failures.push(`${path}: missing current release v${version}`);
+  if (!surfaceText[path].includes(`v${publishedVersion}`)) failures.push(`${path}: missing published release v${publishedVersion}`);
+}
+
+const exactPublishedMarkers = [
+  ["README.md", `**Latest published release:** [\`v${publishedVersion}\`]`],
+  ["docs/HOME.md", `Current release \`v${publishedVersion}\``],
+  ["docs/DISTRIBUTION.md", `[\`v${publishedVersion}\`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v${publishedVersion})`],
+  ["docs/description.html", `releases/tag/v${publishedVersion}\" style=\"color:#58a6ff\">v${publishedVersion}</a>`],
+];
+for (const [path, marker] of exactPublishedMarkers) {
+  if (!surfaceText[path].includes(marker)) failures.push(`${path}: missing exact latest-published marker for v${publishedVersion}`);
+}
+const changesReleasePattern = new RegExp(`## Current Release\\s+### \\[v${publishedVersion.replace(/\./g, "\\.")}\\]`);
+if (!changesReleasePattern.test(surfaceText["docs/CHANGES.md"])) failures.push(`docs/CHANGES.md: Current Release is not v${publishedVersion}`);
+
+const candidateSurfaces = [
+  "README.md",
+  "docs/API.md",
+  "docs/CHANGES.md",
+  "docs/DECLARATIVE-API.md",
+  "docs/DISTRIBUTION.md",
+  "docs/HOME.md",
+  "docs/QUICK-START.md",
+  "docs/ROADMAP.md",
+  "docs/STUDIO-ROADMAP.md",
+  "docs/SUPER-SIMPLE.md",
+];
+if (publishedVersion !== version) {
+  for (const path of candidateSurfaces) {
+    const source = path in surfaceText ? surfaceText[path] : read(path);
+    if (!source.includes(`v${version}`) || !source.includes(`v${publishedVersion}`) || !/candidate|unreleased/i.test(source)) {
+      failures.push(`${path}: candidate documentation must identify both v${version} and published v${publishedVersion}`);
+    }
+  }
+} else {
+  for (const path of candidateSurfaces) {
+    const source = path in surfaceText ? surfaceText[path] : read(path);
+    if (/candidate|unreleased/i.test(source)) failures.push(`${path}: released documentation still contains candidate wording`);
+  }
 }
 
 for (const path of ["README.md", "docs/HOME.md", "docs/DISTRIBUTION.md", "docs/description.html"]) {
@@ -75,7 +114,7 @@ for (const [, docsLabel, descriptionLabel, tocPath, wowInterface] of flavorTocs)
 }
 
 for (const required of [
-  `RGX-Framework-v${version}.zip`,
+  `RGX-Framework-v${publishedVersion}.zip`,
   "release.json",
   "one product",
   "Source-Only Tooling",
@@ -93,7 +132,7 @@ for (const [path, source] of Object.entries(surfaceText)) {
 
 const readme = surfaceText["README.md"];
 if (/\n\s*on\s*=\s*\{/.test(readme)) failures.push("README.md: primary example uses future declarative on form");
-if (/\n\s*every\s*=\s*\{/.test(readme)) failures.push("README.md: primary example uses future declarative every form");
+if (!/\n\s*every\s*=\s*\{/.test(readme)) failures.push("README.md: primary example is missing shipped declarative every form");
 for (const path of ["README.md", "docs/HOME.md", "docs/description.html", "docs/SUPER-SIMPLE.md"]) {
   if (!surfaceText[path].includes("SavedVariables: MyAddonDB")) failures.push(`${path}: persisted DB example is missing SavedVariables: MyAddonDB`);
 }
@@ -106,9 +145,8 @@ for (const required of [`RGX-Framework-v${version}.zip`, `${releaseSnapshot.runt
 }
 
 const schema = JSON.parse(read("schemas/rgx-addon.schema.json"));
-for (const key of ["on", "every"]) {
-  if (schema.properties?.[key]?.["x-rgx-ships"] !== "tier4") failures.push(`schema: ${key} must remain tier4 until runtime implementation lands`);
-}
+if (schema.properties?.on?.["x-rgx-ships"] !== "tier4") failures.push("schema: on must remain tier4 until runtime implementation lands");
+if (schema.properties?.every?.["x-rgx-ships"] !== "today") failures.push("schema: every must ship today with its runtime implementation");
 
 const studio = surfaceText["docs/STUDIO-ROADMAP.md"];
 for (const required of ["work_items/30", "work_items/36", "Studio is still blocked"]) {
@@ -159,4 +197,5 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log(`DOCS CONGRUENT  v${version}, ${flavorTocs.length} flavors, ${currentSurfaces.length} public surfaces.`);
+const releaseState = publishedVersion === version ? "published" : `candidate v${version}, published`;
+console.log(`DOCS CONGRUENT  ${releaseState} v${publishedVersion}, ${flavorTocs.length} flavors, ${currentSurfaces.length} public surfaces.`);

@@ -167,6 +167,9 @@ emitter:Fire(signal, ...)
 
 ## Timers
 
+> Declarative `every` below is implemented in the unreleased `v2.7.0`
+> candidate. The latest published release is `v2.6.2`.
+
 | Method | Description |
 |---|---|
 | `RGX:After(duration, callback, label)` | One-shot delay; returns timer ref |
@@ -176,6 +179,14 @@ emitter:Fire(signal, ...)
 | `RGX:CreateTimer(duration, callback, repeating, label)` | Low-level; returns timer table |
 
 `Every` callback signature: `function(timer)` — repeating timers can cancel themselves.
+
+Addon-scoped `After` and `Every` refs carry `owner = addon`. Declarative
+`every = { name = { seconds, handler } }` handlers receive
+`function(addon, timer)`, bind after the addon's matching `ADDON_LOADED` setup,
+and carry `name`, `declarativeName`, and stable `AddonName:every:name` labels.
+Definitions in one declaration dispatch lexically by name when they become due
+on the same update. Timer callback failures are reported with the label and
+remain isolated from unrelated timers.
 
 ---
 
