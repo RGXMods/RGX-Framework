@@ -68,19 +68,17 @@ end
 
 local function SafeGetPlayerAuraBySpellID(spellId)
     if type(spellId) ~= "number" then return nil end
-    if not C_UnitAuras or type(C_UnitAuras.GetPlayerAuraBySpellID) ~= "function" then
-        return nil
-    end
-    local ok, auraData = pcall(C_UnitAuras.GetPlayerAuraBySpellID, spellId)
+    local getter = RGX.API and RGX.API.GetPlayerAuraBySpellID
+    if type(getter) ~= "function" then return nil end
+    local ok, auraData = pcall(getter, spellId)
     if not ok then return nil end
     return auraData
 end
 
 local function SafeGetAuraDataByIndex(unit, index, filter)
-    if not C_UnitAuras or type(C_UnitAuras.GetAuraDataByIndex) ~= "function" then
-        return nil
-    end
-    local ok, auraData = pcall(C_UnitAuras.GetAuraDataByIndex, unit, index, filter)
+    local getter = RGX.API and RGX.API.UnitAura
+    if type(getter) ~= "function" then return nil end
+    local ok, auraData = pcall(getter, unit, index, filter)
     if not ok then return nil end
     return auraData
 end

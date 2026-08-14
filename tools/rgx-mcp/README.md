@@ -12,7 +12,7 @@ consumer addons    depend on  →  RGX-Framework
 RGX-Framework      depends on →  nothing (and never on rgx-mcp)
 ```
 
-This tool lives at `tools/rgx-mcp/` **inside the framework repo** and ships inside the packaged addon zip too (since v2.4.0) — anyone who installs RGX-Framework and wants to build their own addon on it already has the MCP server on hand, no separate download. The schema and API reference are read live from the enclosing checkout (one source of truth); set `RGX_FRAMEWORK_PATH` only when running against a different framework tree.
+This transition tool lives at `tools/rgx-mcp/` **inside the framework source repo** for contract-conformance CI. It is excluded from both the WoW player archive and the data-only contract SDK. Public MCP/API/editor tooling belongs to RGX Studio after production gate #30. Set `RGX_FRAMEWORK_PATH` only when intentionally running against a different framework tree.
 
 ## Tools
 
@@ -20,7 +20,7 @@ This tool lives at `tools/rgx-mcp/` **inside the framework repo** and ships insi
 |---|---|
 | `rgx_validate_addon` | Validate an RGXAddon opts table (JSON; Lua functions as `{"$lua":"function"}`) against `schemas/rgx-addon.schema.json`; flags contract-frozen `tier4` keys that don't run yet |
 | `rgx_audit_lua` | Scan a `.lua` file or addon directory for the unsafe patterns the framework prevents: raw `C_Timer`, manual `OnEvent` frames, `SLASH_` globals, unguarded `SetAttribute`, secret-aura field comparisons, raw hook reassignment. Deterministic |
-| `rgx_generate_addon` | Emit a complete contract-congruent addon file using only shipped keys (`RGXAddon "Name" { ... }`) |
+| `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys, including human `on` triggers and named `every` timers (`RGXAddon "Name" { ... }`) |
 | `rgx_get_contract` | Return the schema + shipped-surface reference for agent context |
 
 ## Resources
@@ -30,8 +30,10 @@ This tool lives at `tools/rgx-mcp/` **inside the framework repo** and ships insi
 
 ## Setup
 
+Node.js 20 or newer is required.
+
 ```bash
-npm install
+npm ci --no-audit --no-fund
 ```
 
 Claude Code (`.mcp.json` or `claude mcp add`):
@@ -47,7 +49,7 @@ Claude Code (`.mcp.json` or `claude mcp add`):
 }
 ```
 
-The framework repo ships this in `.mcp.json` already — Claude Code sessions in the repo get the `rgx_*` tools automatically after `npm install` in `tools/rgx-mcp/`.
+Only the framework source checkout ships `.mcp.json`; published artifacts do not. Source-checkout agent sessions get the `rgx_*` tools after `npm ci` in `tools/rgx-mcp/`. The MCP follows the same simplicity rule as the runtime: agents should generate and validate the one-call `RGXAddon` form, not invent a more complex consumer pattern.
 
 ## Testing
 
@@ -60,6 +62,14 @@ node test/test-rgx-hello.mjs /path/to/RGX-Hello
 ## Status
 
 v0.1.0 — Tier 5 #15 of the framework roadmap. Verified over live stdio JSON-RPC: initialize handshake, `tools/list`, and all three tools exercised end-to-end against a real shipped addon (see Testing above). The audit detectors mirror the manual audits performed on the framework, BLU, and BPU.
+
+## Distribution
+
+The MCP source is maintained temporarily with the framework contract for CI but
+is not included in either published ZIP. Each release publishes the data-only
+contract SDK as `RGX-Developer-X.Y.Z.zip` beside its artifact manifest and
+checksums. Run this transition server only from a source checkout with its
+tracked lockfile. Update runtime, schema, docs, and conformance tests together.
 
 ## License
 

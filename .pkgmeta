@@ -3,9 +3,6 @@
 
 package-as: RGX-Framework
 
-# License file (LICENSE.txt at repo root; TOC declares X-License: MIT)
-license: LICENSE.txt
-
 # Files and folders excluded from the packaged zip.
 # NOTE: directory entries must NOT have a trailing slash — the packager's
 # matcher treats "docs/" and "docs" differently, and the slash form silently
@@ -19,14 +16,20 @@ ignore:
   - README.md
   - docs
   - schemas
+  - tools
+  - tests
+  - .github
+  - .reference
+  - .release
+  - artifacts
   - graphify-out
   - .agents
   - .claude
+  - media/kiwi.gif
+  - media/logo.png
 
-# tools/rgx-mcp intentionally ships in the packaged zip: addon authors who
-# install RGX-Framework and want to build their own addon on it should
-# already have the framework's MCP server (validate/audit/generate against
-# schemas/rgx-addon.schema.json) on hand, not need a separate download.
+# MCP and other executable tooling remain source-only. Public API/MCP/editor
+# distribution belongs to RGX Studio; the contract SDK contains data only.
 
 # Release notes come from the canonical changelog summary.
 manual-changelog:

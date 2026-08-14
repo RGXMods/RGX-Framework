@@ -19,10 +19,16 @@ RGX-Framework is a modern, self-contained WoW Retail addon framework — an alte
 ```lua
 -- Line 1 of MyAddon.lua is the addon. RGXAddon is a framework-provided
 -- global; RequiredDeps guarantees it exists. No local, no assert.
-local addon = RGXAddon("MyAddon", {
+RGXAddon "MyAddon" {
     slash   = "myaddon",              -- /myaddon opens the options panel
     minimap = "Interface\\AddOns\\MyAddon\\media\\logo.tga",
     db      = { enabled = true, volume = 80 },   -- SavedVariables proxy on addon.db
+    on      = {
+        login = function(self) self:Print("Ready!") end,
+    },
+    every   = {
+        heartbeat = { 30, function(self) self.heartbeatTicks = (self.heartbeatTicks or 0) + 1 end },
+    },
     options = {
         General = {
             { section = "Settings" },
@@ -31,17 +37,14 @@ local addon = RGXAddon("MyAddon", {
         },
     },
     welcome = "loaded — /myaddon for options",
-    onInit  = function(self)
-        self:RegisterEvent("PLAYER_LOGIN", function()
-            self:Print("Ready!")
-        end)
-    end,
-})
+}
 ```
 
 That is a **complete addon**: profile-aware saved settings, a tabbed options panel with db-bound controls, a slash command, a minimap button, and branded chat output — with every event, timer, and control routed through the framework's taint-safe paths automatically. The `addon` object carries scoped `RegisterEvent` / `RegisterUnitEvent` / `RegisterMessage` / `After` / `Every` / `Print` / `Warn` / `Error` so you never touch raw WoW plumbing.
 
-> The declarative surface grows each release (framework roadmap Tier 4 adds declarative `events`/`timers` tables and grid card layouts). Anything not yet declarative is available Ã  la carte below.
+> Human `on` triggers and named `every` timers ship today. One-line controls and
+> grid card layouts remain frozen future contract forms. Anything not yet
+> declarative is available a la carte below.
 
 **3. À la carte — individual systems when you need them:**
 
@@ -191,6 +194,8 @@ Full documentation lives in the [`docs/`](docs/) directory:
 - **[Foundation Decisions](docs/FOUNDATION.md)** — what RGX keeps vs drops from Ace3, and why
 - **[Ace3 Analysis](docs/ACE3-ANALYSIS.md)** — how each Ace3 piece maps to RGX, and where RGX aims to be better
 - **[Roadmap](docs/ROADMAP.md)** — profile/database system, SharedMedia drop-in, pack system, localization, longer-term plans
+- **[Studio Roadmap](docs/STUDIO-ROADMAP.md)** — separate Tauri visual authoring product, contract and preview boundaries, phased delivery
+- **[Distribution](docs/DISTRIBUTION.md)** — player/developer artifact boundary, checksums, and installation
 
 ### Other
 
@@ -202,16 +207,22 @@ Full documentation lives in the [`docs/`](docs/) directory:
 
 ## MCP Server (rgx-mcp)
 
-RGX-Framework ships an [MCP](https://modelcontextprotocol.io) server at [`tools/rgx-mcp/`](tools/rgx-mcp/) — anyone with this repo checked out has it. It gives AI coding agents (Claude Code, etc.) four tools that read the framework's own schema and docs, so agent-authored addons stay congruent with the Simplicity Contract:
+RGX-Framework temporarily maintains an [MCP](https://modelcontextprotocol.io) server at [`tools/rgx-mcp/`](tools/rgx-mcp/) as a source-tree contract-conformance fixture. It gives CI and framework contributors four tools that read the canonical schema and docs:
 
 | Tool | What it does |
 |---|---|
 | `rgx_validate_addon` | Validate an `RGXAddon` opts table against `schemas/rgx-addon.schema.json` |
 | `rgx_audit_lua` | Scan Lua for unsafe patterns the framework prevents (raw `C_Timer`, manual event frames, `SLASH_` globals, unguarded `SetAttribute`, secret-aura comparisons, raw hook reassignment) |
-| `rgx_generate_addon` | Emit a complete addon file using only shipped keys |
+| `rgx_generate_addon` | Emit a contract-congruent addon Lua file using only shipped keys |
 | `rgx_get_contract` | Return the schema + declarative API reference for agent context |
 
-Read-only by design — it never edits repos, commits, or touches the game. Registered automatically for Claude Code sessions in this repo via `.mcp.json` (run `npm install` once in `tools/rgx-mcp/`). Excluded from the packaged addon zip. See [`tools/rgx-mcp/README.md`](tools/rgx-mcp/README.md) for setup elsewhere.
+Read-only by design — it never edits repos, commits, or touches the game.
+Registered automatically for agent sessions in this repo via `.mcp.json` (run
+`npm ci` once in `tools/rgx-mcp/`). It is excluded from both the WoW player
+archive and the data-only contract SDK. Public API/MCP/editor tooling belongs to
+RGX Studio after production gate #30. Each release publishes a separate
+`RGX-Developer-X.Y.Z.zip` containing canonical contract data, documentation,
+inventory, provenance, and checksums. See [`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md).
 
 ---
 
