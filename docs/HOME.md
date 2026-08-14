@@ -12,7 +12,7 @@ RGX-Framework is a single `RequiredDeps` entry that provides a declarative addon
 
 ```lua
 -- MyAddon.toc
-## Interface: 120007
+## Interface: 120100
 ## Title: MyAddon
 ## RequiredDeps: RGX-Framework
 ## SavedVariables: MyAddonDB
@@ -51,7 +51,7 @@ That gives you saved settings with profiles, a tabbed options panel with control
 | Addon setup | AceAddon + AceDB + AceConfig assembly | `RGXAddon "Name" { }` |
 | Options UI | AceConfig mega-tables → unstyled AceGUI | Small declarative tables → themed, db-bound controls |
 | Taint safety | Your problem | By construction — pcall-wrapped dispatch, lockdown guards, Midnight secret-aura handling |
-| Tooling | None | JSON schema + in-tree MCP server (validate/audit/generate) + in-game test suite |
+| Tooling | None | Source-only schema/conformance fixture + in-game test suite; public tooling belongs to Studio |
 
 The full audited comparison lives in [`docs/ACE3-ANALYSIS.md`](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/ACE3-ANALYSIS.md).
 
@@ -98,7 +98,7 @@ All modules load from `RGX-Framework.xml`; the dormant tier was re-enabled in v2
 
 ### Tooling & Testing
 
-- [[RGX-MCP]] — the in-tree MCP server: validate, audit, and generate RGX addons (ships in the addon zip)
+- [[RGX-MCP]] — the temporary source-only conformance fixture used by CI
 - [[Testing]] — RGX-Hello, the reference addon and in-game visual test suite
 
 ### Guides

@@ -1,7 +1,7 @@
 # Distribution
 
-RGX-Framework publishes separate player and contract SDK artifacts. Node tooling,
-schemas, documentation, references, and future Studio code never belong in the
+RGX-Framework publishes one product: the WoW addon framework. Node tooling,
+schemas, documentation, references, and future Studio code never belong in its
 World of Warcraft addon archive.
 
 ## Release Assets
@@ -10,16 +10,14 @@ For framework version `X.Y.Z`, the release workflow publishes:
 
 | Asset | Audience | Contents |
 |---|---|---|
-| BigWigs `RGX-Framework-*.zip` | Players | The upload sent to CurseForge and other addon services |
-| `RGX-Framework-runtime-X.Y.Z.zip` | Players and package verification | Canonical deterministic player archive |
-| `RGX-Developer-X.Y.Z.zip` | Addon and Studio tooling authors | Data-only contract SDK: canonical schema/docs, Studio roadmap, provenance, inventory, and license. No MCP or executable tooling. |
-| `RGX-Artifacts-X.Y.Z.json` | Automation | Version, Interface, source revision, file inventory, sizes, and SHA-256 hashes |
-| `RGX-Artifacts-X.Y.Z.sha256` | Everyone | SHA-256 checksums for the two canonical ZIPs and JSON manifest |
+| BigWigs `RGX-Framework-*.zip` | Players | The only published product archive; uploaded to GitHub and addon services |
+| `release.json` | Automation | BigWigs packager release metadata |
 
-The BigWigs ZIP is the distribution-service payload. CI builds it with the
-same `.pkgmeta` used by releases and inspects the actual archive before release.
-The deterministic runtime ZIP provides a stable independently verifiable copy
-of the same player allowlist.
+The BigWigs ZIP is the distribution-service payload and is built with
+`.pkgmeta`. CI independently enforces the exact runtime allowlist and can
+reproduce the same package boundary as `RGX-Framework-X.Y.Z.zip` plus an
+inventory manifest and checksums. These are verification sidecars, not a second
+product.
 
 ## Player Allowlist
 
@@ -27,6 +25,11 @@ The player archive has one top-level `RGX-Framework/` directory and only:
 
 ```text
 RGX-Framework.toc
+RGX-Framework_Vanilla.toc
+RGX-Framework_TBC.toc
+RGX-Framework_Wrath.toc
+RGX-Framework_Cata.toc
+RGX-Framework_Mists.toc
 RGX-Framework.xml
 LICENSE.txt
 core/**/*.lua
@@ -41,37 +44,31 @@ It rejects JavaScript, TypeScript, JSON, Rust, Tauri, `node_modules`, `tools/`,
 `schemas/`, `docs/`, `.reference/`, and other non-runtime paths. Every Lua/XML
 load reference must exist in the inspected ZIP.
 
-Install the runtime ZIP by extracting `RGX-Framework/` under the game's
-`Interface/AddOns/` directory. Do not place `RGX-Developer/` there.
+Install the archive by extracting `RGX-Framework/` under the game's
+`Interface/AddOns/` directory.
 
-## Contract SDK Artifact
+## Source Tooling
 
-`RGX-Developer-X.Y.Z.zip` retains its filename for release compatibility, but
-its role is a data-only contract SDK. It contains no Node entrypoint, MCP server,
-`.mcp.json`, tests, or executable transport. Tools consume the canonical schema
-and documentation directly from this artifact.
-
-The current `tools/rgx-mcp/` remains in the framework source checkout only as a
-temporary contract-conformance fixture used by CI. Public API/MCP/editor tooling
-belongs to RGX Studio after production gate #30. RGX-Framework remains the
-authoritative producer of runtime semantics and versioned contract data.
+Schemas, documentation, reference tools, and the temporary MCP conformance
+fixture remain available only in the source repository. Public API, MCP, editor,
+and contract-bundle distribution belongs to the future RGX Studio product.
 
 ## Checksums
 
 On a POSIX shell:
 
 ```bash
-sha256sum -c RGX-Artifacts-X.Y.Z.sha256
+sha256sum -c RGX-Framework-X.Y.Z.sha256
 ```
 
 On PowerShell, compare each value with:
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\RGX-Developer-X.Y.Z.zip
+Get-FileHash -Algorithm SHA256 .\RGX-Framework-X.Y.Z.zip
 ```
 
-The JSON manifest also records a SHA-256 digest for every canonical source file
-inside each artifact. `sourceDirty` is `false` for release artifacts; local
+The JSON manifest also records a SHA-256 digest for every runtime source file.
+`sourceDirty` is `false` for release builds; local
 builds from an uncommitted worktree record `true` so the base commit is not
 mistaken for the exact artifact contents.
 

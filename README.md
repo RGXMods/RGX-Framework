@@ -42,9 +42,9 @@ RGXAddon "MyAddon" {
 
 That is a **complete addon**: profile-aware saved settings, a tabbed options panel with db-bound controls, a slash command, a minimap button, and branded chat output — with every event, timer, and control routed through the framework's taint-safe paths automatically. The `addon` object carries scoped `RegisterEvent` / `RegisterUnitEvent` / `RegisterMessage` / `After` / `Every` / `Print` / `Warn` / `Error` so you never touch raw WoW plumbing.
 
-> Human `on` triggers and named `every` timers ship today. One-line controls and
-> grid card layouts remain frozen future contract forms. Anything not yet
-> declarative is available a la carte below.
+> Human `on` triggers, named `every` timers, one-line controls, and grid card
+> layouts remain frozen future contract forms. Use the addon's scoped event and
+> timer methods today; anything not yet declarative is available a la carte below.
 
 **3. À la carte — individual systems when you need them:**
 
@@ -195,7 +195,7 @@ Full documentation lives in the [`docs/`](docs/) directory:
 - **[Ace3 Analysis](docs/ACE3-ANALYSIS.md)** — how each Ace3 piece maps to RGX, and where RGX aims to be better
 - **[Roadmap](docs/ROADMAP.md)** — profile/database system, SharedMedia drop-in, pack system, localization, longer-term plans
 - **[Studio Roadmap](docs/STUDIO-ROADMAP.md)** — separate Tauri visual authoring product, contract and preview boundaries, phased delivery
-- **[Distribution](docs/DISTRIBUTION.md)** — player/developer artifact boundary, checksums, and installation
+- **[Distribution](docs/DISTRIBUTION.md)** — runtime package boundary, checksums, and installation
 
 ### Other
 
@@ -205,7 +205,7 @@ Full documentation lives in the [`docs/`](docs/) directory:
 
 ---
 
-## MCP Server (rgx-mcp)
+## Source Contract Conformance
 
 RGX-Framework temporarily maintains an [MCP](https://modelcontextprotocol.io) server at [`tools/rgx-mcp/`](tools/rgx-mcp/) as a source-tree contract-conformance fixture. It gives CI and framework contributors four tools that read the canonical schema and docs:
 
@@ -218,22 +218,21 @@ RGX-Framework temporarily maintains an [MCP](https://modelcontextprotocol.io) se
 
 Read-only by design — it never edits repos, commits, or touches the game.
 Registered automatically for agent sessions in this repo via `.mcp.json` (run
-`npm ci` once in `tools/rgx-mcp/`). It is excluded from both the WoW player
-archive and the data-only contract SDK. Public API/MCP/editor tooling belongs to
-RGX Studio after production gate #30. Each release publishes a separate
-`RGX-Developer-X.Y.Z.zip` containing canonical contract data, documentation,
-inventory, provenance, and checksums. See [`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md).
+`npm ci` once in `tools/rgx-mcp/`). It is source-only and excluded from the WoW
+addon release. Public API/MCP/editor and contract-bundle distribution belongs to
+RGX Studio. RGX-Framework publishes only the framework addon package. See
+[`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md).
 
 ---
 
 ## Compatibility
 
-- **WoW Retail only**
-- Interface version: `120007`
+- **WoW Retail, Classic Era, TBC Classic, Wrath/Titan, Cataclysm, and Mists Classic**
+- Flavor-specific Interface metadata is declared in the corresponding TOCs.
 - `C_AddOns.GetAddOnMetadata` and `GetAddOnMetadata` both handled
 - `ColorPickerFrame` old API and `ColorPickerInteraction` new API both handled
 - `Settings.RegisterCanvasLayoutCategory` and `InterfaceOptions_AddCategory` both handled
-- **Developer tooling:** an in-tree MCP server (`tools/rgx-mcp/`) for validating/auditing/generating addons — see above
+- **Source conformance tooling:** temporary in-tree MCP fixture for CI; not a published product
 
 ---
 

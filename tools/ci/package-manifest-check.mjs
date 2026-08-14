@@ -15,7 +15,6 @@ import process from "node:process";
 import { unzipSync, zipSync } from "fflate";
 
 const RUNTIME_ROOT = "RGX-Framework";
-const DEVELOPER_ROOT = "RGX-Developer";
 // fflate writes local DOS timestamp fields, so construct fixed local components
 // rather than an absolute instant that would vary when built in another zone.
 const FIXED_MTIME = new Date(1980, 0, 1, 0, 0, 0);
@@ -81,6 +80,11 @@ function listFiles(directory) {
 function runtimeSourceFiles() {
   return [
     "RGX-Framework.toc",
+    "RGX-Framework_Vanilla.toc",
+    "RGX-Framework_TBC.toc",
+    "RGX-Framework_Wrath.toc",
+    "RGX-Framework_Cata.toc",
+    "RGX-Framework_Mists.toc",
     "RGX-Framework.xml",
     "LICENSE.txt",
     ...listFiles("core"),
@@ -89,18 +93,6 @@ function runtimeSourceFiles() {
     ...listFiles("media/fonts"),
   ];
 }
-
-function developerSourceFiles() {
-  return [
-    "LICENSE.txt",
-    "schemas/rgx-addon.schema.json",
-    "docs/DECLARATIVE-API.md",
-    "docs/DISTRIBUTION.md",
-    "docs/STUDIO-ROADMAP.md",
-  ];
-}
-
-const developerFiles = developerSourceFiles();
 
 function inventory(files, archiveRoot) {
   return files.map((source) => {
@@ -146,29 +138,21 @@ function sourceDirty() {
   }
 }
 
-function artifactMetadata(runtimeFiles, developerFiles) {
+function artifactMetadata(runtimeFiles) {
   const { version, interface: wowInterface, website: sourceRepository } = parseToc();
   if (!version || !wowInterface) throw new Error("RGX-Framework.toc must declare Version and Interface");
   return {
-    formatVersion: 2,
+    formatVersion: 3,
     frameworkVersion: version,
     sourceRepository,
     sourceRevision: sourceRevision(),
     sourceDirty: sourceDirty(),
     wowInterface,
-    supportedFlavor: "retail",
+    supportedFlavors: ["retail", "classic-era", "tbc", "wrath", "cata", "mists"],
     runtime: {
-      archive: `RGX-Framework-runtime-${version}.zip`,
+      archive: `RGX-Framework-${version}.zip`,
       root: RUNTIME_ROOT,
       files: inventory(runtimeFiles, RUNTIME_ROOT),
-    },
-    developer: {
-      archive: `RGX-Developer-${version}.zip`,
-      root: DEVELOPER_ROOT,
-      kind: "contract-sdk",
-      executableTooling: false,
-      futureToolingOwner: "RGX Studio",
-      files: inventory(developerFiles, DEVELOPER_ROOT),
     },
   };
 }
@@ -245,7 +229,7 @@ function validateRuntime(entries, expectedPaths) {
     const extension = /\.[^.\/]+$/.exec(relativePath.toLowerCase())?.[0] ?? "";
     if (segments.some((segment) => FORBIDDEN_PLAYER_SEGMENTS.has(segment))) failures.push(`runtime archive: forbidden path ${path}`);
     if (FORBIDDEN_PLAYER_EXTENSIONS.has(extension)) failures.push(`runtime archive: forbidden extension ${path}`);
-    const allowed = relativePath === "RGX-Framework.toc"
+    const allowed = /^RGX-Framework(?:_(?:Vanilla|TBC|Wrath|Cata|Mists))?\.toc$/.test(relativePath)
       || relativePath === "RGX-Framework.xml"
       || relativePath === "LICENSE.txt"
       || /^(?:core|modules)\/.+\.lua$/.test(relativePath)
@@ -258,32 +242,13 @@ function validateRuntime(entries, expectedPaths) {
   return failures;
 }
 
-function validateDeveloper(entries, expectedPaths) {
-  const failures = validateExactArchive(entries, expectedPaths, "developer archive");
-  for (const required of ["schemas/rgx-addon.schema.json", "docs/DECLARATIVE-API.md"]) {
-    if (!entries[`${DEVELOPER_ROOT}/${required}`]) failures.push(`developer archive: missing canonical ${required}`);
-  }
-  for (const path of Object.keys(entries)) {
-    if (path.endsWith("/")) continue;
-    if (path.toLowerCase().split("/").includes("node_modules")) failures.push(`developer archive: node_modules leaked into ${path}`);
-    if (/\.(?:js|mjs|cjs|ts|tsx|rs)$/i.test(path)) failures.push(`developer archive: executable tooling leaked into ${path}`);
-    if (path.includes("/tools/") || path.endsWith("/.mcp.json")) failures.push(`developer archive: tooling path leaked into ${path}`);
-  }
-  return failures;
-}
-
 function validateSourceBoundary(runtimeFiles) {
   const failures = [];
   const runtimeSet = new Set(runtimeFiles);
-  const developerSet = new Set(developerFiles);
   for (const source of runtimeFiles) {
-    if (developerSet.has(source) && source !== "LICENSE.txt") failures.push(`source boundary: ${source} appears in both artifacts`);
-    if (/^(?:tools|schemas|docs)\//.test(source)) failures.push(`source boundary: developer path selected for runtime ${source}`);
+    if (/^(?:tools|schemas|docs)\//.test(source)) failures.push(`source boundary: non-runtime path selected for runtime ${source}`);
   }
-  for (const source of developerFiles) {
-    if (/^(?:core|modules|media)\//.test(source) || /^RGX-Framework\.(?:toc|xml)$/.test(source)) failures.push(`source boundary: runtime path selected for developer artifact ${source}`);
-  }
-  if (!runtimeSet.has("LICENSE.txt") || !developerSet.has("LICENSE.txt")) failures.push("source boundary: LICENSE.txt must ship in both artifacts");
+  if (!runtimeSet.has("LICENSE.txt")) failures.push("source boundary: LICENSE.txt must ship in the runtime artifact");
   return failures;
 }
 
@@ -317,19 +282,18 @@ function inspectExternalRuntime(path, expectedRelativePaths) {
   return failures;
 }
 
-function writeArtifacts(metadata, runtimeZip, developerZip) {
+function writeArtifacts(metadata, runtimeZip) {
   const expectedOutput = resolve(options.root, "artifacts");
   if (options.out !== expectedOutput) throw new Error(`artifact output must be ${expectedOutput}`);
   rmSync(options.out, { recursive: true, force: true });
   mkdirSync(options.out, { recursive: true });
   const artifacts = {
     [metadata.runtime.archive]: runtimeZip,
-    [metadata.developer.archive]: developerZip,
   };
-  const manifestName = `RGX-Artifacts-${metadata.frameworkVersion}.json`;
+  const manifestName = `RGX-Framework-${metadata.frameworkVersion}.manifest.json`;
   const manifest = Buffer.from(JSON.stringify(metadata, null, 2) + "\n");
   artifacts[manifestName] = manifest;
-  const checksumsName = `RGX-Artifacts-${metadata.frameworkVersion}.sha256`;
+  const checksumsName = `RGX-Framework-${metadata.frameworkVersion}.sha256`;
   const checksums = Buffer.from(checksumText(artifacts));
   artifacts[checksumsName] = checksums;
   for (const [name, data] of Object.entries(artifacts)) writeFileSync(join(options.out, name), data);
@@ -337,31 +301,20 @@ function writeArtifacts(metadata, runtimeZip, developerZip) {
 }
 
 const runtimeFiles = runtimeSourceFiles();
-for (const path of [...runtimeFiles, ...developerFiles]) {
+for (const path of runtimeFiles) {
   if (!existsSync(join(options.root, path)) || !statSync(join(options.root, path)).isFile()) throw new Error(`artifact source file is missing: ${path}`);
 }
 
-const metadata = artifactMetadata(runtimeFiles, developerFiles);
-const developerInventory = `${metadata.developer.files.map((file) => `${file.sha256}  ${file.source}`).join("\n")}\n`;
+const metadata = artifactMetadata(runtimeFiles);
 const runtimeZip = zipArtifact(runtimeFiles, RUNTIME_ROOT);
-const developerZip = zipArtifact(developerFiles, DEVELOPER_ROOT, {
-  "ARTIFACT-INVENTORY.sha256": developerInventory,
-  "artifact-manifest.json": JSON.stringify(metadata, null, 2) + "\n",
-});
 
 const runtimeExpected = [
   ...metadata.runtime.files.map((file) => file.path),
-];
-const developerExpected = [
-  ...metadata.developer.files.map((file) => file.path),
-  `${DEVELOPER_ROOT}/ARTIFACT-INVENTORY.sha256`,
-  `${DEVELOPER_ROOT}/artifact-manifest.json`,
 ];
 const failures = [
   ...validatePkgmeta(),
   ...validateSourceBoundary(runtimeFiles),
   ...validateRuntime(archiveEntries(runtimeZip), runtimeExpected),
-  ...validateDeveloper(archiveEntries(developerZip), developerExpected),
 ];
 if (options.inspect) failures.push(...inspectExternalRuntime(options.inspect, runtimeFiles));
 
@@ -371,7 +324,7 @@ if (failures.length) {
 }
 
 let output = [];
-if (options.out) output = writeArtifacts(metadata, runtimeZip, developerZip);
-console.log(`PACKAGE BOUNDARY OK  ${runtimeFiles.length} runtime file(s), ${developerFiles.length} developer file(s).`);
+if (options.out) output = writeArtifacts(metadata, runtimeZip);
+console.log(`PACKAGE BOUNDARY OK  ${runtimeFiles.length} runtime file(s).`);
 if (options.inspect) console.log(`PACKAGER ARCHIVE OK  ${basename(options.inspect)}`);
 if (output.length) console.log(`ARTIFACTS BUILT  ${output.join(", ")}`);

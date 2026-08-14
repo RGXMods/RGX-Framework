@@ -2,6 +2,19 @@
 
 ## Current Development Release
 
+### [v2.6.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.6.1.md) - 2026-08-13
+
+- Removed the mistaken secondary product concept. RGX-Framework releases only
+  the addon framework; future public MCP/API/editor tooling belongs to Studio.
+- Deterministic runtime verification now includes all six flavor TOCs.
+- Corrected premature documentation claims: declarative `on` and `every` remain
+  frozen future contract forms until their runtime implementation lands.
+
+### [v2.6.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.6.0.md) - 2026-08-13
+
+- Added capability-gated support and verified TOCs for Retail, Classic Era,
+  TBC, Wrath/Titan, Cataclysm, and Mists Classic.
+
 ### [v2.5.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.5.0.md) - 2026-07-04
 
 - **Fixed: declarative `minimap` buttons forgot their dragged position.** `RGX.Addon` created the button without passing `storage`, so the angle never persisted; creation now happens after `addon.db` exists and persists there by default. The bare form also assumes a left-click that opens your options panel, and a new advanced table form passes through the full minimap opts (`tooltip`, `defaultAngle`, `onRightClick`, ...).

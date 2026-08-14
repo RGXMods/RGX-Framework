@@ -67,7 +67,7 @@ Anything beyond one line (style objects, standalone selectors, previews) lives i
 
 ```lua
 -- .toc file
-## Interface: 120007
+## Interface: 120100
 ## Title: MyAddon
 ## RequiredDeps: RGX-Framework
 

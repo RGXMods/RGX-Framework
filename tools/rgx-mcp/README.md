@@ -12,7 +12,7 @@ consumer addons    depend on  →  RGX-Framework
 RGX-Framework      depends on →  nothing (and never on rgx-mcp)
 ```
 
-This transition tool lives at `tools/rgx-mcp/` **inside the framework source repo** for contract-conformance CI. It is excluded from both the WoW player archive and the data-only contract SDK. Public MCP/API/editor tooling belongs to RGX Studio after production gate #30. Set `RGX_FRAMEWORK_PATH` only when intentionally running against a different framework tree.
+This transition tool lives at `tools/rgx-mcp/` **inside the framework source repo** for contract-conformance CI. It is not distributed as a Framework product. Public MCP/API/editor tooling belongs to RGX Studio. Set `RGX_FRAMEWORK_PATH` only when intentionally running against a different framework tree.
 
 ## Tools
 
@@ -20,7 +20,7 @@ This transition tool lives at `tools/rgx-mcp/` **inside the framework source rep
 |---|---|
 | `rgx_validate_addon` | Validate an RGXAddon opts table (JSON; Lua functions as `{"$lua":"function"}`) against `schemas/rgx-addon.schema.json`; flags contract-frozen `tier4` keys that don't run yet |
 | `rgx_audit_lua` | Scan a `.lua` file or addon directory for the unsafe patterns the framework prevents: raw `C_Timer`, manual `OnEvent` frames, `SLASH_` globals, unguarded `SetAttribute`, secret-aura field comparisons, raw hook reassignment. Deterministic |
-| `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys, including human `on` triggers and named `every` timers (`RGXAddon "Name" { ... }`) |
+| `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys (`RGXAddon "Name" { ... }`) |
 | `rgx_get_contract` | Return the schema + shipped-surface reference for agent context |
 
 ## Resources
@@ -66,10 +66,9 @@ v0.1.0 — Tier 5 #15 of the framework roadmap. Verified over live stdio JSON-RP
 ## Distribution
 
 The MCP source is maintained temporarily with the framework contract for CI but
-is not included in either published ZIP. Each release publishes the data-only
-contract SDK as `RGX-Developer-X.Y.Z.zip` beside its artifact manifest and
-checksums. Run this transition server only from a source checkout with its
-tracked lockfile. Update runtime, schema, docs, and conformance tests together.
+is not included in the published Framework archive. Run it only from a source
+checkout with its tracked lockfile. Future public MCP/API/editor distribution
+belongs to RGX Studio. Update runtime, schema, docs, and conformance tests together.
 
 ## License
 

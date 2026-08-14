@@ -4,7 +4,7 @@
 <div style="font-size:26px;font-weight:800;letter-spacing:0.4px;color:#bc6fa8"><img src="https://github.com/DonnieDice/RGX-Framework/blob/main/media/logo.png?raw=true" width="24" height="24"> <span style="color:#8b4b5c">R</span><span style="color:#8b4b5c">G</span><span style="color:#8b4b5c">X</span> <span style="color:#007bff">| </span><span style="color:#ffffff">F</span><span style="color:#fff">ramework</span></div>
 <div style="margin-top:4px;color:#c7d0db;font-size:14px">One dependency. Everything your addon suite needs.</div>
 <div style="margin-top:10px">
-<span style="display:inline-block;background-color:#13202a;border:1px solid #29566f;color:#b9ecff;padding:3px 8px;margin-right:6px">Retail</span>
+<span style="display:inline-block;background-color:#13202a;border:1px solid #29566f;color:#b9ecff;padding:3px 8px;margin-right:6px">Retail + Classic</span>
 <span style="display:inline-block;background-color:#1a2115;border:1px solid #546c39;color:#ddf2b1;padding:3px 8px">Library AddOn</span>
 </div>
 </div>
@@ -14,7 +14,7 @@
 <div style="padding:12px 14px;background-color:#151a22;border:1px solid #30363d">
 <div style="font-size:18px;font-weight:700;color:#ffd166">Overview</div>
 <div style="margin-top:8px;color:#e6edf3;line-height:1.5">
-RGX-Framework is a modern WoW Retail addon framework — an alternative to Ace3. One dependency gives your addon suite events, timers, hooks, slash commands, fonts, colors, textures, dropdowns, UI controls, minimap buttons, options panels, a design system, and more. No embedding. No version conflicts. When the framework updates, every addon on the player's machine benefits automatically.
+RGX-Framework is a modern WoW addon framework for Retail and supported Classic clients. One dependency gives your addon suite events, timers, hooks, slash commands, fonts, colors, textures, dropdowns, UI controls, minimap buttons, options panels, a design system, and more. No embedding. No version conflicts. When the framework updates, every addon on the player's machine benefits automatically.
 </div>
 <div style="margin-top:8px;color:#c7d0db;line-height:1.5">
 It stays quiet for players and useful for authors. If another addon requires RGX-Framework, install it and leave it enabled. If you are building addons, use it as a single shared library with a clean API — no LibStub, no embedding tax, no legacy compat shims.
@@ -95,9 +95,7 @@ It stays quiet for players and useful for authors. If another addon requires RGX
 <div style="font-size:18px;font-weight:700;color:#4ecdc4">Quick Start</div>
 <pre style="margin-top:10px;background-color:#0d1117;color:#c9d1d9;border:1px solid #30363d;padding:10px;white-space:pre-wrap">## RequiredDeps: RGX-Framework
 
-local RGX = assert(_G.RGXFramework, "MyAddon: RGX not loaded")
-
-RGX.Addon("MyAddon", {
+RGXAddon "MyAddon" {
   slash   = "myaddon",
   minimap = true,
   db      = { enabled = true, volume = 80 },
@@ -108,15 +106,15 @@ RGX.Addon("MyAddon", {
     },
   },
   welcome = "loaded &mdash; /myaddon for options",
-})</pre>
+}</pre>
 <div style="margin-top:8px;color:#c7d0db;font-size:13px">One call = saved settings, options panel, slash command, minimap button &mdash; all routed through taint-safe framework paths.</div>
 </td>
 <td style="width:42%;vertical-align:top">
 <div style="padding:12px 14px;background-color:#1b1520;border:1px solid #4a3147;margin-bottom:12px">
 <div style="font-size:18px;font-weight:700;color:#ff8fab">Compatibility</div>
 <div style="margin-top:10px;color:#e6edf3;line-height:1.7">
-&bull; WoW Retail only<br/>
-&bull; Interface version: <span style="color:#58a6ff">120007</span><br/>
+&bull; Retail, Classic Era, TBC, Wrath/Titan, Cataclysm, and Mists<br/>
+&bull; Retail Interface: <span style="color:#58a6ff">120100</span><br/>
 &bull; Full Ace3 alternative &mdash; no LibStub required
 </div>
 </div>
@@ -138,9 +136,9 @@ RGX.Addon("MyAddon", {
 <div style="height:12px"></div>
 
 <div style="padding:12px 14px;background-color:#1b1520;border:1px solid #4a3147">
-<div style="font-size:18px;font-weight:700;color:#ff8fab">Developer Tooling: rgx-mcp</div>
+<div style="font-size:18px;font-weight:700;color:#ff8fab">Source Conformance Fixture</div>
 <div style="margin-top:8px;color:#e6edf3;line-height:1.5">
-An <a href="https://modelcontextprotocol.io" style="color:#58a6ff">MCP</a> server ships in-tree at <code>tools/rgx-mcp/</code> &mdash; validate, audit, and generate addons against the framework's own schema. Read-only, excluded from the packaged zip.
+The source repository temporarily contains an <a href="https://modelcontextprotocol.io" style="color:#58a6ff">MCP</a> conformance fixture at <code>tools/rgx-mcp/</code>. It is read-only, excluded from Framework releases, and used by CI. Future public tooling belongs to RGX Studio.
 </div>
 <div style="margin-top:8px;color:#c7d0db;line-height:1.7">
 &bull; <code>rgx_validate_addon</code> &mdash; schema-check an RGXAddon table &nbsp;

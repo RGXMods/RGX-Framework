@@ -29,7 +29,7 @@ ignore:
   - media/logo.png
 
 # MCP and other executable tooling remain source-only. Public API/MCP/editor
-# distribution belongs to RGX Studio; the contract SDK contains data only.
+# distribution belongs to RGX Studio.
 
 # Release notes come from the canonical changelog summary.
 manual-changelog:

@@ -36,13 +36,21 @@ jobs:
         working-directory: tools/ci
         run: npm run schema-check
 
+      - name: Flavor TOC, compatibility, and package gates
+        working-directory: tools/ci
+        run: npm run flavor-check
+
+      - name: Runtime-only deterministic package boundary
+        working-directory: tools/ci
+        run: npm run package-check
+
       - name: Wiki manifest gate (every mapped doc exists)
         run: node tools/wiki/build-wiki.mjs "${RUNNER_TEMP}/wiki-out"
 
       - name: Install rgx-mcp
         working-directory: tools/rgx-mcp
-        # rgx-mcp's lockfile is gitignored, so npm ci is not usable here.
-        run: npm install --no-audit --no-fund
+        # Source-only conformance fixture with a tracked lockfile.
+        run: npm ci --no-audit --no-fund
 
       - name: Clone a fresh RGX-Hello
         run: git clone --depth 1 https://github.com/DonnieDice/RGX-Hello.git "${RUNNER_TEMP}/RGX-Hello"

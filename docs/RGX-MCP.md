@@ -1,6 +1,6 @@
-# RGX-MCP — the framework's MCP server
+# RGX-MCP - temporary source conformance fixture
 
-`tools/rgx-mcp/` is a read-only [MCP](https://modelcontextprotocol.io) (Model Context Protocol) server that lets AI agents (Claude Code, etc.) validate, audit, and generate declarative RGX addons against the framework's frozen Simplicity Contract. It is developer tooling and is deliberately separate from the Lua/XML/media player archive.
+`tools/rgx-mcp/` is a temporary read-only [MCP](https://modelcontextprotocol.io) (Model Context Protocol) fixture used by source-tree CI to validate, audit, and generate declarative RGX addons against the framework's frozen Simplicity Contract. It is never part of the Lua/XML/media addon archive.
 
 ## Tools
 
@@ -8,7 +8,7 @@
 |---|---|
 | `rgx_validate_addon` | Validate an `RGXAddon` opts table (as JSON; Lua functions as `{"$lua":"function"}`) against `schemas/rgx-addon.schema.json`; flags contract-frozen `tier4` keys that don't run yet |
 | `rgx_audit_lua` | Scan a `.lua` file or addon directory for the unsafe patterns the framework prevents: raw `C_Timer`, manual `OnEvent` frames, `SLASH_` globals, unguarded `SetAttribute`, secret-aura field comparisons, raw hook reassignment |
-| `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys, including human `on` triggers and named `every` timers |
+| `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys |
 | `rgx_get_contract` | Return the schema + shipped-surface reference for agent context |
 
 ## Resources
@@ -25,9 +25,9 @@ cd /path/to/RGX-Framework/tools/rgx-mcp
 npm ci --no-audit --no-fund
 ```
 
-The separately downloadable contract SDK does not include this server or any
-executable MCP transport. Run the transition implementation only from a source
-checkout. Public API/MCP/editor tooling belongs to RGX Studio after gate #30.
+Run the transition implementation only from a source checkout. RGX-Framework
+never publishes this fixture or any tooling archive. Public API/MCP/editor
+tooling belongs to RGX Studio.
 
 Node.js 20 or newer is required.
 
@@ -43,8 +43,8 @@ Claude Code (`.mcp.json` or `claude mcp add`):
 
 Only the framework source checkout includes `.mcp.json`. The schema and API
 reference are read from that checkout; set `RGX_FRAMEWORK_PATH` only to run
-against a different framework tree. Published player and contract SDK artifacts
-contain no MCP server. See [[Distribution]].
+against a different framework tree. The published Framework addon contains no
+MCP server. See [[Distribution]].
 
 ## The tandem loop
 
