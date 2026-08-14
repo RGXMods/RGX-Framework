@@ -123,6 +123,7 @@ function RGX:RegisterModule(name, module, opts)
 
     module.name = module.name or normalizedName
     module.framework = self
+    module.available = true
 
     self.modules[normalizedName] = module
     self.loadedModules[normalizedName] = true
@@ -141,7 +142,11 @@ function RGX:GetModule(name)
         return nil
     end
 
-    return self.modules[normalizedName] or ResolveModuleAlias(self, normalizedName)
+    local module = self.modules[normalizedName] or ResolveModuleAlias(self, normalizedName)
+    if module and type(self.IsModuleAvailable) == "function" and not self:IsModuleAvailable(normalizedName) then
+        return nil
+    end
+    return module
 end
 
 function RGX:RequireModule(name)
