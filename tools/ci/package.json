@@ -2,10 +2,12 @@
   "name": "rgx-ci",
   "version": "0.1.0",
   "private": true,
-  "description": "CI helper scripts for RGX-Framework: Lua syntax gate and schema validation",
+  "description": "CI helper scripts for RGX-Framework validation and deterministic artifacts",
   "type": "module",
   "scripts": {
     "lua-check": "node lua-syntax-check.mjs ../..",
+    "package-build": "node package-manifest-check.mjs ../.. --out ../../artifacts",
+    "package-check": "node package-manifest-check.mjs ../..",
     "schema-check": "node schema-check.mjs ../../schemas/rgx-addon.schema.json",
     "flavor-check": "node flavor-toc-check.mjs && node flavor-compat-check.mjs && node flavor-package-check.mjs"
   },
@@ -13,6 +15,8 @@
   "license": "MIT",
   "dependencies": {
     "ajv": "^8.17.0",
+    "fflate": "0.8.3",
+    "js-yaml": "^5.2.3",
     "luaparse": "^0.3.1",
     "wasmoon-lua5.1": "^1.16.0"
   }
