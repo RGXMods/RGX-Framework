@@ -30,7 +30,7 @@ repository creation must not begin until that issue is completed. The Studio
 milestone intentionally has no due date and no implementation assignees while
 blocked.
 
-Public status snapshot, updated 2026-08-13: RGX-Framework `v2.6.1` is live as a
+Public status snapshot, updated 2026-08-14: RGX-Framework `v2.6.2` is live as a
 runtime-only addon release, but the production gate remains open and declarative
 named timers remain in progress. The
 [`RGXAuras restricted-value boundary`](https://gitlab.dicematrix.cloud/rgxmods/warcraft/monorepo/-/work_items/36)
