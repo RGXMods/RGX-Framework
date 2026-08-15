@@ -19,7 +19,7 @@ This transition tool lives at `tools/rgx-mcp/` **inside the framework source rep
 | Tool | What it does |
 |---|---|
 | `rgx_validate_addon` | Validate an RGXAddon opts table (JSON; Lua functions as `{"$lua":"function"}`) against `schemas/rgx-addon.schema.json`; flags contract-frozen `tier4` keys that don't run yet |
-| `rgx_audit_lua` | Scan a `.lua` file or addon directory for the unsafe patterns the framework prevents: raw `C_Timer`, manual `OnEvent` frames, `SLASH_` globals, unguarded `SetAttribute`, secret-aura field comparisons, raw hook reassignment. Deterministic |
+| `rgx_audit_lua` | Scan a `.lua` file or addon directory for the unsafe patterns the framework prevents: raw `C_Timer`, manual `OnEvent` frames, `SLASH_` globals, unguarded `SetAttribute`, raw aura event/API plumbing, and hook reassignment. Deterministic |
 | `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys (`RGXAddon "Name" { ... }`), including named `every` timers |
 | `rgx_get_contract` | Return the schema + shipped-surface reference for agent context |
 
@@ -53,7 +53,7 @@ Only the framework source checkout ships `.mcp.json`; published artifacts do not
 
 ## Testing
 
-`test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK (stdio transport, no protocol reimplementation) against [RGX-Hello](https://github.com/DonnieDice/RGX-Hello). It parses and validates the actual curried `RGXAddon` table, generates the matching supported surface with named timers, and audits the actual Lua tree. It verifies that `every` is shipped while `on` remains Tier 4. Unknown or Tier 4 keys fail directly. This is how the `suffix` schema gap and generator `dbName` blind spot were found.
+`test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK (stdio transport, no protocol reimplementation) against [RGX-Hello](https://github.com/DonnieDice/RGX-Hello). It parses and validates the actual curried `RGXAddon` table, generates the matching supported surface with named timers, and audits the actual Lua tree. It verifies that `every` is shipped while `on` remains Tier 4, and uses paired fixtures to require RGXAuras consumer code to pass while raw aura plumbing fails. Unknown or Tier 4 keys fail directly.
 
 ```bash
 node test/test-rgx-hello.mjs /path/to/RGX-Hello

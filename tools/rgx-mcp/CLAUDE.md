@@ -17,11 +17,11 @@ The temporary source-only MCP conformance fixture for RGX-Framework. It validate
 
 ```
 src/server.js   — the whole server (McpServer over stdio): 4 tools, 2 resources
-package.json    — deps: @modelcontextprotocol/sdk, ajv (2020-12), zod
+package.json    — deps: @modelcontextprotocol/sdk, ajv (2020-12), luaparse, zod
 ```
 
 ## Conventions
 
 - Plain Node ESM, no build step, no TypeScript — the simplicity ethos applies to the tooling too.
-- Detectors are deterministic regex over Lua lines (comments skipped); each carries actionable `advice` naming the RGX replacement.
-- Keep the audit detector list in sync with the framework's "make the bug unrepresentable" thesis (raw C_Timer, manual OnEvent frames, SLASH_ globals, unguarded SetAttribute, secret-aura comparisons, raw hook reassignment).
+- Detectors are deterministic. Simple patterns use line regexes with comments skipped; restricted-aura plumbing uses a Lua 5.1 AST so aliases, scope, bare calls, and parse failures remain visible. Each finding carries actionable `advice` naming the RGX replacement.
+- Keep the audit detector list in sync with the framework's "make the bug unrepresentable" thesis (raw C_Timer, manual OnEvent frames, SLASH_ globals, unguarded SetAttribute, raw aura plumbing, raw hook reassignment).

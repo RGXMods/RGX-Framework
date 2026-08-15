@@ -739,24 +739,26 @@ Reputation and renown tracking, normalized across expansions.
 
 ## Auras (`RGXAuras`)
 
-Aura scanning and watching first audited against the Midnight 12.0.7 generated
-API docs and compatibility-hardened through v2.6.0. The player spell-ID path and
-never-secret instance IDs are the guaranteed primitives. Any-unit `auraData`
-may contain restricted values and must remain opaque; `pcall` can isolate an
-error but cannot prevent or undo taint.
+The unreleased v2.7.0 candidate makes RGXAuras an accessible-only boundary.
+Aura-specific and generic Blizzard predicates run before values are queried,
+indexed, compared, cached, or forwarded. Restricted or unverifiable data fails
+closed; `pcall` remains failure isolation, not taint prevention. Published
+v2.6.2 retains the older best-effort arbitrary-unit behavior.
 
 | Method | Description |
 |---|---|
-| `Auras:HasPlayerAura(spellId)` / `GetPlayerAura(spellId)` | Player fast path via `C_UnitAuras.GetPlayerAuraBySpellID` (AllowedWhenTainted — always safe) |
-| `Auras:HasAura(spellId, unit)` / `GetAura(spellId, unit)` | Best-effort lookup for unrestricted units (`unit` defaults `"player"`); not a secret-value boundary |
-| `Auras:IterateAuras(unit, filter, fn)` | Enumerate unrestricted-unit data via `GetAuraDataByIndex`; returned fields may not be inspected when restricted |
-| `Auras:WatchUnit(unit)` / `UnwatchUnit(unit)` | Maintain an incremental `UNIT_AURA` cache for a unit (instance IDs are never secret). Player is watched by default |
-| `Auras:GetAuraByInstanceID(unit, id)` | Cached lookup for watched units, live lookup otherwise |
-| `Auras:OnApplied(fn)` | `fn(unit, auraData)` — fires for watched units; treat restricted fields as opaque |
+| `Auras:HasPlayerAura(spellId)` / `GetPlayerAura(spellId)` | RequiresNonSecretAura player lookup; restricted matches return false/nil |
+| `Auras:HasAura(spellId, unit)` / `GetAura(spellId, unit)` | Accessible-only lookup (`unit` defaults `"player"`); denied or unverifiable results return false/nil |
+| `Auras:IterateAuras(unit, filter, fn)` | Deliver accessible snapshots only; stops before a denied entry and returns the delivered count |
+| `Auras:WatchUnit(unit)` / `UnwatchUnit(unit)` | Maintain a predicate-approved incremental cache. Denied events invalidate it without callbacks; player is watched by default |
+| `Auras:GetAuraByInstanceID(unit, id)` | Predicate-checked live lookup on supported clients; refreshes/clears watched cache entries |
+| `Auras:OnApplied(fn)` | `fn(unit, auraData)` with predicate-approved arguments |
 | `Auras:OnRemoved(fn)` | `fn(unit, auraInstanceID)` |
-| `Auras:OnUpdated(fn)` | `fn(unit, auraData)`; treat restricted fields as opaque |
+| `Auras:OnUpdated(fn)` | `fn(unit, auraData)` with predicate-approved arguments |
 
 All `On*` registrars return an unsubscribe closure.
+Raw `RGX:RegisterEvent("UNIT_AURA", ...)` payloads remain unsanitized; normal
+consumers should use RGXAuras instead.
 
 ---
 

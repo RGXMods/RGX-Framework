@@ -35,7 +35,8 @@ runtime-only addon release. A `v2.7.0` declarative named-timer candidate is unde
 automated verification and still requires its in-game acceptance check. The
 production gate remains open. The
 [`RGXAuras restricted-value boundary`](https://gitlab.dicematrix.cloud/rgxmods/warcraft/monorepo/-/work_items/36)
-is also an open production blocker. Studio is still blocked. GitLab is the
+has an automated accessible-only candidate but remains an open production
+blocker until Retail in-game validation. Studio is still blocked. GitLab is the
 authoritative tracker and may require sign-in; this page is the public roadmap
 snapshot.
 

@@ -43,6 +43,12 @@ RGX.Capabilities = {
     events = HasFunction(C_EventUtils, "IsEventValid"),
     modernAuras = HasFunction(C_UnitAuras, "GetAuraDataByIndex"),
     playerAuraBySpell = HasFunction(C_UnitAuras, "GetPlayerAuraBySpellID"),
+    unitAuraBySpell = HasFunction(C_UnitAuras, "GetUnitAuraBySpellID"),
+    auraByInstance = HasFunction(C_UnitAuras, "GetAuraDataByAuraInstanceID"),
+    auraSecrecy = HasFunction(C_Secrets, "HasSecretRestrictions")
+        and HasFunction(C_Secrets, "ShouldAurasBeSecret"),
+    valueAccessPredicate = type(canaccessvalue) == "function" or type(issecretvalue) == "function",
+    tableAccessPredicate = type(canaccesstable) == "function" or type(issecrettable) == "function",
     modernQuestLog = HasFunction(C_QuestLog, "GetNumQuestLogEntries") and HasFunction(C_QuestLog, "GetInfo"),
     legacyQuestLog = type(GetNumQuestLogEntries) == "function" and type(GetQuestLogTitle) == "function",
     modernReputation = HasFunction(C_Reputation, "GetNumFactions") and HasFunction(C_Reputation, "GetFactionDataByIndex"),
@@ -170,15 +176,96 @@ function RGX.API.GetNamePlates()
     return {}
 end
 
-function RGX.API.UnitAura(unit, index, filter)
-    if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
-        return C_UnitAuras.GetAuraDataByIndex(unit, index, filter)
+local function SecretPredicate(name, ...)
+    if type(C_Secrets) ~= "table" or type(C_Secrets[name]) ~= "function" then
+        return nil
     end
-    if type(UnitAura) ~= "function" then return nil end
+
+    local ok, result = pcall(C_Secrets[name], ...)
+    if not ok or type(result) ~= "boolean" then
+        return nil
+    end
+    return result
+end
+
+function RGX.API.HasSecretRestrictions()
+    local restricted = SecretPredicate("HasSecretRestrictions")
+    if type(restricted) == "boolean" then
+        return restricted
+    end
+
+    -- The supported 4.4.2 Cataclysm contract predates secret values entirely.
+    if RGX.isCata then
+        return false
+    end
+    return nil
+end
+
+local function AuraSecretPredicate(name, ...)
+    local restrictions = RGX.API.HasSecretRestrictions()
+    if restrictions == false then
+        return false
+    end
+    if restrictions ~= true then
+        return nil
+    end
+    return SecretPredicate(name, ...)
+end
+
+function RGX.API.ShouldAurasBeSecret()
+    return AuraSecretPredicate("ShouldAurasBeSecret")
+end
+
+function RGX.API.ShouldUnitAuraIndexBeSecret(unit, index, filter)
+    if not RGX.API.CanAccessValue(unit) or type(unit) ~= "string" or unit == "" then
+        return nil
+    end
+    if not RGX.API.CanAccessValue(index) or type(index) ~= "number" then
+        return nil
+    end
+    if type(filter) ~= "nil" and not RGX.API.CanAccessValue(filter) then
+        return nil
+    end
+    return AuraSecretPredicate("ShouldUnitAuraIndexBeSecret", unit, index, filter)
+end
+
+function RGX.API.ShouldUnitAuraInstanceBeSecret(unit, auraInstanceID)
+    if not RGX.API.CanAccessValue(unit) or type(unit) ~= "string" or unit == "" then
+        return nil
+    end
+    if not RGX.API.CanAccessValue(auraInstanceID) or type(auraInstanceID) ~= "number" then
+        return nil
+    end
+    return AuraSecretPredicate("ShouldUnitAuraInstanceBeSecret", unit, auraInstanceID)
+end
+
+function RGX.API.UnitAura(unit, index, filter)
+    if not RGX.API.CanAccessValue(unit) or type(unit) ~= "string" or unit == "" then
+        return nil, "restricted"
+    end
+    if not RGX.API.CanAccessValue(index) or type(index) ~= "number" then
+        return nil, "restricted"
+    end
+    if type(filter) ~= "nil" and not RGX.API.CanAccessValue(filter) then
+        return nil, "restricted"
+    end
+    if RGX.API.ShouldUnitAuraIndexBeSecret(unit, index, filter) ~= false then
+        return nil, "restricted"
+    end
+
+    if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
+        local ok, auraData = pcall(C_UnitAuras.GetAuraDataByIndex, unit, index, filter)
+        if not ok then return nil, "restricted" end
+        if type(auraData) == "nil" then return nil, "missing" end
+        if not RGX.API.CanAccessTable(auraData) then return nil, "restricted" end
+        return auraData, "accessible"
+    end
+    if type(UnitAura) ~= "function" then return nil, "missing" end
     local name, icon, applications, dispelName, duration, expirationTime,
         sourceUnit, isStealable, _, spellId, canApplyAura, isBossAura,
         castByPlayer, nameplateShowAll, timeMod = UnitAura(unit, index, filter)
-    if not name then return nil end
+    if type(name) == "nil" then return nil, "missing" end
+    if not RGX.API.CanAccessValue(name) then return nil, "restricted" end
     return {
         name = name,
         icon = icon,
@@ -194,20 +281,69 @@ function RGX.API.UnitAura(unit, index, filter)
         isFromPlayerOrPlayerPet = castByPlayer,
         nameplateShowAll = nameplateShowAll,
         timeMod = timeMod,
-    }
+    }, "accessible"
 end
 
 function RGX.API.GetPlayerAuraBySpellID(spellID)
+    if not RGX.API.CanAccessValue(spellID) or type(spellID) ~= "number" then
+        return nil
+    end
     if C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID then
-        return C_UnitAuras.GetPlayerAuraBySpellID(spellID)
+        local ok, auraData = pcall(C_UnitAuras.GetPlayerAuraBySpellID, spellID)
+        if not ok or type(auraData) == "nil" or not RGX.API.CanAccessTable(auraData) then
+            return nil
+        end
+        return auraData
     end
     -- Fallback: scan manually
     for i = 1, 40 do
         local aura = RGX.API.UnitAura("player", i, "HELPFUL")
-        if not aura then break end
-        if aura.spellId == spellID then return aura end
+        if type(aura) == "nil" then break end
+        local auraSpellID = aura.spellId
+        if RGX.API.CanAccessValue(auraSpellID) and auraSpellID == spellID then
+            return aura
+        end
     end
     return nil
+end
+
+function RGX.API.GetUnitAuraBySpellID(unit, spellID)
+    if not RGX.API.CanAccessValue(unit) or type(unit) ~= "string" or unit == "" then
+        return nil
+    end
+    if not RGX.API.CanAccessValue(spellID) or type(spellID) ~= "number" then
+        return nil
+    end
+    if not C_UnitAuras or type(C_UnitAuras.GetUnitAuraBySpellID) ~= "function" then
+        return nil
+    end
+
+    local ok, auraData = pcall(C_UnitAuras.GetUnitAuraBySpellID, unit, spellID)
+    if not ok or type(auraData) == "nil" or not RGX.API.CanAccessTable(auraData) then
+        return nil
+    end
+    return auraData
+end
+
+function RGX.API.GetAuraDataByInstanceID(unit, auraInstanceID)
+    if not RGX.API.CanAccessValue(unit) or type(unit) ~= "string" or unit == "" then
+        return nil, "restricted"
+    end
+    if not RGX.API.CanAccessValue(auraInstanceID) or type(auraInstanceID) ~= "number" then
+        return nil, "restricted"
+    end
+    if RGX.API.ShouldUnitAuraInstanceBeSecret(unit, auraInstanceID) ~= false then
+        return nil, "restricted"
+    end
+    if not C_UnitAuras or type(C_UnitAuras.GetAuraDataByAuraInstanceID) ~= "function" then
+        return nil, "missing"
+    end
+
+    local ok, auraData = pcall(C_UnitAuras.GetAuraDataByAuraInstanceID, unit, auraInstanceID)
+    if not ok then return nil, "restricted" end
+    if type(auraData) == "nil" then return nil, "missing" end
+    if not RGX.API.CanAccessTable(auraData) then return nil, "restricted" end
+    return auraData, "accessible"
 end
 
 function RGX.API.GetSpellInfo(spellID)
@@ -391,28 +527,26 @@ print("|cFF88FF88[RGX] Compat layer loaded: " .. RGX.wowVersion .. "|r")
 
 -- Secret value/table access helpers for addons
 function RGX.API.CanAccessValue(value)
-    if value == nil then return false end
+    if type(value) == "nil" then return false end
     if type(canaccessvalue) == "function" then
         return canaccessvalue(value) == true
     end
     if type(issecretvalue) == "function" then
         return not issecretvalue(value)
     end
-    return true
+    return RGX.API.HasSecretRestrictions() == false
 end
 
 function RGX.API.CanAccessTable(tbl)
-    if tbl == nil then return false end
+    local valueType = type(tbl)
+    if valueType ~= "table" then return false end
     if type(canaccesstable) == "function" then
         return canaccesstable(tbl) == true
     end
     if type(issecrettable) == "function" then
         return not issecrettable(tbl)
     end
-    if type(issecretvalue) == "function" then
-        return not issecretvalue(tbl)
-    end
-    return type(tbl) == "table"
+    return RGX.API.HasSecretRestrictions() == false
 end
 
 -- Safe iteration helper

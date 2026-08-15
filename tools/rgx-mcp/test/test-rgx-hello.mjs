@@ -198,6 +198,50 @@ try {
   const auditReport = JSON.parse(audit.content[0].text);
   console.log(JSON.stringify(auditReport, null, 2));
   check("RGX-Hello's Lua is clean of unsafe patterns", auditReport.clean === true, JSON.stringify(auditReport.findings));
+
+  console.log("\n== rgx_audit_lua (restricted-aura fixtures) ==");
+  const fixtureAudit = await client.callTool({
+    name: "rgx_audit_lua",
+    arguments: { path: join(HERE, "fixtures") },
+  });
+  const fixtureReport = JSON.parse(fixtureAudit.content[0].text);
+  console.log(JSON.stringify(fixtureReport, null, 2));
+  const safeAuraFindings = fixtureReport.findings.filter((finding) => finding.file === "aura-safe.lua");
+  const unsafeAuraFindings = fixtureReport.findings.filter(
+    (finding) => finding.file === "aura-unsafe.lua" && finding.detector === "raw_aura_plumbing"
+  );
+  const expectedUnsafeAuraLines = [3, 10, 11, 12, 15, 17, 19, 21, 22, 23, 29, 31, 32, 35, 36, 37, 38, 41, 43, 44];
+  check("RGXAuras consumer usage passes the restricted-aura audit", safeAuraFindings.length === 0, JSON.stringify(safeAuraFindings));
+  check(
+    "raw aura plumbing fails the restricted-aura audit",
+    JSON.stringify(unsafeAuraFindings.map((finding) => finding.line)) === JSON.stringify(expectedUnsafeAuraLines),
+    JSON.stringify(unsafeAuraFindings)
+  );
+  check(
+    "raw aura findings remain complete across files",
+    fixtureReport.findings.some((finding) => finding.file === "z-aura-unsafe.lua"
+      && finding.line === 1
+      && finding.detector === "raw_aura_plumbing"),
+    JSON.stringify(fixtureReport.findings)
+  );
+  const orderedFiles = fixtureReport.findings.map((finding) => finding.file);
+  check(
+    "directory audit findings are deterministic by file",
+    JSON.stringify(orderedFiles) === JSON.stringify([...orderedFiles].sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b)))),
+    JSON.stringify(orderedFiles)
+  );
+
+  const malformedAudit = await client.callTool({
+    name: "rgx_audit_lua",
+    arguments: { path: join(HERE, "fixtures", "aura-malformed.txt") },
+  });
+  const malformedReport = JSON.parse(malformedAudit.content[0].text);
+  check(
+    "unparseable Lua fails the source audit closed",
+    malformedReport.clean === false
+      && malformedReport.findings.some((finding) => finding.detector === "lua_parse_error" && finding.line === 2),
+    JSON.stringify(malformedReport)
+  );
 } finally {
   await client.close();
 }

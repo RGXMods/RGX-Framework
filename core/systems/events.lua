@@ -26,13 +26,36 @@ RGX.wakeFrameEvents = RGX.wakeFrameEvents or {
 local canRegisterFrameEventsNow
 local flushPendingFrameEvents
 
+local function canAccessValue(value)
+    local api = RGX.API
+    if type(api) == "table" and type(api.CanAccessValue) == "function" then
+        return api.CanAccessValue(value) == true
+    end
+    return false
+end
+
+local function canAccessTable(value)
+    local api = RGX.API
+    if type(api) == "table" and type(api.CanAccessTable) == "function" then
+        return api.CanAccessTable(value) == true
+    end
+    return false
+end
+
+local function safeErrorText(err)
+    if not canAccessValue(err) then
+        return "<inaccessible error>"
+    end
+    return tostring(err)
+end
+
 local function reportDispatchError(channel, name, id, err)
     local message = string.format(
         "[RGX:%s] Error in '%s' handler '%s': %s",
         tostring(channel),
         tostring(name),
         tostring(id),
-        tostring(err)
+        safeErrorText(err)
     )
 
     if type(_G.geterrorhandler) == "function" then
@@ -48,7 +71,7 @@ local function reportEventRegistrationError(action, event, err)
         "[RGX:event] %s failed for '%s': %s",
         tostring(action),
         tostring(event),
-        tostring(err)
+        safeErrorText(err)
     )
 
     if type(_G.geterrorhandler) == "function" then
@@ -357,12 +380,22 @@ end
 -- The callback receives (event, unit, ...) — the unit token is always the
 -- second argument, matching WoW's native unit event signature.
 function RGX:RegisterUnitEvent(event, unit, callback, id, owner)
-  if type(event) ~= "string" or event == "" then return false end
+  if not canAccessValue(event) or type(event) ~= "string" or event == "" then return false end
 
   local units
   if type(unit) == "table" then
-    units = unit
-  elseif type(unit) == "string" and unit ~= "" then
+    if not canAccessTable(unit) then return false end
+    units = {}
+    for _, candidate in ipairs(unit) do
+      if not canAccessValue(candidate)
+          or type(candidate) ~= "string"
+          or candidate == "" then
+        return false
+      end
+      units[#units + 1] = candidate
+    end
+    if #units == 0 then return false end
+  elseif canAccessValue(unit) and type(unit) == "string" and unit ~= "" then
     units = { unit }
   else
     return false
@@ -404,27 +437,29 @@ function RGX:FireEvent(event, ...)
   local unitBucket = self.unitEvents[event]
   if unitBucket then
     local unitToken = select(1, ...)
-    for id, entry in pairs(unitBucket) do
-      local match = false
-      if entry.units then
-        for _, u in ipairs(entry.units) do
-          if u == unitToken then
-            match = true
-            break
+    if canAccessValue(unitToken) then
+      for id, entry in pairs(unitBucket) do
+        local match = false
+        if entry.units then
+          for _, u in ipairs(entry.units) do
+            if canAccessValue(u) and u == unitToken then
+              match = true
+              break
+            end
           end
         end
-      end
-      if match then
-        local ok, err
-        if entry.callbackType == "string" then
-          ok, err = pcall(entry.owner[entry.callback], entry.owner, event, ...)
-        else
-          ok, err = pcall(entry.callback, event, ...)
+        if match then
+          local ok, err
+          if entry.callbackType == "string" then
+            ok, err = pcall(entry.owner[entry.callback], entry.owner, event, ...)
+          else
+            ok, err = pcall(entry.callback, event, ...)
+          end
+          if not ok then
+            reportDispatchError("unitEvent", event, id, err)
+          end
+          count = count + 1
         end
-        if not ok then
-          reportDispatchError("unitEvent", event, id, err)
-        end
-        count = count + 1
       end
     end
   end

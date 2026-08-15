@@ -16,6 +16,11 @@ for _, name in ipairs(expectedUnavailable) do
 end
 
 check(RGX:GetModule("auras"):HasPlayerAura(123), "aura normalization")
+check(RGX:GetModule("auras"):HasAura(123, "target"), "accessible any-unit aura normalization")
+check(RGX.API.CanAccessValue(123), "value access capability")
+check(RGX.API.CanAccessTable({}), "table access capability")
+check(RGX.API.ShouldAurasBeSecret() == false, "unrestricted flavor aura policy")
+check(RGX:HasCapability("auraSecrecy") == (expectedFlavor ~= "cata"), "aura secrecy capability")
 
 local quest = RGX.API.GetQuestLogInfo(1)
 check(type(quest) == "table" and quest.questID == 456, "quest normalization")

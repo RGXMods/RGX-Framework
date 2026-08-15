@@ -11,8 +11,13 @@
 - Named timers dispatch deterministically by name within one declaration, carry
   owner/name metadata and stable `AddonName:every:name` diagnostic labels, and
   remain failure-isolated with self-cancellation support.
-- Added 166 Lua 5.1 behavior checks plus schema vectors and MCP
-  validation/generation coverage. Declarative `on` remains Tier 4.
+- Added 166 timer and 86 restricted-aura Lua 5.1 behavior checks plus schema
+  vectors and source-conformance coverage. Declarative `on` remains Tier 4.
+- Hardened RGXAuras into an accessible-only boundary: denied event payloads,
+  AuraData, and instance IDs are never indexed, cached, formatted, or forwarded;
+  watched caches invalidate without synthesizing removals.
+- Hardened the source audit against protected/stored raw aura API references and
+  parse failures; RGX-Hello records exact restricted and recovery counter phases.
 - Expected release assets are `RGX-Framework-v2.7.0.zip` and `release.json`;
   the addon archive contains 100 runtime files and all six flavor TOCs.
 
