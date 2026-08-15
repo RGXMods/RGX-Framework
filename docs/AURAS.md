@@ -7,9 +7,7 @@ Restricted or unverifiable values fail closed and never reach consumer
 callbacks. `pcall` still isolates ordinary API/callback errors; it does not
 prevent taint and is not used as authorization.
 
-> **Candidate status:** these hardened semantics are implemented in the
-> unreleased `v2.7.0` source candidate. The latest published release is
-> `v2.6.2`, whose arbitrary-unit aura boundary remains best-effort.
+Implemented in `v2.7.0` (current). Previous release `v2.6.2` had best-effort arbitrary-unit behavior.
 
 ```lua
 local Auras = RGX:GetAuras()
@@ -94,11 +92,9 @@ ordering. The mirrors are references, never runtime or release dependencies.
 
 ## Required Retail Check
 
-Automation cannot emulate engine secret values or prove absence of taint. Before
-release, validate on Retail `12.1.0.69283` and record the candidate commit and ZIP
-SHA-256:
+Automation cannot emulate engine secret values or prove absence of taint. Validate on Retail `12.1.0.69283` and record the commit and ZIP SHA-256:
 
-1. Install matching RGX-Framework and RGX-Hello candidates.
+1. Install matching RGX-Framework and RGX-Hello.
 2. Run `/console scriptErrors 1`, `/console taintLog 2`, then `/reload`.
 3. Open `/rgxvisual`, select Auras, scan player/target once, and start the live
    log outside restrictions. It must report that both player and target watches

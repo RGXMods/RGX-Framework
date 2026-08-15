@@ -30,15 +30,14 @@ repository creation must not begin until that issue is completed. The Studio
 milestone intentionally has no due date and no implementation assignees while
 blocked.
 
-Public status snapshot, updated 2026-08-14: RGX-Framework `v2.6.2` is live as a
-runtime-only addon release. A `v2.7.0` declarative named-timer candidate is under
-automated verification and still requires its in-game acceptance check. The
-production gate remains open. The
+Public status snapshot, updated 2026-08-15: RGX-Framework `v2.7.0` is live as a
+runtime-only addon release with declarative named timers and an accessible-only
+aura boundary. The production gate remains open pending completed in-game
+validation. The
 [`RGXAuras restricted-value boundary`](https://gitlab.dicematrix.cloud/rgxmods/warcraft/monorepo/-/work_items/36)
-has an automated accessible-only candidate but remains an open production
-blocker until Retail in-game validation. Studio is still blocked. GitLab is the
-authoritative tracker and may require sign-in; this page is the public roadmap
-snapshot.
+has automated accessible-only verification; Retail in-game validation is pending.
+Studio is still blocked. GitLab is the authoritative tracker and may require
+sign-in; this page is the public roadmap snapshot.
 
 Framework production readiness requires all of the following:
 

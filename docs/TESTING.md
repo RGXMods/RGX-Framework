@@ -48,15 +48,15 @@ RGX-Hello check remains mandatory.
 
 ### Retail restricted-aura acceptance
 
-Use Retail `12.1.0.69283`, record both candidate commits and the Framework ZIP
-SHA-256, enable `scriptErrors 1` and `taintLog 2`, then follow the Auras-tab
-procedure in [[Auras]]. The scan must report restriction `ACTIVE`; observing only
-combat is insufficient. Both watches must register, and accessible setup must
-exercise all three callback counters plus a target callback. Use **Snapshot Aura
-Counters** immediately before and after a visible restricted target aura change;
-all three values must remain equal. After restrictions end, snapshot after the
-first controlled event and use a second if the first performed the documented
-silent rebuild; recovery must advance a counter by the second snapshot. Stop the
-log, induce one more change and snapshot unchanged totals to prove unsubscribe,
+Use Retail `12.1.0.69283`, record the commit and Framework ZIP SHA-256, enable
+`scriptErrors 1` and `taintLog 2`, then follow the Auras-tab procedure in
+[[Auras]]. The scan must report restriction `ACTIVE`; observing only combat is
+insufficient. Both watches must register, and accessible setup must exercise all
+three callback counters plus a target callback. Use **Snapshot Aura Counters**
+immediately before and after a visible restricted target aura change; all three
+values must remain equal. After restrictions end, snapshot after the first
+controlled event and use a second if the first performed the documented silent
+rebuild; recovery must advance a counter by the second snapshot. Stop the log,
+induce one more change and snapshot unchanged totals to prove unsubscribe,
 then record Lua-error output, blocked-action output, and `_retail_/Logs/taint.log`
 on #36.

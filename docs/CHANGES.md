@@ -1,11 +1,11 @@
 # Changes
 
-## Current Development
+## Current Release
 
-### [v2.7.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.0.md) - 2026-08-14
+### [v2.7.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.0.md) - 2026-08-15
 
-- The `v2.7.0` candidate adds declarative named repeating timers with
-  `every = { name = { seconds, handler } }`.
+- Implements `every = { name = { seconds, handler } }` as a complete declarative
+  vertical slice. Declarative `on` remains Tier 4.
 - Timer declarations are fully validated before addon resources register, bind
   after database/options/minimap setup, and call `handler(addon, timer)`.
 - Named timers dispatch deterministically by name within one declaration, carry
@@ -18,10 +18,8 @@
   watched caches invalidate without synthesizing removals.
 - Hardened the source audit against protected/stored raw aura API references and
   parse failures; RGX-Hello records exact restricted and recovery counter phases.
-- Expected release assets are `RGX-Framework-v2.7.0.zip` and `release.json`;
+- Published assets are `RGX-Framework-v2.7.0.zip` and `release.json`;
   the addon archive contains 100 runtime files and all six flavor TOCs.
-
-## Current Release
 
 ### [v2.6.2](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.6.2.md) - 2026-08-14
 

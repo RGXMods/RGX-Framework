@@ -12,9 +12,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 
 ## Quick Start
 
-> This source branch targets the `v2.7.0` candidate. The named `every` form
-> below is not available in the latest published release, `v2.6.2`, until the
-> candidate completes its required in-game validation and is tagged.
+**Latest published release:** [`v2.7.0`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.7.0)
 
 **1. Declare the dependency:**
 
@@ -244,8 +242,7 @@ RGX Studio. RGX-Framework publishes only the framework addon package. See
 
 ## Compatibility
 
-- **Latest published release:** [`v2.6.2`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.6.2)
-- **Development candidate:** `v2.7.0` (declarative named timers; awaiting required in-game validation)
+- **Latest published release:** [`v2.7.0`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.7.0)
 - **Clients:** Retail `120100`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
 - **Distribution:** one runtime-only addon package; see [Distribution](docs/DISTRIBUTION.md)
 - `C_AddOns.GetAddOnMetadata` and `GetAddOnMetadata` both handled

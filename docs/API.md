@@ -167,9 +167,6 @@ emitter:Fire(signal, ...)
 
 ## Timers
 
-> Declarative `every` below is implemented in the unreleased `v2.7.0`
-> candidate. The latest published release is `v2.6.2`.
-
 | Method | Description |
 |---|---|
 | `RGX:After(duration, callback, label)` | One-shot delay; returns timer ref |
@@ -739,11 +736,7 @@ Reputation and renown tracking, normalized across expansions.
 
 ## Auras (`RGXAuras`)
 
-The unreleased v2.7.0 candidate makes RGXAuras an accessible-only boundary.
-Aura-specific and generic Blizzard predicates run before values are queried,
-indexed, compared, cached, or forwarded. Restricted or unverifiable data fails
-closed; `pcall` remains failure isolation, not taint prevention. Published
-v2.6.2 retains the older best-effort arbitrary-unit behavior.
+RGXAuras is an accessible-only boundary. Aura-specific and generic Blizzard predicates run before values are queried, indexed, compared, cached, or forwarded. Restricted or unverifiable data fails closed; `pcall` remains failure isolation, not taint prevention.
 
 | Method | Description |
 |---|---|

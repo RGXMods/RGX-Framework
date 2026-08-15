@@ -1,8 +1,6 @@
 # SUPER SIMPLE RGX Integration
 
-> This page follows the unreleased `v2.7.0` candidate. The latest published
-> release is `v2.6.2`; named `every` timers become public only after candidate
-> in-game validation and release.
+This page documents the released `v2.7.0` API.
 
 ## A Complete Addon In One Call
 

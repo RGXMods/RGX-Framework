@@ -9,10 +9,6 @@ annotated `x-rgx-ships: "today"` (implemented) or `"tier4"` (frozen target).
 This page documents **what ships today**, verified against
 `core/core.lua` (`RGX.Addon`, `_G.RGXAddon`).
 
-> **Candidate status:** this source targets `v2.7.0`. Declarative named `every`
-> timers are implemented here but are not in the latest published release,
-> `v2.6.2`, until the candidate passes its required in-game check and is tagged.
-
 ---
 
 ## Entry point
