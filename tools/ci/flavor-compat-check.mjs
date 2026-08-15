@@ -58,8 +58,32 @@ for (const [flavor, projectConstant, available, unavailable] of flavors) {
           C_PerksProgram = { GetCurrencyAmount = function() return 0 end }
           C_QuestLog = { GetActivePreyQuest = function() return 1 end }
       end
-      C_UnitAuras = { GetAuraDataByIndex = function() return { spellId = 123, auraInstanceID = 1 } end,
-          GetPlayerAuraBySpellID = function(id) if id == 123 then return { spellId = id } end end }
+      if __expectedFlavor ~= "cata" then
+          canaccessvalue = function(value) return type(value) ~= "nil" end
+          canaccesstable = function(value) return type(value) == "table" end
+          issecretvalue = function() return false end
+          issecrettable = function() return false end
+          C_Secrets = {
+              HasSecretRestrictions = function() return false end,
+              ShouldAurasBeSecret = function() return false end,
+              ShouldUnitAuraIndexBeSecret = function() return false end,
+              ShouldUnitAuraInstanceBeSecret = function() return false end,
+          }
+      end
+      C_UnitAuras = {
+          GetAuraDataByIndex = function(_, index)
+              if index == 1 then return { spellId = 123, auraInstanceID = 1 } end
+          end,
+          GetAuraDataByAuraInstanceID = function(_, id)
+              if id == 1 then return { spellId = 123, auraInstanceID = id } end
+          end,
+          GetPlayerAuraBySpellID = function(id) if id == 123 then return { spellId = id } end end,
+      }
+      if __expectedFlavor ~= "cata" then
+          C_UnitAuras.GetUnitAuraBySpellID = function(_, id)
+              if id == 123 then return { spellId = id, auraInstanceID = 1 } end
+          end
+      end
       GetNumQuestLogEntries = function() return 1 end
       GetQuestLogTitle = function() return "Quest", 10, 0, false, false, false, 1, 456 end
       GetNumFactions = function() return 1 end

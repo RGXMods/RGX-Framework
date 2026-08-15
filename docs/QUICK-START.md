@@ -178,15 +178,21 @@ RGX:RegisterEvent("PLAYER_ENTERING_WORLD", function(event, isLogin, isReload)
     end
 end, "myAddon_enterWorld")
 
--- Unit event
-RGX:RegisterUnitEvent("UNIT_AURA", function(event, unit)
-    if unit == "player" then
-        -- aura changed
-    end
-end, "player", "myAddon_auraTracker")
+-- Unit event: unit is the second argument, before the callback.
+RGX:RegisterUnitEvent("UNIT_POWER_UPDATE", "player", function(event, unit)
+    -- player power changed
+end, "myAddon_powerTracker")
 
 -- Unregister later
-RGX:UnregisterEvent("UNIT_AURA", "myAddon_auraTracker")
+RGX:UnregisterUnitEvent("UNIT_POWER_UPDATE", "myAddon_powerTracker")
+
+-- Aura data has a stronger restricted-value boundary; use RGXAuras instead of
+-- reading raw UNIT_AURA payloads.
+local Auras = RGX:GetAuras()
+local stop = Auras:OnUpdated(function(unit, auraData)
+    print(unit, auraData.name)
+end)
+stop() -- unsubscribe
 ```
 
 ---

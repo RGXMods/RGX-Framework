@@ -68,6 +68,7 @@ if (!changesReleasePattern.test(surfaceText["docs/CHANGES.md"])) failures.push(`
 const candidateSurfaces = [
   "README.md",
   "docs/API.md",
+  "docs/AURAS.md",
   "docs/CHANGES.md",
   "docs/DECLARATIVE-API.md",
   "docs/DISTRIBUTION.md",
@@ -143,6 +144,13 @@ const currentChangelog = existsSync(join(ROOT, currentChangelogPath)) ? read(cur
 for (const required of [`RGX-Framework-v${version}.zip`, `${releaseSnapshot.runtimeFiles} runtime files`]) {
   if (!currentChangelog.includes(required)) failures.push(`${currentChangelogPath}: missing ${required}`);
 }
+if (publishedVersion !== version) {
+  if (!/unreleased|candidate/i.test(currentChangelog) || !currentChangelog.includes(`v${publishedVersion}`)) {
+    failures.push(`${currentChangelogPath}: candidate changelog must identify published v${publishedVersion}`);
+  }
+} else if (/unreleased|candidate/i.test(currentChangelog)) {
+  failures.push(`${currentChangelogPath}: released changelog still contains candidate wording`);
+}
 
 const schema = JSON.parse(read("schemas/rgx-addon.schema.json"));
 if (schema.properties?.on?.["x-rgx-ships"] !== "tier4") failures.push("schema: on must remain tier4 until runtime implementation lands");
@@ -154,11 +162,11 @@ for (const required of ["work_items/30", "work_items/36", "Studio is still block
 }
 
 const auras = surfaceText["docs/AURAS.md"];
-for (const required of ["pcall` does not prevent taint", "not a general secrecy boundary", "best-effort for unrestricted units"]) {
+for (const required of ["accessible-only aura boundary", "fail closed", "raw UNIT_AURA", "payload, which remains unsanitized", "v2.7.0", "v2.6.2", "12.1.0.69283"]) {
   if (!auras.includes(required)) failures.push(`docs/AURAS.md: missing restricted-value boundary '${required}'`);
 }
 const mcpServer = read("tools/rgx-mcp/src/server.js");
-for (const required of ["pcall catches errors but does not prevent taint", "secrecy predicates", "tracked in #36", "typeof control === \"string\""]) {
+for (const required of ["pcall catches errors but does not prevent taint", "fails closed and withholds restricted AuraData", "raw event payloads remain unsanitized", "typeof control === \"string\""]) {
   if (!mcpServer.includes(required)) failures.push(`tools/rgx-mcp/src/server.js: secret-aura advice missing '${required}'`);
 }
 

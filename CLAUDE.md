@@ -136,7 +136,7 @@ All in-tree modules are loaded by the XML loader. No dormant code remains.
 
 ### Tier 3 — Runtime primitives
 
-9. **RGXAuras — SHIPPED, RESTRICTED-VALUE HARDENING OPEN.** The player spell-ID path is guaranteed; arbitrary any-unit `auraData` remains best-effort and is tracked by production blocker #36. The original 12.0.7 generated-doc audit is historical provenance, not the current compatibility claim.
+9. **RGXAuras — SHIPPED, ACCESSIBLE-ONLY HARDENING IN REVIEW.** The v2.7.0 source candidate checks aura-specific and generic predicates before any-unit data is indexed, cached, or forwarded. Production blocker #36 remains open until Retail in-game validation; the original 12.0.7 audit is historical provenance, not the current compatibility claim.
 10. **RGXTooltip — SHIPPED.** `GameTooltip` hook registry, structured composition, and failure-isolated native hooks.
 11. **RGXCombatLog** — structured `COMBAT_LOG_EVENT_UNFILTERED` dispatch: parse subevent, source/dest GUIDs, spellId. Needed by BLU Combat, BPU capture events, and is the core rgx-mod event trigger.
 

@@ -118,8 +118,8 @@ Framework already has these. Addons just haven't adopted them yet.
 
 These modules shipped; remaining hardening is tracked separately.
 
-10. **RGXAuras — SHIPPED; #36 HARDENING OPEN** — guaranteed player lookup and best-effort unrestricted-unit scanning
-    - `HasAura(spellId, unit)`, `GetAura(spellId, unit)`; `pcall` is failure isolation, not a taint boundary
+10. **RGXAuras — SHIPPED; #36 HARDENING IN REVIEW** — the v2.7.0 candidate adds an accessible-only any-unit boundary; Retail in-game validation remains open
+    - `HasAura(spellId, unit)`, `GetAura(spellId, unit)` fail closed before restricted data is indexed, cached, or forwarded
     - Generalizes BPU's `PlayerHasAuraSpellID` pattern
     - Core rgx-mod aura trigger primitive
     - Uses `C_UnitAuras.GetPlayerAuraBySpellID` (taint-safe)
@@ -159,7 +159,7 @@ Phases unlock as the framework subsystems above are built. The framework work an
 | Phase | rgx-mod Feature | Framework Dependency | Status |
 |---|---|---|---|
 | 1 | Baseline (BLU-derived sound triggers) | Core, DB, Events, Sound, Combat | Done (framework side) |
-| 2 | Multi-trigger auras | RegisterUnitEvent, RGXAuras | Framework primitives shipped; restricted-value hardening #36 open |
+| 2 | Multi-trigger auras | RegisterUnitEvent, RGXAuras | Accessible-only hardening automated; #36 awaits Retail validation |
 | 3 | Display types + conditions | RGXDisplays (new), RGXConditions (new) | Not built |
 | 4 | Options editor + actions | RGXUI, RGXDropdowns | Done (framework side) |
 | 5 | Import/export + profiles | Serialization, Profiles, Bucket events | Profiles + Serialization done; Bucket events not built |

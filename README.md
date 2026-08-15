@@ -229,7 +229,7 @@ RGX-Framework temporarily maintains an [MCP](https://modelcontextprotocol.io) se
 | Tool | What it does |
 |---|---|
 | `rgx_validate_addon` | Validate an `RGXAddon` opts table against `schemas/rgx-addon.schema.json` |
-| `rgx_audit_lua` | Scan Lua for unsafe patterns the framework prevents (raw `C_Timer`, manual event frames, `SLASH_` globals, unguarded `SetAttribute`, secret-aura comparisons, raw hook reassignment) |
+| `rgx_audit_lua` | Scan Lua for unsafe patterns the framework prevents (raw `C_Timer`, manual event frames, `SLASH_` globals, unguarded `SetAttribute`, raw aura event/API plumbing, raw hook reassignment) |
 | `rgx_generate_addon` | Emit a contract-congruent addon Lua file using only shipped keys |
 | `rgx_get_contract` | Return the schema + declarative API reference for agent context |
 

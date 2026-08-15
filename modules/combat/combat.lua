@@ -422,10 +422,9 @@ function Combat:Init()
     end)
 
     -- Procs / auras
-    RGX:RegisterEvent("UNIT_AURA", function(_, unit)
-        if unit ~= "player" then return end
+    RGX:RegisterUnitEvent("UNIT_AURA", "player", function()
         Fire(Combat._onProc)
-    end)
+    end, "RGXCombat_Proc")
 
     -- Encounter end
     RGX:RegisterEvent("ENCOUNTER_END", function(_, encounterID, encounterName, difficultyID, groupSize, success)
