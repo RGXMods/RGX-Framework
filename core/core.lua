@@ -65,7 +65,7 @@ local function NormalizeModuleName(name)
     return string.lower(name)
 end
 
-RGX.version = GetAddOnMetadataCompat(addonName, "Version") or "1.0.0"
+RGX.version = GetAddOnMetadataCompat(addonName, "Version") or "unknown"
 RGX.debugMode = false
 
 -- Module storage
