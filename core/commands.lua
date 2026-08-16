@@ -34,6 +34,8 @@ RGX:RegisterSlashCommand("rgx", function(msg)
         end
     elseif cmd == "version" or cmd == "ver" then
         print("|cFF00A2FF[RGX]|r RGX-Framework v" .. (RGX.version or "unknown"))
+    elseif cmd == "version" or cmd == "ver" then
+        print("|cFF00A2FF[RGX]|r RGX-Framework v" .. (RGX.version or "unknown"))
     else
         print("|cFF00A2FF[RGX]|r Commands: modules, fonts, debug, dbtest")
     end

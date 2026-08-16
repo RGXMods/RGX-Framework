@@ -386,7 +386,7 @@ function RGX:UpdateTimers(elapsed)
             end
             timer._lastClock = timerClock
 
-            if timer.elapsed >= timer.duration then
+if timer.elapsed >= timer.duration then
                 processed = processed + 1
                 local callbackStarted = nowSeconds()
                 self._timerDispatchDepth = (self._timerDispatchDepth or 0) + 1
