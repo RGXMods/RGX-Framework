@@ -390,7 +390,8 @@ function RGX:UpdateTimers(elapsed)
                 processed = processed + 1
                 local callbackStarted = nowSeconds()
                 self._timerDispatchDepth = (self._timerDispatchDepth or 0) + 1
-                local ok, err = pcall(timer.callback, timer)
+                local callbackArg = timer.owner or timer
+                local ok, err = pcall(timer.callback, callbackArg)
                 self._timerDispatchDepth = math.max(0, (self._timerDispatchDepth or 1) - 1)
                 local callbackElapsed = nowSeconds() - callbackStarted
                 local timerSlowSeconds = slowSeconds

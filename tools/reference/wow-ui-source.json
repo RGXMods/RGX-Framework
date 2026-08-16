@@ -1,0 +1,52 @@
+{
+  "repository": "https://github.com/Gethe/wow-ui-source.git",
+  "sparsePaths": [
+    "Interface/AddOns/Blizzard_APIDocumentationGenerated",
+    "Interface/AddOns/Blizzard_FrameXML",
+    "Interface/AddOns/Blizzard_SharedXML"
+  ],
+  "flavors": [
+    {
+      "id": "retail",
+      "label": "Retail",
+      "ref": "live",
+      "kind": "branch",
+      "active": true
+    },
+    {
+      "id": "classic-era",
+      "label": "Classic Era",
+      "ref": "classic_era",
+      "kind": "branch",
+      "active": true
+    },
+    {
+      "id": "tbc",
+      "label": "Burning Crusade Classic",
+      "ref": "classic_anniversary",
+      "kind": "branch",
+      "active": true
+    },
+    {
+      "id": "wrath",
+      "label": "Wrath/Titan",
+      "ref": "classic_titan",
+      "kind": "branch",
+      "active": true
+    },
+    {
+      "id": "mists",
+      "label": "Mists Classic",
+      "ref": "classic",
+      "kind": "branch",
+      "active": true
+    },
+    {
+      "id": "cata-4.4.2",
+      "label": "Cataclysm 4.4.2 historical baseline",
+      "ref": "4.4.2",
+      "kind": "tag",
+      "active": false
+    }
+  ]
+}
