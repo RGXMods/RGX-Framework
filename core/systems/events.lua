@@ -287,20 +287,28 @@ RGX.eventFrame = RGX.eventFrame or CreateFrame("Frame")
 
 flushPendingFrameEvents = function(rgx)
     if not rgx or not rgx.pendingFrameEvents or not next(rgx.pendingFrameEvents) then
-        return
+        return false
     end
 
     if not canRegisterFrameEventsNow() then
-        return
+        return false
     end
 
-    for event in pairs(RGX.pendingFrameEvents) do
+    local changed = false
+    for event in pairs(rgx.pendingFrameEvents) do
         if not hasAnyEventHandlers(rgx, event) then
             rgx.pendingFrameEvents[event] = nil
+            changed = true
         elseif safeRegisterFrameEvent(rgx.eventFrame, event) then
             rgx.pendingFrameEvents[event] = nil
+            changed = true
         end
     end
+    return changed
+end
+
+function RGX:FlushPendingFrameEvents()
+    return flushPendingFrameEvents(self)
 end
 
 local function registerWakeFrameEvents(frame)
@@ -422,11 +430,40 @@ function RGX:RegisterUnitEvent(event, unit, callback, id, owner)
 end
 
 function RGX:UnregisterUnitEvent(event, id)
-  return unregisterHandler(self.unitEvents, event, id)
+  local removed = unregisterHandler(self.unitEvents, event, id)
+  if removed and not hasAnyEventHandlers(self, event) then
+    unqueuePendingFrameEvent(self, event)
+    safeUnregisterFrameEvent(self.eventFrame, event)
+  end
+  return removed
 end
 
 function RGX:UnregisterAllUnitEvents(id)
-  return unregisterHandlerEverywhere(self.unitEvents, id)
+  if type(id) ~= "string" or id == "" then
+    return false
+  end
+
+  local removed = false
+  local touched = {}
+  for event, bucket in pairs(self.unitEvents) do
+    if bucket[id] then
+      bucket[id] = nil
+      removed = true
+      touched[event] = true
+    end
+    if not next(bucket) then
+      self.unitEvents[event] = nil
+    end
+  end
+
+  for event in pairs(touched) do
+    if not hasAnyEventHandlers(self, event) then
+      unqueuePendingFrameEvent(self, event)
+      safeUnregisterFrameEvent(self.eventFrame, event)
+    end
+  end
+
+  return removed
 end
 
 function RGX:FireEvent(event, ...)
@@ -465,6 +502,9 @@ function RGX:FireEvent(event, ...)
   end
 
   self._dispatchDepth = math.max(0, (self._dispatchDepth or 1) - 1)
+  if self._dispatchDepth == 0 then
+    flushPendingFrameEvents(self)
+  end
 
   return count
 end
