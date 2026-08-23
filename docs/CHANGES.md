@@ -2,6 +2,23 @@
 
 ## Current Release
 
+### [v2.7.3](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.3.md) - 2026-08-22
+
+- Fixed `ADDON_ACTION_FORBIDDEN` from the v2.7.2 event-lifecycle flush: deferred
+  native registrations now run only from an anonymous next-frame driver, never
+  while unwinding an event dispatch, timer dispatch, combat, or pet battle.
+- Registration success is verified with `IsEventRegistered`; unsupported or
+  repeatedly rejected events are dropped after a bounded attempt cap instead of
+  retrying forever. The 2.7.2 deferral guarantee is preserved one frame later.
+- Retail no longer registers `COMBAT_LOG_EVENT_UNFILTERED`: new flavor-gated
+  `combatLogEvent` capability, `RGXCombat` skips CLEU on Retail 12.x, and
+  `RGXCombat:HasCombatLogEvents()` exposes the degraded surface.
+- Event-lifecycle runtime coverage extended from 35 to 66 checks.
+- Published assets are `RGX-Framework-v2.7.3.zip` and `release.json`; the addon
+  archive contains 100 runtime files and all six flavor TOCs.
+
+## Recent Releases
+
 ### [v2.7.2](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.2.md) - 2026-08-22
 
 - Fixed deferred WoW frame-event registrations created during framework event
@@ -20,8 +37,6 @@
   green.
 - Published assets are `RGX-Framework-v2.7.2.zip` and `release.json`; the addon
   archive contains 100 runtime files and all six flavor TOCs.
-
-## Recent Releases
 
 ### [v2.7.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.0.md) - 2026-08-15
 

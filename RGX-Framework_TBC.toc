@@ -1,5 +1,5 @@
 ## Interface: 20506
-## Version: 2.7.2
+## Version: 2.7.3
 ## Title: RGX-Framework
 ## Notes: Modular WoW addon framework
 ## Author: RGX
