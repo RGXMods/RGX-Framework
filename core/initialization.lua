@@ -8,23 +8,11 @@ local addonName, RGX = ...
 RGX._ready = false
 RGX._readyCallbacks = RGX._readyCallbacks or {}
 
--- Timer callbacks can register new WoW events while the runtime deliberately
--- blocks frame:RegisterEvent calls. Once the outer timer dispatch returns,
--- complete those deferred registrations immediately instead of leaving them
--- stranded until an unrelated wake event happens to fire.
-do
-    local RuntimeUpdateTimers = RGX.UpdateTimers
-    if type(RuntimeUpdateTimers) == "function" then
-        function RGX:UpdateTimers(elapsed)
-            local result = RuntimeUpdateTimers(self, elapsed)
-            if (self._timerDispatchDepth or 0) == 0
-                and type(self.FlushPendingFrameEvents) == "function" then
-                self:FlushPendingFrameEvents()
-            end
-            return result
-        end
-    end
-end
+-- Timer- and event-callback registrations defer into RGX.pendingFrameEvents
+-- and are drained by the anonymous next-frame registration driver in
+-- events.lua. Native Frame:RegisterEvent must not run while unwinding a
+-- Blizzard event or timer dispatch (protection layer / ADDON_ACTION_FORBIDDEN),
+-- so nothing synchronous happens at dispatch tails anymore.
 
 function RGX:IsReady()
     return self._ready == true

@@ -36,6 +36,11 @@ local function HasEvent(name)
     if HasFunction(C_EventUtils, "IsEventValid") then
         return C_EventUtils.IsEventValid(name) == true
     end
+    -- Fallback for clients without the validation API. Every supported flavor
+    -- (Retail, Classic Era, TBC, Wrath/Titan, Cataclysm, Mists) ships
+    -- C_EventUtils.IsEventValid, so this path is unreachable on those clients.
+    -- Capability decisions that affect protected behavior (e.g. combatLogEvent)
+    -- must NOT rely on this fallback; they gate on explicit flavor knowledge.
     return true
 end
 
@@ -62,6 +67,12 @@ RGX.Capabilities = {
     housing = HasEvent("CURRENT_HOUSE_INFO_RECIEVED") and (type(C_Housing) == "table" or type(C_HousingDecor) == "table"),
     tradingPost = HasFunction(C_PerksProgram, "GetCurrencyAmount") and HasEvent("PERKS_PROGRAM_CURRENCY_REFRESH"),
     prey = HasFunction(C_QuestLog, "GetActivePreyQuest") and HasEvent("UPDATE_UI_WIDGET"),
+    -- COMBAT_LOG_EVENT_UNFILTERED: Retail 12.x clients reject addon-side
+    -- registration (protection layer; documented HasRestrictions). Classic
+    -- flavors accept it as the standard combat-log path. This is an explicit
+    -- flavor gate: it deliberately does NOT rely on HasEvent/IsEventValid,
+    -- which describe documentation validity, not registerability.
+    combatLogEvent = RGX.isClassicEra or RGX.isTBC or RGX.isWrath or RGX.isCata or RGX.isMists,
     settings = HasFunction(Settings, "RegisterCanvasLayoutCategory") and HasFunction(Settings, "RegisterAddOnCategory") and HasFunction(Settings, "OpenToCategory"),
     menuUtil = HasFunction(MenuUtil, "CreateContextMenu"),
 }

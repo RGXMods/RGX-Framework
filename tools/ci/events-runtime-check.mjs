@@ -22,17 +22,32 @@ try {
     __inCombat = false
     InCombatLockdown = function() return __inCombat == true end
     UnitAffectingCombat = function() return __inCombat == true end
-    C_EventUtils = { IsEventValid = function() return true end }
+    C_EventUtils = { IsEventValid = function(event) return event ~= "RGX_UNSUPPORTED_EVENT" end }
     SlashCmdList = {}
     geterrorhandler = function()
         return function(message) error(message, 0) end
     end
 
+    -- Mock frame models the client accurately for this suite:
+    --  - attempts[event] counts every native RegisterEvent attempt
+    --  - deny[event] emulates a protection-layer rejection: RegisterEvent
+    --    returns silently WITHOUT registering (like ADDON_ACTION_FORBIDDEN,
+    --    which is not a Lua error), so IsEventRegistered stays false
+    --  - throws[event] emulates a plain Lua error from the C API
     function CreateFrame()
-        local frame = { scripts = {}, registered = {} }
+        local frame = { scripts = {}, registered = {}, attempts = {}, deny = {}, throws = {} }
         function frame:SetScript(script, handler) self.scripts[script] = handler end
-        function frame:RegisterEvent(event) self.registered[event] = true end
+        function frame:Show() self._shown = true end
+        function frame:Hide() self._shown = false end
+        function frame:RegisterEvent(event)
+            self.attempts[event] = (self.attempts[event] or 0) + 1
+            if self.throws[event] then error("mock C error for " .. event, 2) end
+            if self.deny[event] then return end
+            self.registered[event] = true
+        end
+        function frame:RegisterAllEvents() self.allEvents = true end
         function frame:UnregisterEvent(event) self.registered[event] = nil end
+        function frame:IsEventRegistered(event) return self.registered[event] == true end
         return frame
     end
 
@@ -55,7 +70,7 @@ try {
     loadSource(__testSource, "tools/ci/events-runtime-test.lua")()
   `);
 
-  if ((lua.ctx.__rgxEventsCheckCount ?? 0) < 30) {
+  if ((lua.ctx.__rgxEventsCheckCount ?? 0) < 60) {
     throw new Error(`event lifecycle harness ran too few checks: ${lua.ctx.__rgxEventsCheckCount}`);
   }
   console.log(lua.ctx.__rgxEventsTestResult);
