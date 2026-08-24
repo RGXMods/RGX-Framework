@@ -1,6 +1,6 @@
 # rgx-mcp source conformance fixture
 
-Temporary MCP fixture for [RGX-Framework](https://github.com/DonnieDice/RGX-Framework) source-tree CI. It lets contributors validate, audit, and generate declarative RGX addons against the framework's frozen **Simplicity Contract**. It is private package metadata, not a separately published product.
+Temporary MCP fixture for [RGX-Framework](https://github.com/RGXMods/RGX-Framework) source-tree CI. It lets contributors validate, audit, and generate declarative RGX addons against the framework's frozen **Simplicity Contract**. It is private package metadata, not a separately published product.
 
 **Read-only by design.** This tool inspects and generates — it never edits repos, never commits, never touches the game.
 
@@ -53,7 +53,7 @@ Only the framework source checkout ships `.mcp.json`; published artifacts do not
 
 ## Testing
 
-`test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK (stdio transport, no protocol reimplementation) against [RGX-Hello](https://github.com/DonnieDice/RGX-Hello). It parses and validates the actual curried `RGXAddon` table, generates the matching supported surface with named timers, and audits the actual Lua tree. It verifies that `every` is shipped while `on` remains Tier 4, and uses paired fixtures to require RGXAuras consumer code to pass while raw aura plumbing fails. Unknown or Tier 4 keys fail directly.
+`test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK (stdio transport, no protocol reimplementation) against [RGX-Hello](https://github.com/RGXMods/RGX-Hello). It parses and validates the actual curried `RGXAddon` table, generates the matching supported surface with named timers, and audits the actual Lua tree. It verifies that `every` is shipped while `on` remains Tier 4, and uses paired fixtures to require RGXAuras consumer code to pass while raw aura plumbing fails. Unknown or Tier 4 keys fail directly.
 
 ```bash
 node test/test-rgx-hello.mjs /path/to/RGX-Hello

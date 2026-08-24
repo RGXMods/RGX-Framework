@@ -48,7 +48,7 @@ Binds a swatch control to `addon.db.accentColor` (`{r,g,b}`); clicking the swatc
 
 ## Testing
 
-`/rgxcolor` (from [RGX-Hello](https://github.com/DonnieDice/RGX-Hello)) opens the picker directly; the Colors tab of `/rgxvisual` exercises the swatch controls, reset, and direct-open paths. See [[Testing]].
+`/rgxcolor` (from [RGX-Hello](https://github.com/RGXMods/RGX-Hello)) opens the picker directly; the Colors tab of `/rgxvisual` exercises the swatch controls, reset, and direct-open paths. See [[Testing]].
 
 ## History
 

@@ -1,6 +1,6 @@
 # Testing — RGX-Hello
 
-[RGX-Hello](https://github.com/DonnieDice/RGX-Hello) is two things in one install:
+[RGX-Hello](https://github.com/RGXMods/RGX-Hello) is two things in one install:
 
 1. **The reference addon** — `data/core.lua` is the canonical hello-world: the smallest complete RGX addon, written in the declarative `RGXAddon` style you should copy when starting your own.
 2. **The framework's in-game test suite** — `data/visualtest.lua` exercises every user-facing framework module through the manual API, and doubles as the reference for going beyond the declarative surface.
@@ -27,7 +27,7 @@
 | Design | `RGX:Font` one-call styling, `RGXDesign` primitives, theme tokens |
 | System | declarative `every` self-cancellation, `RGX:After`, `RGX:Every`, `RGX:CancelTimer` |
 
-Sound is intentionally untested here — the sound module is a per-addon registry that [BLU](https://github.com/DonnieDice/BLU) exercises in production, which is a more honest test than a synthetic registration.
+Sound is intentionally untested here — the sound module is a per-addon registry that [BLU](https://github.com/RGXMods/BLU) exercises in production, which is a more honest test than a synthetic registration.
 
 ## The standing pattern
 

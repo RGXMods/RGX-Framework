@@ -10,6 +10,6 @@
 ## X-Category: Library
 ## X-License: MIT
 ## X-Curse-Project-ID: 1516939
-## X-Website: https://github.com/DonnieDice/RGX-Framework
+## X-Website: https://github.com/RGXMods/RGX-Framework
 
 RGX-Framework.xml

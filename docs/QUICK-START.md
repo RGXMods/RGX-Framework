@@ -1,6 +1,6 @@
 # Quick Start
 
-> **The fast path is the [[Declarative API]].** For most addons, `RGXAddon "MyAddon" { ... }` provides saved settings, named repeating timers, an options panel, a slash command, and a minimap button in one call. Events still use scoped methods on the returned addon until declarative `on` ships. The rest of this page is the **à la carte** path: reaching individual modules directly through `_G.RGXFramework`, for addons that need to go beyond the declarative surface (see [RGX-Hello's](https://github.com/DonnieDice/RGX-Hello) `data/visualtest.lua` for a full worked example of this style).
+> **The fast path is the [[Declarative API]].** For most addons, `RGXAddon "MyAddon" { ... }` provides saved settings, named repeating timers, an options panel, a slash command, and a minimap button in one call. Events still use scoped methods on the returned addon until declarative `on` ships. The rest of this page is the **à la carte** path: reaching individual modules directly through `_G.RGXFramework`, for addons that need to go beyond the declarative surface (see [RGX-Hello's](https://github.com/RGXMods/RGX-Hello) `data/visualtest.lua` for a full worked example of this style).
 
 This page walks you through integrating RGX-Framework into a consumer addon, from TOC setup to first font/color/module usage.
 

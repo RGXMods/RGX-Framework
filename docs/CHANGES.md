@@ -2,7 +2,7 @@
 
 ## Current Release
 
-### [v2.7.4](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.4.md) - 2026-08-23
+### [v2.7.4](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.4.md) - 2026-08-23
 
 - Standardized framework chat output as `{icon} - [RGX] {message}` through
   `RGX:CreateChatPrefix()`.
@@ -16,7 +16,7 @@
 
 ## Recent Releases
 
-### [v2.7.3](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.3.md) - 2026-08-22
+### [v2.7.3](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.3.md) - 2026-08-22
 
 - Fixed `ADDON_ACTION_FORBIDDEN` from the v2.7.2 event-lifecycle flush: deferred
   native registrations now run only from an anonymous next-frame driver, never
@@ -31,7 +31,7 @@
 - Published assets are `RGX-Framework-v2.7.3.zip` and `release.json`; the addon
   archive contains 100 runtime files and all six flavor TOCs.
 
-### [v2.7.2](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.2.md) - 2026-08-22
+### [v2.7.2](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.2.md) - 2026-08-22
 
 - Fixed deferred WoW frame-event registrations created during framework event
   dispatch. Consumer events registered from `PLAYER_LOGIN`,
@@ -50,33 +50,33 @@
 - Published assets are `RGX-Framework-v2.7.2.zip` and `release.json`; the addon
   archive contains 100 runtime files and all six flavor TOCs.
 
-### [v2.7.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.0.md) - 2026-08-15
+### [v2.7.0](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.0.md) - 2026-08-15
 
 - Added declarative named repeating timers with deterministic ordering,
   lifecycle binding, metadata, self-cancellation, and failure isolation.
 - Hardened RGXAuras into an accessible-only restricted-value boundary and added
   the corresponding Lua 5.1 runtime and source-conformance coverage.
 
-### [v2.6.2](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.6.2.md) - 2026-08-14
+### [v2.6.2](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.6.2.md) - 2026-08-14
 
 - Synchronized distribution documentation and hardened release/package
   validation across the six supported WoW flavors.
 
-### [v2.6.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.6.1.md) - 2026-08-13
+### [v2.6.1](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.6.1.md) - 2026-08-13
 
 - Restored the single-product framework distribution boundary and aligned
   deterministic package verification.
 
-### [v2.6.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.6.0.md) - 2026-08-13
+### [v2.6.0](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.6.0.md) - 2026-08-13
 
 - Added capability-gated support and verified TOCs for Retail, Classic Era,
   TBC, Wrath/Titan, Cataclysm, and Mists Classic.
 
-### [v2.5.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.5.1.md) - 2026-08-12
+### [v2.5.1](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.5.1.md) - 2026-08-12
 
 - Added the cross-version compatibility layer, hardened aura payload access,
   and shipped accumulated UI and pet-battle fixes.
 
 ## Historical Release Notes
 
-Full per-version notes remain in [`docs/changelogs/`](https://github.com/DonnieDice/RGX-Framework/tree/main/docs/changelogs), including releases from v1.x through v2.5.0.
+Full per-version notes remain in [`docs/changelogs/`](https://github.com/RGXMods/RGX-Framework/tree/main/docs/changelogs), including releases from v1.x through v2.5.0.
