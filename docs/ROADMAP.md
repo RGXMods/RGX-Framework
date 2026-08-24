@@ -179,6 +179,10 @@ Phases unlock as the framework subsystems above are built. The framework work an
 
 ## Near-Term Feature Additions
 
+### Pre-Mapped WoW UI Reference
+
+Maintain a private fork of Gethe/wow-ui-source whose scheduled CI synchronizes the configured upstream refs and rebuilds the per-flavor and merged Graphify maps after changes, keeping the generated maps clone-ready. Exact source remains evidence; graphs remain discovery indexes.
+
 ### Bloodlust Detection
 
 Add `RGX_BLOODLUST` and `RGX_SATED` messages to the framework event system:
