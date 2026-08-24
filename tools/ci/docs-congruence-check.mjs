@@ -56,7 +56,7 @@ for (const path of ["README.md", "docs/HOME.md", "docs/DISTRIBUTION.md", "docs/d
 const exactPublishedMarkers = [
   ["README.md", `**Latest published release:** [\`v${publishedVersion}\`]`],
   ["docs/HOME.md", `Current release \`v${publishedVersion}\``],
-  ["docs/DISTRIBUTION.md", `[\`v${publishedVersion}\`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v${publishedVersion})`],
+  ["docs/DISTRIBUTION.md", `[\`v${publishedVersion}\`](https://github.com/RGXMods/RGX-Framework/releases/tag/v${publishedVersion})`],
   ["docs/description.html", `releases/tag/v${publishedVersion}\" style=\"color:#58a6ff\">v${publishedVersion}</a>`],
 ];
 for (const [path, marker] of exactPublishedMarkers) {

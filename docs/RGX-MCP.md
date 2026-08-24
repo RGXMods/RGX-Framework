@@ -48,13 +48,13 @@ MCP server. See [[Distribution]].
 
 ## The tandem loop
 
-`tools/rgx-mcp/test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK against the real [RGX-Hello](https://github.com/DonnieDice/RGX-Hello) repo. It parses the actual curried `RGXAddon` table as Lua 5.1, validates that complete options object, generates the matching supported surface including named timers, and audits the actual Lua tree. It also verifies that `every` is shipped while `on` remains Tier 4, and proves with paired fixtures that RGXAuras consumer code passes while raw aura event/API references are reported, including references passed through `pcall` or stored for later use. An unparseable Lua source fails the audit closed. Unknown or Tier 4 keys therefore fail instead of hiding behind a hand-maintained transcription.
+`tools/rgx-mcp/test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK against the real [RGX-Hello](https://github.com/RGXMods/RGX-Hello) repo. It parses the actual curried `RGXAddon` table as Lua 5.1, validates that complete options object, generates the matching supported surface including named timers, and audits the actual Lua tree. It also verifies that `every` is shipped while `on` remains Tier 4, and proves with paired fixtures that RGXAuras consumer code passes while raw aura event/API references are reported, including references passed through `pcall` or stored for later use. An unparseable Lua source fails the audit closed. Unknown or Tier 4 keys therefore fail instead of hiding behind a hand-maintained transcription.
 
 ```bash
 node test/test-rgx-hello.mjs /path/to/RGX-Hello
 ```
 
-Source: [`tools/rgx-mcp/`](https://github.com/DonnieDice/RGX-Framework/tree/main/tools/rgx-mcp).
+Source: [`tools/rgx-mcp/`](https://github.com/RGXMods/RGX-Framework/tree/main/tools/rgx-mcp).
 
 ## Contract Congruence
 

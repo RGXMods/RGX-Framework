@@ -132,4 +132,4 @@ Automation cannot emulate engine secret values or prove absence of taint. Valida
 | `Auras:OnApplied(fn)` / `OnRemoved(fn)` / `OnUpdated(fn)` | unsubscribe closure |
 | `Auras:GetAuraByInstanceID(unit, id)` | accessible AuraData \| nil |
 
-Source: [`modules/auras/auras.lua`](https://github.com/DonnieDice/RGX-Framework/blob/main/modules/auras/auras.lua). Test it in-game via [[RGX-Hello|Testing]]'s Auras tab.
+Source: [`modules/auras/auras.lua`](https://github.com/RGXMods/RGX-Framework/blob/main/modules/auras/auras.lua). Test it in-game via [[RGX-Hello|Testing]]'s Auras tab.

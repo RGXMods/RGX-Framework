@@ -12,7 +12,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/DonnieDice/RGX-Framework.git",
+    "url": "https://github.com/RGXMods/RGX-Framework.git",
     "directory": "tools/rgx-mcp"
   },
   "dependencies": {

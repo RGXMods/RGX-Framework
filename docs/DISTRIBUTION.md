@@ -6,7 +6,7 @@ World of Warcraft addon archive.
 
 ## Current Release
 
-[`v2.7.4`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.7.4)
+[`v2.7.4`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.4)
 publishes exactly two GitHub assets:
 
 | Asset | Purpose |
