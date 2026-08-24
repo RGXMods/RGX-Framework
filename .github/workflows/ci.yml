@@ -61,7 +61,7 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Clone a fresh RGX-Hello
-        run: git clone --depth 1 https://github.com/DonnieDice/RGX-Hello.git "${RUNNER_TEMP}/RGX-Hello"
+        run: git clone --depth 1 https://github.com/RGXMods/RGX-Hello.git "${RUNNER_TEMP}/RGX-Hello"
 
       - name: rgx-mcp end-to-end vs the real RGX-Hello
         working-directory: tools/rgx-mcp

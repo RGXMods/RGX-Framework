@@ -51,7 +51,7 @@ jobs:
 
       - name: Validate contract against RGX-Hello
         run: |
-          git clone --depth 1 https://github.com/DonnieDice/RGX-Hello.git "${RUNNER_TEMP}/RGX-Hello"
+          git clone --depth 1 https://github.com/RGXMods/RGX-Hello.git "${RUNNER_TEMP}/RGX-Hello"
           node tools/rgx-mcp/test/test-rgx-hello.mjs "${RUNNER_TEMP}/RGX-Hello"
 
       - name: Install jq
@@ -276,7 +276,7 @@ jobs:
               color=385018
               footer="RGX Mods • Stable Release"
               description="A new stable release of the RGX shared library is live."
-              release_url="https://github.com/DonnieDice/RGX-Framework/releases/tag/${tag}"
+              release_url="https://github.com/RGXMods/RGX-Framework/releases/tag/${tag}"
               downloads="[CurseForge](https://www.curseforge.com/wow/addons/rgx-framework) • [GitHub](${release_url})"
               channel="Release"
               ;;
@@ -285,7 +285,7 @@ jobs:
               color=16744448
               footer="RGX Mods • Beta Build"
               description="Beta build available for testing."
-              release_url="https://github.com/DonnieDice/RGX-Framework/releases/tag/${tag}"
+              release_url="https://github.com/RGXMods/RGX-Framework/releases/tag/${tag}"
               downloads="[CurseForge](https://www.curseforge.com/wow/addons/rgx-framework) • [GitHub](${release_url})"
               channel="Beta"
               ;;
@@ -294,7 +294,7 @@ jobs:
               color=9109504
               footer="RGX Mods • Alpha Build"
               description="Alpha build available for testing."
-              release_url="https://github.com/DonnieDice/RGX-Framework/releases/tag/${tag}"
+              release_url="https://github.com/RGXMods/RGX-Framework/releases/tag/${tag}"
               downloads="[GitHub](${release_url})"
               channel="Alpha"
               ;;
@@ -303,7 +303,7 @@ jobs:
               color=3447003
               footer="RGX Mods • Dev Build"
               description="Development build from the dev branch."
-              release_url="https://github.com/DonnieDice/RGX-Framework/tree/dev"
+              release_url="https://github.com/RGXMods/RGX-Framework/tree/dev"
               downloads="[GitHub Dev Branch](${release_url})"
               channel="Dev"
               ;;
@@ -312,7 +312,7 @@ jobs:
               color=10000000
               footer="RGX Mods"
               description="Build completed."
-              release_url="https://github.com/DonnieDice/RGX-Framework/releases"
+              release_url="https://github.com/RGXMods/RGX-Framework/releases"
               downloads="[GitHub](${release_url})"
               channel="Unknown"
               ;;
@@ -320,13 +320,13 @@ jobs:
 
           jq -n \
             --arg username "RGX-Framework Releases" \
-            --arg avatar_url "https://raw.githubusercontent.com/DonnieDice/RGX-Framework/main/media/logo.png" \
+            --arg avatar_url "https://raw.githubusercontent.com/RGXMods/RGX-Framework/main/media/logo.png" \
             --arg title "$title" \
             --arg url "$release_url" \
             --arg description "$description" \
             --argjson color "$color" \
             --arg footer "$footer" \
-            --arg icon_url "https://raw.githubusercontent.com/donniedice/SimpleQuestPlates/main/media/kiwi.gif" \
+            --arg icon_url "https://raw.githubusercontent.com/RGXMods/SimpleQuestPlates/main/media/kiwi.gif" \
             --arg timestamp "${RELEASE_TIMESTAMP}" \
             --arg summary "$summary" \
             --arg downloads "$downloads" \
@@ -376,19 +376,19 @@ jobs:
             --arg timestamp "$timestamp" \
             '{
               username: "RGX-Framework Build Failed",
-              avatar_url: "https://raw.githubusercontent.com/DonnieDice/RGX-Framework/main/media/logo.png",
+              avatar_url: "https://raw.githubusercontent.com/RGXMods/RGX-Framework/main/media/logo.png",
               embeds: [{
                 title: "RGX-Framework Build Failed",
                 description: "The release workflow encountered an error",
-                url: ("https://github.com/DonnieDice/RGX-Framework/actions/runs/" + $run_id),
+                url: ("https://github.com/RGXMods/RGX-Framework/actions/runs/" + $run_id),
                 color: 15158332,
                 fields: [
                   { name: "Version", value: $version, inline: true },
-                  { name: "Workflow", value: ("https://github.com/DonnieDice/RGX-Framework/actions/runs/" + $run_id), inline: true }
+                  { name: "Workflow", value: ("https://github.com/RGXMods/RGX-Framework/actions/runs/" + $run_id), inline: true }
                 ],
                 footer: {
                   text: "RGX Mods - Build System",
-                  icon_url: "https://raw.githubusercontent.com/DonnieDice/RGX-Framework/main/media/logo.png"
+                  icon_url: "https://raw.githubusercontent.com/RGXMods/RGX-Framework/main/media/logo.png"
                 },
                 timestamp: $timestamp
               }]
