@@ -11,6 +11,7 @@ package-as: RGX-Framework
 ignore:
   - .gitignore
   - .mcp.json
+  - AGENTS.md
   - CLAUDE.md
   - README.md
   - docs

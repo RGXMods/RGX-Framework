@@ -2,48 +2,70 @@
 
 ## Current Release
 
+### [v2.7.4](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.4.md) - 2026-08-23
+
+- Standardized framework chat output as `{icon} - [RGX] {message}` through
+  `RGX:CreateChatPrefix()`.
+- Added a persistent global login-message gate with `/rgx login on|off|status`
+  and the `IsLoginMessagesEnabled`, `SetLoginMessagesEnabled`, and
+  `LoginMessage` APIs.
+- Routed declarative `welcome` output through the login gate and reduced
+  framework startup output to one gated, metadata-derived line.
+- Added Lua 5.1 runtime coverage for persistence, command confirmations,
+  declarative welcome behavior, prefix formatting, and startup deduplication.
+
+## Recent Releases
+
+### [v2.7.3](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.3.md) - 2026-08-22
+
+- Fixed `ADDON_ACTION_FORBIDDEN` from the v2.7.2 event-lifecycle flush: deferred
+  native registrations now run only from an anonymous next-frame driver, never
+  while unwinding an event dispatch, timer dispatch, combat, or pet battle.
+- Registration success is verified with `IsEventRegistered`; unsupported or
+  repeatedly rejected events are dropped after a bounded attempt cap instead of
+  retrying forever. The 2.7.2 deferral guarantee is preserved one frame later.
+- Retail no longer registers `COMBAT_LOG_EVENT_UNFILTERED`: new flavor-gated
+  `combatLogEvent` capability, `RGXCombat` skips CLEU on Retail 12.x, and
+  `RGXCombat:HasCombatLogEvents()` exposes the degraded surface.
+- Event-lifecycle runtime coverage extended from 35 to 66 checks.
+- Published assets are `RGX-Framework-v2.7.3.zip` and `release.json`; the addon
+  archive contains 100 runtime files and all six flavor TOCs.
+
+### [v2.7.2](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.2.md) - 2026-08-22
+
+- Fixed deferred WoW frame-event registrations created during framework event
+  dispatch. Consumer events registered from `PLAYER_LOGIN`,
+  `PLAYER_ENTERING_WORLD`, or another handler now become native frame events
+  immediately after the outermost safe dispatch returns.
+- Extended the same lifecycle guarantee to registrations created inside RGX
+  timer callbacks, closing the second path that could strand callbacks in
+  `pendingFrameEvents`.
+- Made unit-event unregistration clean up pending and native frame state
+  symmetrically while preserving a shared registration when regular handlers
+  still exist for the same event.
+- Added 35 Lua 5.1 event-lifecycle checks covering login bootstrap, nested
+  dispatch, unit events, timers, combat deferral, shared handlers, and
+  removal-before-flush. Existing 166 timer and 86 restricted-aura checks remain
+  green.
+- Published assets are `RGX-Framework-v2.7.2.zip` and `release.json`; the addon
+  archive contains 100 runtime files and all six flavor TOCs.
+
 ### [v2.7.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.0.md) - 2026-08-15
 
-- Implements `every = { name = { seconds, handler } }` as a complete declarative
-  vertical slice. Declarative `on` remains Tier 4.
-- Timer declarations are fully validated before addon resources register, bind
-  after database/options/minimap setup, and call `handler(addon, timer)`.
-- Named timers dispatch deterministically by name within one declaration, carry
-  owner/name metadata and stable `AddonName:every:name` diagnostic labels, and
-  remain failure-isolated with self-cancellation support.
-- Added 166 timer and 86 restricted-aura Lua 5.1 behavior checks plus schema
-  vectors and source-conformance coverage. Declarative `on` remains Tier 4.
-- Hardened RGXAuras into an accessible-only boundary: denied event payloads,
-  AuraData, and instance IDs are never indexed, cached, formatted, or forwarded;
-  watched caches invalidate without synthesizing removals.
-- Hardened the source audit against protected/stored raw aura API references and
-  parse failures; RGX-Hello records exact restricted and recovery counter phases.
-- Published assets are `RGX-Framework-v2.7.0.zip` and `release.json`;
-  the addon archive contains 100 runtime files and all six flavor TOCs.
+- Added declarative named repeating timers with deterministic ordering,
+  lifecycle binding, metadata, self-cancellation, and failure isolation.
+- Hardened RGXAuras into an accessible-only restricted-value boundary and added
+  the corresponding Lua 5.1 runtime and source-conformance coverage.
 
 ### [v2.6.2](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.6.2.md) - 2026-08-14
 
-- Synchronized the README, canonical docs, addon-service description source,
-  release metadata, and all 29 generated Wiki pages with the runtime-only
-  six-flavor distribution.
-- Added CI checks that keep versioned public surfaces, flavor metadata, package
-  inventory, Wiki mappings, and the real RGX-Hello declarative contract aligned.
-- Hardened tag publishing with an inspected BigWigs preflight archive, exact
-  asset validation, release metadata validation, and same-run SHA verification.
-- Corrected the documented restricted-aura boundary: `pcall` isolates errors but
-  does not prevent taint. This release does not claim a runtime aura-safety fix.
-- Published assets are exactly `RGX-Framework-v2.6.2.zip` and `release.json`;
-  the addon archive contains 100 runtime files and all six flavor TOCs.
+- Synchronized distribution documentation and hardened release/package
+  validation across the six supported WoW flavors.
 
 ### [v2.6.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.6.1.md) - 2026-08-13
 
-- Removed the mistaken secondary product concept. RGX-Framework releases only
-  the addon framework; future public MCP/API/editor tooling belongs to Studio.
-- Deterministic runtime verification now includes all six flavor TOCs.
-- Corrected premature documentation claims: declarative `on` and `every` remain
-  frozen future contract forms until their runtime implementation lands.
-- Published assets are exactly `RGX-Framework-v2.6.1.zip` and `release.json`;
-  the inspected addon archive contains 100 runtime files and all six flavor TOCs.
+- Restored the single-product framework distribution boundary and aligned
+  deterministic package verification.
 
 ### [v2.6.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.6.0.md) - 2026-08-13
 
@@ -52,137 +74,9 @@
 
 ### [v2.5.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.5.1.md) - 2026-08-12
 
-- Added the cross-version compatibility layer later used by the six-flavor
-  release, hardened aura update payload access, and added pet-battle queries.
-- Shipped accumulated dropdown, font, color-picker, and options-panel fixes.
+- Added the cross-version compatibility layer, hardened aura payload access,
+  and shipped accumulated UI and pet-battle fixes.
 
-### [v2.5.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.5.0.md) - 2026-07-04
+## Historical Release Notes
 
-- **Fixed: declarative `minimap` buttons forgot their dragged position.** `RGX.Addon` created the button without passing `storage`, so the angle never persisted; creation now happens after `addon.db` exists and persists there by default. The bare form also assumes a left-click that opens your options panel, and a new advanced table form passes through the full minimap opts (`tooltip`, `defaultAngle`, `onRightClick`, ...).
-- **Fixed: declarative `dropdown` controls saved but never visually restored their selection** — `value = addon.db[key]` was not passed, the exact save-without-restore bug class the framework exists to kill.
-- **New `{ color = "dbKey" }` control** — the DSL now reaches `UI:CreateColorPicker`; default color assumed from the db defaults.
-- **`slash` advanced form** — `slash = { "cmd", handler = function(addon, msg) ... end }` overrides the assumed open-the-panel handler.
-- **Auto-derived SavedVariables names now strip non-identifier characters** (`"RGX-Hello"` → `RGXHelloDB`), matching what `rgx_generate_addon` emits. Hyphenated-name addons relying on the old raw concatenation should set `dbName` explicitly (RGX-Hello always has).
-- **Progressive-disclosure principle and the BLU-proven layout model** (panel → tabs → multi-page tabs → 1–2 column cards → widgets) encoded in `CLAUDE.md`, `docs/DECLARATIVE-API.md`, and the schema; `docs/ACE3-ANALYSIS.md` gained a verified current-state parity map against Ace3.
-
-### [v2.4.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.4.1.md) - 2026-07-03
-
-- **Fixed: declarative slider `suffix` was silently dropped.** `{ slider = "volume", suffix = "%" }` in an `RGXAddon` options table validated fine and ran with no error, but the options-table-to-UI mapper only forwarded `key`/`label`/`min`/`max`/`step` to `UI:CreateSlider` — `suffix` never reached it, so no addon using it (including RGX-Hello's own Volume slider) ever actually showed the suffix. Found by running `tools/rgx-mcp` end-to-end against RGX-Hello's real, shipped opts table instead of a synthetic fixture.
-- `schemas/rgx-addon.schema.json` now allows `suffix` on `sliderControl` (it was rejecting the same shipped, working key the schema itself hadn't caught up to).
-- `rgx_generate_addon` gained a `dbName` override and `label`/`suffix` passthrough on generated sliders. Without an override it was emitting `RGX-HelloDB` (hyphen intact) as the SavedVariables hint for a name like "RGX-Hello", which doesn't match what any hyphenated addon should actually ship — it now strips non-identifier characters for the default and lets callers override explicitly.
-- New `tools/rgx-mcp/test/test-rgx-hello.mjs` — drives the real server over the real MCP client SDK and points it at the actual RGX-Hello repo (generate/validate/audit), so future changes to the schema, the mapper, or the generator get checked against a real addon, not just synthetic input.
-
-### [v2.4.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.4.0.md) - 2026-07-03
-
-- **RGXColorPicker redesigned** with a modern circular control vocabulary (ring-and-fill drag handles on the SV box and hue bar, circular swatches and preview, hover feedback on presets, primary-themed focus states on the hex/RGB inputs) built on `RGXDesign` tokens instead of hardcoded colors, replacing the borrowed Blizzard minimize-button icon that was standing in for a cursor.
-- **`UI:CreateLabel` fixed to actually wrap long text.** FontStrings with no explicit width auto-size to a single line and silently overflow their parent frame's edge instead of breaking — every multi-sentence label (e.g. the visual test harness's "What to test" hints) rendered past its panel. `CreateLabel` now accepts an opt-in `options.width` that enables `SetWordWrap` and justification; short labels are unaffected.
-- **`tools/rgx-visual-test/` moved to the `RGX-Hello` repo**, merged into that addon rather than shipped as a separate in-tree dev tool — RGX-Hello is now both the minimal reference addon and the visual QA harness.
-- **Historical v2.4.0 behavior:** `tools/rgx-mcp/` was intentionally added to the packaged addon ZIP. This was later reversed; as of v2.6.1 it is a temporary source-only CI fixture and never ships to players.
-
-### [v2.3.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.3.0.md) - 2026-07-03
-
-- **New module: RGXTooltip** — tooltip composition (`Show`/`Attach`) replacing the `SetOwner → ClearLines → AddLine × N → Show` boilerplate found across 71 GameTooltip call sites in BattlePetUtility alone, plus a safe wrapper (`HookNative`) over Blizzard's `TooltipDataProcessor` for augmenting native item/spell/unit/aura/pet/mount/macro tooltips. Blizzard does not pcall-wrap `TooltipDataProcessor` dispatch, so `HookNative` pcall-guards every registered callback — one addon's tooltip hook can no longer break tooltip rendering for every other addon.
-- **RGXColorPicker actually renders now.** `Show()` silently failed since the module was introduced — six frames called `:SetBackdrop()` without the required `BackdropTemplate` mixin, throwing partway through construction so the frame was never cached. With that fixed, two more stub features were exposed: the hue bar never had a rainbow (a hardcoded flat red — the original code's own comment admitted it was left unfinished), and the saturation/value box never had a saturation axis (only value/brightness worked). Both replaced with real gradients (a 6-segment hue rainbow, and a reactive white→hue `SetGradient` for saturation).
-- **New dev tool: `tools/rgx-visual-test/`** — an in-tree QA harness for manually testing RGX's UI controls in-game (`/rgxvisual` full panel, `/rgxcolor` picker only). Not player-facing, excluded from the packaged zip.
-- Documented the in-tree `tools/rgx-mcp/` MCP server and the Declarative API in README.md and description.html (shipped in v2.2.0, previously undocumented in either entry point).
-
-### [v2.2.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.2.1.md) - 2026-07-02
-
-- Packaging hotfix: the v2.2.0 zip leaked `docs/`, `schemas/`, and `tools/` — the packager's ignore matcher silently fails on directory entries with trailing slashes. Entries normalized; the zip now contains only the runtime (TOC, XML, core, modules, media, LICENSE).
-
-### [v2.2.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.2.0.md) - 2026-07-02
-
-- **rgx-mcp ships in-tree** at `tools/rgx-mcp/` — read-only MCP server (validate/audit/generate against the Simplicity Contract). It was intended to be excluded from the player ZIP, but the v2.2.0 package leaked `tools/`, `docs/`, and `schemas/`; v2.2.1 corrected the packager rules. Registered in `.mcp.json` for source checkouts.
-- **CI: Discord notifications fixed** — the notify step now fails loudly on webhook rejection instead of silently succeeding (`curl` without `--fail` treated 4xx as success); avatar URL corrected; empty-secret guard added.
-- Repaired double-encoded UTF-8 (mojibake) across 11 documentation files; deleted `docs/USAGE-BPU.md` in favor of the Tier 2 work item it described.
-- **New module: RGXAuras** — player spell-ID fast paths, best-effort unrestricted-unit scans, and incremental `UNIT_AURA` watching. Later restricted-value audits clarified that arbitrary `auraData` is not a general secrecy boundary and `pcall` does not prevent taint; see the current Auras documentation.
-- **`RGXAddon` global entry point** — line 1 of a consumer addon is the addon: `RGXAddon "MyAddon" { ... }` (curried form supported). Wraps `RGX.Addon`; the `local RGX = assert(...)` form is the documented escape hatch, not the front door. The current human contract is `docs/DECLARATIVE-API.md`.
-- **Declarative API contract shipped** — `schemas/rgx-addon.schema.json` (machine-checkable shape of the `RGXAddon` opts table; keys annotated `x-rgx-ships: today|tier4`, trigger vocabulary + control grammar encoded) and `docs/DECLARATIVE-API.md` (human reference for the shipped surface, verified against `core/core.lua`). This is Tier 5 #14 and the contract the external `rgx-mcp` tool validates against. Schema excluded from the packaged zip.
-- `RGXSharedMedia` now fires the internal message `RGX_SHAREDMEDIA_UPDATED` after every scan so consumers can re-import bridge entries and refresh media pickers.
-- Added `SM:ExcludeFolder(addonFolderName)` — consumers that manage their own media can exclude their AddOn folder from the generic scan so their paths are not re-bridged as duplicates. The framework's own folder is excluded by default.
-- Packaging fixes: added missing `LICENSE.txt` (TOC already declared `X-License: MIT`); `.pkgmeta` now excludes agent/tool files (`CLAUDE.md`, `Home.md`, `.agents/`, `.claude/`, `graphify-out/`) from the zip, uses the valid `manual-changelog` key pointing at `docs/CHANGES.md`, and drops stale font-download instructions (fonts are committed under `media/fonts/`).
-- Removed dead `KittyGetSoundPacks` / `KittyRegisterSoundPack` scan and hook from `RGXSharedMedia` — these globals never existed in any real addon; the generic addon-global scan already covers third-party sound packs.
-- Enforced the framework's own "no `C_Timer`" rule: `RGXDelves:QueueLivesRefresh` and `RGXHonor:QueueCheck` now use `RGX:After` so deferred work is budgeted and diagnosable by the framework timer driver.
-- Documented the design thesis in `CLAUDE.md`: centralize current-API adapters, failure isolation, and combat-lockdown guards so consumers avoid unsafe plumbing. Restricted values remain opaque; `pcall` is not a taint boundary.
-
-### [v2.1.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.1.0.md) - 2026-06-30
-
-- Enabled RGXCombat — combat enter/leave/kill/crit/low-health/execute/encounter callbacks now active for all consumers.
-- Enabled 8 event callback modules that were dormant since v1.8.0: Achievement, LevelUp, Quest, Honor, Delves, Housing, TradingPost, Prey.
-- All modules are now active in the XML loader. No dormant code remains in-tree.
-- `TryInit("RGXCombat")` wired into initialization.lua between RGXSharedMedia and RGXPetBattles.
-- Removed stale comment in initialization.lua that described RGXCombat as blocked during load screen (its Init() already defers via PLAYER_REGEN_ENABLED).
-
-Full notes:
-- [v2.1.0 changelog](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.1.0.md)
-
-## Production Releases
-
-### [v2.0.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0.md) - 2026-06-30
-
-- Stable RGX 2.0 framework release for retail 12.0.7.
-- Promotes the RGX.Addon, NewDatabase, event, timer, and runtime integration work out of alpha.
-- Keeps unfinished callback modules out of the XML loader for a clean live load.
-- Includes combat-safe event/runtime hardening and SharedMedia scan coalescing from the alpha cycle.
-
-Full notes:
-- [v2.0.0 changelog](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0.md)
-
-### [v2.0.0-alpha.2](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0-alpha.2.md) - 2026-06-28
-
-- SharedMedia startup scan now coalesces light/full rescans instead of doing the expensive generic pass immediately.
-- Generic addon-global media scan is deferred until after `PLAYER_LOGIN`, reducing startup timer-slow warnings.
-- Added scan-state guards so late media-provider loads can upgrade a pending scan without duplicating work.
-
-Full notes:
-- [v2.0.0-alpha.2 changelog](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0-alpha.2.md)
-
-### [v2.0.0-alpha.1](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0-alpha.1.md) - 2026-06-11
-
-- **RGX.Addon()** — one-call addon factory: auto-creates database, slash commands, minimap button from a single declarative table.
-- **Declarative options engine** — table-driven panel builder with toggle, slider, dropdown, button, section, label controls, all auto-bound to `addon.db`.
-- **Proxy fix** — `__newindex`/`__index` now guard internal fields (`_guard`, `_raw`, `_defaults`, `_callbacks`, `_onSwitch`) with `rawget`/`rawset` so they never leak into profile SavedVars.
-- Fixed `MergeDefaults` → `MergeTable` (3 call sites — `MergeDefaults` was never defined).
-- Added `database_test.lua` with 14 assertions, wired via `/rgx dbtest` command.
-- `RGX.Addon()` now passes `opts.onSwitch` through to `NewDatabase`.
-- Timer-slow threshold: 50ms → 250ms (SharedMedia:QueueScan ~207ms is normal I/O).
-
-Full notes:
-- [v2.0.0-alpha.1 changelog](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.0.0-alpha.1.md)
-
-### [v1.9.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/1.9.0.md) - 2026-06-09
-
-- **NewDatabase API** — `RGX:NewDatabase(name, defaults, opts)` with metamethod-based profile access, profile CRUD, cross-character `db.global`.
-- Combat lockdown safety — `pcall(function() ... end)` closure pattern replaces raw C function reference.
-- `RGXCombat` returned to dormant status.
-
-### [v1.8.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/1.8.0.md) - 2026-06-09
-
-- **BLU v7 migration foundation** — 10 callback modules (Achievement, LevelUp, Collectibles, Loot, Quest, Honor, Delves, Housing, TradingPost, Prey).
-- Theme highlight tokens, combat safety guards.
-
-### [v1.6.0](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/1.6.0.md) - 2026-05-01
-
-## Changes
-
-- Reworked backend font handling to properly support shared bundled fonts across downstream addons.
-- Improved RGX font registration, lookup, and UI application paths so addons can reliably consume the shared font system.
-- Updated shared option UI behavior for tabs, buttons, labels, and reset controls.
-- Restored framework tab sizing and label anchoring to the expected RGX defaults.
-- Cleaned up button/tab text handling to avoid unintended wrapping, alignment drift, and inconsistent font-string anchors.
-- Rewrote README.md as a polished entry point with links to the full wiki documentation.
-- Added comprehensive wiki documentation: Architecture, API Reference, Fonts System, Dropdowns System, Theming & Design, Troubleshooting, and Migration Guide.
-- Updated CurseForge description.html with current module list, font counts, and documentation links.
-- Fixed stale file path references (modules/fonts/fonts.lua → modules/fonts/definitions.lua).
-- Fixed inconsistent dormant module wording across all docs (standardized to "in-tree but not loaded by the XML loader").
-- Fixed stale interface version in Super Simple example code (110002 → 120005).
-- Standardized font count language across all docs (36 bundled + 8 WoW defaults = ~44 total, 10 blocked, ~34 available).
-
-## Fixes
-
-- Fixed shared font plumbing needed by BattlePetUtility and SimpleQuestPlates.
-- Fixed RGX option tabs using widened dimensions and incorrect text alignment.
-- Fixed non-icon option tab labels being left-aligned instead of centered.
-- Fixed icon tab label padding regressions.
-- Removed unintended word-wrap and font-string anchor changes from shared RGX controls.
-- Verified touched RGX Lua files pass syntax validation.
+Full per-version notes remain in [`docs/changelogs/`](https://github.com/DonnieDice/RGX-Framework/tree/main/docs/changelogs), including releases from v1.x through v2.5.0.

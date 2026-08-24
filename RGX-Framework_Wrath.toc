@@ -1,5 +1,5 @@
 ## Interface: 38002
-## Version: 2.7.0
+## Version: 2.7.4
 ## Title: RGX-Framework
 ## Notes: Modular WoW addon framework
 ## Author: RGX

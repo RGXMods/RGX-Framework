@@ -65,7 +65,7 @@ local function NormalizeModuleName(name)
     return string.lower(name)
 end
 
-RGX.version = GetAddOnMetadataCompat(addonName, "Version") or "1.0.0"
+RGX.version = GetAddOnMetadataCompat(addonName, "Version") or "unknown"
 RGX.debugMode = false
 
 -- Module storage
@@ -156,7 +156,7 @@ function RGX:RequireModule(name)
         if type(_G.geterrorhandler) == "function" then
             _G.geterrorhandler()(msg)
         else
-            print("|cFFFF4444" .. msg .. "|r")
+            self:Error(msg)
         end
     end
     return module
@@ -279,7 +279,7 @@ end
 -- Utilities
 function RGX:Debug(...)
     if not self.debugMode then return end
-    print("|cFF00FF00[RGX]|r", ...)
+    print(self:CreateChatPrefix({ tagColor = "00ff00" }), ...)
 end
 
 function RGX:CopyTable(orig)
@@ -657,7 +657,9 @@ function RGX.Addon(name, opts)
         end -- addon.db check
 
         BindDeclarativeEvery(addon, declarativeEvery)
-        if opts.welcome then addon:Print(opts.welcome) end
+        -- Declarative welcome is a login message: it uses the framework chat
+        -- prefix and obeys the global login-message preference (/rgx login off).
+        if opts.welcome then RGX:LoginMessage(opts.welcome) end
         if opts.onInit then opts.onInit(addon) end
         RGX:UnregisterEvent("ADDON_LOADED", name .. "_RGXAddon")
     end, name .. "_RGXAddon")

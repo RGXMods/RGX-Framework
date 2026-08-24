@@ -36,6 +36,11 @@ local function HasEvent(name)
     if HasFunction(C_EventUtils, "IsEventValid") then
         return C_EventUtils.IsEventValid(name) == true
     end
+    -- Fallback for clients without the validation API. Every supported flavor
+    -- (Retail, Classic Era, TBC, Wrath/Titan, Cataclysm, Mists) ships
+    -- C_EventUtils.IsEventValid, so this path is unreachable on those clients.
+    -- Capability decisions that affect protected behavior (e.g. combatLogEvent)
+    -- must NOT rely on this fallback; they gate on explicit flavor knowledge.
     return true
 end
 
@@ -62,6 +67,12 @@ RGX.Capabilities = {
     housing = HasEvent("CURRENT_HOUSE_INFO_RECIEVED") and (type(C_Housing) == "table" or type(C_HousingDecor) == "table"),
     tradingPost = HasFunction(C_PerksProgram, "GetCurrencyAmount") and HasEvent("PERKS_PROGRAM_CURRENCY_REFRESH"),
     prey = HasFunction(C_QuestLog, "GetActivePreyQuest") and HasEvent("UPDATE_UI_WIDGET"),
+    -- COMBAT_LOG_EVENT_UNFILTERED: Retail 12.x clients reject addon-side
+    -- registration (protection layer; documented HasRestrictions). Classic
+    -- flavors accept it as the standard combat-log path. This is an explicit
+    -- flavor gate: it deliberately does NOT rely on HasEvent/IsEventValid,
+    -- which describe documentation validity, not registerability.
+    combatLogEvent = RGX.isClassicEra or RGX.isTBC or RGX.isWrath or RGX.isCata or RGX.isMists,
     settings = HasFunction(Settings, "RegisterCanvasLayoutCategory") and HasFunction(Settings, "RegisterAddOnCategory") and HasFunction(Settings, "OpenToCategory"),
     menuUtil = HasFunction(MenuUtil, "CreateContextMenu"),
 }
@@ -503,9 +514,7 @@ end
 -- Conditional module loader
 function RGX:TryLoadModule(moduleName)
     if not self:IsModuleAvailable(moduleName) then
-        if self.debugMode then
-            print("|cFFFF8800[RGX] Module " .. moduleName .. " not available on " .. self.wowVersion .. "|r")
-        end
+        self:Debug("Module " .. moduleName .. " not available on " .. self.wowVersion)
         return false
     end
     
@@ -515,7 +524,7 @@ function RGX:TryLoadModule(moduleName)
         if mod and type(mod.Init) == "function" then
             local ok, err = pcall(mod.Init, mod)
             if not ok then
-                print("|cFFFF4444[RGX] Init error " .. global .. ": " .. tostring(err) .. "|r")
+                self:Error("Init error " .. global .. ": " .. tostring(err))
             end
             return true
         end
@@ -523,7 +532,7 @@ function RGX:TryLoadModule(moduleName)
     return false
 end
 
-print("|cFF88FF88[RGX] Compat layer loaded: " .. RGX.wowVersion .. "|r")
+RGX:Debug("Compat layer loaded: " .. RGX.wowVersion)
 
 -- Secret value/table access helpers for addons
 function RGX.API.CanAccessValue(value)
