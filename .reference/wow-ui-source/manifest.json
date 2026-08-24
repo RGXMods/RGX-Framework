@@ -1,0 +1,72 @@
+{
+  "repository": "https://github.com/Gethe/wow-ui-source.git",
+  "syncedAt": "2026-08-13T07:49:22.777Z",
+  "flavors": [
+    {
+      "id": "retail",
+      "label": "Retail",
+      "ref": "live",
+      "kind": "branch",
+      "active": true,
+      "version": "12.1.0.69283",
+      "commit": "710f59e457317676c0f699e6addaf2c405c2a1a4",
+      "path": ".reference/wow-ui-source/retail",
+      "syncedAt": "2026-08-13T07:49:23.593Z"
+    },
+    {
+      "id": "classic-era",
+      "label": "Classic Era",
+      "ref": "classic_era",
+      "kind": "branch",
+      "active": true,
+      "version": "1.15.9.69109",
+      "commit": "7285babcfa6931f7c4265ce8672fa6d99c7bcaf1",
+      "path": ".reference/wow-ui-source/classic-era",
+      "syncedAt": null
+    },
+    {
+      "id": "tbc",
+      "label": "Burning Crusade Classic",
+      "ref": "classic_anniversary",
+      "kind": "branch",
+      "active": true,
+      "version": "2.5.6.69110",
+      "commit": "e9bbe81652a6a3fddc6fb547c379218341899792",
+      "path": ".reference/wow-ui-source/tbc",
+      "syncedAt": null
+    },
+    {
+      "id": "wrath",
+      "label": "Wrath/Titan",
+      "ref": "classic_titan",
+      "kind": "branch",
+      "active": true,
+      "version": "3.80.2.69137",
+      "commit": "825d29d3662b372f0bead725ee6abd339e4a77b5",
+      "path": ".reference/wow-ui-source/wrath",
+      "syncedAt": null
+    },
+    {
+      "id": "mists",
+      "label": "Mists Classic",
+      "ref": "classic",
+      "kind": "branch",
+      "active": true,
+      "version": "5.5.4.69155",
+      "commit": "ee771c39c640884d58d599f6c824f63d055b3ad7",
+      "path": ".reference/wow-ui-source/mists",
+      "syncedAt": null
+    },
+    {
+      "id": "cata-4.4.2",
+      "label": "Cataclysm 4.4.2 historical baseline",
+      "ref": "4.4.2",
+      "kind": "tag",
+      "active": false,
+      "version": "4.4.2.60895",
+      "commit": "a1ca983a43a7aa73b5764d3245925ba40869fce3",
+      "path": ".reference/wow-ui-source/cata-4.4.2",
+      "syncedAt": null
+    }
+  ]
+}
