@@ -45,7 +45,7 @@ framework bug — report it.
 | `db` | table of profile defaults; creates `addon.db` on ADDON_LOADED. SavedVariables name assumes `<Name>DB` with non-identifier characters stripped (`"RGX-Hello"` → `RGXHelloDB`) — declare it in your TOC | `dbName` overrides the name; `global` (cross-character), `onSwitch` (profile-switch callback) |
 | `options` | `TabName = { controls... }`; requires `db`; builds a tabbed panel with db-bound controls (automatic save **and** restore) | per-control advanced keys below; Tier 4 adds `columns` and multi-page tabs |
 | `title` | — | Panel title; assumes the addon name |
-| `welcome` | string printed with the branded prefix on load | — |
+| `welcome` | startup string printed with the framework icon and `[RGX]` prefix on load; obeys the global `/rgx login on|off` preference | — |
 | `onInit` | function(addon), runs on ADDON_LOADED after `db`/`options` exist — the imperative escape hatch | — |
 | `every` | `name = { seconds, function(addon, timer) }`; starts after ADDON_LOADED and first fires after the interval | multiple deterministically named repeating timers; handlers may self-cancel with `addon:CancelTimer(timer)` |
 | `brand` | — | Hex color (no `#`) for the chat prefix; assumes `58be81` |

@@ -12,7 +12,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 
 ## Quick Start
 
-**Latest published release:** [`v2.7.3`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.7.3)
+**Latest published release:** [`v2.7.4`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.7.4)
 
 **1. Declare the dependency:**
 
@@ -242,7 +242,7 @@ RGX Studio. RGX-Framework publishes only the framework addon package. See
 
 ## Compatibility
 
-- **Latest published release:** [`v2.7.3`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.7.3)
+- **Latest published release:** [`v2.7.4`](https://github.com/DonnieDice/RGX-Framework/releases/tag/v2.7.4)
 - **Clients:** Retail `120100`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
 - **Distribution:** one runtime-only addon package; see [Distribution](docs/DISTRIBUTION.md)
 - `C_AddOns.GetAddOnMetadata` and `GetAddOnMetadata` both handled

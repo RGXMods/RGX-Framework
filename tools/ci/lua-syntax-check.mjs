@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // CI Lua syntax gate: parse every .lua file in the repo with luaparse so a
 // syntax error can never reach a tag/release. Walks from the repo root, skips
-// node_modules/.git, and exits non-zero listing every file that fails.
+// node_modules/.git/local reference mirrors, and exits non-zero listing every
+// project file that fails.
 //
 // Usage: node tools/ci/lua-syntax-check.mjs [rootDir]
 import luaparse from "luaparse";
@@ -9,7 +10,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const root = process.argv[2] || join(process.cwd());
-const SKIP = new Set(["node_modules", ".git", ".github"]);
+const SKIP = new Set(["node_modules", ".git", ".github", ".reference"]);
 
 function walk(dir, out = []) {
   for (const entry of readdirSync(dir)) {

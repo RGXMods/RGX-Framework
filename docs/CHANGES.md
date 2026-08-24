@@ -2,6 +2,20 @@
 
 ## Current Release
 
+### [v2.7.4](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.4.md) - 2026-08-23
+
+- Standardized framework chat output as `{icon} - [RGX] {message}` through
+  `RGX:CreateChatPrefix()`.
+- Added a persistent global login-message gate with `/rgx login on|off|status`
+  and the `IsLoginMessagesEnabled`, `SetLoginMessagesEnabled`, and
+  `LoginMessage` APIs.
+- Routed declarative `welcome` output through the login gate and reduced
+  framework startup output to one gated, metadata-derived line.
+- Added Lua 5.1 runtime coverage for persistence, command confirmations,
+  declarative welcome behavior, prefix formatting, and startup deduplication.
+
+## Recent Releases
+
 ### [v2.7.3](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.3.md) - 2026-08-22
 
 - Fixed `ADDON_ACTION_FORBIDDEN` from the v2.7.2 event-lifecycle flush: deferred
@@ -16,8 +30,6 @@
 - Event-lifecycle runtime coverage extended from 35 to 66 checks.
 - Published assets are `RGX-Framework-v2.7.3.zip` and `release.json`; the addon
   archive contains 100 runtime files and all six flavor TOCs.
-
-## Recent Releases
 
 ### [v2.7.2](https://github.com/DonnieDice/RGX-Framework/blob/main/docs/changelogs/2.7.2.md) - 2026-08-22
 

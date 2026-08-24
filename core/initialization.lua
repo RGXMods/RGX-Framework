@@ -23,7 +23,7 @@ function RGX:OnReady(fn)
     if self._ready then
         local ok, err = pcall(fn)
         if not ok then
-            print("|cFFFF4444[RGX] OnReady error: " .. tostring(err) .. "|r")
+            self:Error("OnReady error: " .. tostring(err))
         end
     else
         self._readyCallbacks[#self._readyCallbacks + 1] = fn
@@ -113,10 +113,10 @@ RGX:RegisterEvent("ADDON_LOADED", function(_, addon)
             end
             local mod = _G[global]
             if mod and type(mod.Init) == "function" then
-                local ok, err = pcall(mod.Init, mod)
-                if not ok then
-                    print("|cFFFF4444[RGX] Init error " .. global .. ": " .. tostring(err) .. "|r")
-                end
+            local ok, err = pcall(mod.Init, mod)
+            if not ok then
+                RGX:Error("Init error " .. global .. ": " .. tostring(err))
+            end
             end
         end
 
@@ -145,9 +145,12 @@ RGX:RegisterEvent("ADDON_LOADED", function(_, addon)
         for i = 1, #callbacks do
             local ok, err = pcall(callbacks[i])
             if not ok then
-                print("|cFFFF4444[RGX] OnReady error: " .. tostring(err) .. "|r")
+                RGX:Error("OnReady error: " .. tostring(err))
             end
         end
+
+        -- One framework startup line, gated by /rgx login off.
+        RGX:LoginMessage(string.format("RGX-Framework v%s loaded.", tostring(RGX.version)))
 
         RGX:UnregisterEvent("ADDON_LOADED", "RGX_Init")
     end

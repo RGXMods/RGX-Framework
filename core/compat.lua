@@ -514,9 +514,7 @@ end
 -- Conditional module loader
 function RGX:TryLoadModule(moduleName)
     if not self:IsModuleAvailable(moduleName) then
-        if self.debugMode then
-            print("|cFFFF8800[RGX] Module " .. moduleName .. " not available on " .. self.wowVersion .. "|r")
-        end
+        self:Debug("Module " .. moduleName .. " not available on " .. self.wowVersion)
         return false
     end
     
@@ -526,7 +524,7 @@ function RGX:TryLoadModule(moduleName)
         if mod and type(mod.Init) == "function" then
             local ok, err = pcall(mod.Init, mod)
             if not ok then
-                print("|cFFFF4444[RGX] Init error " .. global .. ": " .. tostring(err) .. "|r")
+                self:Error("Init error " .. global .. ": " .. tostring(err))
             end
             return true
         end
@@ -534,7 +532,7 @@ function RGX:TryLoadModule(moduleName)
     return false
 end
 
-print("|cFF88FF88[RGX] Compat layer loaded: " .. RGX.wowVersion .. "|r")
+RGX:Debug("Compat layer loaded: " .. RGX.wowVersion)
 
 -- Secret value/table access helpers for addons
 function RGX.API.CanAccessValue(value)

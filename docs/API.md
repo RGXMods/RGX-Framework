@@ -64,10 +64,13 @@ Complete public API by module. See individual module docs for deeper detail:
 
 | Method | Description |
 |---|---|
-| `RGX:Print(...)` | `|cff58be81[RGX]|r` green prefix |
-| `RGX:Warn(...)` | `|cffffcc00[RGX]|r` yellow prefix |
-| `RGX:Error(...)` | `|cffff4444[RGX]|r` red prefix |
+| `RGX:Print(...)` | Framework icon + green `[RGX]` prefix |
+| `RGX:Warn(...)` | Framework icon + yellow `[RGX]` prefix |
+| `RGX:Error(...)` | Framework icon + red `[RGX]` prefix |
 | `RGX:Debug(...)` | Prints only when `debugMode` is true |
+| `RGX:LoginMessage(message, opts?)` | Print a startup message when the global login-message preference is enabled |
+| `RGX:IsLoginMessagesEnabled()` | Return the persisted global login-message preference (default `true`) |
+| `RGX:SetLoginMessagesEnabled(enabled)` | Persist the global login-message preference in `RGXFrameworkDB` |
 
 ### Chat Prefix
 
@@ -80,6 +83,11 @@ local prefix = RGX:CreateChatPrefix({
     spacer = " - ",
 })
 ```
+
+The bare form uses the framework icon, ` - ` spacer, and green `[RGX]` tag.
+Pass `icon = ""` to suppress the icon. Players can manage startup messages with
+`/rgx login on|off|status`; normal `Print`, `Warn`, and `Error` output is never
+gated.
 
 ### Object Composition
 
