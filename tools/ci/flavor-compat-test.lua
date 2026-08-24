@@ -21,6 +21,8 @@ check(RGX.API.CanAccessValue(123), "value access capability")
 check(RGX.API.CanAccessTable({}), "table access capability")
 check(RGX.API.ShouldAurasBeSecret() == false, "unrestricted flavor aura policy")
 check(RGX:HasCapability("auraSecrecy") == (expectedFlavor ~= "cata"), "aura secrecy capability")
+check(RGX:HasCapability("combatLogEvent") == (expectedFlavor ~= "retail"),
+    "CLEU capability: classic flavors only (Retail 12.x rejects addon CLEU registration)")
 
 local quest = RGX.API.GetQuestLogInfo(1)
 check(type(quest) == "table" and quest.questID == 456, "quest normalization")

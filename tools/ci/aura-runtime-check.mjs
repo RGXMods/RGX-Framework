@@ -111,6 +111,8 @@ try {
     function CreateFrame()
         local frame = { scripts = {}, registered = {} }
         function frame:SetScript(script, handler) self.scripts[script] = handler end
+        function frame:Show() self._shown = true end
+        function frame:Hide() self._shown = false end
         function frame:RegisterEvent(event) self.registered[event] = true end
         function frame:RegisterAllEvents() self.allEvents = true end
         function frame:UnregisterEvent(event) self.registered[event] = nil end
