@@ -23,8 +23,9 @@ gh release view v2.7.4 --repo DonnieDice/RGX-Framework --json assets \
   --jq '.assets[] | select(.name == "RGX-Framework-v2.7.4.zip") | .digest'
 ```
 
-CurseForge is the currently configured addon service. Wago and WoWInterface are
-skipped unless their project IDs and secrets are added to the release pipeline.
+CurseForge is the currently configured addon service. Wago remains skipped
+because this project has no existing Wago connection; new connections are not
+added automatically.
 
 ## Flavor Metadata
 

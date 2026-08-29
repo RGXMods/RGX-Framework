@@ -1,0 +1,24 @@
+stages:
+  - validate
+
+addon:validate:
+  stage: validate
+  image: node:22-alpine
+  before_script:
+    - apk add --no-cache lua5.1 libxml2-utils
+  script:
+    - test -s README.md
+    - find . -maxdepth 1 -type f -name '*.toc' -print -quit | grep -q .
+    - find . -type f -name '*.lua' -not -path './.git/*' -exec luac5.1 -p '{}' \;
+    - find . -type f -name '*.xml' -not -path './.git/*' -exec xmllint --noout '{}' \;
+    - >-
+      if find . -type f
+      \( -name '*.toc' -o -name '*.md' -o -name '*.yml' -o -name '*.yaml' \)
+      -not -path './.git/*'
+      -not -path './.gitlab/ci/addon.yml'
+      -exec grep -nEi 'WoWInterface|X-WoWI-ID|WOWI_API_TOKEN' '{}' +;
+      then echo 'WoWInterface publishing is retired; remove the references above.' >&2; exit 1; fi
+    - >-
+      if test -f tools/ci/package-lock.json;
+      then cd tools/ci && npm ci --no-audit --no-fund && npm run lua-check && npm run schema-check;
+      fi
