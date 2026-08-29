@@ -1,5 +1,6 @@
 stages:
   - validate
+  - mirror
 
 addon:validate:
   stage: validate
@@ -22,3 +23,22 @@ addon:validate:
       if test -f tools/ci/package-lock.json;
       then cd tools/ci && npm ci --no-audit --no-fund && npm run lua-check && npm run schema-check;
       fi
+
+mirror:github:
+  stage: mirror
+  image:
+    name: alpine/git:latest
+    entrypoint: [""]
+  needs: ["addon:validate"]
+  variables:
+    GIT_DEPTH: "0"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+  resource_group: github-mirror-$CI_PROJECT_ID
+  script:
+    - test -n "$GITHUB_MIRROR_REPOSITORY"
+    - test -n "$GITHUB_MIRROR_TOKEN"
+    - if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then git fetch origin --unshallow; fi
+    - git fetch origin --prune "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*"
+    - git push "https://donniedice:${GITHUB_MIRROR_TOKEN}@github.com/${GITHUB_MIRROR_REPOSITORY}.git" "+refs/heads/*:refs/heads/*" "+refs/tags/*:refs/tags/*" --prune
