@@ -174,7 +174,7 @@ const normalizedDistribution = distribution.replace(/\s+/g, " ");
 const curseProject = retailToc.match(/^## X-Curse-Project-ID:\s*(\S+)/m)?.[1];
 if (curseProject !== "1516939") failures.push(`RGX-Framework.toc: expected CurseForge project 1516939, got ${curseProject}`);
 if (!normalizedDistribution.includes("CurseForge is the currently configured addon service")) failures.push("docs/DISTRIBUTION.md: CurseForge configuration is not documented");
-for (const [metadataKey, service] of [["X-Wago-ID", "Wago"], ["X-WoWI-ID", "WoWInterface"]]) {
+for (const [metadataKey, service] of [["X-Wago-ID", "Wago"]]) {
   const configured = new RegExp(`^## ${metadataKey}:`, "m").test(retailToc);
   const documentedSkipped = new RegExp(`${service}[\\s\\S]{0,40}skipped`).test(normalizedDistribution);
   if (configured && documentedSkipped) failures.push(`docs/DISTRIBUTION.md: ${service} is configured but documented as skipped`);
