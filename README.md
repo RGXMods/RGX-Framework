@@ -262,4 +262,4 @@ RGX Studio. RGX-Framework publishes only the framework addon package. See
 
 ## License
 
-MIT for framework code. Bundled fonts retain their own open licenses — see [docs/FONT-SOURCES.md](docs/FONT-SOURCES.md) for attribution.
+[MIT](LICENSE.txt) for framework code. Bundled fonts retain their own open licenses — see [docs/FONT-SOURCES.md](docs/FONT-SOURCES.md) for attribution.
