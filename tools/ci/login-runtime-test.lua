@@ -27,8 +27,8 @@ local function stopCapture()
     _G.print = realPrint
 end
 
--- ── Framework version must come from TOC metadata (mocked: 2.7.4)
-check(RGX.version == "2.7.4",
+-- ── Framework version must come from TOC metadata (mocked: 2.7.5)
+check(RGX.version == "2.7.5",
     "framework version must come from addon metadata, got " .. tostring(RGX.version))
 
 -- ── 1: login messages default ON
@@ -39,7 +39,7 @@ startCapture()
 RGX.eventFrame.scripts.OnEvent(RGX.eventFrame, "ADDON_LOADED", "RGX-Framework")
 stopCapture()
 check(#captured == 1, "framework init should emit exactly one startup line, got " .. #captured)
-check(contains(captured[1], "RGX-Framework v2.7.4 loaded."), "startup line text")
+check(contains(captured[1], "RGX-Framework v2.7.5 loaded."), "startup line text")
 check(contains(captured[1], "[|r|cff58be81RGX|r|cffffffff]|r"),
     "startup line carries the colored [RGX] tag")
 check(contains(captured[1], "logo.tga"), "startup line carries the framework icon")

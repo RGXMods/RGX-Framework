@@ -6,7 +6,11 @@ local function check(condition, message)
     if not condition then error("CHECK FAILED: " .. message, 2) end
 end
 
-check(RGX.wowVersion == expectedFlavor, "detected flavor " .. tostring(RGX.wowVersion))
+local expectedRuntimeFlavor = expectedFlavor == "forever" and "retail" or expectedFlavor
+check(RGX.wowVersion == expectedRuntimeFlavor, "detected flavor " .. tostring(RGX.wowVersion))
+if expectedFlavor == "forever" then
+    check(RGX.isForever, "Forever interface capability")
+end
 
 for _, name in ipairs(expectedAvailable) do
     check(RGX:IsModuleAvailable(name), name .. " should be available")
@@ -21,8 +25,8 @@ check(RGX.API.CanAccessValue(123), "value access capability")
 check(RGX.API.CanAccessTable({}), "table access capability")
 check(RGX.API.ShouldAurasBeSecret() == false, "unrestricted flavor aura policy")
 check(RGX:HasCapability("auraSecrecy") == (expectedFlavor ~= "cata"), "aura secrecy capability")
-check(RGX:HasCapability("combatLogEvent") == (expectedFlavor ~= "retail"),
-    "CLEU capability: classic flavors only (Retail 12.x rejects addon CLEU registration)")
+check(RGX:HasCapability("combatLogEvent") == (expectedFlavor ~= "retail" and expectedFlavor ~= "forever"),
+    "CLEU capability: Interface 12 clients reject addon CLEU registration")
 
 local quest = RGX.API.GetQuestLogInfo(1)
 check(type(quest) == "table" and quest.questID == 456, "quest normalization")
