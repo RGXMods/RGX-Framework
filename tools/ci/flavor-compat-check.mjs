@@ -14,7 +14,8 @@ const sources = {
 };
 
 const flavors = [
-  ["retail", "WOW_PROJECT_MAINLINE", ["auras", "quest", "reputation", "achievement", "petbattles", "honor", "delves", "housing", "tradingpost", "prey"], []],
+    ["retail", "WOW_PROJECT_MAINLINE", ["auras", "quest", "reputation", "achievement", "petbattles", "honor", "delves", "housing", "tradingpost", "prey"], []],
+    ["forever", "WOW_PROJECT_MAINLINE", ["auras", "quest", "reputation", "achievement", "petbattles", "honor", "delves", "housing", "tradingpost", "prey"], []],
   ["classic_era", "WOW_PROJECT_CLASSIC", ["auras", "quest", "reputation", "achievement", "petbattles", "honor"], ["delves", "housing", "tradingpost", "prey"]],
   ["tbc", "WOW_PROJECT_BURNING_CRUSADE_CLASSIC", ["auras", "quest", "reputation", "achievement", "petbattles", "honor"], ["delves", "housing", "tradingpost", "prey"]],
   ["wrath", "WOW_PROJECT_WRATH_CLASSIC", ["auras", "quest", "reputation", "achievement", "petbattles", "honor"], ["delves", "housing", "tradingpost", "prey"]],
@@ -51,13 +52,16 @@ for (const [flavor, projectConstant, available, unavailable] of flavors) {
       end }
       C_PetBattles = { GetHealth = function() return 1 end }
       UnitHonorLevel = function() return 1 end
-      if __expectedFlavor == "retail" then
+       if __expectedFlavor == "retail" or __expectedFlavor == "forever" then
           C_EventUtils.IsEventValid = function() return true end
           C_DelvesUI = { GetFactionForCompanion = function() return 1 end }
           C_Housing = {}
           C_PerksProgram = { GetCurrencyAmount = function() return 0 end }
           C_QuestLog = { GetActivePreyQuest = function() return 1 end }
-      end
+       end
+       if __expectedFlavor == "forever" then
+           GetBuildInfo = function() return "1.60.1", 69893, "Sep 16 2026", 120007 end
+       end
       if __expectedFlavor ~= "cata" then
           canaccessvalue = function(value) return type(value) ~= "nil" end
           canaccesstable = function(value) return type(value) == "table" end
