@@ -2,6 +2,12 @@
 
 ## Current Release
 
+### [v2.7.5](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.5.md) - 2026-09-17
+
+- Added explicit WoW Forever Beta support for Interface `120007` while retaining Retail `120100` compatibility.
+- Uses the interface capability rather than client build `69893` to suppress restricted CLEU registration.
+- Skips the generic SharedMedia global scan on Forever to avoid the measured startup hitch.
+
 ### [v2.7.4](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.4.md) - 2026-08-23
 
 - Standardized framework chat output as `{icon} - [RGX] {message}` through

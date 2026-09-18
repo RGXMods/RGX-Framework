@@ -26,7 +26,7 @@ try {
   lua.doStringSync(`
     _G.RGXFrameworkDB = {}
     C_AddOns = { GetAddOnMetadata = function(name, field)
-        if field == "Version" then return "2.7.4" end
+        if field == "Version" then return "2.7.5" end
         return nil
     end }
     strtrim = function(s) return (tostring(s or ""):gsub("^%s+", ""):gsub("%s+$", "")) end
