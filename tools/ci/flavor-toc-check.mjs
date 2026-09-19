@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const expected = new Map([
-  ["RGX-Framework.toc", "120007"],
+  ["RGX-Framework.toc", "120100"],
   ["RGX-Framework_Vanilla.toc", "11509"],
   ["RGX-Framework_TBC.toc", "20506"],
   ["RGX-Framework_Wrath.toc", "38002"],
