@@ -33,9 +33,10 @@ RGX.isTBC = (RGX.wowVersion == "tbc")
 RGX.isWrath = (RGX.wowVersion == "wrath")
 RGX.isCata = (RGX.wowVersion == "cata")
 RGX.isMists = (RGX.wowVersion == "mists")
--- WoW Forever is a Classic beta product with the Retail API at Interface
--- 120007. Treat this as an API capability, never as a fixed client build.
-RGX.isForever = RGX.interfaceVersion >= 120000 and RGX.interfaceVersion < 120100
+-- WoW Forever is a Classic beta product (branch 1.60.x) that reports the
+-- Retail-era API surface at Interface 16001. Treat this as an API capability,
+-- never as a fixed client build.
+RGX.isForever = RGX.interfaceVersion >= 16000 and RGX.interfaceVersion < 17000
 
 local function HasFunction(namespace, name)
     return type(namespace) == "table" and type(namespace[name]) == "function"
