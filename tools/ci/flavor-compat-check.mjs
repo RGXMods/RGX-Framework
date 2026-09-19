@@ -60,7 +60,7 @@ for (const [flavor, projectConstant, available, unavailable] of flavors) {
           C_QuestLog = { GetActivePreyQuest = function() return 1 end }
        end
        if __expectedFlavor == "forever" then
-           GetBuildInfo = function() return "1.60.1", 69893, "Sep 16 2026", 120007 end
+           GetBuildInfo = function() return "1.60.1", 69893, "Sep 16 2026", 16001 end
        end
       if __expectedFlavor ~= "cata" then
           canaccessvalue = function(value) return type(value) ~= "nil" end
