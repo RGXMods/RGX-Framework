@@ -2,6 +2,10 @@
 
 ## Current Release
 
+### [v2.7.6](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.6.md) - 2026-09-20
+
+- Durable minimap button positions across the suite: drag angles mirror into `RGXFrameworkDB.RGXMinimapPositions` and restore when an addon's own SavedVariables are lost.
+
 ### [v2.7.5](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.5.md) - 2026-09-17
 
 - Added WoW Forever Beta compatibility (Interface `16001` client) via runtime capability detection while retaining Retail `120100` manifest support.
