@@ -118,10 +118,9 @@ function Button:GetAngle()
         return self._getAngle() or self._defaultAngle
     end
     if self._storage and self._angleKey then
-        local angle = tonumber(self._storage[self._angleKey])
-        if angle then
-            return angle
-        end
+        -- The durable framework store is the authoritative source — it
+        -- survives addon SavedVariables loss, which the addon's own
+        -- storage (and its defaults) do not.
         if self._name then
             local durable = GetDurablePositions()
             if durable then
@@ -132,7 +131,7 @@ function Button:GetAngle()
                 end
             end
         end
-        return self._defaultAngle
+        return tonumber(self._storage[self._angleKey]) or self._defaultAngle
     end
     return self._defaultAngle
 end
