@@ -2,6 +2,10 @@
 
 ## Current Release
 
+### [v2.7.7](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.7.md) - 2026-09-21
+
+- Fixed the tonumber crash in compat.lua on WoW Forever beta clients. New RGX.API guarded module. Minimap positions prefer durable store. 101 runtime files.
+
 ### [v2.7.6](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.6.md) - 2026-09-20
 
 - Durable minimap button positions across the suite: drag angles mirror into `RGXFrameworkDB.RGXMinimapPositions` and restore when an addon's own SavedVariables are lost.
