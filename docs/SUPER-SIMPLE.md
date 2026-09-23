@@ -1,5 +1,7 @@
 # SUPER SIMPLE RGX Integration
 
+> **Unreleased candidate: v2.7.8** (in development; restyles RGXDesign with rounded nine-slice panels and a navy/cyan palette). Latest published release: v2.7.7.
+
 This page documents the released `v2.7.0` API.
 
 ## A Complete Addon In One Call

@@ -1,5 +1,7 @@
 # Auras - `RGXAuras`
 
+> **Unreleased candidate: v2.7.8** (in development; restyles RGXDesign with rounded nine-slice panels and a navy/cyan palette). Latest published release: v2.7.7.
+
 `RGXAuras` is the framework's accessible-only aura boundary. It checks
 Blizzard's aura-specific and generic access predicates before querying,
 indexing, iterating, comparing, caching, formatting, or forwarding aura data.
