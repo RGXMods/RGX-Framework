@@ -1,5 +1,7 @@
 # RGX-Framework Roadmap
 
+> **Unreleased candidate: v2.7.8** (in development; restyles RGXDesign with rounded nine-slice panels and a navy/cyan palette). Latest published release: v2.7.7.
+
 ## Direction
 
 RGX-Framework is a modern WoW addon framework and the **foundation layer for `rgx-mod`** — a WeakAuras replacement.
