@@ -1,5 +1,7 @@
 # RGX Studio Roadmap
 
+> **Unreleased candidate: v2.7.8** (in development; restyles RGXDesign with rounded nine-slice panels and a navy/cyan palette). Latest published release: v2.7.7.
+
 ## Milestone Status
 
 RGX Studio is a **future, blocked milestone**, not current implementation work.

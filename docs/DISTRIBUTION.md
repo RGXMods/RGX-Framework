@@ -23,7 +23,14 @@ gh release view v2.7.7 --repo DonnieDice/RGX-Framework --json assets \
   --jq '.assets[] | select(.name == "RGX-Framework-v2.7.7.zip") | .digest'
 ```
 
-CurseForge is the currently configured addon service. Wago remains skipped
+CurseForge is the currently configured addon service.
+
+## Release Candidate
+
+`v2.7.8` is the unreleased candidate. It restyles RGXDesign with rounded
+nine-slice panels and ships one new texture (`media/panel_rounded.tga`), so
+the packaged `RGX-Framework-v2.7.8.zip` will contain exactly 102 runtime
+files — one more than v2.7.7, which shipped exactly 101. Wago remains skipped
 because this project has no existing Wago connection; new connections are not
 added automatically.
 

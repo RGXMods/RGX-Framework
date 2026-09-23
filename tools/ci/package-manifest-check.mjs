@@ -95,6 +95,7 @@ function runtimeSourceFiles() {
     ...listFiles("core"),
     ...listFiles("modules"),
     "media/logo.tga",
+    "media/panel_rounded.tga",
     ...listFiles("media/fonts"),
   ];
 }
@@ -239,6 +240,7 @@ function validateRuntime(entries, expectedPaths) {
       || relativePath === "LICENSE.txt"
       || /^(?:core|modules)\/.+\.lua$/.test(relativePath)
       || relativePath === "media/logo.tga"
+      || relativePath === "media/panel_rounded.tga"
       || /^media\/fonts\/(?:.+\.(?:otf|ttf)|README\.md)$/.test(relativePath);
     if (!allowed) failures.push(`runtime archive: path is outside the player allowlist ${path}`);
     if (/^(?:core|modules)\/.+\.lua$/.test(relativePath) && !loadReferences.has(relativePath)) failures.push(`runtime archive: Lua file is not in the load graph ${path}`);

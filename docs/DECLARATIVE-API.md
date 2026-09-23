@@ -1,4 +1,6 @@
-# Declarative API — `RGXAddon`
+# Declarative API
+
+> **Unreleased candidate: v2.7.8** (in development; restyles RGXDesign with rounded nine-slice panels and a navy/cyan palette). Latest published release: v2.7.7. — `RGXAddon`
 
 The authoring surface and human-readable **Simplicity Contract** for RGX addons.
 Evolution is additive-only: what you write today keeps working forever. The
