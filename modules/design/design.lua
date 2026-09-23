@@ -164,6 +164,20 @@ function Design:SetHighlightColor(color, accent)
     self:SetTheme({ primary = color, accent = accent })
 end
 
+-- Scoped theme override for one addon's UI construction without mutating the
+-- shared defaults: applies the theme for fn's duration, then restores.
+--   Design:WithTheme({ primary = SQP_GREEN }, function() ... build panel ... end)
+function Design:WithTheme(theme, fn)
+    if type(fn) ~= "function" then return end
+    local prevPrimary = self.Theme.primary
+    local prevAccent = self.Theme.accent
+    self:SetTheme(theme)
+    local ok, err = pcall(fn)
+    self.Theme.primary = prevPrimary
+    self.Theme.accent = prevAccent
+    if not ok then error(err, 0) end
+end
+
 Design.SetColors = Design.SetTheme
 Design.UseTheme = Design.SetTheme
 
