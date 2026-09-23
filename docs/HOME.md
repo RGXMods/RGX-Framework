@@ -8,6 +8,8 @@ Current release `v2.7.7` supports Retail `120100`, Classic Era `11509`, TBC
 `20506`, Wrath/Titan `38002`, Cataclysm `40402`, and Mists `50504` from one
 runtime-only addon package.
 
+> **Unreleased candidate: v2.7.8** (in development; restyles RGXDesign with rounded nine-slice panels and a navy/cyan palette). Latest published release: v2.7.7.
+
 > **Related:** [CurseForge](https://www.curseforge.com/wow/addons/rgx-framework) · [GitHub](https://github.com/RGXMods/RGX-Framework) · [Issues](https://github.com/RGXMods/RGX-Framework/issues) · [RGX-Hello (reference addon + test suite)](https://github.com/RGXMods/RGX-Hello)
 
 ---

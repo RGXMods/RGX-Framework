@@ -1,5 +1,16 @@
 # Changes
 
+## Unreleased Candidate
+
+### v2.7.8 (candidate, based on published v2.7.7)
+
+- RGXDesign restyle taking the BugTabs aesthetic: dark navy rounded
+  nine-slice panels (12px corners via new `media/panel_rounded.tga`),
+  cyan `#00e6ff` primary accent, gold secondary accent, Inter labels
+  with locale-safe font fallback and soft text shadows.
+- `Design:CreateFrame` rounds by default; pass `opts.square = true` for
+  the legacy flat backdrop (exported `Design:ApplyBackdrop` unchanged).
+
 ## Current Release
 
 ### [v2.7.7](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.7.md) - 2026-09-21
