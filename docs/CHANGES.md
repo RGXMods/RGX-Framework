@@ -10,6 +10,12 @@
   with locale-safe font fallback and soft text shadows.
 - `Design:CreateFrame` rounds by default; pass `opts.square = true` for
   the legacy flat backdrop (exported `Design:ApplyBackdrop` unchanged).
+- Minimap `Button:GetAngle` now reads the durable store before
+  callback-backed sources, so dragged positions persist for every
+  consumer path.
+- New `Design:WithTheme(theme, fn)` scoped theme helper: an addon can
+  apply its brand color while building its panel, and RGXDesign
+  restores its defaults afterwards.
 
 ## Current Release
 
