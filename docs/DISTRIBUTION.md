@@ -114,6 +114,38 @@ compression settings. The manifest records every runtime source digest, source
 revision, and `sourceDirty` state. `artifacts/` and `.release/` are generated and
 ignored by Git.
 
+## Contract Bundle
+
+The versioned contract bundle pins the declarative contract surface
+(schema, declarative API docs, derived API catalog, conformance vectors)
+separately from the player archive so MCP, Studio, and other authoring
+tools can pin an exact revision without copying RGX semantics.
+
+```bash
+cd tools/ci
+npm ci
+npm run contract-bundle-check   # verify only
+npm run contract-bundle-build   # verify + emit to artifacts/
+```
+
+Generated files:
+
+```text
+RGX-Framework-X.Y.Z-contract.zip
+RGX-Framework-X.Y.Z-contract.manifest.json
+RGX-Framework-X.Y.Z-contract.sha256
+```
+
+Bundle metadata (format version, framework version, flavor, source
+revision, per-file SHA-256 digests) is generated from `RGX-Framework.toc`
+and git state, never hand-repeated. Rebuilding the same revision produces
+byte-identical outputs. Consumers must check `formatVersion` and reject
+unknown versions.
+
+The `contract:bundle` CI job (`.gitlab/ci/addon.yml`) builds the bundle,
+verifies every manifest hash, and confirms a second build is
+byte-identical on the default branch, tags, and merge requests.
+
 ## Addon-Service Description
 
 `docs/description.html` is the canonical addon-service description source. The

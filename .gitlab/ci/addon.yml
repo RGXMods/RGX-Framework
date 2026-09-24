@@ -1,5 +1,6 @@
 stages:
   - validate
+  - contract
   - mirror
 
 addon:validate:
@@ -23,6 +24,28 @@ addon:validate:
       if test -f tools/ci/package-lock.json;
       then cd tools/ci && npm ci --no-audit --no-fund && npm run lua-check && npm run schema-check;
       fi
+
+# Build the versioned contract bundle (issue #6) separately from the player
+# archive, prove its hashes, and verify a rebuild is byte-identical.
+contract:bundle:
+  stage: contract
+  image: node:22-alpine
+  needs: ["addon:validate"]
+  script:
+    - cd tools/ci && npm ci --no-audit --no-fund
+    - npm run contract-bundle-build
+    - cd ../../artifacts && sha256sum * > /tmp/contract-bundle.sum
+    - cd ../tools/ci && npm run contract-bundle-build
+    - cd ../../artifacts && sha256sum -c /tmp/contract-bundle.sum
+  artifacts:
+    when: on_success
+    paths:
+      - artifacts/
+    expire_in: 90 days
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 mirror:github:
   stage: mirror
