@@ -17,6 +17,11 @@
   apply its brand color while building its panel, and RGXDesign
   restores its defaults afterwards.
 
+- Options panel tab buttons honor `panel.theme` at runtime: hover and
+  active states resolve the panel brand `primary` instead of the
+  shared RGXDesign default, and the build-time `Design:SetTheme` is
+  restored after construction.
+
 ## Current Release
 
 ### [v2.7.7](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.7.md) - 2026-09-21
