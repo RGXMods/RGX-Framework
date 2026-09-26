@@ -34,6 +34,15 @@ local addonName, RGX = ...
 
 local Design = {}
 
+-- Apply the framework default font to a label, preserving size/flags.
+local function ApplyDefaultFont(fs)
+    local Fonts = _G.RGXFonts
+    if not (Fonts and type(Fonts.Apply) == "function" and type(Fonts.GetDefault) == "function") then return end
+    if not (fs and fs.GetFont) then return end
+    local _, size, flags = fs:GetFont()
+    pcall(Fonts.Apply, Fonts, fs, Fonts:GetDefault(), size, flags)
+end
+
 -- Theme tokens. Addons should override these before building UI.
 Design.Theme = {
     primary = {0.000, 0.902, 1.000}, -- #00e6ff cyan
@@ -271,8 +280,8 @@ function Design:CreateButton(parent, text, width, height, tooltipTitle, tooltipB
     local label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     label:SetPoint("CENTER", 0, 0)
     label:SetText(text or "")
-    label:SetTextColor(self:Unpack("text"))
-    ApplyLabelFont(label, 12)
+    label:SetTextColor(self:Unpack("subtext"))
+    ApplyDefaultFont(label)
     btn.label = label
 
     btn:SetScript("OnEnter", function(self)
@@ -328,7 +337,7 @@ function Design:CreateSectionHeader(parent, text, icon)
     label:SetPoint("LEFT", leftInset, 0)
     label:SetText(text)
     label:SetTextColor(self:Unpack("primary"))
-    ApplyLabelFont(label, 13)
+    ApplyDefaultFont(label)
     header.label = label
 
     return header

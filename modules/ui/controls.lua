@@ -52,6 +52,15 @@ UI.backdrop = {
     insets = {left = 0, right = 0, top = 0, bottom = 0}
 }
 
+-- Apply the framework default font to a label, preserving size/flags.
+local function ApplyDefaultFont(fs)
+    local Fonts = _G.RGXFonts
+    if not (Fonts and type(Fonts.Apply) == "function" and type(Fonts.GetDefault) == "function") then return end
+    if not (fs and fs.GetFont) then return end
+    local _, size, flags = fs:GetFont()
+    pcall(Fonts.Apply, Fonts, fs, Fonts:GetDefault(), size, flags)
+end
+
 function UI:CreateStatusBarDropdown(parent, options)
     options = options or {}
 
@@ -573,6 +582,7 @@ function UI:CreateLabel(parent, options)
     else
         label:SetFontObject("GameFontNormal")
     end
+    ApplyDefaultFont(label)
     
     local colorKeys = {
         normal = "text",
@@ -761,6 +771,43 @@ function UI:CreatePreviewFrame(parent, options)
     frame.preview.bg:SetColorTexture(D:Unpack("background"))
     
     return frame
+end
+
+--[[============================================================================
+    COLUMNS — centered multi-column page layout
+
+    UI:CreateColumns(parent, count, options)
+    options:
+        colWidth  width per column (default: share the parent width evenly)
+        gap       horizontal gap between columns (default 14)
+        margin    extra inset from the parent edges when auto-sizing (default 0)
+
+    Columns are centered as a block inside the parent, so two-column pages
+    sit properly centered instead of hugging the edges.
+    Returns one frame per column (unpack into locals).
+============================================================================]]
+
+function UI:CreateColumns(parent, count, options)
+    options = options or {}
+    count = count or 2
+    local gap = options.gap or 14
+    local colWidth = options.colWidth
+    if not colWidth then
+        local w = (parent.GetWidth and parent:GetWidth()) or 0
+        colWidth = math.floor((w - (count - 1) * gap - (options.margin or 0) * 2) / count)
+        if colWidth < 80 then colWidth = 80 end
+    end
+
+    local columns = {}
+    for i = 1, count do
+        local col = CreateFrame("Frame", nil, parent)
+        col:SetWidth(colWidth)
+        local xCenter = (i - 0.5 - count / 2) * (colWidth + gap)
+        col:SetPoint("TOP", parent, "TOP", xCenter, 0)
+        col:SetPoint("BOTTOM", parent, "BOTTOM", xCenter, 0)
+        columns[i] = col
+    end
+    return unpack(columns)
 end
 
 --[[============================================================================
