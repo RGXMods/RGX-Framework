@@ -1,7 +1,5 @@
 # RGX-Framework API Reference
 
-> **Unreleased candidate: v2.7.8** (in development; restyles RGXDesign with rounded nine-slice panels and a navy/cyan palette). Latest published release: v2.7.7.
-
 Complete public API by module. See individual module docs for deeper detail:
 
 - [docs/FONTS.md](FONTS.md) — font system
