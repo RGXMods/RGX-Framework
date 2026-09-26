@@ -42,10 +42,16 @@ contract:bundle:
     paths:
       - artifacts/
     expire_in: 90 days
+  # Only repos that ship the contract tooling can build the bundle. Addons
+  # share this include but have no tools/ci, and an unguarded `cd tools/ci`
+  # failed every addon pipeline that reached this stage.
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      exists: tools/ci/package.json
     - if: '$CI_COMMIT_TAG'
+      exists: tools/ci/package.json
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      exists: tools/ci/package.json
 
 mirror:github:
   stage: mirror
