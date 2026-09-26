@@ -368,7 +368,18 @@ function UI:CreateSlider(parent, options)
 
 	apply(storage[key] or default)
 
-	container.SetValue = apply
+	container.SetValue = function(first, maybe)
+		-- Support both control:SetValue(v) and control.SetValue(v)
+		local value
+		if maybe ~= nil and first == container then
+			value = maybe
+		elseif maybe == nil then
+			value = first
+		else
+			value = maybe
+		end
+		apply(value)
+	end
 	container.GetValue = function() return storage[key] or default end
 
 	return container
