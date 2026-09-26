@@ -11,6 +11,8 @@
     "package-check": "node package-manifest-check.mjs ../..",
     "docs-check": "node docs-congruence-check.mjs",
     "schema-check": "node schema-check.mjs ../../schemas/rgx-addon.schema.json",
+    "contract-bundle-build": "node contract-bundle-check.mjs --out ../../artifacts",
+    "contract-bundle-check": "node contract-bundle-check.mjs",
     "flavor-check": "node flavor-toc-check.mjs && node flavor-compat-check.mjs && node flavor-package-check.mjs"
   },
   "engines": { "node": ">=18" },
