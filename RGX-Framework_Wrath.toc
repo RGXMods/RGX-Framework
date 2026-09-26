@@ -3,8 +3,9 @@
 ## Title: RGX-Framework
 ## Notes: Modular WoW addon framework
 ## Author: RGX
-## Category: RGX
-## Group: RGX
+## Category: RealmGX
+## DefaultState: Enabled
+## Group: RealmGX
 ## SavedVariables: RGXFrameworkDB
 ## IconTexture: Interface\AddOns\RGX-Framework\media\logo.tga
 ## X-Category: Library
