@@ -41,6 +41,15 @@ local function GetDesign()
     return _G.RGXDesign
 end
 
+-- Apply the framework default font (Blizzard-compatible) to panel header text
+local function ApplyDefaultFont(fs)
+    local Fonts = _G.RGXFonts
+    if not (Fonts and type(Fonts.Apply) == "function" and type(Fonts.GetDefault) == "function") then return end
+    if not (fs and fs.GetFont) then return end
+    local _, size, flags = fs:GetFont()
+    pcall(Fonts.Apply, Fonts, fs, Fonts:GetDefault(), size, flags)
+end
+
 -- ── Layout constants ──────────────────────────────────────────────────────────
 
 local TAB_W = 94
@@ -77,6 +86,17 @@ end
 
 -- ── Create a single tab button ────────────────────────────────────────────────
 
+local function GetTabPrimary(panelRef, D)
+    local theme = panelRef.theme
+    if type(theme) == "table" then
+        local c = theme.primary or theme.highlight or theme.highlightColor or theme.themeColor
+        if type(c) == "table" and type(c[1]) == "number" then
+            return c[1], c[2] or 1, c[3] or 1
+        end
+    end
+    return D:Unpack('primary')
+end
+
 local function CreateTabButton(parent, text, tabIndex, row, col, panelRef, icon, addonKey)
     local D = GetDesign()
     local sr, sg, sb = D:Unpack("surface")
@@ -100,6 +120,7 @@ local function CreateTabButton(parent, text, tabIndex, row, col, panelRef, icon,
     btn.border = border
 
     local btnText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ApplyDefaultFont(btnText)
     if icon then
         local iconTex = btn:CreateTexture(nil, "ARTWORK")
         iconTex:SetSize(14, 14)
@@ -123,8 +144,9 @@ local function CreateTabButton(parent, text, tabIndex, row, col, panelRef, icon,
     btn:SetScript("OnEnter", function(self)
         if not self.isActive then
             local D = GetDesign()
-            self.border:SetBackdropBorderColor(D:Unpack("primary"))
-            self.text:SetTextColor(D:Unpack("primary"))
+            local pr, pg, pb = GetTabPrimary(panelRef, D)
+            self.border:SetBackdropBorderColor(pr, pg, pb)
+            self.text:SetTextColor(pr, pg, pb)
         end
     end)
     btn:SetScript("OnLeave", function(self)
@@ -140,8 +162,9 @@ local function CreateTabButton(parent, text, tabIndex, row, col, panelRef, icon,
         if active then
             local D = GetDesign()
             self.bg:SetColorTexture(D:Unpack("hover"))
-            self.border:SetBackdropBorderColor(D:Unpack("primary"))
-            self.text:SetTextColor(D:Unpack("primary"))
+            local pr, pg, pb = GetTabPrimary(panelRef, D)
+            self.border:SetBackdropBorderColor(pr, pg, pb)
+            self.text:SetTextColor(pr, pg, pb)
             if self.iconTex then self.iconTex:SetDesaturated(false); self.iconTex:SetAlpha(1) end
         else
             local D = GetDesign()
@@ -265,6 +288,11 @@ local _panelCounter = 0
 local function CreateOptionsPanel(UI, opts)
     opts = opts or {}
     local D = GetDesign()
+    -- Apply the requested theme for the build, then restore the previous
+    -- global theme so addons do not leak brand colors into later panels.
+    -- Tab buttons honor panel.theme at runtime via GetTabPrimary.
+    local _prevPrimary = D and D.Theme and D.Theme.primary
+    local _prevAccent  = D and D.Theme and D.Theme.accent
     if D and type(D.SetTheme) == "function" then
         D:SetTheme(opts.theme or opts.colors or opts)
     end
@@ -293,6 +321,7 @@ local function CreateOptionsPanel(UI, opts)
     panel.settingsCategoryName = _sidebarName
     panel.tabs     = {}
     panel.contents = {}
+    panel.theme    = opts.theme or opts.colors
 
     -- Outer container
     local container = CreateFrame("Frame", nil, panel, "BackdropTemplate")
@@ -342,6 +371,7 @@ local function CreateOptionsPanel(UI, opts)
     titleStr:SetPoint("LEFT", header, "TOPLEFT", leftX, -14)
     titleStr:SetJustifyV("MIDDLE")
     titleStr:SetText(opts.title or tAddonName)
+    ApplyDefaultFont(titleStr)
 
     if opts.subtitle then
         local sub = header:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -349,6 +379,7 @@ local function CreateOptionsPanel(UI, opts)
         sub:SetJustifyV("MIDDLE")
         sub:SetText(opts.subtitle)
         sub:SetTextColor(D:Unpack("subtext"))
+        ApplyDefaultFont(sub)
     end
 
     if opts.website then
@@ -357,6 +388,7 @@ local function CreateOptionsPanel(UI, opts)
         site:SetJustifyV("MIDDLE")
         site:SetText(opts.website)
         site:SetTextColor(D:Unpack("text"))
+        ApplyDefaultFont(site)
     end
 
     local verText = opts.version or GetMeta(tAddonName, "Version") or ""
@@ -368,6 +400,7 @@ local function CreateOptionsPanel(UI, opts)
         ver:SetText(verText)
         ver:SetJustifyH("RIGHT")
         ver:SetTextColor(D:Unpack("primary"))
+        ApplyDefaultFont(ver)
     end
 
     if opts.author then
@@ -377,6 +410,7 @@ local function CreateOptionsPanel(UI, opts)
         auth:SetText("by " .. opts.author)
         auth:SetTextColor(D:Unpack("subtext"))
         auth:SetJustifyH("RIGHT")
+        ApplyDefaultFont(auth)
     end
 
     if opts.brand then
@@ -385,6 +419,7 @@ local function CreateOptionsPanel(UI, opts)
         brand:SetJustifyV("MIDDLE")
         brand:SetText(opts.brand)
         brand:SetJustifyH("RIGHT")
+        ApplyDefaultFont(brand)
     end
 
     -- ── Banner (optional, sits between header and tabs) ───────────────────────
@@ -816,6 +851,10 @@ end
     if type(UISpecialFrames) == "table" and panel.GetName and panel:GetName() then
         table.insert(UISpecialFrames, panel:GetName())
     end
+
+    -- Restore the previous global theme (see save above).
+    if _prevPrimary then D.Theme.primary = _prevPrimary end
+    if _prevAccent  then D.Theme.accent  = _prevAccent  end
 
     return panel
 end
