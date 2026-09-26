@@ -41,6 +41,15 @@ local function GetDesign()
     return _G.RGXDesign
 end
 
+-- Apply the framework default font (Blizzard-compatible) to panel header text
+local function ApplyDefaultFont(fs)
+    local Fonts = _G.RGXFonts
+    if not (Fonts and type(Fonts.Apply) == "function" and type(Fonts.GetDefault) == "function") then return end
+    if not (fs and fs.GetFont) then return end
+    local _, size, flags = fs:GetFont()
+    pcall(Fonts.Apply, Fonts, fs, Fonts:GetDefault(), size, flags)
+end
+
 -- ── Layout constants ──────────────────────────────────────────────────────────
 
 local TAB_W = 94
@@ -111,6 +120,7 @@ local function CreateTabButton(parent, text, tabIndex, row, col, panelRef, icon,
     btn.border = border
 
     local btnText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ApplyDefaultFont(btnText)
     if icon then
         local iconTex = btn:CreateTexture(nil, "ARTWORK")
         iconTex:SetSize(14, 14)
@@ -361,6 +371,7 @@ local function CreateOptionsPanel(UI, opts)
     titleStr:SetPoint("LEFT", header, "TOPLEFT", leftX, -14)
     titleStr:SetJustifyV("MIDDLE")
     titleStr:SetText(opts.title or tAddonName)
+    ApplyDefaultFont(titleStr)
 
     if opts.subtitle then
         local sub = header:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -368,6 +379,7 @@ local function CreateOptionsPanel(UI, opts)
         sub:SetJustifyV("MIDDLE")
         sub:SetText(opts.subtitle)
         sub:SetTextColor(D:Unpack("subtext"))
+        ApplyDefaultFont(sub)
     end
 
     if opts.website then
@@ -376,6 +388,7 @@ local function CreateOptionsPanel(UI, opts)
         site:SetJustifyV("MIDDLE")
         site:SetText(opts.website)
         site:SetTextColor(D:Unpack("text"))
+        ApplyDefaultFont(site)
     end
 
     local verText = opts.version or GetMeta(tAddonName, "Version") or ""
@@ -387,6 +400,7 @@ local function CreateOptionsPanel(UI, opts)
         ver:SetText(verText)
         ver:SetJustifyH("RIGHT")
         ver:SetTextColor(D:Unpack("primary"))
+        ApplyDefaultFont(ver)
     end
 
     if opts.author then
@@ -396,6 +410,7 @@ local function CreateOptionsPanel(UI, opts)
         auth:SetText("by " .. opts.author)
         auth:SetTextColor(D:Unpack("subtext"))
         auth:SetJustifyH("RIGHT")
+        ApplyDefaultFont(auth)
     end
 
     if opts.brand then
@@ -404,6 +419,7 @@ local function CreateOptionsPanel(UI, opts)
         brand:SetJustifyV("MIDDLE")
         brand:SetText(opts.brand)
         brand:SetJustifyH("RIGHT")
+        ApplyDefaultFont(brand)
     end
 
     -- ── Banner (optional, sits between header and tabs) ───────────────────────
