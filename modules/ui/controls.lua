@@ -916,22 +916,43 @@ function UI:CreateColumns(parent, count, options)
     options = options or {}
     count = count or 2
     local gap = options.gap or 14
-    local colWidth = options.colWidth
-    if not colWidth then
-        local w = (parent.GetWidth and parent:GetWidth()) or 0
-        colWidth = math.floor((w - (count - 1) * gap - (options.margin or 0) * 2) / count)
-        if colWidth < 80 then colWidth = 80 end
-    end
+    local margin = options.margin or 0
+    local fixedWidth = options.colWidth
 
     local columns = {}
     for i = 1, count do
-        local col = CreateFrame("Frame", nil, parent)
-        col:SetWidth(colWidth)
-        local xCenter = (i - 0.5 - count / 2) * (colWidth + gap)
-        col:SetPoint("TOP", parent, "TOP", xCenter, 0)
-        col:SetPoint("BOTTOM", parent, "BOTTOM", xCenter, 0)
-        columns[i] = col
+        columns[i] = CreateFrame("Frame", nil, parent)
     end
+
+    -- Column width is derived from the parent, which may be anchor-sized and
+    -- therefore report 0 until layout resolves. Recompute on size changes so
+    -- the page settles at the right width instead of staying collapsed.
+    local function layout()
+        local colWidth = fixedWidth
+        if not colWidth then
+            local w = (parent.GetWidth and parent:GetWidth()) or 0
+            if w <= 0 then
+                colWidth = 360
+            else
+                colWidth = math.floor((w - (count - 1) * gap - margin * 2) / count)
+                if colWidth < 80 then colWidth = 80 end
+            end
+        end
+        for i = 1, count do
+            local col = columns[i]
+            col:SetWidth(colWidth)
+            local xCenter = (i - 0.5 - count / 2) * (colWidth + gap)
+            col:ClearAllPoints()
+            col:SetPoint("TOP", parent, "TOP", xCenter, 0)
+            col:SetPoint("BOTTOM", parent, "BOTTOM", xCenter, 0)
+        end
+    end
+    layout()
+
+    if parent.HookScript then
+        parent:HookScript("OnSizeChanged", layout)
+    end
+
     return unpack(columns)
 end
 
