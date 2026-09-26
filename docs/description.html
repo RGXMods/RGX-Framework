@@ -5,7 +5,7 @@
   <div style="margin-top:16px;padding:12px 14px;background:#151a22;border:1px solid #30363d">
     <div style="font-size:18px;font-weight:700;color:#ffd166">Overview</div>
     <div style="margin-top:8px;line-height:1.6">
-      RGX-Framework is a modern, shared WoW addon framework for Retail and supported Classic clients. It provides events, timers, hooks, slash commands, saved-variable helpers, fonts, colors, textures, dropdowns, UI controls, minimap buttons, options panels, aura helpers, combat callbacks, sound, and more without LibStub embedding.
+      RGX-Framework is a modern, shared WoW addon framework for Retail, Classic Era, TBC, Wrath/Titan, Cataclysm, and Mists. One dependency provides events, timers, hooks, slash commands, saved-variable helpers, fonts, colors, textures, dropdowns, UI controls, minimap buttons, options panels, aura helpers, combat callbacks, sound, and more without LibStub embedding. It is not a player-facing addon: it loads silently and exposes an API.
     </div>
   </div>
 
@@ -23,9 +23,22 @@
   </div>
 
   <div style="margin-top:12px;padding:12px 14px;background:#151a22;border:1px solid #30363d">
-    <div style="font-size:18px;font-weight:700;color:#ffd166">2.7.4 Consistent Login Messages</div>
-    <div style="margin-top:8px;line-height:1.6">
-      Framework chat output now uses one icon, spacer, and [RGX] tag. Players can manage startup messages with <code>/rgx login on|off|status</code>; the preference persists globally and also gates declarative welcome strings. Normal command, warning, and error output remains visible.
+    <div style="font-size:18px;font-weight:700;color:#ffd166">What It Provides</div>
+    <div style="margin-top:8px;line-height:1.8">
+      &bull; <b>Lifecycle</b> &mdash; <code>OnReady</code>, <code>OnLogin</code>, module readiness tracking<br/>
+      &bull; <b>Events &amp; Messages</b> &mdash; Blizzard event registration, internal message bus, module-local emitters<br/>
+      &bull; <b>Timers</b> &mdash; <code>After</code>, <code>Every</code>, <code>CancelTimer</code> on a native OnUpdate driver<br/>
+      &bull; <b>Hooks</b> &mdash; safe post-hooks via <code>hooksecurefunc</code><br/>
+      &bull; <b>Slash Commands</b> &mdash; <code>RegisterSlashCommand</code>, no raw <code>SLASH_</code> boilerplate<br/>
+      &bull; <b>Combat Queue</b> &mdash; <code>QueueForCombat</code>, <code>SafeShow</code>, <code>SafeHide</code>, <code>SafeSetPoint</code><br/>
+      &bull; <b>Fonts</b> &mdash; 40 bundled + 4 WoW defaults, style objects, grouped dropdowns<br/>
+      &bull; <b>Colors</b> &mdash; named palette, class/quality/power colors, color math, picker integration<br/>
+      &bull; <b>Textures</b> &mdash; statusbar registry, LibSharedMedia import<br/>
+      &bull; <b>Dropdowns &amp; UI</b> &mdash; nested menus, sliders, toggles, color pickers, tabbed options panels with WoW Settings integration<br/>
+      &bull; <b>Minimap</b> &mdash; circular-drag buttons with persistent angle<br/>
+      &bull; <b>Design</b> &mdash; static brand palette and visual building blocks<br/>
+      &bull; <b>DataBroker</b> &mdash; LibDataBroker-compatible proxy data sources<br/>
+      &bull; <b>Game Modules</b> &mdash; Combat, Reputation, Achievement, LevelUp, Collectibles, Loot, Quest, Honor, Delves, Housing, TradingPost, Prey, PetBattles, Sound, SharedMedia
     </div>
   </div>
 
@@ -39,22 +52,34 @@ RGXAddon "MyAddon" {
   minimap = true,
   db = { enabled = true },
 }</pre>
+    <div style="margin-top:8px;line-height:1.6">
+      That is a complete addon: profile-aware saved settings, a tabbed options panel with db-bound controls, a slash command, a minimap button, and branded chat output. Individual systems are also available &agrave; la carte through <code>RGX:RegisterEvent</code>, <code>RGX:After</code>, <code>RGX:GetFonts()</code>, <code>RGX:GetColors()</code>, <code>RGX:CreateMinimapButton</code>, and friends.
+    </div>
   </div>
 
   <div style="margin-top:12px;padding:12px 14px;background:#151a22;border:1px solid #30363d">
-    <div style="font-size:18px;font-weight:700;color:#ffd166">Distribution</div>
+    <div style="font-size:18px;font-weight:700;color:#ffd166">Font Coverage</div>
     <div style="margin-top:8px;line-height:1.6">
-      RGX-Framework publishes one runtime-only addon product. The GitHub release contains <code>RGX-Framework-v2.7.8.zip</code> plus <code>release.json</code> automation metadata. Source documentation, schemas, tests, and tooling are not included in player installs.
+      44 registered fonts: 40 bundled (30 selectable across Sans/UI, Serif, Monospace, Display, Pixel, and Fantasy families) plus 4 WoW defaults (Friz Quadrata, Arial Narrow, Morpheus, Skurri). Font pack addons can extend the registry at runtime with <code>Fonts:RegisterFontPack()</code>. Attribution for all bundled fonts lives in <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/FONT-SOURCES.md" style="color:#58a6ff">Font Sources &amp; Licenses</a>.
     </div>
   </div>
 
   <div style="margin-top:12px;padding:12px 14px;background:#141b20;border:1px solid #2f454d">
     <div style="font-size:18px;font-weight:700;color:#4ecdc4">Documentation &amp; Support</div>
     <div style="margin-top:8px;line-height:1.8">
-      &bull; <a href="https://github.com/RGXMods/RGX-Framework/wiki" style="color:#58a6ff">Full Wiki</a><br/>
-      &bull; <a href="https://github.com/RGXMods/RGX-Framework" style="color:#58a6ff">GitHub</a><br/>
-      &bull; <a href="https://github.com/RGXMods/RGX-Framework/issues" style="color:#58a6ff">Issues</a><br/>
-      &bull; Discord: <span style="color:#58a6ff">https://discord.gg/N7kdKAHVVF</span>
+      &bull; <a href="https://github.com/RGXMods/RGX-Framework/wiki" style="color:#58a6ff">Full Wiki</a> &mdash; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/SUPER-SIMPLE.md" style="color:#58a6ff">Super Simple Integration</a> &middot; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/MIGRATION.md" style="color:#58a6ff">Migration Guide</a><br/>
+      &bull; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/API.md" style="color:#58a6ff">API Reference</a> &middot; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/ARCHITECTURE.md" style="color:#58a6ff">Architecture</a> &middot; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/DECLARATIVE-API.md" style="color:#58a6ff">Declarative API</a> &middot; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/TROUBLESHOOTING.md" style="color:#58a6ff">Troubleshooting</a><br/>
+      &bull; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/FONTS.md" style="color:#58a6ff">Fonts</a> &middot; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/DROPDOWNS.md" style="color:#58a6ff">Dropdowns</a> &middot; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/THEMING.md" style="color:#58a6ff">Theming &amp; Design</a> &middot; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/CHANGES.md" style="color:#58a6ff">Changelog</a><br/>
+      &bull; <a href="https://github.com/RGXMods/RGX-Framework/issues" style="color:#58a6ff">GitHub Issues</a> &middot; Discord: <span style="color:#58a6ff">https://discord.gg/N7kdKAHVVF</span>
+    </div>
+  </div>
+
+  <div style="margin-top:12px;padding:12px 14px;background:#151a22;border:1px solid #30363d">
+    <div style="font-size:18px;font-weight:700;color:#ffd166">Distribution</div>
+    <div style="margin-top:8px;line-height:1.6">
+      RGX-Framework publishes one runtime-only addon product. The GitHub release contains <code>RGX-Framework-v2.7.8.zip</code> plus <code>release.json</code> automation metadata. Source documentation, schemas, tests, and tooling are not included in player installs. Framework code is licensed under the <a href="https://github.com/RGXMods/RGX-Framework/blob/main/LICENSE.txt" style="color:#58a6ff">MIT License</a>; bundled fonts retain their own open licenses.
     </div>
   </div>
 </div>
+
+<!-- refreshed -->
