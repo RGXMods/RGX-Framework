@@ -96,7 +96,7 @@ function UI:CreateColorPicker(parent, options)
     -- Label
     container.label = self:CreateLabel(container, {
         text = label,
-        size = "small",
+		size = "normal",
         color = "muted"
     })
     container.label:SetPoint("LEFT", 0, 0)
@@ -217,14 +217,14 @@ function UI:CreateSlider(parent, options)
 
 	container.label = self:CreateLabel(container, {
 		text = label,
-		size = "small",
+		size = "normal",
 		color = "muted"
 	})
 	container.label:SetPoint("TOPLEFT", 0, 0)
 
 	container.valueLabel = self:CreateLabel(container, {
 		text = (storage[key] or default) .. suffix,
-		size = "small"
+		size = "normal"
 	})
 	container.valueLabel:SetPoint("TOPRIGHT", -28, 0)
 
@@ -350,7 +350,7 @@ function UI:CreateSlider(parent, options)
 	local reset = self:CreateResetButton(container, function()
 		apply(default)
 	end)
-	reset:SetPoint("RIGHT", container, "RIGHT", 0, -10)
+    self:AnchorRowReset(parent, reset, trackFrame)
 
 	-- Re-place the thumb every time the slider is shown: the first apply() below
 	-- runs while the panel is usually still hidden (login/load), so this is what
@@ -507,8 +507,94 @@ function UI:CreateVolumeSlider(parent, options)
 end
 
 --[[============================================================================
+    ON/OFF SWITCH
+    A single db-bound boolean control for a top-level addon state.
+    Other checkbox options can continue using CreateToggle/CheckButton.
+============================================================================]]
+
+function UI:CreateSwitch(parent, options)
+    options = options or {}
+    local storage = options.storage or {}
+    local key = options.key or "enabled"
+    local default = options.default ~= false
+    local D = RGX:GetDesign()
+    local frame = CreateFrame("Button", nil, parent)
+    frame:SetSize(options.width or 70, 24)
+    frame:RegisterForClicks("LeftButtonUp")
+
+    local button = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    button:EnableMouse(false)
+    button:SetSize(46, 22)
+    button:SetPoint("LEFT", frame, "LEFT", 0, 0)
+    button:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    local knob = button:CreateTexture(nil, "ARTWORK")
+    knob:SetSize(16, 16)
+    knob:SetColorTexture(D:Unpack("text"))
+    local label = self:CreateLabel(frame, {
+        text = options.label or "",
+        size = "normal",
+    })
+    label:SetPoint("LEFT", button, "RIGHT", 8, 0)
+
+    local function value()
+        local stored = storage[key]
+        return stored == nil and default or stored == true
+    end
+    function frame:Refresh()
+        local on = value()
+        local r, g, b = D:Unpack(on and "primary" or "track")
+        button:SetBackdropColor(r, g, b, 0.95)
+        button:SetBackdropBorderColor(D:Unpack("border"))
+        knob:ClearAllPoints()
+        knob:SetPoint(on and "RIGHT" or "LEFT", button, on and "RIGHT" or "LEFT",
+            on and -3 or 3, 0)
+        if options.label == "" then label:SetText(on and "On" or "Off") end
+        frame:SetWidth(math.max(options.width or 70, 54 + label:GetStringWidth() + 4))
+    end
+    function frame:GetChecked() return value() end
+    function frame:SetChecked(on)
+        storage[key] = on == true
+        self:Refresh()
+    end
+    frame:SetScript("OnClick", function()
+        local on = not value()
+        storage[key] = on
+        frame:Refresh()
+        if type(options.onChange) == "function" then options.onChange(on) end
+    end)
+    frame.button = button
+    frame.label = label
+    frame:Refresh()
+    return frame
+end
+
+--[[============================================================================
 TOGGLE CONTROL
 ============================================================================]]
+
+-- A label and 18px checkbox sharing a single layout frame. Consumers can
+-- bind the check to their database or event handlers without recreating its
+-- geometry, font, and artwork in each addon.
+function UI:CreateCheckbox(parent, text)
+    local frame = CreateFrame("Frame", nil, parent)
+    frame:SetSize(300, 20)
+    local checkbox = CreateFrame("CheckButton", nil, frame)
+    checkbox:SetSize(18, 18)
+    checkbox:SetPoint("LEFT", 0, 0)
+    checkbox:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
+    checkbox:SetPushedTexture("Interface\\Buttons\\UI-CheckBox-Down")
+    checkbox:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight")
+    checkbox:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
+    local label = self:CreateLabel(frame, { text = text, size = "normal", color = "normal" })
+    label:SetPoint("LEFT", checkbox, "RIGHT", 5, 0)
+    frame.checkbox = checkbox
+    frame.label = label
+    return frame
+end
 
 function UI:CreateToggle(parent, options)
     options = options or {}
@@ -530,7 +616,7 @@ function UI:CreateToggle(parent, options)
     -- Label
     container.label = self:CreateLabel(container, {
         text = label,
-        size = "small"
+        size = "normal"
     })
     container.label:SetPoint("LEFT", check, "RIGHT", 4, 0)
     
@@ -577,7 +663,7 @@ function UI:CreateLabel(parent, options)
     local colorKeys = {
         normal = "text",
         muted  = "subtext",
-        accent = "primary",
+        accent = "accent",
         red    = "error",
         green  = "success",
         yellow = "warning",
@@ -695,33 +781,61 @@ end
     SECTION/PANEL
 ============================================================================]]
 
+-- A scrollable canvas for card layouts taller than an options tab. Keep the
+-- scrollbar and clipping in the framework so consumers only position cards.
+function UI:CreateScrollPage(parent, height)
+    local scroll = CreateFrame("ScrollFrame", nil, parent, "UIPanelScrollFrameTemplate")
+    scroll:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, -8)
+    scroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -30, 8)
+
+    local canvas = CreateFrame("Frame", nil, scroll)
+    canvas:SetHeight(height or 620)
+    canvas:SetWidth(math.max(1, scroll:GetWidth()))
+    scroll:SetScrollChild(canvas)
+    scroll:HookScript("OnSizeChanged", function(self, width)
+        canvas:SetWidth(math.max(1, width))
+    end)
+    return canvas, scroll
+end
+
 function UI:CreateSection(parent, options)
     options = options or {}
     local title = options.title or "Section"
     local width = options.width or 300
     local height = options.height or 200
-    
-    local section = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    section:SetSize(width, height)
-    section:SetBackdrop(self.backdrop)
     local D = RGX:GetDesign()
-    local sr, sg, sb = D:Unpack("surface")
-    section:SetBackdropColor(sr, sg, sb, 0.85)
-    section:SetBackdropBorderColor(D:Unpack("border"))
-    
-    -- Header
-    section.header = self:CreateLabel(section, {
-        text = title,
-        size = "small",
-        color = "accent"
-    })
-    section.header:SetPoint("TOPLEFT", 12, -10)
-    
-    -- Content area
-    section.content = CreateFrame("Frame", nil, section)
-    section.content:SetPoint("TOPLEFT", 12, -30)
-    section.content:SetPoint("BOTTOMRIGHT", -12, 12)
-    
+    assert(D and type(D.CreateSection) == "function", "RGX UI: section design unavailable")
+    -- Share BLU's section skin; RGXUI owns placement, RGXDesign textures.
+    local section = D:CreateSection(parent, title ~= "" and title or nil, options.icon,
+        { square = options.square ~= false })
+    section:SetSize(width, height)
+    section.headerBand = section.header
+    -- Measure direct widgets after the consumer finishes building the card.
+    -- Children can be Frames or FontStrings; do not depend on a fixed count,
+    -- particular widget type, or the consumer's hand-maintained y offsets.
+    function section:FitContent(padding)
+        local top = self.content:GetTop()
+        local deepest = 0
+        local function measure(region)
+            if not region or (region.IsShown and not region:IsShown()) then return end
+            local bottom = region.GetBottom and region:GetBottom()
+            if top and type(bottom) == "number" then
+                deepest = math.max(deepest, top - bottom)
+            elseif region.GetPoint and region.GetHeight then
+                local _, relative, relativePoint, _, y = region:GetPoint(1)
+                if relative == self.content and (relativePoint == "TOPLEFT" or relativePoint == "TOP")
+                    and type(y) == "number" then
+                    deepest = math.max(deepest, -y + (region:GetHeight() or 0))
+                end
+            end
+        end
+        for _, child in ipairs({self.content:GetChildren()}) do measure(child) end
+        for _, region in ipairs({self.content:GetRegions()}) do measure(region) end
+        if deepest > 0 then
+            self:SetHeight(self.contentTopInset + deepest + self.contentBottomInset + (padding or 2))
+        end
+        return self:GetHeight()
+    end
     return section
 end
 
@@ -745,7 +859,7 @@ function UI:CreatePreviewFrame(parent, options)
     -- Label
     frame.label = self:CreateLabel(frame, {
         text = options.title or "Preview",
-        size = "small",
+        size = "normal",
         color = "muted"
     })
     frame.label:SetPoint("TOP", 0, -8)
