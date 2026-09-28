@@ -37,7 +37,7 @@ local Design = {}
 -- Theme tokens. Addons should override these before building UI.
 Design.Theme = {
     primary = {0.000, 0.902, 1.000}, -- #00e6ff cyan
-    accent  = {0.941, 0.706, 0.161}, -- #f0b429 gold
+    accent  = {0.737, 0.435, 0.659}, -- #bc6fa8 brand purple (highlights/active states)
 }
 
 -- Structural palette: dark navy foundation with cyan-friendly neutrals.
@@ -65,8 +65,24 @@ Design.PANEL_TEX = "Interface\\AddOns\\RGX-Framework\\media\\panel_rounded.tga"
 local PANEL_TC = 0.25
 
 local function ApplyLabelFont(fs, size)
-    -- Inter for latin clients; the client's own font covers CJK/cyrillic
-    -- scripts that Inter does not provide glyphs for.
+    -- One font per addon: honor the framework font designation
+    -- (RGXFonts default set by the addon) so element, button, and text fonts
+    -- are always the same face. Locale fallback covers CJK/cyrillic scripts.
+    local Fonts = _G.RGXFonts
+    if Fonts and type(Fonts.Apply) == "function" and type(Fonts.GetDefault) == "function" then
+        local ok = pcall(function()
+            local _, natural = fs:GetFont()
+            Fonts:Apply(fs, Fonts:GetDefault(), size or natural or 12, "")
+        end)
+        if ok and fs.GetFont then
+            local applied = fs:GetFont()
+            if applied then
+                fs:SetShadowColor(0, 0, 0, 0.6)
+                fs:SetShadowOffset(1, -1)
+                return fs
+            end
+        end
+    end
     local font = "Interface\\AddOns\\RGX-Framework\\media\\fonts\\Inter-Regular.otf"
     local locale = _G.GetLocale and _G.GetLocale()
     if locale == "koKR" or locale == "zhCN" or locale == "zhTW" or locale == "ruRU" then
@@ -243,6 +259,9 @@ function Design:CreateFrame(parent, opts)
         if opts.width  then frame:SetWidth(opts.width)   end
         if opts.height then frame:SetHeight(opts.height) end
         self:ApplyBackdrop(frame, opts.variant or "dark", opts.bgAlpha)
+        if opts.color then
+            frame:SetBackdropColor(self:Unpack(opts.color))
+        end
         return frame
     end
 
@@ -268,11 +287,11 @@ function Design:CreateButton(parent, text, width, height, tooltipTitle, tooltipB
     border:SetBackdropBorderColor(self:Unpack("border"))
     btn.border = border
 
-    local label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     label:SetPoint("CENTER", 0, 0)
     label:SetText(text or "")
     label:SetTextColor(self:Unpack("text"))
-    ApplyLabelFont(label, 12)
+    ApplyLabelFont(label)
     btn.label = label
 
     btn:SetScript("OnEnter", function(self)
@@ -313,6 +332,7 @@ function Design:CreateSectionHeader(parent, text, icon)
     local header = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     header:SetHeight(32)
     self:ApplyBackdrop(header, "solid", 0.95)
+    header:SetBackdropBorderColor(self:Unpack("primary"))
 
     local leftInset = 10
     if icon then
@@ -343,8 +363,9 @@ function Design:CreateDivider(parent)
     return d
 end
 
-function Design:CreateSection(parent, title, icon)
-    local section = self:CreateFrame(parent, { color = "panelAlt" })
+function Design:CreateSection(parent, title, icon, opts)
+    opts = opts or {}
+    local section = self:CreateFrame(parent, { color = "panelAlt", square = opts.square })
 
     if title then
         local header = self:CreateSectionHeader(section, title, icon)
@@ -354,10 +375,14 @@ function Design:CreateSection(parent, title, icon)
         section.content = CreateFrame("Frame", nil, section)
         section.content:SetPoint("TOPLEFT",     16, -42)
         section.content:SetPoint("BOTTOMRIGHT", -16,  12)
+        section.contentTopInset = 42
+        section.contentBottomInset = 12
     else
         section.content = CreateFrame("Frame", nil, section)
         section.content:SetPoint("TOPLEFT",     16, -10)
         section.content:SetPoint("BOTTOMRIGHT", -16,  10)
+        section.contentTopInset = 10
+        section.contentBottomInset = 10
     end
 
     return section
