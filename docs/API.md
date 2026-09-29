@@ -1,5 +1,7 @@
 # RGX-Framework API Reference
 
+Release candidate `v2.7.9` is unreleased; the published version is `v2.7.8`.
+
 Complete public API by module. See individual module docs for deeper detail:
 
 - [docs/FONTS.md](FONTS.md) — font system

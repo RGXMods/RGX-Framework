@@ -1,5 +1,7 @@
 # SUPER SIMPLE RGX Integration
 
+Release candidate `v2.7.9` is unreleased; the published version is `v2.7.8`.
+
 This page documents the released `v2.7.0` API.
 
 ## A Complete Addon In One Call

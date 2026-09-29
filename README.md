@@ -1,5 +1,7 @@
 # RGX-Framework
 
+Release candidate `v2.7.9` is unreleased; the latest published release is `v2.7.8`.
+
 **One dependency. Everything your addon suite needs.**
 
 RGX-Framework is a modern, self-contained WoW addon framework for Retail,
