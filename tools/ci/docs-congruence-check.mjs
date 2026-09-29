@@ -196,9 +196,11 @@ if (existsSync(join(ROOT, "Home.md"))) failures.push("Home.md: competing root wi
 if (!existsSync(join(ROOT, currentChangelogPath))) failures.push(`${currentChangelogPath}: missing current release changelog`);
 
 const releaseWorkflow = read(".github/workflows/release.yml");
-for (const required of ["BigWigsMods/packager@v2", "args: -d", "args: -c -o", "--inspect", "--expected-count", "sha256sum", "release-metadata-check.mjs", "Verify published release assets"]) {
+for (const required of ["tools/release/publish-release.mjs", "npm run package-build", "--inspect", "--expected-count", "sha256sum", "release-metadata-check.mjs", "Verify published release assets"]) {
   if (!releaseWorkflow.includes(required)) failures.push(`release workflow: missing ${required}`);
 }
+if (releaseWorkflow.includes("BigWigsMods/packager")) failures.push("release workflow: BigWigsMods/packager is retired; use the in-house packager");
+if (releaseWorkflow.includes(".release/")) failures.push("release workflow: the .release staging directory is retired");
 
 if (failures.length) {
   for (const failure of failures) console.error(`DOCS ERROR  ${failure}`);

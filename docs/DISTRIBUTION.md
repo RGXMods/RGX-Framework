@@ -13,7 +13,7 @@ publishes exactly two GitHub assets:
 | Asset | Purpose |
 |---|---|
 | `RGX-Framework-v2.7.9.zip` | The only product archive; install this addon |
-| `release.json` | BigWigs packager metadata for automation |
+| `release.json` | In-house packager metadata for automation |
 
 The `v2.7.9` ZIP is expected to contain one `RGX-Framework/` root and exactly 104
 runtime files. Verify the asset and digest after publishing with
