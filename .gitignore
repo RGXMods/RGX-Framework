@@ -1,4 +1,5 @@
 graphify-out/
 artifacts/
+.release/
 skills/
 .reference/wow-ui-source/
