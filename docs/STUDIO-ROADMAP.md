@@ -1,5 +1,7 @@
 # RGX Studio Roadmap
 
+Release candidate `v2.7.9` is unreleased; the published version is `v2.7.8`.
+
 ## Milestone Status
 
 RGX Studio is a **future, blocked milestone**, not current implementation work.

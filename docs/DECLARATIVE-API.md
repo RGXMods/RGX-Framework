@@ -1,5 +1,7 @@
 # Declarative API
 
+Release candidate `v2.7.9` is unreleased; the published version is `v2.7.8`.
+
 The authoring surface and human-readable **Simplicity Contract** for RGX addons.
 Evolution is additive-only: what you write today keeps working forever. The
 machine-checkable shape lives in

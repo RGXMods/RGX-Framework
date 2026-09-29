@@ -1,5 +1,7 @@
 # Changes
 
+Release candidate `v2.7.9` is unreleased; the published version is `v2.7.8`.
+
 ## Current Release
 
 ### [v2.7.8](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.8.md) - 2026-09-25
