@@ -44,9 +44,17 @@ local dd = Drops:CreateNestedDropdown(parent, {
 
     autoWidth = { minWidth = 200, leftInset = 10 }, -- auto-size the list frame
 
+    -- Optional BLU-derived retail button face; the same nested menu remains.
+    -- Omit for the client-default dropdown presentation.
+    triggerStyle = "retail",
+
     onButtonCreated = function(buttonFrame, item) end, -- after each button is rendered
 })
 ```
+
+`Fonts:CreateFontDropdown` and `Fonts:CreateFontSettingControl` pass
+`triggerStyle` through to this factory. The visible retail trigger is styled
+with the current RGXDesign theme; the existing native menu handles selection.
 
 ### Item schema
 

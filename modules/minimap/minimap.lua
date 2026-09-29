@@ -49,7 +49,7 @@
         btn.frame              — the raw WoW Button frame
 --]]
 
-local _, Minimap = ...
+local Minimap = {}
 local RGX = _G.RGXFramework
 
 if not RGX then
@@ -367,6 +367,12 @@ function Minimap:Create(opts)
     frame:SetScript("OnLeave", function()
         if GameTooltip then GameTooltip:Hide() end
     end)
+
+    -- If an addon changes a line after creation, OnEnter and post-click calls
+    -- re-render it from the current binding rather than stale literal text.
+    function btn:RefreshTooltip()
+        if type(ShowTooltip) == "function" then ShowTooltip(self, opts) end
+    end
 
     frame:SetScript("OnClick", function(_, mouseButton)
         if frame.isDragging then return end

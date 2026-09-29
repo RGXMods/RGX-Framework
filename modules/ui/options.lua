@@ -301,6 +301,11 @@ local function CreateOptionsPanel(UI, opts)
 
     local tAddonName = opts.addonName or addonName
     local tabs       = opts.tabs or {}
+    local singlePage = #tabs == 0 and type(opts.content) == "function"
+    if singlePage then
+        -- Reuse the existing lazy content lifecycle without drawing a tab row.
+        tabs = { { text = "", content = opts.content } }
+    end
     local maxPerRow  = opts.maxPerRow or 6
 
     _panelCounter = _panelCounter + 1
@@ -313,7 +318,7 @@ local function CreateOptionsPanel(UI, opts)
     panel:SetFrameStrata("DIALOG")
     panel:EnableMouse(true)
     local _sidebarIcon  = opts.icon or GetMeta(tAddonName, "IconTexture")
-    local _sidebarTitle = opts.title or tAddonName
+    local _sidebarTitle = opts.sidebarTitle or opts.title or tAddonName
     local _sidebarName  = _sidebarIcon
         and format("|T%s:16:16:0:0|t %s", _sidebarIcon, _sidebarTitle)
         or  _sidebarTitle
@@ -444,7 +449,7 @@ local function CreateOptionsPanel(UI, opts)
 
     -- ── Tab container ─────────────────────────────────────────────────────────
     local rowCount      = GetRowCount(tabs, maxPerRow)
-    local tabAreaHeight = GetTabContainerHeight(rowCount)
+    local tabAreaHeight = singlePage and 0 or GetTabContainerHeight(rowCount)
 
     local tabArea = CreateFrame("Frame", nil, container)
     tabArea:SetPoint("TOPLEFT",  tabAnchor, "BOTTOMLEFT",  0, -2)
@@ -454,6 +459,7 @@ local function CreateOptionsPanel(UI, opts)
     local tabBg = tabArea:CreateTexture(nil, "BACKGROUND")
     tabBg:SetAllPoints()
     tabBg:SetColorTexture(br, bg, bb, 0.60)
+    if singlePage then tabBg:Hide() end
 
     -- ── Build tabs and content frames ─────────────────────────────────────────
     for i, tabInfo in ipairs(tabs) do
@@ -464,6 +470,7 @@ local function CreateOptionsPanel(UI, opts)
             tabArea, tabInfo.text, i, row, col, panel, tabInfo.icon, addonKey
         )
         panel.tabs[i] = tabBtn
+        if singlePage then tabBtn:Hide() end
 
         -- Content frame for this tab
         local content = CreateFrame("Frame", nil, container, "BackdropTemplate")
@@ -609,7 +616,8 @@ end
                             if ok then
                                 content._built = true
                             else
-                                RGX:Debug("[RGXOptions] Tab build error: " .. tostring(err))
+                                RGX:Error("[RGXOptions] " .. tostring(tabInfo.text) .. " tab build failed: " .. tostring(err))
+                                ClearContent(content)
                             end
                         else
                             content._built = true
@@ -635,6 +643,12 @@ end
         end
     end
 
+    -- A consumer may show a preview-selected subpage inside the current tab.
+    -- Keep its content visible while clearing the tab-row active state.
+    function panel:ClearTabHighlight()
+        for _, tab in ipairs(self.tabs) do tab:SetActive(false) end
+    end
+
     function panel:InvalidateAllTabs()
         for _, content in ipairs(self.contents) do
             content._dirty = true
@@ -654,6 +668,7 @@ end
                         if type(tabInfo.content) == "function" then
                             local ok = pcall(tabInfo.content, CreateAddHelper(content))
                             content._built = ok == true
+                            if not ok then ClearContent(content) end
                         end
                     end
                 elseif type(content.Refresh) == "function" then

@@ -146,7 +146,7 @@ Fonts:SetDefault(name)         -- set the framework-wide default font name
 Fonts:GetDefault()             -- returns current default (initially "Inter-Regular")
 Fonts:SetDefaultSize(size)     -- set default size (initially 12)
 Fonts:SetDefaultFlags(flags)   -- set default flags (initially "")
-Fonts:SetAutoScale(enable)     -- enable auto-scaling based on UI scale
+Fonts:SetAutoScale(enable)     -- enable auto-scaling based on UI scale (default: off)
 ```
 
 ---
