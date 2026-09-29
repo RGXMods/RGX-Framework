@@ -51,19 +51,23 @@ function readToc(path) {
 }
 
 // Flavor names follow the convention checked by tools/ci/release-metadata-check.mjs:
-// mainline / classic / bcc / titan / cata / mists. Derived from the Interface
-// range so TOC bumps do not require editing a literal map.
+// mainline / classic / forever / bcc / wrath / titan / cata / mists. Ranges
+// mirror BigWigsMods/packager's toc_to_type classification so interface bumps
+// do not require editing a literal map.
 function flavorForInterface(interfaceValue) {
   const value = Number(interfaceValue);
   if (!Number.isInteger(value) || value < 10000) {
     fail(`unrecognized TOC Interface value "${interfaceValue}"`);
   }
+  if (value >= 11000 && value <= 11999) return "classic";
+  if (value >= 16000 && value <= 16999) return "forever";
+  if (value >= 20000 && value <= 20999) return "bcc";
+  if (value >= 30000 && value <= 30999) return "wrath";
+  if (value >= 38000 && value <= 38999) return "titan";
+  if (value >= 40000 && value <= 40999) return "cata";
+  if (value >= 50000 && value <= 50999) return "mists";
   if (value >= 100000) return "mainline";
-  if (value >= 50000) return "mists";
-  if (value >= 40000) return "cata";
-  if (value >= 30000) return "titan";
-  if (value >= 20000) return "bcc";
-  return "classic";
+  fail(`unrecognized TOC Interface value "${interfaceValue}"`);
 }
 
 // CurseForge gameVersionTypeID values (BigWigsMods/packager release.sh).
@@ -75,10 +79,13 @@ const CF_GAME_TYPE_ID = new Map([
   ["titan", 81212],
   ["cata", 77522],
   ["mists", 79434],
+  ["forever", 88568],
 ]);
 
-// Wago patch keys differ for three flavors (BigWigsMods/packager release.sh).
+// Wago patch keys (verified against https://addons.wago.io/api/data/game):
+// retail, classic, bc, wotlk, mop, cata, titan, forever.
 function wagoType(flavor) {
+  if (flavor === "mainline") return "retail";
   if (flavor === "bcc") return "bc";
   if (flavor === "wrath") return "wotlk";
   if (flavor === "mists") return "mop";
@@ -288,7 +295,13 @@ if (!existsSync(changelogFile)) fail(`changelog file does not exist: ${changelog
 const tocText = readToc(tocPath);
 const tocVersion = (tocField(tocText, "Version") ?? "").replace(/^v/, "");
 if (!tocVersion) fail(`${basename(tocPath)} declares no Version`);
-const addonName = basename(tocPath).replace(/\.toc$/, "");
+// Release names use the color-cleaned TOC Title (BigWigs parity, e.g. BLU
+// publishes as "Better Level-Up!"); fall back to the TOC file stem.
+const tocTitle = (tocField(tocText, "Title") ?? "")
+  .replace(/\|c[0-9a-fA-F]{8}/g, "")
+  .replace(/\|r/g, "")
+  .trim();
+const addonName = tocTitle || basename(tocPath).replace(/\.toc$/, "");
 const curseId = tocField(tocText, "X-Curse-Project-ID");
 const wagoId = tocField(tocText, "X-Wago-ID");
 const flavors = collectFlavors(tocPath);
