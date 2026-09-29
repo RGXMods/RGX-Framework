@@ -316,3 +316,11 @@ Before finishing, inspect the diff and run the applicable validation commands ab
 - Publishing integrations prohibited by the shared validation policy are retired and must not be restored.
 - The root `README.md` must remain detailed and project-specific. Narrow distribution edits must not replace or truncate installation, features, compatibility, usage, media, or support content.
 - Verify relative README assets. Do not overwrite newer compatibility facts with stale monorepo or history text.
+
+## Flavor-Specific Consumer Boundaries
+
+- Treat Retail, Classic, and Forever as distinct clients and addon products. Inspect each consumer's TOC, load list, runtime module registry, README, and actual client capabilities before suggesting a framework change or porting behavior. A shared addon name does not imply identical modules, option pages, tab counts, tab rows, or event sources.
+- `rgxmods/warcraft/BLU`, `rgxmods/warcraft/BLU_Forever`, and `rgxmods/warcraft/BLU_Classic` have different feature inventories and UI layouts. The Forever fork keeps only client-supported modules; its tabs and pages are intentionally distinct from Retail. The Classic addon uses Ace3 intentionally: do not claim it already depends on RGX-Framework or add that dependency as a metadata-only change.
+- `rgxmods/warcraft/SimpleQuestPlates`, `rgxmods/warcraft/SimpleQuestPlates_Classic`, and `rgxmods/warcraft/SimpleQuestPlates_Forever` have separate TOCs, compatibility paths, settings, and interface targets. Verify a fix in each flavor's own code and supported client; do not assume a copied layout or event handler is portable.
+- Keep RGX modules capability-gated at the framework boundary. Verify generated API signatures and shipped UI behavior for every affected flavor, including restricted values and combat-safe behavior. A missing feature is a capability difference, not a reason to register nonexistent events or synthesize unavailable modules.
+- For any cross-flavor change, enumerate affected products, compare their module inventories and tab/page specifications, run the framework's flavor checks, and record which clients were actually validated. Preserve each addon's own UI arrangement unless a separately verified requirement changes it.
