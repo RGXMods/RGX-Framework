@@ -7,7 +7,8 @@ The repo contains cooperating subprojects:
 * `core/`, `modules/` — WoW runtime
 * `schemas/rgx-addon.schema.json` — declarative contract
 * `tools/rgx-mcp/` — Node MCP server
-* `tools/ci/` — CI helpers
+* `tools/ci/` — CI helpers, deterministic package builder and checker
+* `tools/release/` — release publisher (GitHub/CurseForge/Wago)
 * `tools/wiki/` — docs → GitHub Wiki generator
 
 `RGX-Framework.xml` is the source of truth for runtime load order.
@@ -83,6 +84,48 @@ RGX:RegisterModule("example", Example, {
 ```
 
 Use the module registry/getters instead of relying directly on global aliases.
+
+## Design Thesis
+
+Make the bug unrepresentable. Most WoW addon maintenance is reactive: hunting
+deprecated APIs and taint in code that already shipped them. RGX-Framework is
+built so consumer addons cannot introduce those bug classes in the first place:
+no manual event frames, no raw `C_Timer`, no raw `SLASH_X`, all dispatch
+pcall-wrapped and failure-isolated, and frame registration deferred through
+combat lockdown. When designing a new subsystem, the test is not "is this
+convenient" but "does this make a whole class of WoW-specific bug impossible
+for the consumer to write." Do not describe `pcall` or arbitrary
+restricted-value handling as taint safety.
+
+Progressive disclosure, one vocabulary: every declarative key works bare with
+assumed arguments and accepts an advanced form when needed — simple addons stay
+one-liner simple, advanced addons remain possible, and the surface never grows
+a second API. Options layout is one composable vocabulary: panel → main page +
+tabs → tabs can be multi-paged → 1–2 column card grids → rows/cards holding the
+widgets; tabs/pages/rows/columns/cards are all the same kind of thing, never
+separate systems. If a caller needs an argument the bare form should have
+assumed, that is a framework bug.
+
+Positioning: RGX fills Ace3's place by being easier to consume, not by
+matching it library-for-library. The audit and the "does this belong" standard
+live in `docs/ACE3-ANALYSIS.md`; the DSL, the schema+MCP loop, and the RGX-Hello
+test suite are the differentiators.
+
+## rgx-mod Context (North Star)
+
+RGX-Framework serves two roles:
+
+1. Shared runtime for the entire RGX Mods addon suite — BLU,
+   SimpleQuestPlates, BattlePetUtility, EnhancedTravelersLog,
+   RemoveNameplateDebuffs, and the LevelUp sound-pack addons all declare
+   `RequiredDeps: RGX-Framework`. One load, one instance, shared by all.
+2. Foundation layer for `rgx-mod`, a WeakAuras replacement built on top of
+   this framework. Every subsystem that benefits current addons is also a
+   building block for rgx-mod's trigger/condition/display engine.
+
+Build priority rule: build a subsystem when it benefits a current maintained
+addon AND rgx-mod. If it only benefits rgx-mod with no current addon use,
+defer it.
 
 ## Consumer API
 
@@ -295,6 +338,8 @@ Never:
 * change `.pkgmeta`, release workflow, version, or release metadata unless the task requires it
 * perform unrelated refactors or repository-wide formatting during a targeted task
 * edit generated wiki output directly
+* add modules that no current addon uses
+* enable dormant modules without verifying `Init()`/`TryInit` wiring in `initialization.lua`
 
 ## Git
 
@@ -310,6 +355,7 @@ Before finishing, inspect the diff and run the applicable validation commands ab
 
 - The GitLab project under `rgxmods/warcraft` is authoritative. Normal work belongs on task branches and must merge through GitLab merge requests, never directly to the default branch.
 - Shared CI is included from `rgxmods/warcraft/RGX-Framework` at `/.gitlab/ci/addon.yml`; validation must pass before publishing to the GitHub mirror.
+- Releases are built and published by the in-house packager: `tools/ci/package-manifest-check.mjs` builds and inspects the deterministic runtime archive; `tools/release/publish-release.mjs` creates the GitHub release and uploads to CurseForge/Wago. BigWigsMods/packager and its `.release/` staging directory are retired.
 - The GitHub `RGXMods` repository is downstream distribution, not development authority.
 - Keep GitLab and GitHub release tags identical, and use protected GitLab release tags.
 - Preserve any existing working Wago connection and ID exactly. Never create a new Wago connection without explicit user direction.
