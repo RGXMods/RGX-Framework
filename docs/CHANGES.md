@@ -1,8 +1,8 @@
 # Changes
 
-## Unreleased Candidate
+## Current Release
 
-### v2.7.8 (candidate, based on published v2.7.7)
+### [v2.7.8](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.8.md) - 2026-09-25
 
 - RGXDesign restyle taking the BugTabs aesthetic: dark navy rounded
   nine-slice panels (12px corners via new `media/panel_rounded.tga`),
@@ -16,8 +16,10 @@
 - New `Design:WithTheme(theme, fn)` scoped theme helper: an addon can
   apply its brand color while building its panel, and RGXDesign
   restores its defaults afterwards.
-
-## Current Release
+- Options panel tab buttons honor `panel.theme` at runtime: hover and
+  active states resolve the panel brand `primary` instead of the
+  shared RGXDesign default, and the build-time `Design:SetTheme` is
+  restored after construction.
 
 ### [v2.7.7](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.7.md) - 2026-09-21
 

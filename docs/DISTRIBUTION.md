@@ -6,31 +6,24 @@ World of Warcraft addon archive.
 
 ## Current Release
 
-[`v2.7.7`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.7)
+[`v2.7.8`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.8)
 publishes exactly two GitHub assets:
 
 | Asset | Purpose |
 |---|---|
-| `RGX-Framework-v2.7.7.zip` | The only product archive; install this addon |
+| `RGX-Framework-v2.7.8.zip` | The only product archive; install this addon |
 | `release.json` | BigWigs packager metadata for automation |
 
-The inspected `v2.7.7` ZIP contains one `RGX-Framework/` root and exactly 101
+The inspected `v2.7.8` ZIP contains one `RGX-Framework/` root and exactly 102
 runtime files. GitHub records the digest on the release asset. To query it with
 GitHub CLI:
 
 ```bash
-gh release view v2.7.7 --repo DonnieDice/RGX-Framework --json assets \
-  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.7.zip") | .digest'
+gh release view v2.7.8 --repo DonnieDice/RGX-Framework --json assets \
+  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.8.zip") | .digest'
 ```
 
-CurseForge is the currently configured addon service.
-
-## Release Candidate
-
-`v2.7.8` is the unreleased candidate. It restyles RGXDesign with rounded
-nine-slice panels and ships one new texture (`media/panel_rounded.tga`), so
-the packaged `RGX-Framework-v2.7.8.zip` will contain exactly 102 runtime
-files — one more than v2.7.7, which shipped exactly 101. Wago remains skipped
+CurseForge is the currently configured addon service. Wago remains skipped
 because this project has no existing Wago connection; new connections are not
 added automatically.
 
@@ -113,6 +106,38 @@ product. The builder fixes ZIP timestamps, entry order, permissions, and
 compression settings. The manifest records every runtime source digest, source
 revision, and `sourceDirty` state. `artifacts/` and `.release/` are generated and
 ignored by Git.
+
+## Contract Bundle
+
+The versioned contract bundle pins the declarative contract surface
+(schema, declarative API docs, derived API catalog, conformance vectors)
+separately from the player archive so MCP, Studio, and other authoring
+tools can pin an exact revision without copying RGX semantics.
+
+```bash
+cd tools/ci
+npm ci
+npm run contract-bundle-check   # verify only
+npm run contract-bundle-build   # verify + emit to artifacts/
+```
+
+Generated files:
+
+```text
+RGX-Framework-X.Y.Z-contract.zip
+RGX-Framework-X.Y.Z-contract.manifest.json
+RGX-Framework-X.Y.Z-contract.sha256
+```
+
+Bundle metadata (format version, framework version, flavor, source
+revision, per-file SHA-256 digests) is generated from `RGX-Framework.toc`
+and git state, never hand-repeated. Rebuilding the same revision produces
+byte-identical outputs. Consumers must check `formatVersion` and reject
+unknown versions.
+
+The `contract:bundle` CI job (`.gitlab/ci/addon.yml`) builds the bundle,
+verifies every manifest hash, and confirms a second build is
+byte-identical on the default branch, tags, and merge requests.
 
 ## Addon-Service Description
 

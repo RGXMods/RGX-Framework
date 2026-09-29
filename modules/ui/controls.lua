@@ -52,6 +52,15 @@ UI.backdrop = {
     insets = {left = 0, right = 0, top = 0, bottom = 0}
 }
 
+-- Apply the framework default font to a label, preserving size/flags.
+local function ApplyDefaultFont(fs)
+    local Fonts = _G.RGXFonts
+    if not (Fonts and type(Fonts.Apply) == "function" and type(Fonts.GetDefault) == "function") then return end
+    if not (fs and fs.GetFont) then return end
+    local _, size, flags = fs:GetFont()
+    pcall(Fonts.Apply, Fonts, fs, Fonts:GetDefault(), size, flags)
+end
+
 function UI:CreateStatusBarDropdown(parent, options)
     options = options or {}
 
@@ -359,7 +368,18 @@ function UI:CreateSlider(parent, options)
 
 	apply(storage[key] or default)
 
-	container.SetValue = apply
+	container.SetValue = function(first, maybe)
+		-- Support both control:SetValue(v) and control.SetValue(v)
+		local value
+		if maybe ~= nil and first == container then
+			value = maybe
+		elseif maybe == nil then
+			value = first
+		else
+			value = maybe
+		end
+		apply(value)
+	end
 	container.GetValue = function() return storage[key] or default end
 
 	return container
@@ -507,72 +527,6 @@ function UI:CreateVolumeSlider(parent, options)
 end
 
 --[[============================================================================
-    ON/OFF SWITCH
-    A single db-bound boolean control for a top-level addon state.
-    Other checkbox options can continue using CreateToggle/CheckButton.
-============================================================================]]
-
-function UI:CreateSwitch(parent, options)
-    options = options or {}
-    local storage = options.storage or {}
-    local key = options.key or "enabled"
-    local default = options.default ~= false
-    local D = RGX:GetDesign()
-    local frame = CreateFrame("Button", nil, parent)
-    frame:SetSize(options.width or 70, 24)
-    frame:RegisterForClicks("LeftButtonUp")
-
-    local button = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    button:EnableMouse(false)
-    button:SetSize(46, 22)
-    button:SetPoint("LEFT", frame, "LEFT", 0, 0)
-    button:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    local knob = button:CreateTexture(nil, "ARTWORK")
-    knob:SetSize(16, 16)
-    knob:SetColorTexture(D:Unpack("text"))
-    local label = self:CreateLabel(frame, {
-        text = options.label or "",
-        size = "normal",
-    })
-    label:SetPoint("LEFT", button, "RIGHT", 8, 0)
-
-    local function value()
-        local stored = storage[key]
-        return stored == nil and default or stored == true
-    end
-    function frame:Refresh()
-        local on = value()
-        local r, g, b = D:Unpack(on and "primary" or "track")
-        button:SetBackdropColor(r, g, b, 0.95)
-        button:SetBackdropBorderColor(D:Unpack("border"))
-        knob:ClearAllPoints()
-        knob:SetPoint(on and "RIGHT" or "LEFT", button, on and "RIGHT" or "LEFT",
-            on and -3 or 3, 0)
-        if options.label == "" then label:SetText(on and "On" or "Off") end
-        frame:SetWidth(math.max(options.width or 70, 54 + label:GetStringWidth() + 4))
-    end
-    function frame:GetChecked() return value() end
-    function frame:SetChecked(on)
-        storage[key] = on == true
-        self:Refresh()
-    end
-    frame:SetScript("OnClick", function()
-        local on = not value()
-        storage[key] = on
-        frame:Refresh()
-        if type(options.onChange) == "function" then options.onChange(on) end
-    end)
-    frame.button = button
-    frame.label = label
-    frame:Refresh()
-    return frame
-end
-
---[[============================================================================
 TOGGLE CONTROL
 ============================================================================]]
 
@@ -659,6 +613,7 @@ function UI:CreateLabel(parent, options)
     else
         label:SetFontObject("GameFontNormal")
     end
+    ApplyDefaultFont(label)
     
     local colorKeys = {
         normal = "text",
@@ -875,6 +830,178 @@ function UI:CreatePreviewFrame(parent, options)
     frame.preview.bg:SetColorTexture(D:Unpack("background"))
     
     return frame
+end
+
+--[[============================================================================
+    SWITCH — sliding on/off control (BLU module-page style)
+
+    UI:CreateSwitch(parent, options)
+    options:
+        key      storage key (when storage given)
+        label    text shown left of the switch
+        default  default state when storage has no value (default true)
+        storage  settings table (optional; without it the switch is stateless
+                 and reports via onChange)
+        onChange function(enabled)
+    Returns a container with .switchFrame / .toggle / .label / .Refresh and
+    container.checkbox (a Button emulating GetChecked) for compatibility.
+============================================================================]]
+
+function UI:CreateSwitch(parent, options)
+    options = options or {}
+    local D = RGX:GetDesign()
+    local pr, pg, pb = 0.02, 0.87, 0.38 -- green-ish; refined by theme below
+    if D then pr, pg, pb = D:Unpack("success") end
+    local br, bg_, bb = 0.30, 0.30, 0.30
+    if D then br, bg_, bb = D:Unpack("border") end
+
+    local container = CreateFrame("Button", nil, parent)
+    container:SetSize(200, 22)
+    container:RegisterForClicks("LeftButtonUp")
+
+    -- Status text (right of label area, matches BLU module toggles)
+    container.label = self:CreateLabel(container, {
+        text = options.label or "",
+        size = "small",
+    })
+    container.label:SetPoint("LEFT", 0, 0)
+
+    local status = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    status:SetPoint("RIGHT", container, "RIGHT", -52, 0)
+    ApplyDefaultFont(status)
+    container.status = status
+
+    -- Track
+    local switchFrame = CreateFrame("Frame", nil, container)
+    switchFrame:SetSize(44, 20)
+    switchFrame:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+    container.switchFrame = switchFrame
+
+    local switchBg = switchFrame:CreateTexture(nil, "BACKGROUND")
+    switchBg:SetAllPoints()
+    switchBg:SetTexture("Interface\\Buttons\\WHITE8x8")
+
+    -- Thumb
+    local toggle = CreateFrame("Frame", nil, switchFrame)
+    toggle:SetSize(18, 18)
+    toggle:EnableMouse(false)
+    container.toggle = toggle
+
+    local toggleBg = toggle:CreateTexture(nil, "ARTWORK")
+    toggleBg:SetAllPoints()
+    toggleBg:SetTexture("Interface\\Buttons\\WHITE8x8")
+    toggleBg:SetVertexColor(0.92, 0.92, 0.92, 1)
+
+    local storage   = options.storage
+    local key       = options.key
+    local default   = options.default
+    if default == nil then default = true end
+    local onChange  = options.onChange or function() end
+    if not (storage and key) then
+        container._enabled = (default == true)
+    end
+
+    local function IsEnabled()
+        if storage and key then
+            local v = storage[key]
+            if v == nil then return default end
+            return v and true or false
+        end
+        return container._enabled == true
+    end
+
+    function container:Refresh()
+        local enabled = IsEnabled()
+        toggle:ClearAllPoints()
+        if enabled then
+            toggle:SetPoint("RIGHT", switchFrame, "RIGHT", -1, 0)
+            switchBg:SetVertexColor(pr, pg, pb, 1)
+            status:SetText("|cff00ff00ON|r")
+        else
+            toggle:SetPoint("LEFT", switchFrame, "LEFT", 1, 0)
+            switchBg:SetVertexColor(br, bg_, bb, 1)
+            status:SetText("|cffff0000OFF|r")
+        end
+    end
+
+    container:SetScript("OnClick", function()
+        local nextState = not IsEnabled()
+        if storage and key then
+            storage[key] = nextState
+        else
+            container._enabled = nextState
+        end
+        container:Refresh()
+        onChange(nextState)
+    end)
+
+    -- Compatibility shim so generic refresh code can SetChecked/GetChecked
+    local fake = { checked = IsEnabled() }
+    function fake:GetChecked()  return IsEnabled() end
+    function fake:SetChecked(s) if storage and key then storage[key] = s and true or false else container._enabled = s and true or false end; container:Refresh() end
+    function fake:SetScript() end
+    container.checkbox = fake
+
+    container:Refresh()
+    return container
+end
+
+--[[============================================================================
+    COLUMNS — centered multi-column page layout
+
+    UI:CreateColumns(parent, count, options)
+    options:
+        colWidth  width per column (default: share the parent width evenly)
+        gap       horizontal gap between columns (default 14)
+        margin    extra inset from the parent edges when auto-sizing (default 0)
+
+    Columns are centered as a block inside the parent, so two-column pages
+    sit properly centered instead of hugging the edges.
+    Returns one frame per column (unpack into locals).
+============================================================================]]
+
+function UI:CreateColumns(parent, count, options)
+    options = options or {}
+    count = count or 2
+    local gap = options.gap or 14
+    local margin = options.margin or 0
+    local fixedWidth = options.colWidth
+
+    local columns = {}
+    for i = 1, count do
+        columns[i] = CreateFrame("Frame", nil, parent)
+    end
+
+    -- Column width is derived from the parent, which may be anchor-sized and
+    -- therefore report 0 until layout resolves. Recompute on size changes so
+    -- the page settles at the right width instead of staying collapsed.
+    local function layout()
+        local colWidth = fixedWidth
+        if not colWidth then
+            local w = (parent.GetWidth and parent:GetWidth()) or 0
+            if w <= 0 then
+                colWidth = 360
+            else
+                colWidth = math.floor((w - (count - 1) * gap - margin * 2) / count)
+                if colWidth < 80 then colWidth = 80 end
+            end
+        end
+        for i = 1, count do
+            local col = columns[i]
+            col:SetWidth(colWidth)
+            local xCenter = (i - 0.5 - count / 2) * (colWidth + gap)
+            col:ClearAllPoints()
+            col:SetPoint("TOP", parent, "TOP", xCenter, 0)
+            col:SetPoint("BOTTOM", parent, "BOTTOM", xCenter, 0)
+        end
+    end
+    layout()
+
+    if parent.HookScript then
+        parent:HookScript("OnSizeChanged", layout)
+    end
+
+    return unpack(columns)
 end
 
 --[[============================================================================

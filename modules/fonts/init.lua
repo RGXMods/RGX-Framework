@@ -166,10 +166,8 @@ function Fonts:Init()
 		end
 	end
 
-	if self:IsAvailable("Inter-Regular") then
+	if not self:SetDefault("FrizQuadrata") then
 		self:SetDefault("Inter-Regular")
-	else
-		self:SetDefault("FrizQuadrata")
 	end
 
 	RGX:RegisterModule("fonts", self)
