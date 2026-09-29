@@ -1,6 +1,5 @@
 # Auras - `RGXAuras`
 
-Release candidate `v2.7.9` is unreleased; the published version is `v2.7.8`.
 
 `RGXAuras` is the framework's accessible-only aura boundary. It checks
 Blizzard's aura-specific and generic access predicates before querying,

@@ -1,7 +1,5 @@
 # Distribution
 
-Release candidate `v2.7.9` is unreleased; the published version is `v2.7.8`.
-The candidate package contains exactly 104 runtime files; the published archive retains its documented inventory.
 
 RGX-Framework publishes one product: the WoW addon framework. Node tooling,
 schemas, documentation, references, and future Studio code never belong in the
@@ -9,21 +7,21 @@ World of Warcraft addon archive.
 
 ## Current Release
 
-[`v2.7.8`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.8)
+[`v2.7.9`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.9)
 publishes exactly two GitHub assets:
 
 | Asset | Purpose |
 |---|---|
-| `RGX-Framework-v2.7.8.zip` | The only product archive; install this addon |
+| `RGX-Framework-v2.7.9.zip` | The only product archive; install this addon |
 | `release.json` | BigWigs packager metadata for automation |
 
-The inspected `v2.7.8` ZIP contains one `RGX-Framework/` root and exactly 102
-runtime files. GitHub records the digest on the release asset. To query it with
+The `v2.7.9` ZIP is expected to contain one `RGX-Framework/` root and exactly 104
+runtime files. Verify the asset and digest after publishing with
 GitHub CLI:
 
 ```bash
-gh release view v2.7.8 --repo DonnieDice/RGX-Framework --json assets \
-  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.8.zip") | .digest'
+gh release view v2.7.9 --repo RGXMods/RGX-Framework --json assets \
+  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.9.zip") | .digest'
 ```
 
 CurseForge is the currently configured addon service. Wago remains skipped
