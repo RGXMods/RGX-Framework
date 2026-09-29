@@ -6,6 +6,12 @@ The UI module (`RGXUI`) provides widget factories for common interface controls 
 
 ## Widget Factories
 
+`UI:CreateSwitch(parent, opts)` returns a db-bound on/off button. Its entire
+element, including the label and surrounding hit area, toggles on click; the
+smaller inset square is visual only. `UI:CreateCheckbox(parent, text)` returns
+an unbound 18px checkbox row with `.checkbox` and `.label`, for consumers that
+manage their own state callbacks.
+
 ### `UI:CreateSlider(parent, opts)` → `Frame`
 
 Create a horizontal slider control bound to a storage table — it saves **and restores** its value.
@@ -214,6 +220,45 @@ Font dropdown + reset button bound to `storage[key]`. Delegates to the Fonts mod
 ---
 
 ## Options Panel Builder
+
+### `UI:CreateScrollPage(parent, height)` → `canvas, scrollFrame`
+
+Create a clipped, scrollable canvas for option cards taller than the tab's
+visible area. Position sections on the canvas; the canvas tracks the scroll
+frame width. Classic-era's `UIPanelScrollFrameTemplate` supplies the scrollbar.
+
+```lua
+local page = UI:CreateScrollPage(content, 620)
+local section = UI:CreateSection(page, { title = "General", height = 140 })
+```
+
+`UI:CreateSection` uses the same `RGXDesign:CreateSection` frame and
+brand-bordered header that BLU uses; RGXUI handles geometry while RGXDesign owns textures
+and themed colors. After adding controls to `section.content`, call
+`section:FitContent()` to measure visible direct children and FontStrings
+and size the card to them. Stacked cards anchored to its bottom follow the
+resulting height. `UI:CreateColumns(parent, 2, { titles = { "Options", "Layout" } })`
+returns card content frames; call `left.card:FitContent()` and
+`right.card:FitContent()` once both columns are built.
+
+`UI:CreateCard(parent, { title = "Font" })` provides a section with a flow
+layout. Anchor stacked cards to the previous card's bottom so `FitContent()`
+or `AutoHeight()` can reflow the column. Use
+`UI:CreateColumns(parent, 2, { card = false })` for plain column hosts when
+the cards themselves supply the section borders.
+
+`UI:CreateButtonGroup(parent, { "Left", "Right" }, { y = -8 })` centers a
+styled button pair in its parent (default 84px buttons, 8px gap). Buttons
+are available as `group.buttons[1]` and `group.buttons[2]`.
+
+`UI:AnchorRowReset(row, reset, control)` puts every reset at the same right
+inset (8px) and centers it vertically on the control rather than its label.
+Framework sliders and font dropdowns use this automatically.
+
+For a single informational page without tab chrome, pass `content = function(frame)
+... end` instead of `tabs`. Existing `tabs = { ... }` panels retain their tab
+row and page lifecycle. The framework's AddOns settings category uses this
+single-page form to link to RGX-Hello and list the available modules and tools.
 
 ### `UI:CreateOptionsPanel(name, opts)` → `panel`
 
