@@ -10,7 +10,7 @@ on:
 env:
   CF_API_KEY: ${{ secrets.CF_API_KEY }}
   WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
-  GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
 jobs:
@@ -177,10 +177,12 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Build release archive for inspection
-        uses: BigWigsMods/packager@v2
-        with:
-          args: -d
+          # The in-house publisher reads the release notes from this file.
+          printf '%s\n' "$changelog_content" > "${RUNNER_TEMP}/release-notes.md"
+
+      - name: Build release archive
+        working-directory: tools/ci
+        run: npm run package-build
 
       - name: Inspect release archive before upload
         id: preflight
@@ -188,25 +190,24 @@ jobs:
         run: |
           version="${{ steps.version.outputs.version }}"
           runtime_files="$(node -p "require('./release-snapshot.json').runtimeFiles")"
-          archive="../../.release/RGX-Framework-v${version}.zip"
+          archive="../../artifacts/RGX-Framework-v${version}.zip"
           node package-manifest-check.mjs ../.. --inspect "$archive" --expected-count "$runtime_files"
 
           actual_sha="$(sha256sum "$archive" | awk '{ print toupper($1) }')"
-          echo "sha256=$actual_sha" >> "$GITHUB_OUTPUT"
-          echo "runtime_files=$runtime_files" >> "$GITHUB_OUTPUT"
+          echo "sha256=$actual_sha" >> $GITHUB_OUTPUT
+          echo "runtime_files=$runtime_files" >> $GITHUB_OUTPUT
 
-      - name: Package and Release
-        uses: BigWigsMods/packager@v2
-        with:
-          # Reuse the inspected package directory instead of copying source again.
-          args: -c -o
-
-      - name: Upload Notes
+      - name: Publish Release
         shell: bash
         run: |
-          echo "GitHub release asset creation is handled by BigWigsMods/packager."
-          grep -q '^## X-Curse-Project-ID:' RGX-Framework.toc && echo "CurseForge: configured" || echo "CurseForge: skipped (no project ID)"
-          grep -q '^## X-Wago-ID:' RGX-Framework.toc && echo "Wago: configured" || echo "Wago: skipped (no project ID)"
+          version="${{ steps.version.outputs.version }}"
+          node tools/release/publish-release.mjs \
+            --toc RGX-Framework.toc \
+            --archive "artifacts/RGX-Framework-v${version}.zip" \
+            --tag "${GITHUB_REF_NAME}" \
+            --release-type "${{ steps.release_type.outputs.type }}" \
+            --changelog-file "${RUNNER_TEMP}/release-notes.md" \
+            --out artifacts
 
       - name: Verify published release assets
         shell: bash

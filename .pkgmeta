@@ -1,26 +1,27 @@
 # RGX-Framework Package Metadata
-# Used by BigWigsMods packager (GitHub Actions release workflow)
+# Exclusion policy for the in-house release packager
+# (tools/ci/package-manifest-check.mjs + tools/release/publish-release.mjs).
 
 package-as: RGX-Framework
 
 # Files and folders excluded from the packaged zip.
-# NOTE: directory entries must NOT have a trailing slash — the packager's
-# matcher treats "docs/" and "docs" differently, and the slash form silently
-# fails (verified against the v2.2.0 zip, which leaked docs/schemas/tools).
+# NOTE: directory entries must NOT have a trailing slash — the legacy
+# BigWigs matcher treated "docs/" and "docs" differently, and the slash form
+# silently failed (verified against the v2.2.0 zip, which leaked
+# docs/schemas/tools). The in-house packager matches both forms.
 # Fonts are committed under media/fonts/ — no download step is required.
 ignore:
   - .gitignore
   - .mcp.json
   - AGENTS.md
-  - CLAUDE.md
   - README.md
   - docs
   - schemas
+  - skills
   - tools
   - tests
   - .github
   - .reference
-  - .release
   - artifacts
   - graphify-out
   - .agents
