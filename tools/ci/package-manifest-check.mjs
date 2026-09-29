@@ -24,7 +24,7 @@ const FORBIDDEN_PLAYER_EXTENSIONS = new Set([
   ".sh", ".ps1", ".bat", ".cmd",
 ]);
 const FORBIDDEN_PLAYER_SEGMENTS = new Set([
-  ".git", ".github", ".reference", "docs", "graphify-out", "node_modules",
+  ".git", ".github", ".reference", ".release", "docs", "graphify-out", "node_modules",
   "schemas", "src-tauri", "tools", "skills",
 ]);
 
@@ -264,7 +264,7 @@ function validatePkgmeta() {
   const pkgmeta = text(".pkgmeta");
   const failures = [];
   if (/^\s*license\s*:/m.test(pkgmeta)) failures.push(".pkgmeta uses unsupported 'license'; keep tracked LICENSE.txt or use license-output");
-  for (const path of ["tools", "docs", "schemas", "skills", ".reference", "artifacts", "graphify-out", "media/kiwi.gif", "media/logo.png"]) {
+  for (const path of ["tools", "docs", "schemas", "skills", ".reference", ".release", "artifacts", "graphify-out", "media/kiwi.gif", "media/logo.png"]) {
     if (!new RegExp(`^\\s*- ${path.replace(".", "\\.")}\\s*$`, "m").test(pkgmeta)) failures.push(`.pkgmeta must exclude ${path}`);
   }
   if (/tools\/rgx-mcp intentionally ships|ships in the packaged zip/i.test(pkgmeta)) failures.push(".pkgmeta must not describe developer tooling as player payload");
