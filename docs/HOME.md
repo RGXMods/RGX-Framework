@@ -1,5 +1,7 @@
 # RGX-Framework
 
+Release candidate `v2.7.9` is unreleased; the published version is `v2.7.8`.
+
 **A modern WoW addon framework — one dependency, everything included.**
 
 RGX-Framework is a single `RequiredDeps` entry that provides a declarative addon front door, events, timers, hooks, combat queueing, slash commands, saved-variable profiles, fonts, colors, a color picker, textures, dropdowns, UI controls, a theming system, tooltips, aura scanning, minimap buttons, sound playback, DataBroker support, and more. No embedding. No version conflicts. No library chains.
