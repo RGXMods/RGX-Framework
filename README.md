@@ -1,6 +1,5 @@
 # RGX-Framework
 
-Release candidate `v2.7.9` is unreleased; the latest published release is `v2.7.8`.
 
 **One dependency. Everything your addon suite needs.**
 
@@ -14,7 +13,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 
 ## Quick Start
 
-**Latest published release:** [`v2.7.8`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.8)
+**Latest published release:** [`v2.7.9`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.9)
 
 **1. Declare the dependency:**
 
@@ -244,7 +243,7 @@ RGX Studio. RGX-Framework publishes only the framework addon package. See
 
 ## Compatibility
 
-- **Latest published release:** [`v2.7.8`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.8)
+- **Latest published release:** [`v2.7.9`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.9)
 
 - **Clients:** Retail `120100`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
 - **Distribution:** one runtime-only addon package; see [Distribution](docs/DISTRIBUTION.md)
