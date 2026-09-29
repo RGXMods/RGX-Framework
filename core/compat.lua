@@ -209,6 +209,19 @@ local function SecretPredicate(name, ...)
     return result
 end
 
+-- A client is secret-capable only when it actually ships the secret-value
+-- machinery. Clients without it (the 4.4.2 Cataclysm contract, the WoW Forever
+-- beta) cannot produce secret values at all.
+local function SecretMachineryPresent()
+    if type(canaccessvalue) == "function"
+        or type(issecretvalue) == "function"
+        or type(canaccesstable) == "function"
+        or type(issecrettable) == "function" then
+        return true
+    end
+    return type(C_Secrets) == "table"
+end
+
 function RGX.API.HasSecretRestrictions()
     local restricted = SecretPredicate("HasSecretRestrictions")
     if type(restricted) == "boolean" then
@@ -217,6 +230,13 @@ function RGX.API.HasSecretRestrictions()
 
     -- The supported 4.4.2 Cataclysm contract predates secret values entirely.
     if RGX.isCata then
+        return false
+    end
+
+    -- docs/AURAS.md: a contract with no secret-value system preserves
+    -- unrestricted behavior; only an unknown or partially supported
+    -- secret-capable environment fails closed.
+    if not SecretMachineryPresent() then
         return false
     end
     return nil
