@@ -1,5 +1,8 @@
 # Distribution
 
+Release candidate `v2.7.9` is unreleased; the published version is `v2.7.8`.
+The candidate package contains exactly 104 runtime files; the published archive retains its documented inventory.
+
 RGX-Framework publishes one product: the WoW addon framework. Node tooling,
 schemas, documentation, references, and future Studio code never belong in the
 World of Warcraft addon archive.
