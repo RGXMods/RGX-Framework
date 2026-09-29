@@ -21,10 +21,11 @@ const FIXED_MTIME = new Date(1980, 0, 1, 0, 0, 0);
 const FORBIDDEN_PLAYER_EXTENSIONS = new Set([
   ".c", ".cc", ".cpp", ".cs", ".go", ".h", ".hpp", ".java", ".js",
   ".jsx", ".json", ".mjs", ".cjs", ".py", ".rs", ".ts", ".tsx",
+  ".sh", ".ps1", ".bat", ".cmd",
 ]);
 const FORBIDDEN_PLAYER_SEGMENTS = new Set([
   ".git", ".github", ".reference", "docs", "graphify-out", "node_modules",
-  "schemas", "src-tauri", "tools",
+  "schemas", "src-tauri", "tools", "skills",
 ]);
 
 const args = process.argv.slice(2);
@@ -156,7 +157,7 @@ function artifactMetadata(runtimeFiles) {
     wowInterface,
     supportedFlavors: ["retail", "classic-era", "tbc", "wrath", "cata", "mists"],
     runtime: {
-      archive: `RGX-Framework-${version}.zip`,
+      archive: `RGX-Framework-v${version}.zip`,
       root: RUNTIME_ROOT,
       files: inventory(runtimeFiles, RUNTIME_ROOT),
     },
@@ -263,7 +264,7 @@ function validatePkgmeta() {
   const pkgmeta = text(".pkgmeta");
   const failures = [];
   if (/^\s*license\s*:/m.test(pkgmeta)) failures.push(".pkgmeta uses unsupported 'license'; keep tracked LICENSE.txt or use license-output");
-  for (const path of ["tools", "docs", "schemas", ".reference", ".release", "artifacts", "graphify-out", "media/kiwi.gif", "media/logo.png"]) {
+  for (const path of ["tools", "docs", "schemas", "skills", ".reference", "artifacts", "graphify-out", "media/kiwi.gif", "media/logo.png"]) {
     if (!new RegExp(`^\\s*- ${path.replace(".", "\\.")}\\s*$`, "m").test(pkgmeta)) failures.push(`.pkgmeta must exclude ${path}`);
   }
   if (/tools\/rgx-mcp intentionally ships|ships in the packaged zip/i.test(pkgmeta)) failures.push(".pkgmeta must not describe developer tooling as player payload");
@@ -297,10 +298,10 @@ function writeArtifacts(metadata, runtimeZip) {
   const artifacts = {
     [metadata.runtime.archive]: runtimeZip,
   };
-  const manifestName = `RGX-Framework-${metadata.frameworkVersion}.manifest.json`;
+  const manifestName = `RGX-Framework-v${metadata.frameworkVersion}.manifest.json`;
   const manifest = Buffer.from(JSON.stringify(metadata, null, 2) + "\n");
   artifacts[manifestName] = manifest;
-  const checksumsName = `RGX-Framework-${metadata.frameworkVersion}.sha256`;
+  const checksumsName = `RGX-Framework-v${metadata.frameworkVersion}.sha256`;
   const checksums = Buffer.from(checksumText(artifacts));
   artifacts[checksumsName] = checksums;
   for (const [name, data] of Object.entries(artifacts)) writeFileSync(join(options.out, name), data);
