@@ -1,8 +1,14 @@
 # Changes
 
-Release candidate `v2.7.9` is unreleased; the published version is `v2.7.8`.
-
 ## Current Release
+
+### [v2.7.9](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.9.md) - 2026-09-29
+
+- Hardened client metadata compatibility checks when APIs are unavailable.
+- Applied framework accent borders to section headers.
+- Documented flavor-specific consumer module and options boundaries.
+
+## Recent Releases
 
 ### [v2.7.8](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.8.md) - 2026-09-25
 
@@ -48,8 +54,6 @@ Release candidate `v2.7.9` is unreleased; the published version is `v2.7.8`.
   framework startup output to one gated, metadata-derived line.
 - Added Lua 5.1 runtime coverage for persistence, command confirmations,
   declarative welcome behavior, prefix formatting, and startup deduplication.
-
-## Recent Releases
 
 ### [v2.7.3](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.3.md) - 2026-08-22
 
