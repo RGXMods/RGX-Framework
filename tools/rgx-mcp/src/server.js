@@ -20,8 +20,13 @@ import luaparse from "luaparse";
 import { readFileSync, readdirSync, lstatSync } from "node:fs";
 import { join, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isDeepStrictEqual } from "node:util";
+import { createDefinitionEngine } from "../../contract/definition.mjs";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
+const definitionSchema = JSON.parse(readFileSync(join(HERE, "../../../schemas/rgx-definition.schema.json"), "utf8"));
+const { normalizeDefinition, importDefinition, exportDefinition, createDefinitionSession }
+  = createDefinitionEngine(definitionSchema);
 // tools/rgx-mcp/src/ -> the framework repo root is three levels up
 const FRAMEWORK = resolve(
   process.env.RGX_FRAMEWORK_PATH ?? join(HERE, "..", "..", "..")
@@ -482,6 +487,41 @@ function generateAddonLua(spec) {
 // ── Server ────────────────────────────────────────────────────────────────────
 
 const server = new McpServer({ name: "rgx-mcp", version: "0.1.0" });
+
+function selectedDefinitionSchema() {
+  const selected = JSON.parse(frameworkFile("schemas/rgx-definition.schema.json"));
+  if (!isDeepStrictEqual(selected, definitionSchema)) {
+    throw new Error("Definition engine does not match the selected framework contract");
+  }
+  return selected;
+}
+
+server.tool(
+  "rgx_edit_definition",
+  "Normalize, import, patch, or export one version-1 label definition using shared authoring logic. Source-development slice; not evidence of support in a released addon. Data only: never executes Lua or writes files.",
+  { operation: z.enum(["normalize", "import", "patch", "export"]),
+    definition: z.record(z.any()).optional(), wire: z.string().optional(), changes: z.record(z.any()).optional() },
+  async ({ operation, definition, wire, changes }) => {
+    try {
+      selectedDefinitionSchema();
+      let normalized;
+      if (operation === "import") normalized = importDefinition(wire);
+      else if (operation === "patch") {
+        const session = createDefinitionSession(definition);
+        normalized = session.patch(changes);
+      } else normalized = normalizeDefinition(definition);
+      return { content: [{ type: "text", text: JSON.stringify({ definition: normalized,
+        wire: exportDefinition(normalized), sourceOnly: true, kinds: ["label"], version: 1 }) }] };
+    } catch (error) {
+      return { isError: true, content: [{ type: "text", text: error.message }] };
+    }
+  }
+);
+
+server.resource("rgx-definition-schema", "rgx://schemas/definition",
+  { description: "Version-1 source-development label definition schema", mimeType: "application/json" },
+  async () => ({ contents: [{ uri: "rgx://schemas/definition", mimeType: "application/json",
+    text: JSON.stringify(selectedDefinitionSchema(), null, 2) }] }));
 
 server.tool(
   "rgx_validate_addon",

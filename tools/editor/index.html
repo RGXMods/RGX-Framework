@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RGX definition round trip</title>
+<style>
+  body{font:16px system-ui;background:#15191d;color:#eee;max-width:720px;margin:32px auto;padding:16px}
+  label{display:block;margin:12px 0}input,textarea,button{font:inherit}input[type=text],textarea{box-sizing:border-box;width:100%}
+  textarea{height:90px}button{margin:8px 8px 8px 0}#scene{height:180px;border:1px solid #456b54;position:relative;overflow:hidden;background:#20262b}
+  #label{position:absolute;left:50%;top:50%;white-space:pre;transform-origin:center}#status{min-height:48px}
+</style>
+<h1>RGX definition round trip</h1>
+<p>Source-only editor slice: one plain-text label. Save stores this browser's definition; import/export transfers data to <code>/rgx editor</code>. This is not a live connection to WoW.</p>
+<div id="scene"><span id="label"></span></div>
+<label>Text <input id="text" type="text"></label>
+<label><input id="enabled" type="checkbox"> Enabled</label>
+<label>X <input id="x" type="number" min="-500" max="500" step="1"></label>
+<label>Y <input id="y" type="number" min="-500" max="500" step="1"></label>
+<label>Scale (%) <input id="scale" type="number" min="25" max="300" step="1"></label>
+<label>Import / export <textarea id="transfer" spellcheck="false"></textarea></label>
+<button id="import">Import draft</button><button id="export">Export draft</button>
+<button id="save">Save</button><button id="cancel">Cancel</button>
+<p id="status" role="status"></p>
+<script type="module">
+import { createDefinitionEngine, exampleDefinition } from '/tools/contract/definition.mjs';
+const schema = await (await fetch('/schemas/rgx-definition.schema.json')).json();
+const { createDefinitionSession } = createDefinitionEngine(schema);
+const $ = id => document.getElementById(id);
+const storageKey = 'rgx-definition-v1';
+let initial = exampleDefinition;
+let startupError;
+try { const saved = localStorage.getItem(storageKey); if (saved) initial = JSON.parse(saved); }
+catch { startupError = 'Stored definition could not be read. It has not been overwritten.'; }
+let session;
+try { session = createDefinitionSession(initial, definition => localStorage.setItem(storageKey, JSON.stringify(definition))); }
+catch { session = createDefinitionSession(exampleDefinition, definition => localStorage.setItem(storageKey, JSON.stringify(definition))); startupError = 'Stored definition is unsupported. It has not been overwritten; Save explicitly replaces it.'; }
+const invalid = new Set();
+function preview() {
+  const d = session.getDraft();
+  $('label').textContent = d.text;
+  $('label').hidden = !d.enabled;
+  $('label').style.transform = `translate(calc(-50% + ${d.x}px), calc(-50% - ${d.y}px)) scale(${d.scale / 100})`;
+}
+function refresh(message = 'Draft ready. Save is explicit.') {
+  invalid.clear();
+  const d = session.getDraft();
+  for (const key of ['text','x','y','scale']) $(key).value = d[key];
+  $('enabled').checked = d.enabled;
+  $('transfer').value = session.export();
+  $('save').disabled = false;
+  $('status').textContent = message;
+  preview();
+}
+for (const key of ['text','enabled','x','y','scale']) {
+  $(key).addEventListener('input', () => {
+    const value = key === 'text' ? $(key).value : key === 'enabled' ? $(key).checked : $(key).valueAsNumber;
+    try { session.patch({ [key]: value }); invalid.delete(key); $('status').textContent = 'Draft changed; Save to persist.'; preview(); }
+    catch (error) { invalid.add(key); $('status').textContent = error.message; }
+    $('save').disabled = invalid.size > 0;
+  });
+}
+for (const action of ['import','export','save','cancel']) $(action).addEventListener('click', () => {
+  try {
+    if (action === 'export') { $('transfer').value = session.export(); return; }
+    if (action === 'import') session.import($('transfer').value);
+    if (action === 'save') { if (invalid.size) throw new Error('Fix invalid fields before saving.'); session.save(); }
+    if (action === 'cancel') session.cancel();
+    refresh(`${action} complete`);
+  } catch (error) { $('status').textContent = error.message; }
+});
+refresh(startupError);
+</script>
+</html>

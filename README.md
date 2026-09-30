@@ -223,7 +223,7 @@ Full documentation lives in the [`docs/`](docs/) directory:
 
 ## Source Contract Conformance
 
-RGX-Framework temporarily maintains an [MCP](https://modelcontextprotocol.io) server at [`tools/rgx-mcp/`](tools/rgx-mcp/) as a source-tree contract-conformance fixture. It gives CI and framework contributors four tools that read the canonical schema and docs:
+RGX-Framework temporarily maintains an [MCP](https://modelcontextprotocol.io) server at [`tools/rgx-mcp/`](tools/rgx-mcp/) as a source-tree contract-conformance fixture. It gives CI and framework contributors tools that read the canonical schema and docs:
 
 | Tool | What it does |
 |---|---|
@@ -231,6 +231,13 @@ RGX-Framework temporarily maintains an [MCP](https://modelcontextprotocol.io) se
 | `rgx_audit_lua` | Scan Lua for unsafe patterns the framework prevents (raw `C_Timer`, manual event frames, `SLASH_` globals, unguarded `SetAttribute`, raw aura event/API plumbing, raw hook reassignment) |
 | `rgx_generate_addon` | Emit a contract-congruent addon Lua file using only shipped keys |
 | `rgx_get_contract` | Return the schema + declarative API reference for agent context |
+| `rgx_edit_definition` | Source-development slice: strictly normalize/import/patch/export one label definition using shared authoring logic; emits data only |
+
+The source-development [definition round trip](docs/UI-CONTROLS.md#definition-round-trip-source-development-slice)
+adds a small external editor (`node tools/editor/serve.mjs`, loopback only) and
+in-game `/rgx editor` adapter over the same versioned data contract. This slice
+is not in the published `v2.7.9` package and is not a complete Studio application
+or Blizzard Edit Mode integration. Browser/WoW visual checks remain required.
 
 Read-only by design — it never edits repos, commits, or touches the game.
 Registered automatically for agent sessions in this repo via `.mcp.json` (run

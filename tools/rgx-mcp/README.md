@@ -22,11 +22,19 @@ This transition tool lives at `tools/rgx-mcp/` **inside the framework source rep
 | `rgx_audit_lua` | Scan a `.lua` file or addon directory for the unsafe patterns the framework prevents: raw `C_Timer`, manual `OnEvent` frames, `SLASH_` globals, unguarded `SetAttribute`, raw aura event/API plumbing, and hook reassignment. Deterministic |
 | `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys (`RGXAddon "Name" { ... }`), including named `every` timers |
 | `rgx_get_contract` | Return the schema + shipped-surface reference for agent context |
+| `rgx_edit_definition` | Source-development label definition normalize/import/patch/export; delegates to the pure shared engine and returns data only |
 
 ## Resources
 
 - `rgx://schemas/addon` — the annotated JSON Schema
 - `rgx://docs/declarative-api` — the shipped declarative surface reference
+- `rgx://schemas/definition` — the source-development version-1 label schema
+
+The optional external editor (`node tools/editor/serve.mjs` from the framework
+root) and this new definition tool use the same browser-compatible
+`tools/contract/definition.mjs`. Imports/updates are strictly validated, unknown
+versions/kinds/fields fail, and responses identify `sourceOnly`. No AI key enters
+the runtime or browser. See [UI Controls](../../docs/UI-CONTROLS.md#definition-round-trip-source-development-slice).
 
 ## Setup
 
