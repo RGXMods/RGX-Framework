@@ -754,6 +754,9 @@ RGXAuras is an accessible-only boundary. Aura-specific and generic Blizzard pred
 | `Auras:IterateAuras(unit, filter, fn)` | Deliver accessible snapshots only; stops before a denied entry and returns the delivered count |
 | `Auras:WatchUnit(unit)` / `UnwatchUnit(unit)` | Maintain a predicate-approved incremental cache. Denied events invalidate it without callbacks; player is watched by default |
 | `Auras:GetAuraByInstanceID(unit, id)` | Predicate-checked live lookup on supported clients; refreshes/clears watched cache entries |
+| `Auras:CooldownState(spellId)` | Tri-state: `"idle"` \| `"active"` \| `"unknown"`; secret-flagged or unverifiable cooldowns answer `"unknown"` and are never compared |
+| `Auras:AuraState(unit, spellId[, filter])` | Tri-state aura presence: `"present"` \| `"absent"` \| `"unknown"`; secret-flagged or restricted lookups answer `"unknown"` rather than false |
+| `Auras:CastReadiness(spellId, blockedAuraSpellId)` | Fail-closed readiness for rules like PW:S: `"ready"` only when cooldown provably idle AND the blocking aura provably absent; `"blocked"` when either holds; `"unknown"` when either was restricted |
 | `Auras:OnApplied(fn)` | `fn(unit, auraData)` with predicate-approved arguments |
 | `Auras:OnRemoved(fn)` | `fn(unit, auraInstanceID)` |
 | `Auras:OnUpdated(fn)` | `fn(unit, auraData)` with predicate-approved arguments |

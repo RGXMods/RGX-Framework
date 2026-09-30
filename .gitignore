@@ -3,3 +3,5 @@ artifacts/
 .release/
 skills/
 .reference/wow-ui-source/
+
+skills-lock.json
