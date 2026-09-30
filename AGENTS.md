@@ -1,49 +1,137 @@
 # RGX-Framework
 
-WoW addon framework. Runtime is Lua 5.1-era WoW Lua. Developer tooling is Node.js.
+## Project At A Glance
 
-The repo contains cooperating subprojects:
+- **Purpose:** one shared foundation for the RGX Mods WoW addon suite, making
+  client-specific bugs impossible at the consumer boundary rather than repairing
+  the same event, timer, database, or UI plumbing in every addon.
+- **Ownership:** RGX-Framework owns shared runtime APIs, compatibility and safety
+  boundaries, persistence, UI/layout/design/media, and reusable DSL, validation,
+  editor, and authoring infrastructure. Consumer addons supply feature-specific
+  definitions, content, settings, and behavior through those APIs. Put reusable
+  fixes here; keep consumer declarations thin.
+- **Dependency architecture:** all RGX addons are intended to depend on the
+  framework through `RequiredDeps: RGX-Framework`, sharing one runtime instance.
+  Verify each product's actual TOC and code before claiming it has migrated;
+  legacy exceptions such as BLU_Classic still need real implementation work.
+- **North star:** RGXMod is a WeakAuras-replacement consumer with the rule model
+  Trigger → Conditions → Display → Actions → Load. Its rules/content consume
+  framework primitives; reusable rule/editor machinery belongs in the framework.
+- **Execution boundary:** WoW runtime is Lua 5.1-era Lua (`core/`, `modules/`,
+  `media/`). Developer tooling is Node.js (`tools/`). Tooling, MCP, knowledge
+  graphs, external models, and local reference mirrors are never runtime
+  dependencies or player-package contents.
+- **Compatibility:** preserve existing public semantics and consumer behavior.
+  Retail, Classic flavors, and Forever are distinct capability targets, not
+  interchangeable copies of one addon.
+- **Authority:** GitLab `rgxmods/warcraft/RGX-Framework` owns development, issues,
+  MRs, and CI; GitHub `RGXMods/RGX-Framework` is downstream distribution. `docs/`
+  is canonical; the Wiki is generated. Read versions and Interfaces from TOCs,
+  not this file or session summaries.
+- **Shipped versus planned:** a design document, parked branch, passing mock,
+  or module file alone does not prove support. Verify runtime loading, lifecycle
+  wiring, schema availability, and consumer-facing behavior before advertising it.
 
-* `core/`, `modules/` — WoW runtime
-* `schemas/rgx-addon.schema.json` — declarative contract
-* `tools/rgx-mcp/` — Node MCP server
-* `tools/ci/` — CI helpers, deterministic package builder and checker
-* `tools/release/` — release publisher (GitHub/CurseForge/Wago)
-* `tools/wiki/` — docs → GitHub Wiki generator
+## Start Here — Any Harness
 
-`RGX-Framework.xml` is the source of truth for runtime load order.
-`RGX-Framework.toc` is the source of truth for version, Interface, and SavedVariables.
+This file is the repository entry point. Local skills, MCP servers, Graphify,
+workstation paths, and previous chat context are optional aids, not prerequisites
+for understanding or following the project rules.
+
+1. Read this overview and the sections relevant to the task. Inspect `git status`,
+   the current branch/diff, and canonical remote identity; preserve concurrent
+   agent/user changes, stashes, and untracked files. Never expose remote credentials.
+2. Resolve the canonical GitLab task. Search open and closed issues before
+   creating one; record scope, acceptance criteria, dependencies, and automated
+   versus manual checks. Read existing notes/MRs to avoid overlapping other work.
+3. Follow the source map below and read scoped instructions in affected
+   directories. Verify the affected consumers, flavor TOCs, loaded modules, and
+   shipped contract; do not implement from a summary alone.
+4. Work on a task branch from the appropriate verified base. Extend framework
+   primitives additively and update affected contract/docs layers together.
+5. Run the applicable checks below. Record exact commands, results, client/source
+   revisions, and remaining in-game checks. A failed or unavailable check is a
+   blocker to the corresponding completion claim, not permission to bypass it.
+6. Inspect the final diff and `git diff --check`. Commit/push only when requested,
+   stage only intended files, and use a GitLab MR for integration. Require actual
+   CI success and the task's review/manual gates before merge or release.
+7. Attach evidence and blockers to the canonical task; leave it open when required
+   acceptance criteria remain. Report the issue/MR URL and the deployment state.
+
+Use supported GitLab APIs/CLI if harness integrations are absent. If required
+access, credentials, tools, or client evidence are unavailable, report the exact
+blocker; do not silently change authority or claim partial work is complete.
+
+## Source Map — Read When Relevant
+
+| Task / fact | Authoritative source and navigation |
+|---|---|
+| Installation, product scope, consumer usage | `README.md`, `docs/QUICK-START.md`, `docs/SUPER-SIMPLE.md` |
+| Runtime load order / module activation | `RGX-Framework.xml`, `core/initialization.lua`, module registration/getters; `docs/ARCHITECTURE.md` |
+| Version / Interfaces / SavedVariables | `RGX-Framework.toc` and `RGX-Framework_*.toc`; consumer TOCs separately |
+| Lifecycle, events, timers, combat queue, DB | `core/core.lua`, `core/systems/`; `docs/API.md`, `docs/FOUNDATION.md` |
+| Client capabilities / restricted data | `core/compat.lua`, `core/compat_api.lua`, `modules/auras/auras.lua`; `docs/AURAS.md` and **WoW API Reference** below |
+| Options, controls, layout, themes, media | `modules/ui/`, `modules/design/`, media modules; `docs/UI-CONTROLS.md`, `docs/THEMING.md` |
+| Shipped declarative API / DSL | `core/core.lua`, `schemas/rgx-addon.schema.json`, `docs/DECLARATIVE-API.md`; check each key's availability |
+| Authoring, validation, generation, audit | `tools/rgx-mcp/`, scoped `tools/rgx-mcp/AGENTS.md`, `docs/RGX-MCP.md`; keep tooling dependent on the canonical contract |
+| Design direction / subsystem priority | `docs/ROADMAP.md`, `docs/ACE3-ANALYSIS.md`, `docs/STUDIO-ROADMAP.md`, canonical GitLab issues; proposals are not shipped APIs |
+| Verification / regressions | `tools/ci/package.json`, `tools/ci/*-check.mjs`, runtime fixtures, `docs/TESTING.md`, RGX-Hello E2E |
+| Player archive / publishing | `.pkgmeta`, `tools/ci/package-manifest-check.mjs`, `tools/release/publish-release.mjs`, `.gitlab/ci/addon.yml`, `docs/DISTRIBUTION.md` |
+| Generated Wiki | `tools/wiki/`; edit `docs/`, never a competing Wiki source |
 
 ## Commands
 
-Lua + schema validation:
+Run from the repository root; install tooling dependencies with
+`npm --prefix tools/ci ci` when needed. The package scripts remain authoritative.
+
+Runtime/shared-boundary changes:
 
 ```bash
-cd tools/ci
-npm ci
-npm run lua-check
-npm run schema-check
+npm --prefix tools/ci run lua-check
+npm --prefix tools/ci run lua-runtime-check
+npm --prefix tools/ci run flavor-check
+npm --prefix tools/ci run docs-check
+npm --prefix tools/ci run schema-check
+npm --prefix tools/ci run package-check
 ```
 
-Wiki manifest:
+Validation branches:
+
+- **Documentation/instructions only:** check referenced files/commands, run
+  `docs-check`, and inspect the diff; no fabricated runtime or in-game result.
+- **Declarative/schema/MCP changes:** run the runtime checks above plus MCP/RGX-Hello
+  E2E below. Runtime, schema, documentation, generation, validation, and audit must
+  agree; run contract-bundle checks when bundle contents/format change.
+- **Database:** the runtime command includes the database regression harness;
+  additionally verify reload persistence, migration/profile switching, and
+  visually restored controls in the affected client.
+- **UI:** test geometry, scrolling, resize/show/hide, tab/page transitions,
+  callback arguments, persisted visual restoration, and unaffected consumers.
+  Aura/event mocks do not cover frame geometry.
+- **Compatibility/safety:** inspect all affected flavor sources and run flavor
+  checks. Actual combat, protected-action, taint, and secret-value behavior needs
+  client evidence; `pcall` and headless tests do not establish safety.
+- **Packaging/release:** build/check the allowlisted runtime archive, verify
+  flavor inventories and exclusions, then verify each requested distribution.
+  XML must pass the shared CI's `xmllint` validation.
+
+Wiki manifest (replace the output placeholder with a temporary directory):
 
 ```bash
-node tools/wiki/build-wiki.mjs /tmp/rgx-wiki-out
+node tools/wiki/build-wiki.mjs "<temporary-wiki-directory>"
 ```
 
 MCP setup:
 
 ```bash
-cd tools/rgx-mcp
-npm ci --no-audit --no-fund
-npm start
+npm --prefix tools/rgx-mcp ci --no-audit --no-fund
+npm --prefix tools/rgx-mcp start
 ```
 
 MCP/RGX-Hello end-to-end:
 
 ```bash
-cd tools/rgx-mcp
-node test/test-rgx-hello.mjs /path/to/RGX-Hello
+node tools/rgx-mcp/test/test-rgx-hello.mjs "<RGX-Hello-checkout>"
 ```
 
 Run the MCP E2E after changing the schema, declarative runtime, generator, validator, audit rules, or declarative API contract.
@@ -115,10 +203,10 @@ test suite are the differentiators.
 
 RGX-Framework serves two roles:
 
-1. Shared runtime for the entire RGX Mods addon suite — BLU,
+1. Shared runtime for the RGX Mods addon suite — including BLU,
    SimpleQuestPlates, BattlePetUtility, EnhancedTravelersLog,
-   RemoveNameplateDebuffs, and the LevelUp sound-pack addons all declare
-   `RequiredDeps: RGX-Framework`. One load, one instance, shared by all.
+   RemoveNameplateDebuffs, and LevelUp sound-pack products. The dependency
+   architecture is one load and one instance; verify adoption per product/flavor.
 2. Foundation layer for `rgx-mod`, a WeakAuras replacement built on top of
    this framework. Every subsystem that benefits current addons is also a
    building block for rgx-mod's trigger/condition/display engine.
@@ -179,6 +267,11 @@ Use RGX events, timers, messages, hooks, combat queue, DB, UI, media, minimap, a
 
 All shared callback dispatch must remain failure-isolated. One consumer callback must not break unrelated consumers.
 
+An inaccessible result is not an absent result. Rules that alert on absence or
+readiness must retain an explicit unknown state and fail closed when evidence is
+restricted, missing, or unverifiable; mocks must cover denied data and predicate
+failures rather than inventing Blizzard APIs to make a test pass.
+
 ## WoW Safety
 
 Do not guess Blizzard APIs. Verify APIs against the Interface version in `RGX-Framework.toc`.
@@ -234,6 +327,10 @@ graphify path "UNIT_AURA" "C_UnitAuras.GetAuraDataByIndex" --graph .reference/wo
 
 Graphify is an index, not evidence. Confirm every conclusion in the underlying generated documentation or UI source and cite the flavor, client version, ref/commit, file, and line when the conclusion drives runtime behavior.
 
+The repository's local `graphify-out/` is also discovery-only. Symbol-name matches
+do not establish an exported API or documentation coverage: distinguish local
+helpers from registered public methods and corroborate each reported gap in code.
+
 For forward compatibility work:
 
 * Check every supported active flavor, not only Retail.
@@ -269,7 +366,24 @@ Existing declarative keys must not silently change meaning.
 
 ## MCP Boundary
 
-`tools/rgx-mcp/` is an in-repo Node package, not part of the Lua runtime dependency graph.
+- **Runtime API:** the Lua interface used by addons (`RGXAddon`, addon methods,
+  module getters/methods); this is the framework's primary product. See `docs/API.md`.
+- **Compatibility adapters:** `RGX.API` in `core/compat*.lua` normalizes client
+  differences; it is not a remote service or a substitute for documented consumer APIs.
+- **Contract:** schema and declarative documentation describe supported authoring
+  forms. They are framework-owned, not a second runtime or an MCP-only vocabulary.
+- **MCP:** `tools/rgx-mcp/` exposes source-only validation, generation, audit, and
+  contract context over stdio for developer clients. It is optional tooling, not
+  required to run addons, edit framework Lua, or build a Studio application.
+- **Studio:** a planned downstream authoring application. Its shell and
+  application-specific integrations consume the framework's shared contract and
+  reusable infrastructure; Studio does not own the runtime API.
+
+Prioritize the runtime API, its contract/docs, and consumer regressions. Preserve
+the existing MCP/RGX-Hello conformance coverage while reusable contract logic is
+extracted for other tooling (GitLab #8); a separate shared engine is planned, not
+already implemented. Expand MCP transport features only for a verified developer
+need, not as a prerequisite for framework work.
 
 Hard dependency direction:
 
@@ -308,6 +422,12 @@ Use existing RGX controls/design/media systems before creating custom equivalent
 DB-bound controls must both save and visually restore persisted state.
 
 A control that saves correctly but reopens with the wrong displayed value is broken.
+
+SavedVariables names must match the consumer TOC; addon lifecycle matching uses
+the actual loaded addon name, which may differ from its display/product name.
+Keep database ownership, adoption, reset defaults, and profile visual refresh
+consistent across reloads. Controls must share one layout/scroll owner rather than
+creating competing canvases for declarative and imperative entry points.
 
 ## Documentation
 
@@ -362,6 +482,21 @@ Before finishing, inspect the diff and run the applicable validation commands ab
 - Publishing integrations prohibited by the shared validation policy are retired and must not be restored.
 - The root `README.md` must remain detailed and project-specific. Narrow distribution edits must not replace or truncate installation, features, compatibility, usage, media, or support content.
 - Verify relative README assets. Do not overwrite newer compatibility facts with stale monorepo or history text.
+
+## Deployment And Local Artifacts
+
+Build test installs from the validated runtime manifest/archive, including media,
+rather than recursively copying the checkout. Preserve the previous install in a
+recoverable backup and verify the installed TOC, load list, inventory, and changed
+file hashes. Confirm the intended client's AddOns path before copying; host
+installs are deployment targets, not a source to reverse-sync into Git.
+
+Keep `.reference/`, `graphify-out/`, `.agents/`, local skills, `node_modules/`,
+`artifacts/`, and `.release/` out of player installs and releases. `.release/`
+remains ignored and excluded even though the old staging workflow is retired.
+Preserve unrelated files and stashes; review contents and establish a recoverable
+path before removing local artifacts. Never store credentials in repository files,
+task text, generated reports, or command output.
 
 ## Flavor-Specific Consumer Boundaries
 

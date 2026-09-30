@@ -12,7 +12,14 @@ consumer addons    depend on  →  RGX-Framework
 RGX-Framework      depends on →  nothing (and never on rgx-mcp)
 ```
 
-This transition tool lives at `tools/rgx-mcp/` **inside the framework source repo** for contract-conformance CI. It is not distributed as a Framework product. Public MCP/API/editor tooling belongs to RGX Studio. Set `RGX_FRAMEWORK_PATH` only when intentionally running against a different framework tree.
+This transition tool lives at `tools/rgx-mcp/` **inside the framework source repo** for contract-conformance CI. It is not distributed as a Framework product. The framework owns the runtime Lua API and reusable contract/authoring logic; a future Studio application consumes that foundation and may package its own downstream adapters. Set `RGX_FRAMEWORK_PATH` only when intentionally running against a different framework tree.
+
+The MCP is an optional stdio adapter, not the API addons use inside WoW and not
+a live-game or HTTP service. It is useful today because validation, generation,
+and audit coverage run against RGX-Hello. A transport-independent shared contract
+engine is planned in framework issue #8; it has not yet been extracted from
+`src/server.js`. See [the layer comparison](../../docs/RGX-MCP.md#runtime-api-contract-and-mcp)
+and [scoped agent guidance](AGENTS.md).
 
 ## Tools
 
@@ -36,7 +43,8 @@ Node.js 20 or newer is required.
 npm ci --no-audit --no-fund
 ```
 
-Claude Code (`.mcp.json` or `claude mcp add`):
+Example for an MCP-capable harness, with its working directory set to the
+framework repository root (configuration/discovery varies by harness):
 
 ```json
 {
@@ -49,11 +57,11 @@ Claude Code (`.mcp.json` or `claude mcp add`):
 }
 ```
 
-Only the framework source checkout ships `.mcp.json`; published artifacts do not. Source-checkout agent sessions get the `rgx_*` tools after `npm ci` in `tools/rgx-mcp/`. The MCP follows the same simplicity rule as the runtime: agents should generate and validate the one-call `RGXAddon` form, not invent a more complex consumer pattern.
+The framework source checkout includes `.mcp.json`; published artifacts do not. A harness must support/configure the server and its dependencies before exposing the `rgx_*` tools. Framework development does not require MCP. The MCP follows the same simplicity rule as the runtime: agents should generate and validate the one-call `RGXAddon` form, not invent a more complex consumer pattern.
 
 ## Testing
 
-`test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK (stdio transport, no protocol reimplementation) against [RGX-Hello](https://github.com/RGXMods/RGX-Hello). It parses and validates the actual curried `RGXAddon` table, generates the matching supported surface with named timers, and audits the actual Lua tree. It verifies that `every` is shipped while `on` remains Tier 4, and uses paired fixtures to require RGXAuras consumer code to pass while raw aura plumbing fails. Unknown or Tier 4 keys fail directly.
+`test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK (stdio transport, no protocol reimplementation) against [RGX-Hello](https://github.com/RGXMods/RGX-Hello). It parses and validates the actual curried `RGXAddon` table, generates the matching supported surface with named timers, and audits the actual Lua tree. It verifies that `every` is shipped while `on` remains Tier 4, and uses paired fixtures to require RGXAuras consumer code to pass while raw aura plumbing fails. Validation reports `tier4KeysUsed` separately; schema-valid future keys are not evidence of shipped behavior. Generation is limited to supported shipped forms.
 
 ```bash
 node test/test-rgx-hello.mjs /path/to/RGX-Hello
@@ -67,8 +75,9 @@ v0.1.0 — transition fixture for the framework roadmap. Verified over live stdi
 
 The MCP source is maintained temporarily with the framework contract for CI but
 is not included in the published Framework archive. Run it only from a source
-checkout with its tracked lockfile. Future public MCP/API/editor distribution
-belongs to RGX Studio. Update runtime, schema, docs, and conformance tests together.
+checkout with its tracked lockfile. Future Studio-specific services and app
+integrations remain separate from the framework runtime; shared contract logic
+remains framework-owned. Update runtime, schema, docs, and conformance tests together.
 
 ## License
 
