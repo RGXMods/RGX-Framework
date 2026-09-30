@@ -345,7 +345,7 @@ function Design:CreateSectionHeader(parent, text, icon)
     -- the primary token dimmed down, never the full-brightness or accent
     -- variant, so every addon gets its own subdued brand frame.
     local pr, pg, pb = self:Unpack("primary")
-    header:SetBackdropBorderColor(pr * 0.55, pg * 0.55, pb * 0.55)
+    header:SetBackdropBorderColor(pr * 0.35, pg * 0.35, pb * 0.35)
 
     local leftInset = 10
     if icon then
