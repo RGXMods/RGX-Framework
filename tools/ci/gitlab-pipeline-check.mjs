@@ -56,4 +56,7 @@ for (const hasContractTools of [true, false]) {
 }
 assert.deepEqual(config["contract:bundle"].needs, ["addon:validate"]);
 assert.deepEqual(config["mirror:github"].needs, ["addon:validate"]);
+for (const command of config["addon:validate"].script) {
+  assert(!/\n\s*&&/.test(command), "YAML folding must not put && at the start of a shell line");
+}
 console.log(`GITLAB PIPELINE RULES OK  ${checks} source/tooling scenarios; required validation preserved`);
