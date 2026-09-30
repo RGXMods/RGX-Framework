@@ -355,19 +355,19 @@ canaccesstable, issecrettable = savedCanAccessTable, savedIsSecretTable
 -- restricted data downgrades before any comparison is attempted.
 check(Auras:CooldownState(9001) == "unknown", "missing cooldown record should answer unknown")
 
-__cooldowns[9002] = { startTime = 0, duration = 0 }
+__cooldowns[9002] = { startTime = 0, duration = 0, isEnabled = true, modRate = 1 }
 check(Auras:CooldownState(9002) == "idle", "zero duration should answer idle")
 
 __timeNow = 100
-__cooldowns[9003] = { startTime = 95, duration = 8 }
+__cooldowns[9003] = { startTime = 95, duration = 8, isEnabled = true, modRate = 1 }
 check(Auras:CooldownState(9003) == "active", "in-flight cooldown should answer active")
 
-__cooldowns[9004] = { startTime = 95, duration = 8 }
+__cooldowns[9004] = { startTime = 95, duration = 8, isEnabled = true, modRate = 1 }
 __timeNow = 200
 check(Auras:CooldownState(9004) == "idle", "elapsed cooldown should answer idle")
 
 __timeNow = 100
-__cooldowns[9005] = { startTime = 95, duration = 8 }
+__cooldowns[9005] = { startTime = 95, duration = 8, isEnabled = true, modRate = 1 }
 __secretCooldownSpells[9005] = true
 check(Auras:CooldownState(9005) == "unknown", "secret-flagged cooldown should answer unknown without comparing")
 __secretCooldownSpells[9005] = nil
@@ -380,29 +380,122 @@ do
     __deniedTables[deniedPayload] = nil
 end
 
-__playerAura = { spellId = 9010, auraInstanceID = 9010 }
+__auras.player.HELPFUL = { { spellId = 9010, auraInstanceID = 9010 } }
 check(Auras:AuraState("player", 9010) == "present", "matching player aura should answer present")
 
-__playerAura = nil
+__auras.player.HELPFUL = {}
 check(Auras:AuraState("player", 9010) == "absent", "clean miss should answer absent")
 
-__secretAuraSpells[9011] = true
-check(Auras:AuraState("player", 9011) == "unknown", "secret-flagged aura should answer unknown")
-__secretAuraSpells[9011] = nil
+__secretIndexes[indexKey("player", 1, "HELPFUL")] = true
+check(Auras:AuraState("player", 9011) == "unknown", "restricted scan should answer unknown")
+__secretIndexes[indexKey("player", 1, "HELPFUL")] = nil
 
 -- The Priest rule: PW:S idle + Weakened Soul absent.
-__cooldowns[9012] = { startTime = 0, duration = 0 }
-__playerAura = { spellId = 9013, auraInstanceID = 9013 }
+__cooldowns[9012] = { startTime = 0, duration = 0, isEnabled = true, modRate = 1 }
+__auras.player.HARMFUL = { { spellId = 9013, auraInstanceID = 9013 } }
 check(Auras:CastReadiness(9012, 9013) == "blocked", "blocked aura present should block")
-__playerAura = nil
+__auras.player.HARMFUL = {}
 check(Auras:CastReadiness(9012, 9013) == "ready", "idle cooldown + absent aura should answer ready")
-__cooldowns[9012] = { startTime = GetTime(), duration = 8 }
+__cooldowns[9012] = { startTime = GetTime(), duration = 8, isEnabled = true, modRate = 1 }
 check(Auras:CastReadiness(9012, 9013) == "blocked", "active cooldown should block")
 __cooldowns[9012] = nil
 check(Auras:CastReadiness(9012, 9013) == "unknown", "missing cooldown record should stay unknown")
 __secretCooldownSpells[9012] = true
 check(Auras:CastReadiness(9012, 9013) == "unknown", "secret cooldown can never be ready")
 __secretCooldownSpells[9012] = nil
+
+-- A hidden direct-lookup miss must not turn into a false ready signal.
+__cooldowns[9012] = { startTime = 0, duration = 0, isEnabled = true, modRate = 1 }
+__playerAura = nil
+__secretIndexes[indexKey("player", 1, "HARMFUL")] = true
+__indexGetterCalls = 0
+check(Auras:CastReadiness(9012, 9013) == "unknown", "hidden blocker must never report ready")
+check(__indexGetterCalls == 1, "denied harmful index should not reach its getter")
+__secretIndexes[indexKey("player", 1, "HARMFUL")] = nil
+
+local deniedReadinessAura = poisonTable()
+__deniedTables[deniedReadinessAura] = true
+__auras.player.HELPFUL = { deniedReadinessAura }
+check(Auras:AuraState("player", 9013) == "unknown", "denied aura table must stay unopened")
+__auras.player.HELPFUL = { { spellId = deniedValue } }
+check(Auras:AuraState("player", 9013) == "unknown", "denied spell field cannot prove absence")
+__auras.player.HELPFUL = { { spellId = 9013 } }
+check(Auras:AuraState("player", 9013, "HARMFUL") == "absent", "filter must exclude helpful matches")
+check(Auras:AuraState("player", 9013, "HELPFUL") == "present", "filter must include helpful matches")
+check(Auras:AuraState("player", 9013, deniedValue) == "unknown", "denied filter must fail closed")
+__auras.player.HELPFUL = {}
+
+local savedIndexGetter = C_UnitAuras.GetAuraDataByIndex
+C_UnitAuras.GetAuraDataByIndex = function() error("unavailable query") end
+check(Auras:AuraState("player", 9013) == "unknown", "getter errors must not imply absence")
+C_UnitAuras.GetAuraDataByIndex = nil
+check(Auras:AuraState("player", 9013) == "unknown", "missing aura APIs must not imply absence")
+C_UnitAuras.GetAuraDataByIndex = savedIndexGetter
+local savedIndexPredicate = C_Secrets.ShouldUnitAuraIndexBeSecret
+C_Secrets.ShouldUnitAuraIndexBeSecret = function() error("predicate failed") end
+check(Auras:AuraState("player", 9013) == "unknown", "predicate errors must fail closed")
+C_Secrets.ShouldUnitAuraIndexBeSecret = nil
+check(Auras:AuraState("player", 9013) == "unknown", "missing restricted-client predicate must fail closed")
+C_Secrets.ShouldUnitAuraIndexBeSecret = savedIndexPredicate
+
+__cooldowns[9014] = { startTime = 0, duration = 0, isEnabled = false, modRate = 1 }
+check(Auras:CooldownState(9014) == "active", "on-hold cooldown is not idle")
+__cooldowns[9014] = { startTime = 0, duration = 0 }
+check(Auras:CooldownState(9014) == "unknown", "missing enabled state cannot prove idle")
+__cooldowns[9014] = { startTime = deniedValue, duration = 0, isEnabled = true }
+check(Auras:CooldownState(9014) == "unknown", "denied cooldown field cannot be compared")
+__cooldowns[9014] = { startTime = 0, duration = -1, isEnabled = true }
+check(Auras:CooldownState(9014) == "unknown", "negative duration is not idle")
+__cooldowns[9014] = { startTime = 0, duration = 0 / 0, isEnabled = true }
+check(Auras:CooldownState(9014) == "unknown", "NaN duration cannot prove idle")
+__cooldowns[9014] = { startTime = 1, duration = 8, isEnabled = true, modRate = 2 }
+check(Auras:CooldownState(9014) == "active", "modified cooldown must not use assumed expiry math")
+check(Auras:CooldownState(deniedValue) == "unknown", "denied spell ID cannot reach cooldown getter")
+check(Auras:CastReadiness(9012, deniedValue) == "unknown", "denied blocker ID cannot be tested for truthiness")
+
+local savedCooldownPredicate = C_Secrets.ShouldSpellCooldownBeSecret
+local savedModernCooldown = C_Spell.GetSpellCooldown
+C_Secrets.ShouldSpellCooldownBeSecret = function() error("predicate failed") end
+C_Spell.GetSpellCooldown = function() error("getter must not run after failed predicate") end
+check(Auras:CooldownState(9012) == "unknown", "failed cooldown predicate must stop before getter")
+C_Secrets.ShouldSpellCooldownBeSecret = nil
+check(Auras:CooldownState(9012) == "unknown", "missing restricted cooldown predicate must fail closed")
+C_Secrets.ShouldSpellCooldownBeSecret = savedCooldownPredicate
+C_Spell.GetSpellCooldown = savedModernCooldown
+
+local savedLegacyCooldown = GetSpellCooldown
+GetSpellCooldown = function() error("modern getter must take precedence") end
+check(Auras:CooldownState(9012) == "idle", "modern cooldown getter must be preferred")
+C_Spell.GetSpellCooldown = nil
+GetSpellCooldown = function() return 95, 8, 1, 1 end
+check(Auras:CooldownState(9012) == "active", "legacy tuple cooldown should normalize")
+GetSpellCooldown = function() return 0, 0, 1 end
+check(Auras:CooldownState(9012) == "idle", "legacy idle tuple should normalize")
+GetSpellCooldown = function() return 0, 0, 0 end
+check(Auras:CooldownState(9012) == "active", "legacy disabled tuple is not idle")
+GetSpellCooldown, C_Spell.GetSpellCooldown = savedLegacyCooldown, savedModernCooldown
+
+local savedTime = GetTime
+GetTime = function() return deniedValue end
+check(Auras:CooldownState(9003) == "unknown", "inaccessible clock must fail closed")
+GetTime = savedTime
+
+-- Historical clients without secret machinery retain ordinary query behavior.
+local savedSecrets = C_Secrets
+C_Secrets = nil
+canaccessvalue, issecretvalue, canaccesstable, issecrettable = nil, nil, nil, nil
+check(Auras:CooldownState(9012) == "idle", "no-secret client should support idle cooldowns")
+check(Auras:AuraState("player", 9013) == "absent", "no-secret client should prove an empty scan")
+C_Spell.GetSpellCooldown = nil
+GetSpellCooldown = function() return 0, 0, 1 end
+check(Auras:CastReadiness(9012, 9013) == "ready", "no-secret legacy client should support readiness")
+local savedUnitAuras = C_UnitAuras
+C_UnitAuras = nil
+check(Auras:AuraState("player", 9013) == "unknown", "no-secret client with missing APIs is still unknown")
+C_UnitAuras, C_Secrets = savedUnitAuras, savedSecrets
+GetSpellCooldown, C_Spell.GetSpellCooldown = savedLegacyCooldown, savedModernCooldown
+canaccessvalue, issecretvalue = savedCanAccessValue, savedIsSecretValue
+canaccesstable, issecrettable = savedCanAccessTable, savedIsSecretTable
 
 __rgxAuraTestResult = string.format(
     "LUA RUNTIME OK  restricted aura boundary (%d checks, Lua %s)",
