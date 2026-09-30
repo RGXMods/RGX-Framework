@@ -697,38 +697,74 @@ function UI:CreateResetButton(parent, onClick)
     return btn
 end
 
-function UI:CreateButton(parent, text, w, h)
-    h = h or 22
-    local D = RGX:GetDesign()
-    if D and type(D.CreateButton) == "function" then
-        return D:CreateButton(parent, text, w, h)
+-- Buttons are created with skin only. Behavior is attached via SetScript or
+-- the options table form. Pcall-isolated like every other shared dispatch so
+-- one consumer's handler error cannot break unrelated panels.
+local function AttachButtonAction(btn, onClick)
+    if type(onClick) ~= "function" then return btn end
+    btn:SetScript("OnClick", function(self, button)
+        local ok, err = pcall(onClick, self, button)
+        if not ok and RGX and type(RGX.Error) == "function" then
+            RGX:Error("[RGXUI] button onClick failed: " .. tostring(err))
+        end
+    end)
+    return btn
+end
+
+-- UI:CreateButton(parent, textOrOpts[, w][, h])
+-- Legacy positional form still works; the table form is the declared
+-- ergonomic surface: { text, width, height, tooltip, onClick }.
+function UI:CreateButton(parent, textOrOpts, w, h)
+    local opts = nil
+    local text = textOrOpts
+    if type(textOrOpts) == "table" then
+        opts = textOrOpts
+        text = opts.text
+        w = opts.width or w
+        h = opts.height or h
+    elseif type(textOrOpts) == "function" then
+        -- UI:CreateButton(parent, onClickFn) is never valid — surface it.
+        text = nil
+        opts = { onClick = textOrOpts }
     end
-    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    btn:SetSize(w or 120, h or 22)
-    local bg = btn:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints()
-    bg:SetColorTexture(D:Unpack("surface"))
-    local border = CreateFrame("Frame", nil, btn, "BackdropTemplate")
-    border:SetAllPoints()
-    border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    border:SetBackdropBorderColor(D:Unpack("border"))
-    local lbl = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    lbl:SetAllPoints()
-    lbl:SetJustifyH("CENTER")
-    lbl:SetJustifyV("MIDDLE")
-    lbl:SetText(text or "")
-    lbl:SetTextColor(D:Unpack("subtext"))
-    btn:SetScript("OnEnter", function()
-        local D2 = RGX:GetDesign()
-        border:SetBackdropBorderColor(D2:Unpack("primary"))
-        bg:SetColorTexture(D2:Unpack("hover"))
-        lbl:SetTextColor(D2:Unpack("primary"))
-    end)
-    btn:SetScript("OnLeave", function()
-        border:SetBackdropBorderColor(D:Unpack("border"))
+    h = h or (opts and opts.height) or 22
+
+    local D = RGX:GetDesign()
+    local btn
+    if D and type(D.CreateButton) == "function" then
+        btn = D:CreateButton(parent, text, w, h,
+            opts and opts.tooltip, opts and opts.tooltipBody)
+    else
+        btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
+        btn:SetSize(w or 120, h)
+        local bg = btn:CreateTexture(nil, "BACKGROUND")
+        bg:SetAllPoints()
         bg:SetColorTexture(D:Unpack("surface"))
+        local border = CreateFrame("Frame", nil, btn, "BackdropTemplate")
+        border:SetAllPoints()
+        border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        border:SetBackdropBorderColor(D:Unpack("border"))
+        local lbl = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        lbl:SetAllPoints()
+        lbl:SetJustifyH("CENTER")
+        lbl:SetJustifyV("MIDDLE")
+        lbl:SetText(text or "")
         lbl:SetTextColor(D:Unpack("subtext"))
-    end)
+        btn:SetScript("OnEnter", function()
+            local D2 = RGX:GetDesign()
+            border:SetBackdropBorderColor(D2:Unpack("primary"))
+            bg:SetColorTexture(D2:Unpack("hover"))
+            lbl:SetTextColor(D2:Unpack("primary"))
+        end)
+        btn:SetScript("OnLeave", function()
+            border:SetBackdropBorderColor(D:Unpack("border"))
+            bg:SetColorTexture(D:Unpack("surface"))
+            lbl:SetTextColor(D:Unpack("subtext"))
+        end)
+    end
+    if opts and type(opts.onClick) == "function" then
+        AttachButtonAction(btn, opts.onClick)
+    end
     return btn
 end
 

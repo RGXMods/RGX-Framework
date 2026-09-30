@@ -605,28 +605,40 @@ function RGX.Addon(name, opts)
                     tabs[#tabs + 1] = {
                         text = tabName,
                         content = function(frame)
+                            -- Scroll page + flow layout: controls render in
+                            -- declaration order with no overlap and scroll
+                            -- when the page is taller than the content area.
+                            local canvas = UI:CreateScrollPage(frame)
+                            local flow = UI:CreateFlowLayout(canvas)
                             for _, ctrl in ipairs(controls) do
                                 if type(ctrl) == "table" then
+                                    local w
                                     if type(ctrl.toggle) == "string" then
-                                        UI:CreateToggle(frame, { key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default })
+                                        w = UI:CreateToggle(canvas, { key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default })
                                     elseif type(ctrl.slider) == "string" then
-                                        UI:CreateSlider(frame, { key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper), storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100, step = ctrl.step or 1, suffix = ctrl.suffix, progress = ctrl.progress })
+                                        w = UI:CreateSlider(canvas, { key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper), storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100, step = ctrl.step or 1, suffix = ctrl.suffix, progress = ctrl.progress })
                                     elseif type(ctrl.color) == "string" then
-                                        UI:CreateColorPicker(frame, { key = ctrl.color, label = ctrl.label or ctrl.color:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default or addon.db[ctrl.color], onChange = function(r, g, b) addon.db[ctrl.color] = { r = r, g = g, b = b } end })
+                                        w = UI:CreateColorPicker(canvas, { key = ctrl.color, label = ctrl.label or ctrl.color:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default or addon.db[ctrl.color], onChange = function(r, g, b) addon.db[ctrl.color] = { r = r, g = g, b = b } end })
                                     elseif type(ctrl.dropdown) == "string" and Drops then
                                         local items = {}
-                                        for _, v in ipairs(ctrl.items or {}) do items[#items+1] = { text = tostring(v), value = v } end
-                                        -- value restores the saved selection visually; without it the
-                                        -- dropdown saved but always reopened blank -- the exact
-                                        -- save-without-restore bug class this framework exists to kill.
-                                        Drops:CreateNestedDropdown(frame, { label = ctrl.label or ctrl.dropdown:gsub("^%l", string.upper), items = items, width = ctrl.width or 260, value = addon.db[ctrl.dropdown], onChange = function(v) addon.db[ctrl.dropdown] = v end })
+                                        for _, v in ipairs(ctrl.items or {}) do items[#items + 1] = { text = tostring(v), value = v } end
+                                        w = Drops:CreateNestedDropdown(canvas, { label = ctrl.label or ctrl.dropdown:gsub("^%l", string.upper), items = items, width = ctrl.width or 260, value = addon.db[ctrl.dropdown], onChange = function(v) addon.db[ctrl.dropdown] = v end })
                                     elseif type(ctrl.button) == "string" and type(ctrl.action) == "function" then
-                                        UI:CreateButton(frame, ctrl.button, ctrl.width or 120, ctrl.height or 22, ctrl.action)
+                                        w = UI:CreateButton(canvas, { text = ctrl.button, width = ctrl.width, height = ctrl.height, onClick = ctrl.action })
                                     elseif type(ctrl.section) == "string" then
-                                        UI:CreateSection(frame, ctrl.section)
+                                        w = UI:CreateLabel(canvas, { text = ctrl.section, size = "normal", color = "accent" })
                                     end
+                                    if w then flow:Add(w) end
                                 end
                             end
+                            local function reflow()
+                                if canvas:GetWidth() <= 0 then return end
+                                local used = flow:Apply()
+                                canvas:SetHeight(math.max(1, used))
+                            end
+                            reflow()
+                            canvas:HookScript("OnShow", reflow)
+                            canvas:HookScript("OnSizeChanged", reflow)
                         end,
                     }
                 end
