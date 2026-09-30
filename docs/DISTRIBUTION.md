@@ -80,8 +80,11 @@ repository folders such as `tools/`, `schemas/`, or `docs/` into AddOns.
 ## Source-Only Tooling
 
 Schemas, documentation, reference tools, and the temporary MCP conformance
-fixture remain available only in the source repository. Public API, MCP, editor,
-and contract-bundle distribution belongs to the future RGX Studio product.
+fixture remain available only in the source repository. The public runtime Lua
+API ships inside the framework addon. Shared contract and authoring logic remain
+framework-owned; future Studio-specific services, adapters, and editor application
+distribution are separate from this player archive. MCP is optional tooling,
+not a runtime dependency. See [[RGX-MCP]] for the layer comparison.
 
 ## Local Verification
 
