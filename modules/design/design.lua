@@ -341,8 +341,8 @@ function Design:CreateSectionHeader(parent, text, icon)
     local header = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     header:SetHeight(32)
     self:ApplyBackdrop(header, "solid", 0.95)
-    -- BLU-style header: accent border around a dark band, primary label text.
-    header:SetBackdropBorderColor(self:Unpack("accent"))
+    -- Section headers frame in the theme's primary brand color.
+    header:SetBackdropBorderColor(self:Unpack("primary"))
 
     local leftInset = 10
     if icon then
