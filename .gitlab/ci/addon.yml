@@ -6,6 +6,11 @@ stages:
 addon:validate:
   stage: validate
   image: node:22-alpine
+  # Jobs without rules are excluded from MR pipelines by GitLab's default.
+  # contract:bundle still needs validation there; preserve that mandatory gate.
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - when: on_success
   before_script:
     - apk add --no-cache lua5.1 libxml2-utils
   script:
@@ -22,7 +27,8 @@ addon:validate:
       then echo 'WoWInterface publishing is retired; remove the references above.' >&2; exit 1; fi
     - >-
       if test -f tools/ci/package-lock.json;
-      then cd tools/ci && npm ci --no-audit --no-fund && npm run lua-check && npm run schema-check;
+       then cd tools/ci && npm ci --no-audit --no-fund && npm run lua-check && npm run schema-check
+       && if test -f gitlab-pipeline-check.mjs; then node gitlab-pipeline-check.mjs; fi;
       fi
 
 # Build the versioned contract bundle (issue #6) separately from the player
