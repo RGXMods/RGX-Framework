@@ -217,6 +217,79 @@ function Auras:HasPlayerAura(spellId)
     return type(SafeGetPlayerAuraBySpellID(spellId)) ~= "nil"
 end
 
+-- ── Tri-state readiness (fail-closed) ────────────────────────────────────────
+-- For rules like "PW:S ready" that require a cooldown to be provably idle and a
+-- locked aura to be provably absent. On clients with restricted combat data,
+-- comparison of secret values throws; predicates exist to decide before
+-- comparing, so restricted data reads answer "unknown" and callers fail closed.
+--
+--   Auras:CooldownState(spellID)                  -> "idle" | "active" | "unknown"
+--   Auras:AuraState(unit, spellID[, filter])      -> "present" | "absent" | "unknown"
+--   Auras:CastReadiness(spellID, blockedAuraID)   -> "ready" | "blocked" | "unknown"
+--     ready    cooldown idle AND blocked aura absent (both proven)
+--     blocked  cooldown active OR blocked aura present
+--     unknown  either half was restricted/unavailable (treat as blocked: no alert)
+
+function Auras:CooldownState(spellID)
+    if not spellID then return "unknown" end
+    -- Secrecy predicate first: when the client says this cooldown is restricted,
+    -- nothing downstream may be compared.
+    if C_Secrets and type(C_Secrets.ShouldSpellCooldownBeSecret) == "function" then
+        local ok, secret = pcall(C_Secrets.ShouldSpellCooldownBeSecret, spellID)
+        if ok and secret == true then return "unknown" end
+    end
+    local getter = GetSpellCooldown
+    if type(getter) ~= "function" and C_Spell then getter = C_Spell.GetSpellCooldown end
+    if type(getter) ~= "function" then return "unknown" end
+    local ok, info = pcall(getter, spellID)
+    if not ok then return "unknown" end
+    if type(info) == "nil" then return "unknown" end
+    local API = RGX.API
+    if not (API and API.CanAccessTable and API.CanAccessTable(info)) then return "unknown" end
+    local startTime = info.startTime
+    local duration = info.duration
+    if not (API.CanAccessValue and API.CanAccessValue(startTime))
+        or not (API.CanAccessValue and API.CanAccessValue(duration)) then
+        return "unknown"
+    end
+    if type(startTime) ~= "number" or type(duration) ~= "number" then return "unknown" end
+    if duration <= 0 then return "idle" end
+    local now = GetTime and GetTime() or 0
+    if startTime == 0 or (startTime + duration) <= now then return "idle" end
+    return "active"
+end
+
+function Auras:AuraState(unit, spellID, filter)
+    if not spellID then return "unknown" end
+    unit = NormalizeUnit(unit)
+    if type(unit) == "nil" then return "unknown" end
+
+    -- Secrecy predicates: restricted auras may not be distinguished from absent.
+    if C_Secrets and type(C_Secrets.ShouldSpellAuraSecrecy) == "function" then
+        local ok, secret = pcall(C_Secrets.ShouldSpellAuraSecrecy, spellID)
+        if ok and secret == true then return "unknown" end
+    end
+
+    local aura = self:GetAura(spellID, unit)
+    if aura and type(aura) == "table" then
+        local matches = AuraMatchesSpellID(aura, spellID)
+        if matches then return "present" end
+    end
+
+    -- "absent" requires the query to have actually run. The secrecy check above
+    -- is the only restriction gate Blizzard ships: when nothing was flagged
+    -- secret (or no such predicates exist), a nil lookup is a real miss.
+    return "absent"
+end
+
+function Auras:CastReadiness(spellID, blockedAuraSpellID)
+    local cooldown = self:CooldownState(spellID)
+    local aura = blockedAuraSpellID and self:AuraState("player", blockedAuraSpellID) or "absent"
+    if cooldown == "unknown" or aura == "unknown" then return "unknown" end
+    if cooldown == "active" or aura == "present" then return "blocked" end
+    return "ready"
+end
+
 local function IterateAccessibleAuras(unit, filters, callback)
     local visited = 0
     for _, f in ipairs(filters) do

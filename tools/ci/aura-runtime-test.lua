@@ -350,6 +350,60 @@ canaccesstable, issecrettable = nil, nil
 check(not RGX.API.CanAccessTable({}), "missing table predicates should fail closed under restrictions")
 canaccesstable, issecrettable = savedCanAccessTable, savedIsSecretTable
 
+-- â”€â”€ Tri-state readiness (fail-closed) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- A readiness query must prove the cooldown idle AND the blocking aura absent;
+-- restricted data downgrades before any comparison is attempted.
+check(Auras:CooldownState(9001) == "unknown", "missing cooldown record should answer unknown")
+
+__cooldowns[9002] = { startTime = 0, duration = 0 }
+check(Auras:CooldownState(9002) == "idle", "zero duration should answer idle")
+
+__timeNow = 100
+__cooldowns[9003] = { startTime = 95, duration = 8 }
+check(Auras:CooldownState(9003) == "active", "in-flight cooldown should answer active")
+
+__cooldowns[9004] = { startTime = 95, duration = 8 }
+__timeNow = 200
+check(Auras:CooldownState(9004) == "idle", "elapsed cooldown should answer idle")
+
+__timeNow = 100
+__cooldowns[9005] = { startTime = 95, duration = 8 }
+__secretCooldownSpells[9005] = true
+check(Auras:CooldownState(9005) == "unknown", "secret-flagged cooldown should answer unknown without comparing")
+__secretCooldownSpells[9005] = nil
+
+do
+    local deniedPayload = poisonTable()
+    __deniedTables[deniedPayload] = true
+    __cooldowns[9006] = deniedPayload
+    check(Auras:CooldownState(9006) == "unknown", "denied cooldown payload should answer unknown")
+    __deniedTables[deniedPayload] = nil
+end
+
+__playerAura = { spellId = 9010, auraInstanceID = 9010 }
+check(Auras:AuraState("player", 9010) == "present", "matching player aura should answer present")
+
+__playerAura = nil
+check(Auras:AuraState("player", 9010) == "absent", "clean miss should answer absent")
+
+__secretAuraSpells[9011] = true
+check(Auras:AuraState("player", 9011) == "unknown", "secret-flagged aura should answer unknown")
+__secretAuraSpells[9011] = nil
+
+-- The Priest rule: PW:S idle + Weakened Soul absent.
+__cooldowns[9012] = { startTime = 0, duration = 0 }
+__playerAura = { spellId = 9013, auraInstanceID = 9013 }
+check(Auras:CastReadiness(9012, 9013) == "blocked", "blocked aura present should block")
+__playerAura = nil
+check(Auras:CastReadiness(9012, 9013) == "ready", "idle cooldown + absent aura should answer ready")
+__cooldowns[9012] = { startTime = GetTime(), duration = 8 }
+check(Auras:CastReadiness(9012, 9013) == "blocked", "active cooldown should block")
+__cooldowns[9012] = nil
+check(Auras:CastReadiness(9012, 9013) == "unknown", "missing cooldown record should stay unknown")
+__secretCooldownSpells[9012] = true
+check(Auras:CastReadiness(9012, 9013) == "unknown", "secret cooldown can never be ready")
+__secretCooldownSpells[9012] = nil
+
 __rgxAuraTestResult = string.format(
     "LUA RUNTIME OK  restricted aura boundary (%d checks, Lua %s)",
     checks,

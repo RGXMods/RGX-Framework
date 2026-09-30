@@ -58,6 +58,58 @@ do
     _G[gName] = nil
 end
 
+-- Session round-trip: profile selection and profile data must survive a full
+-- write → simulated logout → reload cycle (the BLU-class bug: writes landed in
+-- a database the client never persisted). The client hand-back is modeled by
+-- reassigning the SavedVariables global with the same content, which is what
+-- happens when the serialised table deserializes before ADDON_LOADED.
+do
+    local tName = "RGX_TestDB_RoundTrip"
+    local defaults = { enabled = true, scale = 1.0 }
+    _G[tName] = nil
+
+    local db = RGX:NewDatabase(tName, defaults, {})
+    check(db:GetActiveProfile() == "Default", "round-trip: initial profile should be Default")
+    db:CreateProfile("Tank")
+    db.scale = 2.5
+    db.enabled = false
+    check(_G[tName].profiles.Tank.scale == 2.5, "round-trip: write must land in Tank")
+    check(_G[tName].activeProfile == "Tank", "round-trip: activeProfile must switch")
+
+    local savedContent = _G[tName]
+    _G[tName] = savedContent -- client deserialization returns equivalent content
+    local db2 = RGX:NewDatabase(tName, defaults, {})
+    check(db2:GetActiveProfile() == "Tank", "round-trip: active profile must persist across reload")
+    check(db2.scale == 2.5, "round-trip: profile data must persist across reload")
+    check(db2.enabled == false, "round-trip: stored false must survive, not fall back to default")
+    check(db2.global ~= nil, "round-trip: global table must exist")
+    check(db2.char ~= nil, "round-trip: char table must exist")
+    _G[tName] = nil
+end
+
+-- profileIsGlobal round-trip: the captured db.global view (SQPSettings style)
+-- must survive a reload and keep addressing whichever profile is active.
+do
+    local tName = "RGX_TestDB_GlobalViewRoundTrip"
+    _G[tName] = nil
+    local gdb = RGX:NewDatabase(tName, { enabled = true, scale = 1.0 }, { profileIsGlobal = true })
+    local G = gdb.global
+    gdb:CreateProfile("DPS")
+    G.enabled = false
+    check(_G[tName].profiles.DPS.enabled == false, "global-view: write through the view must persist to the profile")
+    check(_G[tName].activeProfile == "DPS", "global-view: activeProfile must switch")
+
+    local savedContent = _G[tName]
+    local gdb2 = RGX:NewDatabase(tName, { enabled = true, scale = 1.0 }, { profileIsGlobal = true })
+    check(gdb2:GetActiveProfile() == "DPS", "global-view: profile selection must persist across reload")
+    local G2 = gdb2.global
+    check(G2.enabled == false, "global-view: a fresh capture reads the persisted value")
+    G2.scale = 42
+    check(savedContent.profiles.DPS.scale == 42, "global-view: writes through a fresh view land in the saved profile")
+    check(G.scale == 42, "global-view: the pre-reload capture follows the same content")
+    _G[tName] = nil
+end
+
 if #failures > 0 then
     __rgxDbTestResult = "FAILED (" .. #failures .. "): " .. table.concat(failures, " | ")
 else
