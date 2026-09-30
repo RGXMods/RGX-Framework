@@ -9,7 +9,7 @@ import { Lua } from "wasmoon-lua5.1";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..");
-const EXPECTED_CHECKS = 86;
+const EXPECTED_CHECKS = 100;
 const source = (path) => readFileSync(join(ROOT, path), "utf8");
 
 const lua = await Lua.create();
@@ -76,6 +76,23 @@ try {
         ShouldUnitAuraInstanceBeSecret = function(unit, id)
             __instancePredicateCalls = __instancePredicateCalls + 1
             return __secretInstances[tostring(unit) .. ":" .. tostring(id)] == true
+        end,
+        ShouldSpellCooldownBeSecret = function(spellID)
+            return __secretCooldownSpells[spellID] == true
+        end,
+        ShouldSpellAuraSecrecy = function(spellID)
+            return __secretAuraSpells[spellID] == true
+        end,
+    }
+
+    __cooldowns = {}
+    __secretCooldownSpells = {}
+    __secretAuraSpells = {}
+    __timeNow = 0
+    GetTime = function() return __timeNow end
+    C_Spell = {
+        GetSpellCooldown = function(spellID)
+            return __cooldowns[spellID]
         end,
     }
 

@@ -103,7 +103,20 @@ assumes 0–100, color default assumes the db default for that key. Every
 control reads its initial state from `addon.db` and writes changes back —
 persistence *and visual restore* are not the author's job.
 
-## Layout model
+### Section
+
+`{ section = "Header Text" }` renders a text header inside a scrollable page. Tabs are
+laid out by the framework's scroll page + flow layout: controls render in
+declaration order, nothing overlaps, and the page scrolls when it is taller
+than the panel.
+
+### Button
+
+`{ button = "Button Text", action = function(addon) ... end, width, height }`
+hooks `action` straight into a click handler through `UI:CreateButton`'s
+table form. The handler is pcall-isolated and cannot break the panel.
+
+### Layout model
 
 One composable vocabulary, top to bottom (proven in BLU): **panel → main page
 + tabs → tabs can be multi-paged → 1–2 column card grid → rows/cards holding
