@@ -85,6 +85,13 @@ and contract-bundle distribution belongs to the future RGX Studio product.
 
 ## Local Verification
 
+The shared GitLab include explicitly selects `addon:validate` for merge-request
+pipelines as well as normal branch/tag pipelines. Contract and mirror jobs keep
+their mandatory validation dependency; mirror jobs never run for MRs. The
+source-rule regression check covers Framework and consuming-addon repositories:
+`npm --prefix tools/ci run gitlab-ci-check`. Actual MR pipeline/job success is
+also required; a valid branch pipeline or lint result alone is not MR evidence.
+
 From a framework source checkout:
 
 ```bash
