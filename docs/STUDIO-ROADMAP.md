@@ -135,8 +135,11 @@ runtime + schema + docs + contract data + RGX-Hello + Studio tooling fixtures
 
 RGX-Framework publishes only its WoW addon runtime. Canonical schemas and docs
 remain in Framework source, but Framework does not publish a second product,
-contract bundle, MCP service, or editor tooling. Those distributions belong to
-RGX Studio.
+contract bundle, MCP service, or editor tooling. Future Studio application and
+service distributions remain separate. This distribution distinction does not
+transfer the runtime API or reusable validation/generation/editor infrastructure
+out of Framework ownership. MCP is an optional developer adapter; Studio can
+consume shared contract logic without requiring that protocol.
 The future Studio-specific contract catalog is:
 
 ```text
@@ -283,9 +286,11 @@ not because application work should start early.
 - Add feature-introduction metadata to declarative keys.
 - Add the approved RGX API catalog.
 - Extract reusable pure contract validation/generation logic from MCP transport.
-- Move public MCP/API transport and editor integrations into RGX Studio; retain
-  the in-framework MCP only as a temporary source-tree conformance fixture until
-  that replacement is operational.
+- Keep shared contract validation/generation and reusable editor infrastructure
+  framework-owned; Studio consumes it through application-specific integrations.
+  Any Studio MCP or external-service adapter is separate from the runtime Lua API.
+  Retain the in-framework source conformance fixture until an equivalent tested
+  replacement is operational; a standalone shared engine remains planned (#8).
 - Add deterministic runtime fixtures for behavior the Studio will simulate.
 
 Exit: one tagged Framework revision produces its runtime archive and exposes a
