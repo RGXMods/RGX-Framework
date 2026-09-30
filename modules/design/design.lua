@@ -341,8 +341,11 @@ function Design:CreateSectionHeader(parent, text, icon)
     local header = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     header:SetHeight(32)
     self:ApplyBackdrop(header, "solid", 0.95)
-    -- Section headers frame in the theme's primary brand color.
-    header:SetBackdropBorderColor(self:Unpack("primary"))
+    -- Section headers frame in a muted version of the theme's brand color:
+    -- the primary token dimmed down, never the full-brightness or accent
+    -- variant, so every addon gets its own subdued brand frame.
+    local pr, pg, pb = self:Unpack("primary")
+    header:SetBackdropBorderColor(pr * 0.55, pg * 0.55, pb * 0.55)
 
     local leftInset = 10
     if icon then
