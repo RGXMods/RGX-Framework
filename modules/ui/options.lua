@@ -180,7 +180,9 @@ local function CreateTabButton(parent, text, tabIndex, row, col, panelRef, icon,
 end
 
 -- ── Auto-layout helper (passed to tab content functions) ─────────────────────
--- Widgets stack vertically so authors never need to call SetPoint.
+-- Widgets stack vertically through the framework's scroll page + flow layout:
+-- rows are positioned and clipped by the framework, so authors never call
+-- SetPoint for routine content and tall pages scroll instead of overflowing.
 --
 -- Usage inside a tab content function:
 --   content = function(add)
@@ -190,38 +192,40 @@ end
 --   end
 
 local function CreateAddHelper(frame)
+    -- The helper frame stays a valid WoW frame: callers may parent manual
+    -- widgets to it directly. Managed controls land in the scroll canvas.
     local UI = GetUI()
-    local yOff = 0
-    local X    = 16
-    local Y0   = 16
-    local GAP  = 10
-
-    local function Place(w)
-        w:SetPoint("TOPLEFT", frame, "TOPLEFT", X, -(Y0 + yOff))
-        yOff = yOff + w:GetHeight() + GAP
-    end
-
-    -- Extend the frame itself with helper methods so it remains a valid WoW
-    -- frame (usable as a parent, CreateTexture target, etc.) while also
-    -- supporting the auto-layout API.
     frame._frame = frame
 
+    if not (UI and UI.CreateScrollPage and UI.CreateFlowLayout) then
+        return frame
+    end
+
+    local canvas = UI:CreateScrollPage(frame)
+    local flow = UI:CreateFlowLayout(canvas)
+
+    frame._rgxCanvas = canvas
+    frame._rgxFlow = flow
+
+    local function Add(w)
+        if w then flow:Add(w) end
+        return w
+    end
+
     function frame:Toggle(label, storage, key, default, onChange)
-        if not UI then return end
-        local w = UI:CreateToggle(frame, {
+        local w = UI:CreateToggle(canvas, {
             label    = label,
             storage  = storage,
             key      = key,
             default  = default ~= false,
             onChange = onChange,
         })
-        Place(w)
+        Add(w)
         return w
     end
 
     function frame:Slider(label, storage, key, min, max, default, suffix)
-        if not UI then return end
-        local w = UI:CreateSlider(frame, {
+        local w = UI:CreateSlider(canvas, {
             label   = label,
             storage = storage,
             key     = key,
@@ -231,37 +235,30 @@ local function CreateAddHelper(frame)
             default = default,
             suffix  = suffix or "",
         })
-        Place(w)
+        Add(w)
         return w
     end
 
     function frame:Color(label, storage, key, default)
-        if not UI then return end
-        local w = UI:CreateColorPicker(frame, {
+        local w = UI:CreateColorPicker(canvas, {
             label   = label,
             storage = storage,
             key     = key,
             default = default or { r = 1, g = 1, b = 1 },
         })
-        Place(w)
+        Add(w)
         return w
     end
 
     function frame:Section(title)
-        if not UI then return end
-        local w = UI:CreateLabel(frame, { text = title, size = "normal", color = "accent" })
-        w:SetPoint("TOPLEFT", frame, "TOPLEFT", X, -(Y0 + yOff))
-        yOff = yOff + 28 + GAP
+        local w = UI:CreateLabel(canvas, { text = title, size = "normal", color = "accent" })
+        Add(w)
         return w
     end
 
     function frame:Text(text)
-        if not UI then return end
-        local w = UI:CreateLabel(frame, { text = text, size = "small", color = "muted" })
-        local y = -(Y0 + yOff)
-        w:SetPoint("TOPLEFT",  frame, "TOPLEFT",  X,  y)
-        w:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -X, y)
-        yOff = yOff + 20 + GAP
+        local w = UI:CreateLabel(canvas, { text = text, size = "small", color = "muted", wrap = true })
+        Add(w)
         return w
     end
 
@@ -594,6 +591,19 @@ end
     end
 
     -- ── SelectTab ─────────────────────────────────────────────────────────────
+    -- Flow content lands in _rgxCanvas when the helper is used; after every
+    -- build or refresh, pack the rows and size the scroll child to the used
+    -- height so long pages scroll and short ones fit.
+    local function ReflowScrollContent(content)
+        local flow = content._rgxFlow
+        local canvas = content._rgxCanvas
+        if not flow or not canvas then return end
+        local ok = pcall(function()
+            local used = flow:Apply()
+            canvas:SetHeight(math.max(1, used))
+        end)
+    end
+
     function panel:SelectTab(index)
         QueueBannerBuild()
 
@@ -622,8 +632,10 @@ end
                         else
                             content._built = true
                         end
+                        ReflowScrollContent(content)
                     elseif type(content.Refresh) == "function" then
                         pcall(content.Refresh, content)
+                        ReflowScrollContent(content)
                     end
                     if tabInfo and type(tabInfo.onSelect) == "function" then
                         pcall(tabInfo.onSelect)
@@ -674,6 +686,7 @@ end
                 elseif type(content.Refresh) == "function" then
                     pcall(content.Refresh, content)
                 end
+                ReflowScrollContent(content)
             end
         end
     end
