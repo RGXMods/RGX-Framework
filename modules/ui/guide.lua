@@ -45,6 +45,30 @@ local function BuildGuide(content)
     debugCard:AutoHeight()
 end
 
+function RGX:OpenDefinitionEditor()
+    local UI = self:GetUI()
+    if type(self:GetDB()) ~= "table" then return false end
+    if not self.definitionEditorPanel then
+        self.definitionEditorPanel = UI:CreateOptionsPanel({
+            addonName = addonName, title = "RGX definition editor", subtitle = "Source development slice",
+            width = 760, height = 600, registerInSettings = false, openInSettings = false,
+            content = function(content)
+                local db = self:GetDB()
+                local definition = db.definitionExample
+                if type(definition) == "nil" then
+                    definition = { version = 1, kind = "label", id = "example", text = "Hello RGX",
+                        enabled = true, x = 0, y = 0, scale = 100 }
+                end
+                local editor, err = UI:CreateDefinitionEditor(content, { definition = definition,
+                    onSave = function(saved) db.definitionExample = saved end })
+                if editor then editor:SetPoint("TOPLEFT", 10, -10)
+                else UI:CreateLabel(content, { text = err or "Unsupported saved definition", width = 460 }):SetPoint("TOPLEFT", 10, -10) end
+            end,
+        })
+    end
+    return self.definitionEditorPanel:Open()
+end
+
 RGX:RegisterEvent("PLAYER_LOGIN", function()
     if RGX.guidePanel then return end
     local UI = RGX:GetUI()

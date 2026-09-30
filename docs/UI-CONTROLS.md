@@ -436,3 +436,79 @@ end
 - Use `container` (the scroll child) as the parent for all controls
 - The scroll container handles overflow automatically
 - Tab content is built lazily on first show and cached unless invalidated
+
+## Definition Round Trip (Source Development Slice)
+
+This first editor slice is available on its feature source branch, not in the
+published `v2.7.9` addon. It edits **one plain-text label definition**, using one
+canonical schema (`schemas/rgx-definition.schema.json`) and equivalent guarded
+Lua/runtime and pure JavaScript/tooling implementations. It does not implement
+the complete Trigger/Conditions/Display/Actions/Load model, a Studio shell, or
+Blizzard Edit Mode registration.
+
+```lua
+local definition = {
+    version = 1, kind = "label", id = "example", text = "Hello RGX",
+    enabled = true, x = 0, y = 0, scale = 100,
+}
+local UI = RGX:GetUI()
+local editor, err = UI:CreateDefinitionEditor(parent, {
+    definition = definition,
+    onSave = function(saved)
+        addon.db.labelDefinition = saved -- persist through the consumer's RGX DB
+    end,
+})
+```
+
+All fields are required. `id` is an ASCII identifier (letter followed by up to
+47 letters/digits/underscores/hyphens); `text` is valid UTF-8 of at most 256 bytes
+without ASCII controls; `enabled` preserves explicit false; x/y are integer
+offsets in -500..500 (positive y is upward); scale is integer percent in 25..300.
+The model owns coordinates and scale, not pixel-identical fonts across platforms.
+
+`CreateDefinitionSession` owns independent saved and draft copies. Patch/Import
+change only a successfully validated draft. Save calls a synchronous `onSave`
+with an independent copy: nil/no return or true accepts; false, another return,
+or an error rejects. Callback side effects are the callback's responsibility;
+the session cannot roll back arbitrary consumer writes. Cancel and closing the
+in-game control restore the last saved draft. Invalid visible fields block Save.
+Getters return independent copies, not mutable session storage.
+
+Import/export uses the data-only envelope
+`RGXD1|label|id|enabled-bit|scale|x|y|percent-encoded-UTF8-text`.
+Every text byte is encoded as `%XX`; no Lua parser, `loadstring`, code execution,
+or live-game bridge is involved in imports. Unknown versions/fields, malformed
+UTF-8/numbers, and inaccessible values are rejected without replacing the saved
+definition. This is a transfer encoding, not a second authoring DSL.
+
+### Try Both Adapters
+
+1. Run `node tools/editor/serve.mjs` from a source checkout, then open
+   `http://127.0.0.1:18790`. The allowlisted static server is loopback-only and
+   read-only. The browser stores an explicitly saved definition in localStorage.
+2. Install a manifest-built feature runtime in the intended test client; run
+   `/rgx editor`. Save uses the framework's own DB leaf
+   `RGXFrameworkDB.definitionExample`; closing/reloading must restore the saved
+   definition. Unsupported stored definitions are preserved and reported.
+3. Change and export a browser draft; paste/import it in-game. Change it there,
+   export, and import back into the browser. Both directions must preserve text,
+   false, position and scale. Import is a draft operation; Save remains explicit.
+4. Test Save/Cancel, invalid fields, malformed imports, reopen/reload persistence,
+   overflow/preview clipping, and unaffected panels in each affected client.
+
+The in-game preview uses the existing RGX scroll viewport, sections, controls,
+and options lifecycle. The ordinary InputBox template and user-input distinction
+are verified in active Retail/Classic source mirrors under
+`Blizzard_SharedXML/Shared/InputBox/InputBoxTemplates.xml` and `.lua`; legacy
+Cataclysm/Forever visual behavior still needs client validation.
+
+`npm --prefix tools/ci run definition-check` crosses the actual JS/Lua validators
+and sessions in both directions, checks the JSON schema, exercises the real Lua
+editor adapter with explicit widget seams, and verifies the static server routes.
+Headless widget seams do not prove WoW geometry, protected-action behavior, or
+actual browser rendering. Record those manual results under framework #27.
+
+For AI-assisted authoring, `rgx_edit_definition` uses the same pure engine and
+returns normalized data plus an interoperable export string. Its schema resource
+is `rgx://schemas/definition`. It is optional source tooling and labels this slice
+`sourceOnly`; it never writes files or executes generated actions.

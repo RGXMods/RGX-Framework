@@ -608,6 +608,22 @@ Access via `Design.Colors.primary`, `Design.Colors.accent`, etc.
 | `UI:CreateSection(parent, opts)` | Section divider with optional title |
 | `UI:CreatePreviewFrame(parent, opts)` | Styled backdrop panel |
 
+### Definition Editor (Source Development Slice)
+
+These additive methods exist on the feature source checkout, not the published
+`v2.7.9` archive. Check method availability before a consumer uses them. They
+edit version-1 plain-text label data, not arbitrary Lua or a complete Studio project.
+
+| Method | Returns / behavior |
+|---|---|
+| `UI:NormalizeDefinition(data)` | Validated independent copy, or `nil, error`; rejects inaccessible values, unsupported versions and unknown fields |
+| `UI:ImportDefinition(wire)` / `ExportDefinition(data)` | Decode/encode the strict `RGXD1` data transfer format; never evaluate Lua |
+| `UI:CreateDefinitionSession(data, onSave)` | Draft/saved session with `GetDefinition`, `GetDraft`, `Patch`, `Import`, `Export`, `Save`, `Cancel` |
+| `UI:CreateDefinitionEditor(parent, opts)` | Framework control editor with `opts.definition`, synchronous failure-isolated `opts.onSave`, and `.session`; returns `nil, error` on invalid initial data |
+
+Run `/rgx editor` for the in-game reference adapter. See [[UI Controls]] for the
+format, external editor command, persistence, and required manual checks.
+
 ### Options Panel
 
 ```lua
