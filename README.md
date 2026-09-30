@@ -205,6 +205,25 @@ Full documentation lives in the [`docs/`](docs/) directory:
 - **[Dropdowns System](docs/DROPDOWNS.md)** — nested menus, auto-width, inline buttons, item normalization, MenuUtil vs legacy compat
 - **[Theming & Design](docs/THEMING.md)** — color palette, font styling conventions, texture system, consistent UI patterns
 
+### Localization
+
+RGX-Framework ships complete WoW client locale coverage for its own
+user-facing output across all twelve WoW client locales: **enUS** (base),
+**deDE**, **esES**, **esMX**, **frFR**, **itIT**, **koKR**, **ptBR**,
+**ptPT**, **ruRU**, **zhCN**, **zhTW**. The framework's own slash-command
+output, login line, control fallback labels, and reputation rank names are
+read from a single locale registry (`modules/locale/locale.lua` +
+`modules/locale/overrides.lua`). The English base loads unconditionally and
+every non-English block is guarded on `GetLocale()`, so untranslated keys
+fall through to English with no nil leaks.
+
+Consumer addons inherit the same convention via the
+`RGXLocale:NewLocale(addonName, locale, isDefault)` registry documented in
+`docs/ROADMAP.md` and `modules/locale/locale.lua`: register one `enUS` base
+table plus guarded per-locale blocks. The frozen per-consumer
+`Handle:SetLocale` / `Handle:GetLocale` wire-scope contract in
+`modules/sound/sound.lua` is unchanged.
+
 ### Design & Philosophy
 
 - **[Foundation Decisions](docs/FOUNDATION.md)** — what RGX keeps vs drops from Ace3, and why

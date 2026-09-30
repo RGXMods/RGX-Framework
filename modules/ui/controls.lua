@@ -85,15 +85,19 @@ UI.CreateTextureDropdown = UI.CreateStatusBarDropdown
 function UI:CreateColorPickerCard(parent, options)
     local CP = RGX:GetColorPicker()
     if not CP or not CP.CreateEmbedded then
-        return self:CreateLabel(parent, { text = "RGX ColorPicker not loaded", color = "red" })
+        local LocaleMod = RGX:GetModule("locale")
+        local LL = (LocaleMod and LocaleMod.L) or {}
+        return self:CreateLabel(parent, { text = LL["UI_COLORPICKER_NOT_LOADED"] or "RGX ColorPicker not loaded", color = "red" })
     end
     return CP:CreateEmbedded(parent, options or {})
 end
 
 function UI:CreateColorPicker(parent, options)
     options = options or {}
+    local LocaleMod = RGX:GetModule("locale")
+    local LL = (LocaleMod and LocaleMod.L) or {}
     local key = options.key or "color"
-    local label = options.label or "Color"
+    local label = options.label or LL["UI_COLOR_DEFAULT_LABEL"] or "Color"
     local default = options.default or {r=1, g=1, b=1}
     local storage = options.storage or {}
     local onChange = options.onChange or function() end
@@ -203,8 +207,10 @@ Usage:
 
 function UI:CreateSlider(parent, options)
 	options = options or {}
+	local LocaleMod = RGX:GetModule("locale")
+	local LL = (LocaleMod and LocaleMod.L) or {}
 	local key = options.key or "value"
-	local label = options.label or "Slider"
+	local label = options.label or LL["UI_SLIDER_DEFAULT_LABEL"] or "Slider"
 	local min = options.min or 0
 	local max = options.max or 100
 	local step = options.step or 1
