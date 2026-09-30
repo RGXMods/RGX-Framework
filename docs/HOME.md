@@ -61,7 +61,7 @@ That gives you saved settings with profiles, a tabbed options panel with control
 | Addon setup | AceAddon + AceDB + AceConfig assembly | `RGXAddon "Name" { }` |
 | Options UI | AceConfig mega-tables → unstyled AceGUI | Small declarative tables → themed, db-bound controls |
 | Safety infrastructure | Your problem | Failure-isolated dispatch, lockdown guards, and documented restricted-value boundaries |
-| Tooling | None | Source-only schema/conformance fixture + in-game test suite; public tooling belongs to Studio |
+| Tooling | None | Source-only schema/conformance fixture + in-game test suite; framework owns shared contract logic, future Studio consumes it |
 
 The full audited comparison lives in [`docs/ACE3-ANALYSIS.md`](https://github.com/RGXMods/RGX-Framework/blob/main/docs/ACE3-ANALYSIS.md).
 

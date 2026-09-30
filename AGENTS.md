@@ -73,7 +73,7 @@ blocker; do not silently change authority or claim partial work is complete.
 | Client capabilities / restricted data | `core/compat.lua`, `core/compat_api.lua`, `modules/auras/auras.lua`; `docs/AURAS.md` and **WoW API Reference** below |
 | Options, controls, layout, themes, media | `modules/ui/`, `modules/design/`, media modules; `docs/UI-CONTROLS.md`, `docs/THEMING.md` |
 | Shipped declarative API / DSL | `core/core.lua`, `schemas/rgx-addon.schema.json`, `docs/DECLARATIVE-API.md`; check each key's availability |
-| Authoring, validation, generation, audit | `tools/rgx-mcp/`, scoped `tools/rgx-mcp/CLAUDE.md`, `docs/RGX-MCP.md`; keep tooling dependent on the canonical contract |
+| Authoring, validation, generation, audit | `tools/rgx-mcp/`, scoped `tools/rgx-mcp/AGENTS.md`, `docs/RGX-MCP.md`; keep tooling dependent on the canonical contract |
 | Design direction / subsystem priority | `docs/ROADMAP.md`, `docs/ACE3-ANALYSIS.md`, `docs/STUDIO-ROADMAP.md`, canonical GitLab issues; proposals are not shipped APIs |
 | Verification / regressions | `tools/ci/package.json`, `tools/ci/*-check.mjs`, runtime fixtures, `docs/TESTING.md`, RGX-Hello E2E |
 | Player archive / publishing | `.pkgmeta`, `tools/ci/package-manifest-check.mjs`, `tools/release/publish-release.mjs`, `.gitlab/ci/addon.yml`, `docs/DISTRIBUTION.md` |
@@ -366,7 +366,24 @@ Existing declarative keys must not silently change meaning.
 
 ## MCP Boundary
 
-`tools/rgx-mcp/` is an in-repo Node package, not part of the Lua runtime dependency graph.
+- **Runtime API:** the Lua interface used by addons (`RGXAddon`, addon methods,
+  module getters/methods); this is the framework's primary product. See `docs/API.md`.
+- **Compatibility adapters:** `RGX.API` in `core/compat*.lua` normalizes client
+  differences; it is not a remote service or a substitute for documented consumer APIs.
+- **Contract:** schema and declarative documentation describe supported authoring
+  forms. They are framework-owned, not a second runtime or an MCP-only vocabulary.
+- **MCP:** `tools/rgx-mcp/` exposes source-only validation, generation, audit, and
+  contract context over stdio for developer clients. It is optional tooling, not
+  required to run addons, edit framework Lua, or build a Studio application.
+- **Studio:** a planned downstream authoring application. Its shell and
+  application-specific integrations consume the framework's shared contract and
+  reusable infrastructure; Studio does not own the runtime API.
+
+Prioritize the runtime API, its contract/docs, and consumer regressions. Preserve
+the existing MCP/RGX-Hello conformance coverage while reusable contract logic is
+extracted for other tooling (GitLab #8); a separate shared engine is planned, not
+already implemented. Expand MCP transport features only for a verified developer
+need, not as a prerequisite for framework work.
 
 Hard dependency direction:
 

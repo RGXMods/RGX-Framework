@@ -147,7 +147,7 @@ The canonical shipped/future boundary is [[Declarative API]]. The declarative Lu
 ### Tier 5 — Schema + source conformance fixture
 
 15. **`docs/DECLARATIVE-API.md` + `schemas/rgx-addon.schema.json`** — machine-checkable contract for the declarative shape
-16. **`rgx-mcp` transition fixture** — temporary read-only source-tree CI tool for validating declarative addons, auditing consumers, and generating shipped forms. It is not a Framework product. Public MCP/API/editor distribution belongs to RGX Studio after gate #30. Dependency rule: the fixture reads RGX docs/schema; the runtime never depends on it.
+16. **`rgx-mcp` transition fixture** — optional read-only source-tree CI tool for validating declarative addons, auditing consumers, and generating shipped forms. It is not a player product or the runtime Lua API. Framework owns the shared contract and reusable authoring logic; future Studio consumes that foundation and may distribute its app-specific integrations after its gate. Keep current conformance coverage until an equivalent replacement exists; transport-independent engine extraction is tracked in #8. Dependency rule: the fixture reads RGX docs/schema; the runtime never depends on it.
 
 **Why this order:** modules complete the runtime → the declarative layer gives one stable authoring surface → the schema/MCP make it machine-checkable. After Tier 5, wiring existing consumers and building brand-new addons becomes near-trivial for humans and agents alike.
 
