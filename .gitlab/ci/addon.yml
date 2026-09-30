@@ -25,10 +25,15 @@ addon:validate:
       -not -path './.gitlab/ci/addon.yml'
       -exec grep -nEi 'WoWInterface|X-WoWI-ID|WOWI_API_TOKEN' '{}' +;
       then echo 'WoWInterface publishing is retired; remove the references above.' >&2; exit 1; fi
-    - >-
-      if test -f tools/ci/package-lock.json;
-       then cd tools/ci && npm ci --no-audit --no-fund && npm run lua-check && npm run schema-check
-       && if test -f gitlab-pipeline-check.mjs; then node gitlab-pipeline-check.mjs; fi;
+    - |
+      if test -f tools/ci/package-lock.json; then
+        cd tools/ci
+        npm ci --no-audit --no-fund
+        npm run lua-check
+        npm run schema-check
+        if test -f gitlab-pipeline-check.mjs; then
+          node gitlab-pipeline-check.mjs
+        fi
       fi
 
 # Build the versioned contract bundle (issue #6) separately from the player
