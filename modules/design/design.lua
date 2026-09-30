@@ -321,7 +321,7 @@ function Design:CreateButton(parent, text, width, height, tooltipTitle, tooltipB
     btn:SetScript("OnLeave", function(self)
         self.bg:SetColorTexture(Design:Unpack("surface"))
         self.border:SetBackdropBorderColor(Design:Unpack("border"))
-        self.label:SetTextColor(Design:Unpack("text"))
+        self.label:SetTextColor(Design:Unpack("subtext"))
         GameTooltip:Hide()
     end)
 
