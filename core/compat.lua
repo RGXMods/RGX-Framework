@@ -257,6 +257,13 @@ function RGX.API.ShouldAurasBeSecret()
     return AuraSecretPredicate("ShouldAurasBeSecret")
 end
 
+function RGX.API.ShouldSpellCooldownBeSecret(spellID)
+    if not RGX.API.CanAccessValue(spellID) or type(spellID) ~= "number" then
+        return nil
+    end
+    return AuraSecretPredicate("ShouldSpellCooldownBeSecret", spellID)
+end
+
 function RGX.API.ShouldUnitAuraIndexBeSecret(unit, index, filter)
     if not RGX.API.CanAccessValue(unit) or type(unit) ~= "string" or unit == "" then
         return nil
@@ -301,7 +308,7 @@ function RGX.API.UnitAura(unit, index, filter)
         if not RGX.API.CanAccessTable(auraData) then return nil, "restricted" end
         return auraData, "accessible"
     end
-    if type(UnitAura) ~= "function" then return nil, "missing" end
+    if type(UnitAura) ~= "function" then return nil, "restricted" end
     local name, icon, applications, dispelName, duration, expirationTime,
         sourceUnit, isStealable, _, spellId, canApplyAura, isBossAura,
         castByPlayer, nameplateShowAll, timeMod = UnitAura(unit, index, filter)

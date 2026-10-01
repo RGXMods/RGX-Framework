@@ -240,10 +240,14 @@ is not in the published `v2.7.9` package and is not a complete Studio applicatio
 or Blizzard Edit Mode integration. Browser/WoW visual checks remain required.
 
 Read-only by design — it never edits repos, commits, or touches the game.
-Registered automatically for agent sessions in this repo via `.mcp.json` (run
-`npm ci` once in `tools/rgx-mcp/`). It is source-only and excluded from the WoW
-addon release. Public API/MCP/editor and contract-bundle distribution belongs to
-RGX Studio. RGX-Framework publishes only the framework addon package. See
+An MCP-capable harness can configure it using the source `.mcp.json` example (run
+`npm ci` once in `tools/rgx-mcp/`); discovery varies by harness. It is optional,
+source-only, and excluded from the WoW addon release. The framework's essential
+API is the [runtime Lua interface](docs/API.md) used by dependent addons. Its
+schema and reusable authoring logic also remain framework-owned; future Studio
+consumes that foundation rather than replacing it. See the
+[API/contract/MCP comparison](docs/RGX-MCP.md#runtime-api-contract-and-mcp).
+RGX-Framework publishes only the framework addon package. See
 [`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md).
 
 ---
