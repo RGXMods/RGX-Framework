@@ -31,6 +31,50 @@ function frameworkFile(rel) {
   return readFileSync(join(FRAMEWORK, rel), "utf8");
 }
 
+// ── WoW API dump search (synced local reference, deterministic; no live data) ─
+
+const DUMP_ROOT = join(FRAMEWORK, ".reference", "wow-api-dump");
+const dumpCaches = new Map();
+
+function loadDumpFlavor(flavorId) {
+  const manifest = JSON.parse(readFileSync(join(DUMP_ROOT, "manifest.json"), "utf8"));
+  const entry = manifest.flavors.find((flavor) => flavor.id === flavorId);
+  if (!entry || !entry.dumpRef || !entry.path) {
+    throw new Error(`Dump flavor '${flavorId}' is unavailable upstream (documented gap) or not synced.`);
+  }
+  const flavorRoot = join(DUMP_ROOT, flavorId);
+  let statsRoot;
+  try {
+    statsRoot = lstatSync(flavorRoot);
+  } catch {
+    throw new Error(`Dump flavor '${flavorId}' is not synced. Run tools/reference/sync-wow-api-dump.mjs.`);
+  }
+  const stamp = Number(statSafeMtime(flavorRoot));
+  const cached = dumpCaches.get(flavorId);
+  if (cached && cached.stamp === stamp) return cached;
+
+  const resources = join(flavorRoot, "Resources");
+  const catalog = { stamp, meta: { flavor: flavorId, build: entry.build, dumpRef: entry.dumpRef, commit: entry.commit }, lines: [] };
+  const stack = [resources];
+  for (let dir; (dir = stack.pop());) {
+    for (const file of readdirSync(dir)) {
+      const full = join(dir, file);
+      const st = lstatSync(full);
+      if (st.isDirectory()) { stack.push(full); continue; }
+      if (!file.endsWith(".lua")) continue;
+      const body = readFileSync(full, "utf8");
+      catalog.lines.push({ file: relative(flavorRoot, full).replaceAll("\\", "/"), body });
+    }
+  }
+  catalog.lines.sort((a, b) => compareUtf8(a.file, b.file));
+  dumpCaches.set(flavorId, catalog);
+  return catalog;
+}
+
+function statSafeMtime(path) {
+  try { return lstatSync(path).mtimeMs; } catch { return 0; }
+}
+
 // ── Schema (loaded from the framework checkout — single source of truth) ─────
 
 let schemaCache = null;
@@ -626,6 +670,54 @@ server.resource(
     contents: [
       { uri: "rgx://docs/declarative-api", mimeType: "text/markdown", text: frameworkFile("docs/DECLARATIVE-API.md") },
     ],
+  })
+);
+
+server.tool(
+  "rgx_search_wow_api",
+  "Deterministic substring search of the synced WoW API dumps (.reference/wow-api-dump/): globals, widget tables, templates, mixins, events, enums. Evidence-bearing output includes flavor, client build, dump branch and commit. Deterministic; never live-game state; confirm conclusions in the wow-ui-source mirror before runtime use.",
+  { pattern: z.string().min(2).describe("Substring (case-insensitive by default) to search for"),
+    flavor: z.enum(["retail", "classic-era", "tbc", "mists", "forever"]).optional(),
+    case_sensitive: z.boolean().optional(), limit: z.number().int().min(1).max(100).optional() },
+  async ({ pattern, flavor, case_sensitive, limit = 20 }) => {
+    const manifest = JSON.parse(readFileSync(join(DUMP_ROOT, "manifest.json"), "utf8"));
+    const flavors = flavor ? [flavor] : manifest.flavors.filter((entry) => entry.dumpRef).map((entry) => entry.id);
+    const needle = case_sensitive ? pattern : pattern.toLowerCase();
+    const results = [];
+    for (const flavorId of flavors) {
+      const catalog = loadDumpFlavor(flavorId);
+      const { meta } = catalog;
+      for (const page of catalog.lines) {
+        const fileLines = page.body.split(/\r?\n/);
+        for (let index = 0; index < fileLines.length; index += 1) {
+          const text = fileLines[index];
+          const hay = case_sensitive ? text : text.toLowerCase();
+          if (!hay.includes(needle)) continue;
+          results.push({ flavor: meta.flavor, build: meta.build, ref: `${meta.dumpRef}@${String(meta.commit).slice(0, 12)}`,
+            location: `${page.file}:${index + 1}`, line: text.trim().slice(0, 200) });
+          if (results.length >= limit) break;
+        }
+        if (results.length >= limit) break;
+      }
+      if (results.length >= limit) break;
+    }
+    return { content: [{ type: "text", text: JSON.stringify({
+      query: pattern, results, limit,
+      synced_from: "Ketho/BlizzardInterfaceResources (client-state dump; confirmation in wow-ui-source before runtime use)",
+      missing_flavors: manifest.flavors.filter((entry) => !entry.dumpRef).map((entry) => entry.id),
+    }, null, 2) }] };
+  }
+);
+
+server.resource(
+  "rgx-wow-api-dump-manifest",
+  "rgx://frames/wow-api-dump",
+  { description: "Synced WoW API dump provenance (branch/commit/build per flavor)", mimeType: "application/json" },
+  async () => ({
+    contents: [{
+      uri: "rgx://frames/wow-api-dump", mimeType: "application/json",
+      text: readFileSync(join(DUMP_ROOT, "manifest.json"), "utf8"),
+    }],
   })
 );
 
