@@ -1040,6 +1040,246 @@ function UI:CreateColumns(parent, count, options)
     return unpack(columns)
 end
 
+-- Versioned label definitions: data-only editor/import surface. Keep this
+-- validator congruent with schemas/rgx-definition.schema.json and JS fixtures.
+local definitionKeys = { version = true, kind = true, id = true, text = true,
+    enabled = true, x = true, y = true, scale = true }
+local function DefinitionValueAccessible(value)
+    return RGX.API and type(RGX.API.CanAccessValue) == "function"
+        and RGX.API.CanAccessValue(value) == true
+end
+local function DefinitionTableAccessible(value)
+    return RGX.API and type(RGX.API.CanAccessTable) == "function"
+        and RGX.API.CanAccessTable(value) == true
+end
+local function ValidDefinitionText(text)
+    if #text > 256 then return false end
+    local i = 1
+    while i <= #text do
+        local first = text:byte(i)
+        local count, low, high = 0, 128, 191
+        if first < 128 then
+            if first < 32 or first == 127 then return false end
+        elseif first >= 194 and first <= 223 then count = 1
+        elseif first == 224 then count, low = 2, 160
+        elseif first >= 225 and first <= 236 then count = 2
+        elseif first == 237 then count, high = 2, 159
+        elseif first >= 238 and first <= 239 then count = 2
+        elseif first == 240 then count, low = 3, 144
+        elseif first >= 241 and first <= 243 then count = 3
+        elseif first == 244 then count, high = 3, 143
+        else return false end
+        for offset = 1, count do
+            local byte = text:byte(i + offset)
+            if not byte or byte < (offset == 1 and low or 128)
+                or byte > (offset == 1 and high or 191) then return false end
+        end
+        i = i + count + 1
+    end
+    return true
+end
+
+function UI:NormalizeDefinition(value)
+    if not DefinitionTableAccessible(value) or getmetatable(value) ~= nil then
+        return nil, "definition must be an accessible plain table"
+    end
+    for key in pairs(value) do
+        if not DefinitionValueAccessible(key) or not definitionKeys[key] then
+            return nil, "unknown definition field"
+        end
+    end
+    for key in pairs(definitionKeys) do
+        if not DefinitionValueAccessible(value[key]) then return nil, "missing/inaccessible definition field" end
+    end
+    if value.version ~= 1 or value.kind ~= "label" then return nil, "unsupported definition version/kind" end
+    if type(value.id) ~= "string" or #value.id > 48
+        or not value.id:match("^[A-Za-z][A-Za-z0-9_-]*$") then return nil, "invalid definition id" end
+    if type(value.text) ~= "string" or not ValidDefinitionText(value.text) then return nil, "invalid definition text" end
+    if type(value.enabled) ~= "boolean" then return nil, "invalid definition enabled state" end
+    for _, key in ipairs({ "x", "y", "scale" }) do
+        local number = value[key]
+        local min, max = -500, 500
+        if key == "scale" then min, max = 25, 300 end
+        if type(number) ~= "number" or number ~= number or number < min or number > max
+            or number % 1 ~= 0 then return nil, "invalid definition number" end
+    end
+    return { version = 1, kind = "label", id = value.id, text = value.text,
+        enabled = value.enabled, x = value.x == 0 and 0 or value.x,
+        y = value.y == 0 and 0 or value.y, scale = value.scale }
+end
+
+function UI:ExportDefinition(value)
+    local d, err = self:NormalizeDefinition(value)
+    if not d then return nil, err end
+    local text = d.text:gsub(".", function(char) return string.format("%%%02X", char:byte()) end)
+    return table.concat({ "RGXD1", d.kind, d.id, d.enabled and "1" or "0",
+        tostring(d.scale), tostring(d.x), tostring(d.y), text }, "|")
+end
+
+function UI:ImportDefinition(wire)
+    if not DefinitionValueAccessible(wire) or type(wire) ~= "string" or #wire > 1024 then
+        return nil, "invalid definition transfer"
+    end
+    local p = {}
+    for part in (wire .. "|"):gmatch("(.-)|") do p[#p + 1] = part end
+    if #p ~= 8 or p[1] ~= "RGXD1" or (p[4] ~= "0" and p[4] ~= "1")
+        or p[8]:gsub("%%[%x][%x]", "") ~= "" then return nil, "invalid definition transfer" end
+    for index = 5, 7 do
+        if not p[index]:match("^-?%d+$") or p[index]:match("^-?0%d") then
+            return nil, "invalid definition number"
+        end
+    end
+    local text = p[8]:gsub("%%([%x][%x])", function(hex) return string.char(tonumber(hex, 16)) end)
+    return self:NormalizeDefinition({ version = 1, kind = p[2], id = p[3], text = text,
+        enabled = p[4] == "1", scale = tonumber(p[5]), x = tonumber(p[6]), y = tonumber(p[7]) })
+end
+
+function UI:CreateDefinitionSession(value, onSave)
+    local owner = self
+    local saved, err = owner:NormalizeDefinition(value)
+    if not saved then return nil, err end
+    local draft = owner:NormalizeDefinition(saved)
+    local session = {}
+    function session:GetDefinition() return owner:NormalizeDefinition(saved) end
+    function session:GetDraft() return owner:NormalizeDefinition(draft) end
+    function session:Patch(changes)
+        if not DefinitionTableAccessible(changes) or getmetatable(changes) ~= nil then
+            return nil, "changes must be an accessible plain table"
+        end
+        local nextDraft = owner:NormalizeDefinition(draft)
+        if not nextDraft then return nil, "inaccessible draft" end
+        for key, value in pairs(changes) do
+            if not DefinitionValueAccessible(key) or not DefinitionValueAccessible(value)
+                or not definitionKeys[key] then return nil, "invalid definition change" end
+            nextDraft[key] = value
+        end
+        local normalized, errorText = owner:NormalizeDefinition(nextDraft)
+        if not normalized then return nil, errorText end
+        draft = normalized
+        return self:GetDraft()
+    end
+    function session:Import(wire)
+        local nextDraft, errorText = owner:ImportDefinition(wire)
+        if not nextDraft then return nil, errorText end
+        draft = nextDraft
+        return self:GetDraft()
+    end
+    function session:Export() return owner:ExportDefinition(draft) end
+    function session:Cancel()
+        local nextDraft, errorText = owner:NormalizeDefinition(saved)
+        if not nextDraft then return nil, errorText end
+        draft = nextDraft
+        return self:GetDraft()
+    end
+    function session:Save()
+        local nextSaved, errorText = owner:NormalizeDefinition(draft)
+        if not nextSaved then return nil, errorText end
+        if type(onSave) == "function" then
+            local ok, accepted = pcall(onSave, owner:NormalizeDefinition(nextSaved))
+            if not ok or (type(accepted) ~= "nil" and
+                (not DefinitionValueAccessible(accepted) or accepted ~= true)) then
+                return nil, "definition save rejected"
+            end
+        end
+        saved = nextSaved
+        return self:GetDefinition()
+    end
+    return session
+end
+
+function UI:CreateDefinitionEditor(parent, options)
+    options = options or {}
+    local session, err = self:CreateDefinitionSession(options.definition, options.onSave)
+    if not session then return nil, err end
+    local frame = CreateFrame("Frame", nil, parent)
+    frame:SetSize(480, 390)
+    frame.session = session
+    local scene = self:CreateSection(frame, { title = "Label preview", width = 460, height = 100 })
+    scene:SetPoint("TOPLEFT", 10, 0)
+    local previewCanvas = self:CreateScrollPage(scene.content, 48)
+    local preview = CreateFrame("Frame", nil, previewCanvas)
+    preview:SetSize(1, 1)
+    local label = self:CreateLabel(preview, { text = "" })
+    label:SetPoint("CENTER")
+    local status = self:CreateLabel(frame, { text = "", width = 460, color = "muted" })
+    status:SetPoint("TOPLEFT", 10, -350)
+    local fields, syncing, invalidFields = {}, false, {}
+    local function updatePreview()
+        local d = session:GetDraft()
+        if not d then return end
+        label:SetText(d.text:gsub("|", "||")) -- plain text, matching browser textContent
+        preview:ClearAllPoints()
+        preview:SetPoint("CENTER", previewCanvas, "CENTER", d.x, d.y)
+        preview:SetScale(d.scale / 100)
+        if d.enabled then preview:Show() else preview:Hide() end
+    end
+    local function input(title, y, onChange)
+        local caption = self:CreateLabel(frame, { text = title })
+        caption:SetPoint("TOPLEFT", 10, y)
+        local box = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
+        box:SetSize(320, 24)
+        box:SetPoint("TOPLEFT", 140, y + 4)
+        if type(box.SetAutoFocus) == "function" then box:SetAutoFocus(false) end
+        ApplyDefaultFont(box)
+        box:SetScript("OnEscapePressed", function(widget) widget:ClearFocus() end)
+        box:SetScript("OnEnterPressed", function(widget) widget:ClearFocus() end)
+        box:SetScript("OnTextChanged", function(widget, userInput)
+            if syncing or not userInput or not onChange then return end
+            local ok, errorText = onChange(widget:GetText())
+            invalidFields[title] = not ok or nil
+            status:SetText(ok and "Draft changed; Save to persist." or (errorText or "Invalid value"))
+            updatePreview()
+        end)
+        return box
+    end
+    fields.text = input("Text", -120, function(text) return session:Patch({ text = text }) end)
+    for index, key in ipairs({ "x", "y", "scale" }) do
+        local fieldKey = key
+        fields[key] = input(key == "scale" and "Scale (%)" or key:upper(), -120 - index * 30,
+            function(text)
+                local number = tonumber(text)
+                if not number then return nil, "Enter an integer" end
+                return session:Patch({ [fieldKey] = number })
+            end)
+    end
+    local toggle = self:CreateToggle(frame, { label = "Enabled", storage = { enabled = session:GetDraft().enabled },
+        default = true, onChange = function(value) session:Patch({ enabled = value }); updatePreview() end })
+    toggle:SetPoint("TOPLEFT", 10, -242)
+    fields.transfer = input("Import / export", -274)
+    local function refresh(message)
+        syncing = true
+        invalidFields = {}
+        local d = session:GetDraft()
+        if d then
+            fields.text:SetText(d.text)
+            for _, key in ipairs({ "x", "y", "scale" }) do fields[key]:SetText(tostring(d[key])) end
+            toggle.check:SetChecked(d.enabled)
+            fields.transfer:SetText(session:Export() or "")
+        end
+        syncing = false
+        status:SetText(message or "Draft ready; changes are saved only on Save.")
+        updatePreview()
+    end
+    for index, action in ipairs({ "Import", "Export", "Save", "Cancel" }) do
+        local name = action
+        local button = self:CreateButton(frame, { text = name, width = 100, onClick = function()
+            if name == "Export" then fields.transfer:SetText(session:Export() or ""); return end
+            local result, errorText
+            if name == "Import" then result, errorText = session:Import(fields.transfer:GetText())
+            elseif name == "Save" then
+                if next(invalidFields) then status:SetText("Fix invalid fields before saving."); return end
+                result, errorText = session:Save()
+            else result, errorText = session:Cancel() end
+            if result then refresh(name .. " complete") else status:SetText(errorText or "Operation failed") end
+        end })
+        button:SetPoint("TOPLEFT", 10 + (index - 1) * 115, -312)
+    end
+    function frame:Refresh() refresh() end
+    frame:SetScript("OnHide", function() session:Cancel(); refresh() end)
+    refresh()
+    return frame
+end
+
 --[[============================================================================
     INITIALIZATION
 ============================================================================]]

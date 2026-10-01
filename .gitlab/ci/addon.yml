@@ -34,6 +34,9 @@ addon:validate:
         if test -f gitlab-pipeline-check.mjs; then
           node gitlab-pipeline-check.mjs
         fi
+        if test -f definition-roundtrip-check.mjs; then
+          node definition-roundtrip-check.mjs
+        fi
       fi
 
 # Build the versioned contract bundle (issue #6) separately from the player

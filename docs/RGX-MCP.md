@@ -34,13 +34,23 @@ MCP transport features.
 | `rgx_audit_lua` | Scan a `.lua` file or addon directory for unsafe patterns: raw `C_Timer`, manual `OnEvent` frames, `SLASH_` globals, unguarded `SetAttribute`, raw aura plumbing, and hook reassignment; RGXAuras consumers remain clean |
 | `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys, including deterministically ordered named `every` timers |
 | `rgx_get_contract` | Return the schema + shipped-surface reference for agent context |
+| `rgx_edit_definition` | Normalize/import/patch/export a version-1 label definition through shared pure logic; returns data and canonical transfer text, explicitly marked source-only |
 | `rgx_search_wow_api` | Deterministic substring search of the synced client dumps under `.reference/wow-api-dump/`, with per-result flavor/build/branch/commit/line provenance. Never live-game state; confirm runtime-driving conclusions in the wow-ui-source mirror |
 
 ## Resources
 
 - `rgx://schemas/addon` — the annotated JSON Schema
 - `rgx://docs/declarative-api` — the shipped declarative surface reference
+- `rgx://schemas/definition` — the source-development label definition schema
 - `rgx://frames/wow-api-dump` — synced dump provenance (fails closed with a sync instruction when dumps are absent; the main capability reference per the root agent guide)
+
+The definition tool delegates to `tools/contract/definition.mjs`, the same pure
+engine used by the external editor. It does not execute Lua, write files, require
+an AI provider, or connect to the live client. Unsupported versions, kinds, and
+fields fail explicitly; overrides via `RGX_FRAMEWORK_PATH` must match the engine's
+canonical schema. The new tool is not present in the published `v2.7.9` snapshot.
+See [[UI Controls]] for the editor round-trip slice; the existing addon-generator
+engine extraction remains separate work under framework #8.
 
 ## Setup
 
