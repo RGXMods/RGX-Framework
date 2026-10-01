@@ -218,11 +218,10 @@ local function DeserializeValue(str)
                     if char == "{" then
                         level = level + 1
                     elseif char == "}" then
+                        level = level - 1
                         if level == 0 then
                             endPos = i
                             break
-                        else
-                            level = level - 1
                         end
                     end
                 end
@@ -252,7 +251,7 @@ function RGX:SerializeTable(t)
 end
 
 function RGX:DeserializeTable(str)
-    if type(str) ~= "string" or not str:find("^" .. SERIAL_PREFIX, 1, true) then
+    if type(str) ~= "string" or str:sub(1, #SERIAL_PREFIX) ~= SERIAL_PREFIX then
         return nil
     end
     return DeserializeValue(str:sub(#SERIAL_PREFIX + 1))
@@ -347,14 +346,18 @@ local function NotifySwitch(self)
     self._guard = true
     local name = self._raw.activeProfile
     local profile = ActiveProfile(self)
-    if self._onSwitch then
-        self._onSwitch(name, profile)
-    end
-    if self._callbacks then
-        for _, cb in ipairs(self._callbacks) do
-            cb(name, profile)
+    local function dispatch(callback)
+        local ok = pcall(callback, name, profile)
+        if not ok and type(RGX.Error) == "function" then
+            -- Diagnostics must not throw past the notification guard either.
+            pcall(RGX.Error, RGX, "Database profile callback failed")
         end
     end
+    -- Snapshot observers so registration during dispatch applies next time.
+    local observers = {}
+    for i, callback in ipairs(self._callbacks or {}) do observers[i] = callback end
+    if type(self._onSwitch) == "function" then dispatch(self._onSwitch) end
+    for _, callback in ipairs(observers) do dispatch(callback) end
     self._guard = nil
 end
 
@@ -398,6 +401,19 @@ function DB:GetActiveProfile()
     return self._raw.activeProfile
 end
 
+-- Consumers may declare their addon before their settings module is loaded.
+-- Bind defaults to the existing owner instead of replacing the DB proxy.
+function DB:RegisterDefaults(defaults)
+    if type(defaults) ~= "table" then return false end
+    self._defaults = defaults
+    EnsureDefault(self)
+    for _, profile in pairs(self._raw.profiles) do
+        if type(profile) == "table" then FillDefaults(self, profile) end
+    end
+    NotifySwitch(self)
+    return true
+end
+
 -- ── Adopt the client-loaded SavedVariables table ────────────────────────────
 -- NewDatabase runs at consumer chunk load, BEFORE the client deserializes
 -- SavedVariables (that happens just before ADDON_LOADED). The client then
@@ -407,6 +423,12 @@ end
 -- fill-only defaults and fires the switch callbacks. No-op when bound.
 function DB:Adopt()
     local g = _G[self._globalName]
+    if type(g) == "nil" then
+        -- A saved file may explicitly assign nil after pre-load construction.
+        -- Reattach the initialized store so later writes reach the TOC global.
+        _G[self._globalName] = self._raw
+        return false
+    end
     if not g or g == self._raw then return false end
 
     self._raw = g
@@ -696,9 +718,7 @@ function RGX:NewDatabase(globalName, defaults, opts)
     FillDefaults(db, raw.profiles[active])
 
     -- Step 6: fire the initial onSwitch callback (used by BLU for UI wiring)
-    if opts.onSwitch then
-        opts.onSwitch(active, raw.profiles[active])
-    end
+    if opts.onSwitch then NotifySwitch(db) end
 
     -- Step 6b: profileIsGlobal consumers capture db.global once (e.g.
     -- SQPSettings = db.global). Return a live view proxy instead of the
