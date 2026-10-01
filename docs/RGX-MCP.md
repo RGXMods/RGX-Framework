@@ -34,11 +34,13 @@ MCP transport features.
 | `rgx_audit_lua` | Scan a `.lua` file or addon directory for unsafe patterns: raw `C_Timer`, manual `OnEvent` frames, `SLASH_` globals, unguarded `SetAttribute`, raw aura plumbing, and hook reassignment; RGXAuras consumers remain clean |
 | `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys, including deterministically ordered named `every` timers |
 | `rgx_get_contract` | Return the schema + shipped-surface reference for agent context |
+| `rgx_search_wow_api` | Deterministic substring search of the synced client dumps under `.reference/wow-api-dump/`, with per-result flavor/build/branch/commit/line provenance. Never live-game state; confirm runtime-driving conclusions in the wow-ui-source mirror |
 
 ## Resources
 
 - `rgx://schemas/addon` — the annotated JSON Schema
 - `rgx://docs/declarative-api` — the shipped declarative surface reference
+- `rgx://frames/wow-api-dump` — synced dump provenance (fails closed with a sync instruction when dumps are absent; the main capability reference per the root agent guide)
 
 ## Setup
 

@@ -291,9 +291,32 @@ Prefer secure hooks/framework wrappers over replacing Blizzard functions.
 
 ## WoW API Reference
 
-Use [Gethe/wow-ui-source](https://github.com/Gethe/wow-ui-source) as the searchable client-source mirror for Blizzard-generated API documentation, FrameXML, and SharedXML. It is a third-party Git mirror of Blizzard's shipped UI source, not an official Blizzard repository.
+**Main reference: the WoW API dump.** [Ketho/BlizzardInterfaceResources](https://github.com/Ketho/BlizzardInterfaceResources) contains client-state dumps (via the KethoDoc addon) of global API functions, widget/handler tables, templates, mixins, events, enums, frames, and CVars for each client branch. Client-specific capability design in this framework is built around that dump: it is the first answer to "does symbol X exist on client Y."
 
-Local sparse mirrors live under `.reference/wow-ui-source/` and are intentionally not runtime or release dependencies. Flavor routes are:
+- Upstream is generated from the running client, not official Blizzard documentation, and its license is unverified — treat it as an internal reference, never packaged or redistributed.
+- **Confirmation layer:** answer runtime-driving conclusions for confirmed signatures, payload semantics, and behavior from the wow-ui-source mirrors below. Reviewers must be able to trace each decision: dump inventory line → generated documentation/FrameXML confirmation.
+- Record dump branch/commit/build from `.reference/wow-api-dump/manifest.json` (or README build info) with any claim.
+
+Dump routes (synced into `.reference/wow-api-dump/<flavor>/`, not runtime or release dependencies):
+
+| RGX flavor | Local path | Dump branch |
+|---|---|---|
+| Retail | `.reference/wow-api-dump/retail/` | `live` |
+| Classic Era | `.reference/wow-api-dump/classic-era/` | `classic_era` |
+| Burning Crusade Classic | `.reference/wow-api-dump/tbc/` | `classic_anniversary` |
+| Mists Classic | `.reference/wow-api-dump/mists/` | `classic` |
+| WoW Forever beta | `.reference/wow-api-dump/forever/` | `forever` |
+| Wrath/Titan | — no dump branch upstream; wow-ui-source mirror only | — |
+| Cataclysm historical baseline | — no dump ref; wow-ui-source tag only | — |
+
+```powershell
+node tools/reference/sync-wow-api-dump.mjs                    # all flavors
+node tools/reference/sync-wow-api-dump.mjs --flavor forever
+node tools/reference/search-wow-api-dump.mjs "C_Secrets." --flavor=retail
+node tools/reference/search-wow-api-dump.mjs "EDIT_MODE_LAYOUTS_UPDATED" --flavor=forever
+```
+
+Confirmation layer: use [Gethe/wow-ui-source](https://github.com/Gethe/wow-ui-source), a third-party Git mirror of Blizzard's shipped UI source, for Blizzard-generated API documentation, FrameXML, and SharedXML. Local sparse mirrors live under `.reference/wow-ui-source/` and are intentionally not runtime or release dependencies. Flavor routes are:
 
 | RGX flavor | Local path | Upstream ref |
 |---|---|---|
@@ -314,18 +337,16 @@ Interface/AddOns/Blizzard_FrameXML/                   Blizzard UI behavior and A
 Interface/AddOns/Blizzard_SharedXML/                  shared utilities, mixins, templates, project constants
 ```
 
-Use exact source search first. Use the Graphify graph at `.reference/wow-ui-graph/graphify-out/graph.json` for discovery, relationships, and call-path questions:
+Search both layers; use the Graphify graph at `.reference/wow-ui-graph/graphify-out/graph.json` for discovery, relationships, and call-path questions:
 
 ```powershell
 node tools/reference/sync-wow-ui-source.mjs
 node tools/reference/search-wow-api.mjs "UNIT_AURA" --flavor=retail --api-only
 node tools/reference/build-wow-api-graph.mjs
 graphify query "How is UNIT_AURA handled?" --graph .reference/wow-ui-graph/graphify-out/graph.json
-graphify explain "C_UnitAuras.GetAuraDataByIndex" --graph .reference/wow-ui-graph/graphify-out/graph.json
-graphify path "UNIT_AURA" "C_UnitAuras.GetAuraDataByIndex" --graph .reference/wow-ui-graph/graphify-out/graph.json
 ```
 
-Graphify is an index, not evidence. Confirm every conclusion in the underlying generated documentation or UI source and cite the flavor, client version, ref/commit, file, and line when the conclusion drives runtime behavior.
+Graphify is an index, not evidence. Confirm every conclusion in the underlying dump record, generated documentation, or UI source and cite the flavor, client version, ref/commit, file, and line when the conclusion drives runtime behavior.
 
 The repository's local `graphify-out/` is also discovery-only. Symbol-name matches
 do not establish an exported API or documentation coverage: distinguish local
@@ -338,7 +359,8 @@ For forward compatibility work:
 * Treat missing APIs, payload fields, templates, and enum values as flavor capabilities, not assumptions to paper over with empty globals.
 * Treat secret/restricted values as opaque. Check secrecy with Blizzard's supported predicates before boolean tests, comparison, indexing, iteration, formatting, or forwarding to consumer code.
 * A caught Lua error does not undo taint. Fix unsafe reads at the framework boundary rather than relying on `pcall` or suppressing the report.
-* Re-sync and rebuild the local graph before compatibility audits when `RGX-Framework.toc` changes Interface version or upstream client branches advance.
+* Re-sync the dump and mirrors and rebuild the local graph before compatibility audits when `RGX-Framework.toc` changes Interface version or upstream client branches advance.
+* MCP tooling offers `rgx_search_wow_api` reading the synced local dumps (`rgx://frames/wow-api-dump`); it is deterministic substring evidence with flavor/build/commit provenance, never live-game state and never a reason to skip the confirmation layer.
 
 ## Declarative Contract
 
