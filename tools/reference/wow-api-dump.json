@@ -1,0 +1,14 @@
+{
+  "repository": "https://github.com/Ketho/BlizzardInterfaceResources.git",
+  "dumpRoot": "Resources",
+  "note": "Client-state dump (KethoDoc). Main RGX capability inventory: which globals, widget methods, templates, mixins, events, and enums exist on each client. License unverified; internal reference only, never packaged or redistributed.",
+  "flavors": [
+    { "id": "retail", "label": "Retail", "dumpRef": "live", "active": true },
+    { "id": "classic-era", "label": "Classic Era", "dumpRef": "classic_era", "active": true },
+    { "id": "tbc", "label": "Burning Crusade Classic", "dumpRef": "classic_anniversary", "active": true },
+    { "id": "mists", "label": "Mists Classic", "dumpRef": "classic", "active": true },
+    { "id": "forever", "label": "WoW Forever beta", "dumpRef": "forever", "active": true },
+    { "id": "wrath", "label": "Wrath/Titan", "dumpRef": null, "active": false, "gap": "No dump branch exists upstream; use the wow-ui-source mirror only." },
+    { "id": "cata-4.4.2", "label": "Cataclysm 4.4.2 historical baseline", "dumpRef": null, "active": false, "gap": "Historical tag baseline stays in the wow-ui-source mirror; no dump ref was published." }
+  ]
+}

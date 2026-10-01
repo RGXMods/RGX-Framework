@@ -8,7 +8,7 @@ Restricted or unverifiable values fail closed and never reach consumer
 callbacks. `pcall` still isolates ordinary API/callback errors; it does not
 prevent taint and is not used as authorization.
 
-Implemented in `v2.7.0` (current). Previous release `v2.6.2` had best-effort arbitrary-unit behavior.
+The accessible-only boundary was introduced in `v2.7.0`. Previous release `v2.6.2` had best-effort arbitrary-unit behavior.
 
 ```lua
 local Auras = RGX:GetAuras()
@@ -35,6 +35,39 @@ end)
 number of accessible snapshots delivered before the first denied or
 unverifiable entry. A zero count can mean no aura or a fail-closed restriction;
 the API intentionally does not reveal which.
+
+## Readiness Queries
+
+The framework owns the readiness boundary shared by dependent addons:
+
+```lua
+local state = Auras:CastReadiness(shieldSpellId, weakenedSoulSpellId)
+if state == "ready" then
+    -- The cooldown is idle and the blocking aura is provably absent.
+end
+```
+
+`CooldownState` returns `"idle"`, `"active"`, or `"unknown"`. It prefers the
+modern cooldown table, supports legacy tuples, checks the cooldown secrecy
+predicate before querying, and guards the returned fields before comparison.
+On-hold cooldowns remain active. Modified-rate cooldowns remain active until
+Blizzard reports zero duration rather than assuming an expiry conversion.
+Missing APIs, failed predicates, denied fields, and invalid records are unknown.
+
+`AuraState(unit, spellId, filter)` returns `"present"`, `"absent"`, or
+`"unknown"`. It scans the requested filter, or both `HELPFUL` and `HARMFUL`
+when omitted. A matching accessible spell ID proves presence. Only reaching
+the accessible end of every requested filter proves absence. A restricted
+entry, inaccessible spell ID, missing API, or failed query returns unknown.
+It does not infer absence from `GetAura` returning nil: a
+`RequiresNonSecretAura` lookup can hide a restricted match.
+
+`CastReadiness` returns `"unknown"` if either query is unknown, `"blocked"`
+for an active cooldown or present blocking aura, and `"ready"` only when both
+conditions are proven. Omit the blocking aura argument for cooldown-only rules.
+This is not a complete castability check: range, resources, charges, and other
+spell requirements are outside this query; a reported cooldown includes any
+global cooldown reported by Blizzard.
 
 ## Watching
 
@@ -86,6 +119,22 @@ partially supported secret-capable environment fails closed.
 | Mists | `5.5.4.69155` | `classic` | `ee771c39c640884d58d599f6c824f63d055b3ad7` |
 | Cataclysm baseline | `4.4.2.60895` | tag `4.4.2` | `a1ca983a43a7aa73b5764d3245925ba40869fce3` |
 
+Readiness repair source inspection additionally used Retail `12.1.0.69404`
+(`live`, `81d15e42f16f3473131880500e7a8c8eb88fa5e6`) and Mists
+`5.5.4.69383` (`classic`, `31840c4374f114e6d42789f90d462f0f5dce41cc`);
+the other four mirror revisions remain those listed above. These are source
+inspection baselines, not in-game validation results.
+
+Within `Interface/AddOns/Blizzard_APIDocumentationGenerated/`:
+
+- Retail `SecretPredicateAPIDocumentation.lua:172-185,220-235` documents
+  `ShouldSpellCooldownBeSecret` and `ShouldUnitAuraIndexBeSecret`. Era, TBC,
+  Wrath/Titan, and Mists expose the same predicates at lines 148 and 193.
+- Retail `SpellDocumentation.lua:268-283` and the four active Classic mirrors
+  at lines 108 onward define the modern `GetSpellCooldown` table return.
+- `SpellSharedDocumentation.lua:19-27` in those five mirrors defines start,
+  duration, enabled/on-hold state, and modification rate.
+
 Evidence comes from each mirror's generated `FrameScriptDocumentation.lua`,
 `SecretPredicateAPIDocumentation.lua`, `UnitAuraDocumentation.lua`, and
 `UnitConstantsDocumentation.lua`, confirmed against Blizzard SharedXML call
@@ -120,7 +169,12 @@ Automation cannot emulate engine secret values or prove absence of taint. Valida
    change and take one final snapshot. The counters and chat log must remain
    unchanged, proving unsubscribe.
 9. Exit the client and inspect `_retail_/Logs/taint.log` for RGX-Framework or
-   RGX-Hello entries. Attach the result to GitLab #36.
+    RGX-Hello entries. Attach the result to [GitLab #14](https://gitlab.dicematrix.cloud/rgxmods/warcraft/RGX-Framework/-/issues/14).
+
+For readiness, also check an idle spell with an absent blocker, an active
+cooldown, and a present blocker. In a restricted state an unprovable blocker
+must yield `"unknown"`, never trigger a `"ready"` alert. Repeat ordinary queries
+on the supported Classic/Forever clients and record which clients were tested.
 
 ## API
 
@@ -132,5 +186,8 @@ Automation cannot emulate engine secret values or prove absence of taint. Valida
 | `Auras:WatchUnit(unit)` / `UnwatchUnit(unit)` | boolean |
 | `Auras:OnApplied(fn)` / `OnRemoved(fn)` / `OnUpdated(fn)` | unsubscribe closure |
 | `Auras:GetAuraByInstanceID(unit, id)` | accessible AuraData \| nil |
+| `Auras:CooldownState(spellId)` | idle \| active \| unknown |
+| `Auras:AuraState(unit, spellId[, filter])` | present \| absent \| unknown |
+| `Auras:CastReadiness(spellId[, blockedAuraSpellId])` | ready \| blocked \| unknown |
 
 Source: [`modules/auras/auras.lua`](https://github.com/RGXMods/RGX-Framework/blob/main/modules/auras/auras.lua). Test it in-game via [[RGX-Hello|Testing]]'s Auras tab.
