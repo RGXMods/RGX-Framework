@@ -22,6 +22,7 @@ This transition tool lives at `tools/rgx-mcp/` **inside the framework source rep
 | `rgx_audit_lua` | Scan a `.lua` file or addon directory for the unsafe patterns the framework prevents: raw `C_Timer`, manual `OnEvent` frames, `SLASH_` globals, unguarded `SetAttribute`, raw aura event/API plumbing, and hook reassignment. Deterministic |
 | `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys (`RGXAddon "Name" { ... }`), including named `every` timers |
 | `rgx_get_contract` | Return the schema + shipped-surface reference for agent context |
+| `rgx_search_wow_api` | Search the synced WoW API dumps (main capability reference) with flavor/build/commit provenance; deterministic, offline after `sync-wow-api-dump.mjs` |
 
 ## Resources
 
