@@ -15,9 +15,12 @@ import luaparse from "luaparse";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
+import { createDefinitionEngine, exampleDefinition } from "../../contract/definition.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SERVER_ENTRY = join(HERE, "..", "src", "server.js");
+const definitionSchema = JSON.parse(readFileSync(join(HERE, "../../../schemas/rgx-definition.schema.json"), "utf8"));
+const { importDefinition } = createDefinitionEngine(definitionSchema);
 
 const helloPath = process.argv[2];
 if (!helloPath) {
@@ -99,6 +102,21 @@ const client = new Client({ name: "rgx-mcp-hello-test", version: "0.1.0" }, { ca
 await client.connect(transport);
 
 try {
+  console.log("== Shared definition authoring (source-development slice) ==");
+  const definitionResource = await client.readResource({ uri: "rgx://schemas/definition" });
+  check("definition resource exposes the canonical schema",
+    JSON.stringify(JSON.parse(definitionResource.contents[0].text)) === JSON.stringify(definitionSchema));
+  const edited = await client.callTool({ name: "rgx_edit_definition", arguments: {
+    operation: "patch", definition: exampleDefinition, changes: { enabled: false, text: "AI-authored Ω", x: 23 },
+  } });
+  const authored = JSON.parse(edited.content[0].text);
+  check("AI authoring preserves false and returns an interoperable data-only definition",
+    authored.sourceOnly === true && authored.definition.enabled === false
+      && importDefinition(authored.wire).text === "AI-authored Ω" && authored.definition.x === 23);
+  const rejected = await client.callTool({ name: "rgx_edit_definition", arguments: {
+    operation: "normalize", definition: { ...exampleDefinition, version: 2 },
+  } });
+  check("AI definition tools reject unsupported versions", rejected.isError === true);
   console.log("== RGX-Hello source congruence ==");
   check("parsed the real RGX-Hello declaration", actualAddonName === "RGX-Hello");
   const minimumComparison = compareVersions(minimumFrameworkVersion, frameworkVersion);

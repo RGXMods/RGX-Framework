@@ -47,9 +47,11 @@ RGX:RegisterSlashCommand("rgx", function(msg)
         else
             RGX:Print("Usage: /rgx login on|off|status")
         end
+    elseif cmd == "editor" then
+        RGX:OpenDefinitionEditor()
     elseif cmd == "version" or cmd == "ver" then
         RGX:Print("RGX-Framework v" .. (RGX.version or "unknown"))
     else
-        RGX:Print("Commands: modules, fonts, debug, dbtest, login, version")
+        RGX:Print("Commands: modules, fonts, debug, dbtest, login, editor, version")
     end
 end, "RGX")

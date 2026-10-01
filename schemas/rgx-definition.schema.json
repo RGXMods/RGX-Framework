@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/RGXMods/RGX-Framework/schemas/rgx-definition.schema.json",
+  "title": "RGX label definition version 1 (source development slice)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "kind", "id", "text", "enabled", "x", "y", "scale"],
+  "properties": {
+    "version": { "const": 1 },
+    "kind": { "const": "label" },
+    "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,47}$" },
+    "text": { "type": "string", "format": "rgx-label-text", "maxLength": 256, "x-rgx-maxBytes": 256, "description": "Plain UTF-8 text, at most 256 bytes, with no ASCII control characters" },
+    "enabled": { "type": "boolean" },
+    "x": { "type": "integer", "minimum": -500, "maximum": 500 },
+    "y": { "type": "integer", "minimum": -500, "maximum": 500 },
+    "scale": { "type": "integer", "minimum": 25, "maximum": 300, "description": "Scale in percent" }
+  }
+}
