@@ -565,7 +565,9 @@ function UI:CreateToggle(parent, options)
     local check = CreateFrame("CheckButton", nil, container, "UICheckButtonTemplate")
     check:SetSize(24, 24)
     check:SetPoint("LEFT", 0, 0)
-    check:SetChecked(storage[key] ~= false and default)
+    local currentValue = storage[key]
+    if type(currentValue) == "nil" then currentValue = default end
+    check:SetChecked(currentValue and true or false)
     
     -- Label
     container.label = self:CreateLabel(container, {
