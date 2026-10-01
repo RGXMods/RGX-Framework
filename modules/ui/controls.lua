@@ -287,13 +287,17 @@ function UI:CreateSlider(parent, options)
 	-- the track has no width yet (frame not laid out, or built while hidden) so
 	-- the caller can retry once geometry resolves.
 	local function positionThumb()
+		local current = storage[key] or default
+		container.valueLabel:SetText(current .. suffix)
+		valueLabel:SetText(current .. suffix)
 		local trackWidth = track:GetWidth()
 		if trackWidth < 1 then return false end
-		local pct = valueToPercent(storage[key] or default)
+		local pct = math.max(0, math.min(1, valueToPercent(current)))
+		local thumbX = trackWidth * pct
 		local fillW = math.max(4, trackWidth * pct)
 		if showProgress then fill:SetWidth(fillW) end
 		thumb:ClearAllPoints()
-		thumb:SetPoint("CENTER", track, "LEFT", fillW, 0)
+		thumb:SetPoint("CENTER", track, "LEFT", thumbX, 0)
 		return true
 	end
 
@@ -302,7 +306,7 @@ function UI:CreateSlider(parent, options)
 	-- otherwise stay at the wrong spot until its value changed -- the "default
 	-- position wrong on login until set/reset/reload" bug. OnShow re-arms this.
 	local function positionThumbDeferred()
-		if positionThumb() then return end
+		if positionThumb() then trackFrame:SetScript("OnUpdate", nil); return end
 		trackFrame:SetScript("OnUpdate", function()
 			if positionThumb() then trackFrame:SetScript("OnUpdate", nil) end
 		end)
@@ -365,6 +369,8 @@ function UI:CreateSlider(parent, options)
 	-- runs while the panel is usually still hidden (login/load), so this is what
 	-- makes the initial position correct without needing a set/reset/reload.
 	container:SetScript("OnShow", positionThumbDeferred)
+	container:SetScript("OnSizeChanged", positionThumbDeferred)
+	trackFrame:SetScript("OnSizeChanged", positionThumbDeferred)
 
 	apply(storage[key] or default)
 
@@ -458,13 +464,8 @@ function UI:CreateVolumeSlider(parent, options)
 		onChange(volume)
 	end
 
-	local function apply(volume)
-		if volume ~= "low" and volume ~= "high" then
-			volume = "medium"
-		end
-		setVolume(volume)
-
-		local function updateVisuals()
+	local function updateVisuals()
+			local volume = getVolume()
 			local trackWidth = track:GetWidth()
 			if trackWidth < 1 then return false end
 			local pct = 0.50
@@ -479,15 +480,22 @@ function UI:CreateVolumeSlider(parent, options)
 			thumb:SetPoint("CENTER", track, "LEFT", fillW, 0)
 			label:SetText(volume:gsub("^%l", string.upper))
 			return true
-		end
-
+	end
+	local function refreshVisuals()
 		if not updateVisuals() then
 			frame:SetScript("OnUpdate", function()
 				if updateVisuals() then
 					frame:SetScript("OnUpdate", nil)
 				end
 			end)
+		else
+			frame:SetScript("OnUpdate", nil)
 		end
+	end
+	local function apply(volume)
+		if volume ~= "low" and volume ~= "high" then volume = "medium" end
+		setVolume(volume)
+		refreshVisuals()
 	end
 
 	button:SetScript("OnMouseDown", function(self)
@@ -516,6 +524,8 @@ function UI:CreateVolumeSlider(parent, options)
 		end
 	end)
 	button:EnableMouseWheel(true)
+	frame:SetScript("OnShow", refreshVisuals)
+	frame:SetScript("OnSizeChanged", refreshVisuals)
 
 	apply(getVolume())
 
@@ -777,17 +787,30 @@ end
 -- A scrollable canvas for card layouts taller than an options tab. Keep the
 -- scrollbar and clipping in the framework so consumers only position cards.
 function UI:CreateScrollPage(parent, height)
-    local scroll = CreateFrame("ScrollFrame", nil, parent, "UIPanelScrollFrameTemplate")
+    -- Intrinsic clipping viewport: framework pages never expose native bars.
+    local scroll = CreateFrame("ScrollFrame", nil, parent)
     scroll:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, -8)
-    scroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -30, 8)
+    scroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -8, 8)
 
     local canvas = CreateFrame("Frame", nil, scroll)
     canvas:SetHeight(height or 620)
     canvas:SetWidth(math.max(1, scroll:GetWidth()))
     scroll:SetScrollChild(canvas)
+    local function clampScroll()
+        local max = math.max(0, scroll:GetVerticalScrollRange())
+        scroll:SetVerticalScroll(math.max(0, math.min(max, scroll:GetVerticalScroll())))
+    end
+    scroll:EnableMouseWheel(true)
+    scroll:SetScript("OnMouseWheel", function(self, delta)
+        local max = math.max(0, self:GetVerticalScrollRange())
+        self:SetVerticalScroll(math.max(0, math.min(max, self:GetVerticalScroll() - delta * 30)))
+    end)
+    scroll:HookScript("OnShow", clampScroll)
     scroll:HookScript("OnSizeChanged", function(self, width)
         canvas:SetWidth(math.max(1, width))
+        clampScroll()
     end)
+    canvas:HookScript("OnSizeChanged", clampScroll)
     return canvas, scroll
 end
 

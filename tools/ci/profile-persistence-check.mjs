@@ -98,7 +98,78 @@ await scenario("observer registration during onSwitch waits for next notificatio
   assert(db:LoadProfile("Default") and calls == 0)
   assert(db:LoadProfile("Default") and calls == 1)
 `);
+await scenario("sliders restore after delayed geometry, resize and show", `
+  local width, textures = 200, {}
+  local function widget(parent)
+    local w = { scripts = {}, parent = parent, children = {} }
+    if parent and parent.children then parent.children[#parent.children + 1] = w end
+    function w:SetScript(key, fn) self.scripts[key] = fn end
+    function w:SetPoint(point, relative, relativePoint, x) self.pointX = x end
+    function w:SetText(text) self.text = text end
+    function w:GetWidth() return width end
+    for _, key in ipairs({ "SetSize", "SetHeight", "SetWidth", "SetAllPoints", "SetTextColor", "Hide", "Show", "SetColorTexture", "SetTexture", "SetVertexColor", "ClearAllPoints", "EnableMouseWheel" }) do w[key] = function() end end
+    function w:CreateFontString() return widget(self) end
+    function w:CreateTexture() local t = widget(self); textures[#textures + 1] = t; return t end
+    return w
+  end
+  CreateFrame = function(_, _, parent) return widget(parent) end
+  RGX.GetDesign = function() return { Unpack = function() return 1, 1, 1, 1 end } end
+  RGX.UI.CreateLabel = function(_, parent) return widget(parent) end
+  RGX.UI.CreateResetButton = function(_, parent) return widget(parent) end
+  RGX.UI.AnchorRowReset = function() end
+  local storage = { value = 50 }
+  local numeric = RGX.UI:CreateSlider(widget(), { storage = storage, min = 0, max = 100 })
+  local thumb = textures[3]
+  assert(thumb.pointX == 100)
+  width = 400
+  local track = thumb.parent
+  if track.scripts.OnSizeChanged then track.scripts.OnSizeChanged(track, 400, 18) end
+  assert(thumb.pointX == 200, "numeric thumb stayed at pre-layout width")
+  storage.value = 75
+  numeric.scripts.OnShow(numeric)
+  assert(thumb.pointX == 300 and numeric.valueLabel.text == "75", "show did not restore both position and label")
+  width, textures = 200, {}
+  local volumeStorage = { volume = "low" }
+  local volume = RGX.UI:CreateVolumeSlider(widget(), { storage = volumeStorage })
+  local volumeThumb = textures[3]
+  width = 400
+  if volume.scripts.OnSizeChanged then volume.scripts.OnSizeChanged(volume, 400, 18) end
+  assert(volumeThumb.pointX == 60, "volume thumb stayed at pre-layout width")
+  volumeStorage.volume = "high"
+  if volume.scripts.OnShow then volume.scripts.OnShow(volume) end
+  assert(volumeThumb.pointX == 340, "volume show did not restore saved state")
+`);
 const first = await vm();
+await scenario("scroll pages have no native bar and retain bounded wheel scrolling", `
+  local range, offset = 150, 120
+  local viewport
+  CreateFrame = function(kind, _, parent, template)
+    assert(template == nil, "scrollbar template should not be instantiated")
+    local w = { scripts = {} }
+    function w:SetPoint() end
+    function w:SetHeight() end
+    function w:SetWidth() end
+    function w:GetWidth() return 200 end
+    function w:SetScrollChild(child) self.child = child end
+    function w:EnableMouseWheel(value) self.wheel = value end
+    function w:SetScript(key, fn) self.scripts[key] = fn end
+    function w:HookScript(key, fn) self.scripts[key] = fn end
+    function w:GetVerticalScrollRange() return range end
+    function w:GetVerticalScroll() return offset end
+    function w:SetVerticalScroll(value) offset = value end
+    if kind == "ScrollFrame" then viewport = w end
+    return w
+  end
+  local canvas, scroll = RGX.UI:CreateScrollPage({}, 600)
+  assert(viewport == scroll and scroll.child == canvas and scroll.ScrollBar == nil and scroll.wheel)
+  scroll.scripts.OnMouseWheel(scroll, -5)
+  assert(offset == 150)
+  scroll.scripts.OnMouseWheel(scroll, 20)
+  assert(offset == 0)
+  range, offset = 20, 100
+  canvas.scripts.OnSizeChanged(canvas)
+  assert(offset == 20)
+`);
 let serialized;
 try {
   serialized = first.doStringSync(`
