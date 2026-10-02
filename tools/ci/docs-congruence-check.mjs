@@ -152,7 +152,7 @@ if (publishedVersion !== version) {
   failures.push(`${currentChangelogPath}: released changelog still contains candidate wording`);
 }
 
-const schema = JSON.parse(read("schemas/rgx-addon.schema.json"));
+const schema = JSON.parse(read("contract/schemas/rgx-addon.schema.json"));
 if (schema.properties?.on?.["x-rgx-ships"] !== "tier4") failures.push("schema: on must remain tier4 until runtime implementation lands");
 if (schema.properties?.every?.["x-rgx-ships"] !== "today") failures.push("schema: every must ship today with its runtime implementation");
 

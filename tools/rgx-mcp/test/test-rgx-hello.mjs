@@ -19,7 +19,7 @@ import { createDefinitionEngine, exampleDefinition } from "../../contract/defini
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SERVER_ENTRY = join(HERE, "..", "src", "server.js");
-const definitionSchema = JSON.parse(readFileSync(join(HERE, "../../../schemas/rgx-definition.schema.json"), "utf8"));
+const definitionSchema = JSON.parse(readFileSync(join(HERE, "../../../contract/schemas/rgx-definition.schema.json"), "utf8"));
 const { importDefinition } = createDefinitionEngine(definitionSchema);
 
 const helloPath = process.argv[2];
