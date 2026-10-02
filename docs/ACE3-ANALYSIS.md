@@ -366,7 +366,7 @@ Everything below verified against shipped source, not aspiration.
 | AceHook | `RGX:Hook` (`runtime.lua`) | Parity |
 | AceBucket | Tier 6 #17 | Planned, need-driven |
 | AceComm + AceSerializer | none (profile serialize only) | **Intentionally absent** until a real addon needs cross-client traffic (OmniCD-style sync is the likely first consumer) |
-| AceLocale | none | **Intentionally absent** until localization work begins (LibLocaleOverride's per-addon override pattern is the researched direction) |
+| AceLocale | `RGXLocale` (`modules/locale/locale.lua`) | Parity for the framework's own strings — `RGXLocale:NewLocale(addonName, locale, isDefault)` registry with an always-loaded enUS base plus guarded per-locale override blocks; consumer addons keep the frozen per-addon `Handle:SetLocale` wire-scope contract |
 | LibSharedMedia | RGXSharedMedia | Parity |
 | LibDBIcon/LDB | RGXMinimap + databroker | **Better** — persistence and tooltip composed in |
 

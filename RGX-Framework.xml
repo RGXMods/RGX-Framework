@@ -12,6 +12,10 @@
 <Script file="core/compat.lua" />
 <Script file="core/compat_api.lua" />
 
+<!-- Locale (must load before any module that reads framework strings) -->
+<Script file="modules/locale/locale.lua" />
+<Script file="modules/locale/overrides.lua" />
+
 <!-- Modules -->
 <Script file="modules/dropdowns/dropdowns.lua" />
  <Script file="modules/fonts/definitions.lua" />

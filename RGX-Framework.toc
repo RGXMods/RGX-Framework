@@ -12,5 +12,6 @@
 ## X-License: MIT
 ## X-Curse-Project-ID: 1516939
 ## X-Website: https://github.com/RGXMods/RGX-Framework
+## X-Localizations: enUS, deDE, esES, esMX, frFR, itIT, koKR, ptBR, ptPT, ruRU, zhCN, zhTW
 
 RGX-Framework.xml
