@@ -169,4 +169,4 @@ function Delves:Init()
 end
 
 _G.RGXDelves = Delves
-RGX:RegisterModule("delves", Delves)
+RGX:RegisterModule("delves", Delves, { category = "game", flavors = { "retail", "forever" } })

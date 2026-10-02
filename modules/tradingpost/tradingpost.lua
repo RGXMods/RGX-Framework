@@ -66,4 +66,4 @@ function TradingPost:Init()
 end
 
 _G.RGXTradingPost = TradingPost
-RGX:RegisterModule("tradingpost", TradingPost)
+RGX:RegisterModule("tradingpost", TradingPost, { category = "game", flavors = { "retail", "forever" } })

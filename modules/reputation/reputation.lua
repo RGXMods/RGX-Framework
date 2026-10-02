@@ -330,4 +330,4 @@ end
 -- ── Wire into framework ───────────────────────────────────────────────────────
 
 _G.RGXReputation = Rep
-RGX:RegisterModule("reputation", Rep)
+RGX:RegisterModule("reputation", Rep, { category = "game" })

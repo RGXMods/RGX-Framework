@@ -70,6 +70,12 @@ for (const m of modules) {
   const category = m.opts.match(/category\s*=\s*"([^"]+)"/)?.[1];
   if (category) assert(["library", "game", "runtime"].includes(category), `${m.file}: unknown category '${category}'`);
 }
+// Every registered module declares its architectural category explicitly.
+const missingCategory = modules.filter((m) => !/category\s*=/.test(m.opts)).map((m) => m.name);
+assert.equal(missingCategory.length, 0, `modules missing category: ${missingCategory.join(", ")}`);
+const libraryCount = modules.filter((m) => /category\s*=\s*"library"/.test(m.opts)).length;
+const gameCount = modules.filter((m) => /category\s*=\s*"game"/.test(m.opts)).length;
+console.log(`TAXONOMY OK ${modules.length} modules declared (libraries ${libraryCount}, game ${gameCount})`);
 // Global namespace freeze: no new _G writes beyond the documented aliases.
 // Compat aliases are framework-owned legacy names; new code must register
 // through RGX:RegisterModule and rely on getters. Generated allowlist from
