@@ -22,8 +22,8 @@
 <button id="save">Save</button><button id="cancel">Cancel</button>
 <p id="status" role="status"></p>
 <script type="module">
-import { createDefinitionEngine, exampleDefinition } from '/tools/contract/definition.mjs';
-const schema = await (await fetch('/schemas/rgx-definition.schema.json')).json();
+import { createDefinitionEngine, exampleDefinition } from '/contract/engine/definition.mjs';
+const schema = await (await fetch('/contract/schemas/rgx-definition.schema.json')).json();
 const { createDefinitionSession } = createDefinitionEngine(schema);
 const $ = id => document.getElementById(id);
 const storageKey = 'rgx-definition-v1';

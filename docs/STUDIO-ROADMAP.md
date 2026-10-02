@@ -93,7 +93,7 @@ permanent risk of desktop source or binaries entering the player archive.
 
 ```text
 RGX runtime Lua
-    <-> schemas/rgx-addon.schema.json
+    <-> contract/schemas/rgx-addon.schema.json
     <-> docs/DECLARATIVE-API.md
     <-> contract tooling and rgx-mcp
     <-> RGX-Hello and runtime contract tests
@@ -145,7 +145,7 @@ The future Studio-specific contract catalog is:
 ```text
 rgx-contract-vX.Y.Z/
     manifest.json
-    schemas/rgx-addon.schema.json
+    contract/schemas/rgx-addon.schema.json
     schemas/rgx-api.catalog.json
     docs/DECLARATIVE-API.md
     assets/design-tokens.json

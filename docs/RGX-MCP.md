@@ -30,7 +30,7 @@ MCP transport features.
 
 | Tool | What it does |
 |---|---|
-| `rgx_validate_addon` | Validate an `RGXAddon` opts table (as JSON; Lua functions as `{"$lua":"function"}`) against `schemas/rgx-addon.schema.json`; flags contract-frozen `tier4` keys that don't run yet |
+| `rgx_validate_addon` | Validate an `RGXAddon` opts table (as JSON; Lua functions as `{"$lua":"function"}`) against `contract/schemas/rgx-addon.schema.json`; flags contract-frozen `tier4` keys that don't run yet |
 | `rgx_audit_lua` | Scan a `.lua` file or addon directory for unsafe patterns: raw `C_Timer`, manual `OnEvent` frames, `SLASH_` globals, unguarded `SetAttribute`, raw aura plumbing, and hook reassignment; RGXAuras consumers remain clean |
 | `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys, including deterministically ordered named `every` timers |
 | `rgx_get_contract` | Return the schema + shipped-surface reference for agent context |
@@ -44,7 +44,7 @@ MCP transport features.
 - `rgx://schemas/definition` — the source-development label definition schema
 - `rgx://frames/wow-api-dump` — synced dump provenance (fails closed with a sync instruction when dumps are absent; the main capability reference per the root agent guide)
 
-The definition tool delegates to `tools/contract/definition.mjs`, the same pure
+The definition tool delegates to `contract/engine/definition.mjs`, the same pure
 engine used by the external editor. It does not execute Lua, write files, require
 an AI provider, or connect to the live client. Unsupported versions, kinds, and
 fields fail explicitly; overrides via `RGX_FRAMEWORK_PATH` must match the engine's

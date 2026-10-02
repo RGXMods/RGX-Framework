@@ -4,7 +4,7 @@
 The authoring surface and human-readable **Simplicity Contract** for RGX addons.
 Evolution is additive-only: what you write today keeps working forever. The
 machine-checkable shape lives in
-[`schemas/rgx-addon.schema.json`](https://github.com/RGXMods/RGX-Framework/blob/main/schemas/rgx-addon.schema.json); keys are
+[`contract/schemas/rgx-addon.schema.json`](https://github.com/RGXMods/RGX-Framework/blob/main/contract/schemas/rgx-addon.schema.json); keys are
 annotated `x-rgx-ships: "today"` (implemented) or `"tier4"` (frozen target).
 
 This page documents **what ships today**, verified against
