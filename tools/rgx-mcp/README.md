@@ -25,7 +25,7 @@ and [scoped agent guidance](AGENTS.md).
 
 | Tool | What it does |
 |---|---|
-| `rgx_validate_addon` | Validate an RGXAddon opts table (JSON; Lua functions as `{"$lua":"function"}`) against `schemas/rgx-addon.schema.json`; flags contract-frozen `tier4` keys that don't run yet |
+| `rgx_validate_addon` | Validate an RGXAddon opts table (JSON; Lua functions as `{"$lua":"function"}`) against `contract/schemas/rgx-addon.schema.json`; flags contract-frozen `tier4` keys that don't run yet |
 | `rgx_audit_lua` | Scan a `.lua` file or addon directory for the unsafe patterns the framework prevents: raw `C_Timer`, manual `OnEvent` frames, `SLASH_` globals, unguarded `SetAttribute`, raw aura event/API plumbing, and hook reassignment. Deterministic |
 | `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys (`RGXAddon "Name" { ... }`), including named `every` timers |
 | `rgx_get_contract` | Return the schema + shipped-surface reference for agent context |
@@ -41,7 +41,7 @@ and [scoped agent guidance](AGENTS.md).
 
 The optional external editor (`node tools/editor/serve.mjs` from the framework
 root) and this new definition tool use the same browser-compatible
-`tools/contract/definition.mjs`. Imports/updates are strictly validated, unknown
+`contract/engine/definition.mjs`. Imports/updates are strictly validated, unknown
 versions/kinds/fields fail, and responses identify `sourceOnly`. No AI key enters
 the runtime or browser. See [UI Controls](../../docs/UI-CONTROLS.md#definition-round-trip-source-development-slice).
 

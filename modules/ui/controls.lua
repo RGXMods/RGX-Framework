@@ -1072,7 +1072,7 @@ function UI:CreateColumns(parent, count, options)
 end
 
 -- Versioned label definitions: data-only editor/import surface. Keep this
--- validator congruent with schemas/rgx-definition.schema.json and JS fixtures.
+-- validator congruent with contract/schemas/rgx-definition.schema.json and JS fixtures.
 local definitionKeys = { version = true, kind = true, id = true, text = true,
     enabled = true, x = true, y = true, scale = true }
 local function DefinitionValueAccessible(value)

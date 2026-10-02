@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/RGXMods/RGX-Framework/schemas/rgx-definition.schema.json",
+  "$id": "https://github.com/RGXMods/RGX-Framework/contract/schemas/rgx-definition.schema.json",
   "title": "RGX label definition version 1 (source development slice)",
   "type": "object",
   "additionalProperties": false,
