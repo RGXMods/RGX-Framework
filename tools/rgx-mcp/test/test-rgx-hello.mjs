@@ -15,7 +15,7 @@ import luaparse from "luaparse";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
-import { createDefinitionEngine, exampleDefinition } from "../../contract/definition.mjs";
+import { createDefinitionEngine, exampleDefinition } from "../../../contract/engine/definition.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SERVER_ENTRY = join(HERE, "..", "src", "server.js");
