@@ -270,6 +270,14 @@ The proxy returned by `NewDatabase` carries profile CRUD (verified against `core
 | `db:CreateProfile(name)` / `db:LoadProfile(name)` / `db:DeleteProfile(name)` | Profile CRUD |
 | `db:RenameProfile(old, new)` / `db:CopyProfile(src, dst)` / `db:ResetProfile(name)` | Profile management |
 | `db:OnProfileChanged(callback)` | Switch notification |
+| `db:RegisterDefaults(defaults)` | Source-development addition: bind late-loaded defaults to the existing proxy, fill missing values across profiles, then notify observers; preserves explicit false and existing values |
+
+Profile notifications are failure-isolated: a failing callback is reported and
+does not skip later observers or leave the notification guard locked. Newly
+registered observers participate on the next notification. `Adopt()` keeps the
+TOC-declared global bound even when a client-loaded saved file assigns nil.
+Keep that storage global as the raw persistence owner; captured active-profile
+views belong in addon-local variables, not over the declared SavedVariables name.
 | `db:Get(path, fallback)` / `db:Set(path, value)` | Dotted-path access on the active profile |
 | `db:SerializeProfile(name)` | Export one profile as a string |
 

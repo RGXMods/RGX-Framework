@@ -37,6 +37,9 @@ addon:validate:
         if test -f definition-roundtrip-check.mjs; then
           node definition-roundtrip-check.mjs
         fi
+        if test -f profile-persistence-check.mjs; then
+          node profile-persistence-check.mjs
+        fi
       fi
 
 # Build the versioned contract bundle (issue #6) separately from the player

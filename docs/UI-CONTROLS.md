@@ -431,6 +431,11 @@ end
 
 ## Layout Notes
 
+- Framework scroll pages are clipping viewports with mouse-wheel scrolling;
+  native scrollbar widgets are not created or shown. Canvas width uses the
+  content area rather than reserving a visible-bar gutter.
+- Numeric and discrete volume slider thumbs refresh after show and geometry
+  changes, reading the current bound storage; redraw does not overwrite settings.
 - Controls are positioned automatically within the scroll container
 - Each control is anchored below the previous one
 - Use `container` (the scroll child) as the parent for all controls
