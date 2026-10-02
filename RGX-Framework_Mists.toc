@@ -10,5 +10,6 @@
 ## IconTexture: Interface\AddOns\RGX-Framework\media\logo.tga
 ## X-Category: Library
 ## X-License: MIT
+## X-Localizations: enUS, deDE, esES, esMX, frFR, itIT, koKR, ptBR, ptPT, ruRU, zhCN, zhTW
 
 RGX-Framework.xml

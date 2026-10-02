@@ -8,6 +8,16 @@
 - Applied framework accent borders to section headers.
 - Documented flavor-specific consumer module and options boundaries.
 
+### Language coverage
+
+RGX-Framework ships complete WoW client locale coverage for its own
+user-facing output across all twelve WoW client locales: enUS (base), deDE,
+esES, esMX, frFR, itIT, koKR, ptBR, ptPT, ruRU, zhCN, zhTW. The same
+coverage list is published in every flavor TOC's `## X-Localizations:`
+header and in `README.md`. Consumer addons inherit the
+`RGXLocale:NewLocale(addonName, locale, isDefault)` registry convention.
+
+
 ## Recent Releases
 
 ### [v2.7.8](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.8.md) - 2026-09-25

@@ -160,7 +160,10 @@ RGX:RegisterEvent("ADDON_LOADED", function(_, addon)
         end
 
         -- One framework startup line, gated by /rgx login off.
-        RGX:LoginMessage(string.format("RGX-Framework v%s loaded.", tostring(RGX.version)))
+        local LocaleMod = RGX:GetModule("locale")
+        local LL = (LocaleMod and LocaleMod.L) or {}
+        local loginFmt = LL["LOGIN_LOADED_FORMAT"] or "RGX-Framework v%s loaded."
+        RGX:LoginMessage(string.format(loginFmt, tostring(RGX.version)))
 
         RGX:UnregisterEvent("ADDON_LOADED", "RGX_Init")
     end

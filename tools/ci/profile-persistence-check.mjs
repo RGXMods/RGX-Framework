@@ -20,6 +20,7 @@ async function vm() {
     function RGX:Debug() end
     function RGX:Error() end
     function RGX:RegisterModule(_, module) self.UI = module end
+    function RGX:GetModule() return nil end
     function UnitName() return "TestPlayer" end
     function GetRealmName() return "TestRealm" end
     assert(loadstring(__database))("RGX-Framework", RGX)
