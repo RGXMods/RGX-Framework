@@ -136,6 +136,10 @@ RGX:GetSound()      -- "sound" → RGXSound
 
 As of v2.1.0, there are no dormant modules. All in-tree modules are loaded by the XML loader.
 
+### Flavor-gated modules
+
+Feature modules that can only exist on specific client families skip registration via `RGX:ModuleSupported(name)` at file scope, decided by the client's own global surface (the namespace the module drives), not the product string. The support map is evidence-coded in `core/compat.lua` from the synced client dumps: housing, delves, tradingpost, and collectibles are Retail-only; prey is Retail + Forever. Blizzard's misspelled `CURRENT_HOUSE_INFO_RECIEVED` event exists on every flavor and never substitutes for a namespace check. Registration tests live in `tools/ci/module-gating-check.mjs`.
+
 Previously dormant modules and when they were re-enabled:
 
 | Module | Global | Re-enabled |
