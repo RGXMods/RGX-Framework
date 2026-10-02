@@ -40,6 +40,9 @@ addon:validate:
         if test -f profile-persistence-check.mjs; then
           node profile-persistence-check.mjs
         fi
+        if test -f module-gating-check.mjs; then
+          node module-gating-check.mjs
+        fi
       fi
 
 # Build the versioned contract bundle (issue #6) separately from the player
