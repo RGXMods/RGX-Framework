@@ -111,7 +111,7 @@ end
 -- Register the conventional global early so other modules and consumers can
 -- reliable discover the API even before strings are populated.
 _G.RGXLocale = Locale
-RGX:RegisterModule("locale", Locale)
+RGX:RegisterModule("locale", Locale, { category = "library" })
 
 -- ── Framework-owned enUS base (loaded unconditionally) ──────────────────────
 

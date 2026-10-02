@@ -658,4 +658,4 @@ end
 -- ── Wire into framework ───────────────────────────────────────────────────────
 
 _G.RGXSharedMedia = SM
-RGX:RegisterModule("sharedmedia", SM)
+RGX:RegisterModule("sharedmedia", SM, { category = "library" })

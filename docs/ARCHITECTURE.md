@@ -145,7 +145,19 @@ As of v2.1.0, there are no dormant modules. All in-tree modules are loaded by th
 
 ### Flavor-gated modules
 
-Feature modules that can only exist on specific client families skip registration via `RGX:ModuleSupported(name)` at file scope, decided by the client's own global surface (the namespace the module drives), not the product string. The support map is evidence-coded in `core/compat.lua` from the synced client dumps: housing, delves, tradingpost, and collectibles are Retail-only; prey is Retail + Forever. Blizzard's misspelled `CURRENT_HOUSE_INFO_RECIEVED` event exists on every flavor and never substitutes for a namespace check. Registration tests live in `tools/ci/module-gating-check.mjs`.
+Feature modules that can only exist on specific client families skip registration via `RGX:ModuleSupported(name)` at file scope, decided by the client's own global surface (the namespace the module drives), not the product string. The support map is evidence-coded in `core/compat.lua` from the synced client dumps; the module's `flavors` registration metadata records the same list so the taxonomy and gate stay congruent. Blizzard's misspelled `CURRENT_HOUSE_INFO_RECIEVED` event exists on every flavor and never substitutes for a namespace check. Registration tests live in `tools/ci/module-gating-check.mjs`.
+
+### Module taxonomy
+
+Every module declares its architectural class at registration:
+`category = "library"` for framework capabilities consumed by any addon
+(fonts, colors, textures, dropdowns, ui, design, minimap, tooltip, databroker,
+sharedmedia, sound, locale) and `category = "game"` for WoW-domain adapters
+(auras, quest, combat, levelup, housing, and the rest). `depends` lists must
+load earlier in `RGX-Framework.xml` — the checker proves it. `stability`
+(`stable | experimental | deprecated | internal`) is recorded alongside; the
+machine-readable API catalog milestone formalizes it further. The global
+namespace is frozen: the checker fails if any new `_G` write appears.
 
 Previously dormant modules and when they were re-enabled:
 

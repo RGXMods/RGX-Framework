@@ -126,4 +126,4 @@ function Prey:Init()
 end
 
 _G.RGXPrey = Prey
-RGX:RegisterModule("prey", Prey)
+RGX:RegisterModule("prey", Prey, { category = "game", flavors = { "retail", "forever" } })

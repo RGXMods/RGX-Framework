@@ -705,7 +705,7 @@ end
 ============================================================================]]
 
 function Colors:Init()
-    RGX:RegisterModule("colors", self)
+    RGX:RegisterModule("colors", self, { category = "library" })
     _G.RGXColors = self
     RGX:Debug("Colors: Initialized")
 end

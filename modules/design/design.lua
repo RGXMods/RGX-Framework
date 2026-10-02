@@ -402,4 +402,4 @@ function Design:CreateSection(parent, title, icon, opts)
 end
 
 _G.RGXDesign = Design
-RGX:RegisterModule("design", Design)
+RGX:RegisterModule("design", Design, { category = "library" })

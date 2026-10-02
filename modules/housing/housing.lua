@@ -108,4 +108,4 @@ function Housing:Init()
 end
 
 _G.RGXHousing = Housing
-RGX:RegisterModule("housing", Housing)
+RGX:RegisterModule("housing", Housing, { category = "game", flavors = { "retail" } })
