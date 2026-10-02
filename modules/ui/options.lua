@@ -11,6 +11,7 @@
 --       version   = nil,            -- auto-read from TOC if nil
 --       author    = "Me",
 --       website   = "discord.gg/...",
+--       closeButton = true,         -- standard window close button (hidden when embedded in Settings)
 --       maxPerRow = 6,              -- tabs per row before wrapping
 --       tabs = {
 --           { text = "General", icon = "Interface\\Icons\\...", content = function(frame) ... end },
@@ -422,6 +423,22 @@ local function CreateOptionsPanel(UI, opts)
         brand:SetText(opts.brand)
         brand:SetJustifyH("RIGHT")
         ApplyDefaultFont(brand)
+    end
+
+    -- ── Close button (QoL absolute detail) ─────────────────────────────────
+    -- UIPanelCloseButton, 30x30, anchored TOPRIGHT 0,0. Hidden while the
+    -- panel is hosted inside the Settings canvas (which owns its own
+    -- chrome; hiding the canvas child would blank the category).
+    -- opts.closeButton == false skips it.
+    local closeBtn
+    if opts.closeButton ~= false then
+        closeBtn = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
+        closeBtn:SetSize(30, 30)
+        closeBtn:SetPoint("TOPRIGHT", 0, 0)
+        closeBtn:SetScript("OnClick", function()
+            if not panel._settingsEmbedded then panel:Hide() end
+        end)
+        panel.closeButton = closeBtn
     end
 
     -- ── Banner (optional, sits between header and tabs) ───────────────────────
@@ -840,6 +857,11 @@ end
             self:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
             self:Show()
         end
+
+        -- Track hosting so the close button can tell floating panels
+        -- (safe to hide) from Settings-canvas hosting (canvas owns chrome).
+        self._settingsEmbedded = opened and true or false
+        if closeBtn then closeBtn:SetShown(not self._settingsEmbedded) end
     end
 
     panel:SetScript("OnShow", function(self)

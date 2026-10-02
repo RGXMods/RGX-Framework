@@ -276,6 +276,7 @@ Create a full options panel with tab system, scroll container, and header.
 | `opts.version` | string | No | — | Version string shown in header |
 | `opts.author` | string | No | — | Author string shown in header |
 | `opts.website` | string | No | — | Website URL shown in header |
+| `opts.closeButton` | boolean | No | true | Standard window close button (hidden while embedded in Settings) |
 
 **Returns:** Panel object with methods below.
 
