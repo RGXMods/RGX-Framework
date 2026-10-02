@@ -100,4 +100,4 @@ end
 -- ── Wire into framework ───────────────────────────────────────────────────────
 
 _G.RGXCollectibles = Collectibles
-RGX:RegisterModule("collectibles", Collectibles)
+RGX:RegisterModule("collectibles", Collectibles, { category = "game", flavors = { "retail" } })

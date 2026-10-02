@@ -423,7 +423,7 @@ end
 ============================================================================]]
 
 function Minimap:Init()
-    RGX:RegisterModule("minimap", self)
+    RGX:RegisterModule("minimap", self, { category = "library" })
     _G.RGXMinimap = self
 end
 

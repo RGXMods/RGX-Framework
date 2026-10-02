@@ -170,6 +170,6 @@ function Fonts:Init()
 		self:SetDefault("Inter-Regular")
 	end
 
-	RGX:RegisterModule("fonts", self)
+	RGX:RegisterModule("fonts", self, { category = "library", depends = { "dropdowns" } })
 	_G.RGXFonts = self
 end

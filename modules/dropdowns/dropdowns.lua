@@ -1122,7 +1122,7 @@ end
 ============================================================================]]
 
 function Dropdowns:Init()
-    RGX:RegisterModule("dropdowns", self)
+    RGX:RegisterModule("dropdowns", self, { category = "library" })
     _G.RGXDropdowns = self
 end
 

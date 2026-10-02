@@ -1316,7 +1316,7 @@ end
 ============================================================================]]
 
 function UI:Init()
-    RGX:RegisterModule("ui", self)
+    RGX:RegisterModule("ui", self, { category = "library", depends = { "fonts", "colors", "textures", "dropdowns" } })
     _G.RGXUI = self
 end
 
