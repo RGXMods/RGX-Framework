@@ -15,7 +15,34 @@ Reusable patterns discovered in consumer addons move into RGX. Addon-specific pr
 
 ## Consumer Integration Levels
 
-Current state as of v2.1.0:
+### Delivery Milestones
+
+GitLab is the live delivery record; these outcomes define scope, not frozen
+issue counts or a release schedule:
+
+1. [Foundation & consumer reliability](https://gitlab.dicematrix.cloud/rgxmods/warcraft/RGX-Framework/-/milestones/1):
+   BLU and SQP persistence first, then verified shared DB/control behavior,
+   callback isolation, timers/auras and reusable media adoption. Fresh-state
+   serialization tests and the affected clients must agree; UI appearance is
+   not proof of saved state. Historical production acceptance does not close
+   newly discovered regressions.
+2. [Contract & AI-assisted authoring](https://gitlab.dicematrix.cloud/rgxmods/warcraft/RGX-Framework/-/milestones/2):
+   approved API catalog, shared validation/generation, compatibility handshake,
+   supported DSL/layout forms, and definition round trips. AI assistance is
+   medium-high priority; runtime/data reliability remains the first gate.
+   MCP is a developer adapter, and Studio consumes framework-owned primitives.
+3. [Flavor-native UI integration](https://gitlab.dicematrix.cloud/rgxmods/warcraft/RGX-Framework/-/milestones/3):
+   skins/themes and stable native geometry with actual flavor evidence. Follow
+   the verified consumer layout and #21 phase order before switching skins.
+
+Undefined pack/addin extension work stays in backlog until a concrete maintained
+consumer plus RGXMod use case and acceptance criteria exist. Keep feature-specific
+content in consumer definitions; consolidate reusable implementation here.
+
+### Historical Integration Snapshot
+
+The following is the v2.1.0 snapshot, not current adoption evidence. Verify each
+product's actual TOC/load list/runtime before relying on a dependency or percentage:
 
 | Addon | RGX Dep | Systems Used | Level |
 |---|---|---|---|
@@ -28,7 +55,7 @@ Current state as of v2.1.0:
 | 14x LevelUp sound packs | Required | sound, events, slash | 25% |
 | ReputationLevelUp | None | — | 0% (migration target) |
 | CoordinationCloakUtility | None | — | 0% (migration target) |
-| BLU_Classic | None (Ace3) | — | 0% (intentional, never migrates) |
+| BLU_Classic | None (Ace3) | — | Legacy implementation; migration requires actual code, not metadata only |
 
 ---
 
