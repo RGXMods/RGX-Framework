@@ -193,13 +193,13 @@ if (!title) failures.push("RGX-Framework.toc must declare Title");
 const { flavor, tocFile } = resolveFlavor();
 if (!/^v?\d+\.\d+\.\d+/.test(version)) failures.push(`RGX-Framework.toc Version is not a semantic version: ${version}`);
 
-const schemaRaw = read("schemas/rgx-addon.schema.json");
+const schemaRaw = read("contract/schemas/rgx-addon.schema.json");
 const schema = JSON.parse(schemaRaw.toString("utf8"));
 const declarativeDoc = read("docs/DECLARATIVE-API.md");
 if (declarativeDoc.includes("DO NOT EDIT")) failures.push("docs/DECLARATIVE-API.md appears to be generated placeholder content");
 
 const apiCatalogJson = Buffer.from(JSON.stringify({
-  description: "Approved declarative API catalog derived from schemas/rgx-addon.schema.json. Keys with ships=\"today\" are implemented in core/core.lua RGX.Addon; \"tier4\" entries are frozen future targets.",
+  description: "Approved declarative API catalog derived from contract/schemas/rgx-addon.schema.json. Keys with ships=\"today\" are implemented in core/core.lua RGX.Addon; \"tier4\" entries are frozen future targets.",
   keys: collectSchemaKeys(schema),
 }, null, 2) + "\n");
 

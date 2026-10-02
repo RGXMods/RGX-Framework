@@ -377,7 +377,7 @@ These are the reasons RGX is a replacement, not a clone — protect them:
 1. **The DSL** — `RGXAddon "Name" { }` with progressive disclosure: every key
    works bare with assumed arguments and accepts an advanced form. Ace3's
    equivalent is assembling five libraries and a config mega-table.
-2. **The machine-checkable contract** — `schemas/rgx-addon.schema.json` +
+2. **The machine-checkable contract** — `contract/schemas/rgx-addon.schema.json` +
    `tools/rgx-mcp` (validate/audit/generate) + an end-to-end test that runs
    the real MCP server against the real reference addon. Ace3 has zero
    tooling; its options tables fail at runtime or never.

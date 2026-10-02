@@ -264,7 +264,7 @@ function validatePkgmeta() {
   const pkgmeta = text(".pkgmeta");
   const failures = [];
   if (/^\s*license\s*:/m.test(pkgmeta)) failures.push(".pkgmeta uses unsupported 'license'; keep tracked LICENSE.txt or use license-output");
-  for (const path of ["tools", "docs", "schemas", "skills", ".reference", ".release", "artifacts", "graphify-out", "media/kiwi.gif", "media/logo.png"]) {
+  for (const path of ["tools", "docs", "contract", "skills", ".reference", ".release", "artifacts", "graphify-out", "media/kiwi.gif", "media/logo.png"]) {
     if (!new RegExp(`^\\s*- ${path.replace(".", "\\.")}\\s*$`, "m").test(pkgmeta)) failures.push(`.pkgmeta must exclude ${path}`);
   }
   if (/tools\/rgx-mcp intentionally ships|ships in the packaged zip/i.test(pkgmeta)) failures.push(".pkgmeta must not describe developer tooling as player payload");

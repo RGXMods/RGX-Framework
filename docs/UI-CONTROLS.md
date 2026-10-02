@@ -446,7 +446,7 @@ end
 
 This first editor slice is available on its feature source branch, not in the
 published `v2.7.9` addon. It edits **one plain-text label definition**, using one
-canonical schema (`schemas/rgx-definition.schema.json`) and equivalent guarded
+canonical schema (`contract/schemas/rgx-definition.schema.json`) and equivalent guarded
 Lua/runtime and pure JavaScript/tooling implementations. It does not implement
 the complete Trigger/Conditions/Display/Actions/Load model, a Studio shell, or
 Blizzard Edit Mode registration.

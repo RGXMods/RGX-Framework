@@ -24,7 +24,7 @@ import { isDeepStrictEqual } from "node:util";
 import { createDefinitionEngine } from "../../contract/definition.mjs";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
-const definitionSchema = JSON.parse(readFileSync(join(HERE, "../../../schemas/rgx-definition.schema.json"), "utf8"));
+const definitionSchema = JSON.parse(readFileSync(join(HERE, "../../../contract/schemas/rgx-definition.schema.json"), "utf8"));
 const { normalizeDefinition, importDefinition, exportDefinition, createDefinitionSession }
   = createDefinitionEngine(definitionSchema);
 // tools/rgx-mcp/src/ -> the framework repo root is three levels up
@@ -85,7 +85,7 @@ function statSafeMtime(path) {
 let schemaCache = null;
 function getSchema() {
   if (!schemaCache) {
-    schemaCache = JSON.parse(frameworkFile("schemas/rgx-addon.schema.json"));
+    schemaCache = JSON.parse(frameworkFile("contract/schemas/rgx-addon.schema.json"));
   }
   return schemaCache;
 }
@@ -533,7 +533,7 @@ function generateAddonLua(spec) {
 const server = new McpServer({ name: "rgx-mcp", version: "0.1.0" });
 
 function selectedDefinitionSchema() {
-  const selected = JSON.parse(frameworkFile("schemas/rgx-definition.schema.json"));
+  const selected = JSON.parse(frameworkFile("contract/schemas/rgx-definition.schema.json"));
   if (!isDeepStrictEqual(selected, definitionSchema)) {
     throw new Error("Definition engine does not match the selected framework contract");
   }
@@ -685,7 +685,7 @@ server.tool(
   {},
   async () => ({
     content: [
-      { type: "text", text: "== schemas/rgx-addon.schema.json ==\n" + JSON.stringify(getSchema(), null, 2) },
+      { type: "text", text: "== contract/schemas/rgx-addon.schema.json ==\n" + JSON.stringify(getSchema(), null, 2) },
       { type: "text", text: "== docs/DECLARATIVE-API.md ==\n" + frameworkFile("docs/DECLARATIVE-API.md") },
     ],
   })

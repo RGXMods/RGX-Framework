@@ -16,7 +16,7 @@ ignore:
   - AGENTS.md
   - README.md
   - docs
-  - schemas
+  - contract
   - skills
   - tools
   - tests

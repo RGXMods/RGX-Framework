@@ -6,7 +6,7 @@ supplement its framework ownership, safety, contract, and verification rules.
 
 ## What this is
 
-The temporary source-only MCP conformance fixture for RGX-Framework. It validates, audits, and generates declarative RGX addons against the human **Simplicity Contract** (`docs/DECLARATIVE-API.md`) and its machine form (`schemas/rgx-addon.schema.json`). It lives under `tools/` for source-tree CI, is private package metadata, and is excluded from Framework releases. RGX-Framework owns the reusable contract, validation, generation, and editor infrastructure; consumer tools use that foundation. Future Studio plans do not establish shipped support or transfer ownership of the shared contract.
+The temporary source-only MCP conformance fixture for RGX-Framework. It validates, audits, and generates declarative RGX addons against the human **Simplicity Contract** (`docs/DECLARATIVE-API.md`) and its machine form (`contract/schemas/rgx-addon.schema.json`). It lives under `tools/` for source-tree CI, is private package metadata, and is excluded from Framework releases. RGX-Framework owns the reusable contract, validation, generation, and editor infrastructure; consumer tools use that foundation. Future Studio plans do not establish shipped support or transfer ownership of the shared contract.
 
 ## Hard rules
 

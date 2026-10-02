@@ -5,11 +5,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv/dist/2020.js";
 import { Lua } from "wasmoon-lua5.1";
-import { createDefinitionEngine, exampleDefinition } from "../contract/definition.mjs";
+import { createDefinitionEngine, exampleDefinition } from "../../contract/engine/definition.mjs";
 import { createEditorServer } from "../editor/serve.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
-const definitionSchema = JSON.parse(readFileSync(join(ROOT, "schemas/rgx-definition.schema.json"), "utf8"));
+const definitionSchema = JSON.parse(readFileSync(join(ROOT, "contract/schemas/rgx-definition.schema.json"), "utf8"));
 const { validLabelText, normalizeDefinition, importDefinition, exportDefinition,
   createDefinitionSession } = createDefinitionEngine(definitionSchema);
 const ajv = new Ajv({ strict: false });
@@ -169,7 +169,7 @@ const server = createEditorServer();
 await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
 try {
   const base = `http://127.0.0.1:${server.address().port}`;
-  for (const path of ["/", "/tools/contract/definition.mjs", "/schemas/rgx-definition.schema.json"]) {
+  for (const path of ["/", "/contract/engine/definition.mjs", "/contract/schemas/rgx-definition.schema.json"]) {
     const response = await fetch(base + path);
     assert.equal(response.status, 200); assert((await response.text()).length > 0);
     checks++;

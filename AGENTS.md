@@ -72,7 +72,7 @@ blocker; do not silently change authority or claim partial work is complete.
 | Lifecycle, events, timers, combat queue, DB | `core/core.lua`, `core/systems/`; `docs/API.md`, `docs/FOUNDATION.md` |
 | Client capabilities / restricted data | `core/compat.lua`, `core/compat_api.lua`, `modules/auras/auras.lua`; `docs/AURAS.md` and **WoW API Reference** below |
 | Options, controls, layout, themes, media | `modules/ui/`, `modules/design/`, media modules; `docs/UI-CONTROLS.md`, `docs/THEMING.md` |
-| Shipped declarative API / DSL | `core/core.lua`, `schemas/rgx-addon.schema.json`, `docs/DECLARATIVE-API.md`; check each key's availability |
+| Shipped declarative API / DSL | `core/core.lua`, `contract/schemas/rgx-addon.schema.json`, `docs/DECLARATIVE-API.md`; check each key's availability |
 | Authoring, validation, generation, audit | `tools/rgx-mcp/`, scoped `tools/rgx-mcp/AGENTS.md`, `docs/RGX-MCP.md`; keep tooling dependent on the canonical contract |
 | Design direction / subsystem priority | `docs/ROADMAP.md`, `docs/ACE3-ANALYSIS.md`, `docs/STUDIO-ROADMAP.md`, canonical GitLab issues; proposals are not shipped APIs |
 | Verification / regressions | `tools/ci/package.json`, `tools/ci/*-check.mjs`, runtime fixtures, `docs/TESTING.md`, RGX-Hello E2E |
@@ -369,7 +369,7 @@ These must remain synchronized:
 ```text
 RGXAddon / RGX.Addon runtime
         ↕
-schemas/rgx-addon.schema.json
+contract/schemas/rgx-addon.schema.json
         ↕
 docs/DECLARATIVE-API.md
         ↕

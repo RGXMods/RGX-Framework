@@ -5,8 +5,8 @@ import { fileURLToPath } from "node:url";
 const root = new URL("../../", import.meta.url);
 const assets = new Map([
   ["/", ["tools/editor/index.html", "text/html; charset=utf-8"]],
-  ["/tools/contract/definition.mjs", ["tools/contract/definition.mjs", "text/javascript; charset=utf-8"]],
-  ["/schemas/rgx-definition.schema.json", ["schemas/rgx-definition.schema.json", "application/json"]],
+  ["/contract/engine/definition.mjs", ["contract/engine/definition.mjs", "text/javascript; charset=utf-8"]],
+  ["/contract/schemas/rgx-definition.schema.json", ["contract/schemas/rgx-definition.schema.json", "application/json"]],
 ]);
 export function createEditorServer() {
   return createServer((request, response) => {
