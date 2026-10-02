@@ -2,6 +2,8 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
 
 <!-- Core -->
+<Script file="core/compat.lua" />
+<Script file="core/compat_api.lua" />
 <Script file="core/core.lua" />
 <Script file="core/systems/config.lua" />
 <Script file="core/systems/database.lua" />
@@ -9,8 +11,6 @@
 <Script file="core/systems/events.lua" />
 <Script file="core/systems/runtime.lua" />
 <Script file="core/systems/utils.lua" />
-<Script file="core/compat.lua" />
-<Script file="core/compat_api.lua" />
 
 <!-- Locale (must load before any module that reads framework strings) -->
 <Script file="modules/locale/locale.lua" />

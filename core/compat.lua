@@ -132,8 +132,9 @@ if not C_AddOns then
     C_AddOns.IsAddOnLoaded = IsAddOnLoaded
 end
 
--- Safe API wrappers (return nil if API doesn't exist)
-RGX.API = {}
+-- Safe API wrappers (return nil if API doesn't exist). Preserve any wrappers
+-- an earlier compat file already installed; this table is shared state.
+RGX.API = RGX.API or {}
 
 function RGX.API.GetAddOnMetadata(name, field)
     if C_AddOns and C_AddOns.GetAddOnMetadata then
@@ -590,7 +591,7 @@ function RGX:TryLoadModule(moduleName)
     return false
 end
 
-RGX:Debug("Compat layer loaded: " .. RGX.wowVersion)
+if type(RGX.Debug) == "function" then RGX:Debug("Compat layer loaded: " .. RGX.wowVersion) end
 
 -- Secret value/table access helpers for addons
 function RGX.API.CanAccessValue(value)

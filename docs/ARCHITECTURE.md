@@ -18,7 +18,14 @@ Every module and every consumer addon references this same table. There is no Li
 
 ## Load Order
 
-WoW loads files in the order declared in `RGX-Framework.xml`. The framework uses this sequence:
+`RGX-Framework.xml` loads in this exact order. The compatibility layer is now
+first: every later file can consult flavor flags and `RGX:ModuleSupported` at
+load time, and `RGX:RegisterModule` refuses gated registrations centrally. Both
+compat files preserve the shared `RGX.API` table (`RGX.API = RGX.API or {}`) —
+earlier revisions silently wiped predicates when the second file loaded, which
+is a load-order bug class we now test for (`tools/ci/compat-loader-check.mjs`).
+
+```textWoW loads files in the order declared in `RGX-Framework.xml`. The framework uses this sequence:
 
 ```
 1. core/core.lua            — global object, module registry, Mixin, CopyTable, Clamp, Lerp, TableCount, Print/Warn/Error/Debug
