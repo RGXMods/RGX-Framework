@@ -165,7 +165,7 @@ const auras = surfaceText["docs/AURAS.md"];
 for (const required of ["accessible-only aura boundary", "fail closed", "raw UNIT_AURA", "payload, which remains unsanitized", "v2.7.0", "v2.6.2", "12.1.0.69283"]) {
   if (!auras.includes(required)) failures.push(`docs/AURAS.md: missing restricted-value boundary '${required}'`);
 }
-const mcpServer = read("tools/rgx-mcp/src/server.js");
+const mcpServer = read("tools/rgx-mcp/src/server.js") + read("contract/engine/audit-lua.mjs");
 for (const required of ["pcall catches errors but does not prevent taint", "fails closed and withholds restricted AuraData", "raw event payloads remain unsanitized", "typeof control === \"string\""]) {
   if (!mcpServer.includes(required)) failures.push(`tools/rgx-mcp/src/server.js: secret-aura advice missing '${required}'`);
 }
