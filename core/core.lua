@@ -120,6 +120,14 @@ function RGX:RegisterModule(name, module, opts)
     if not normalizedName then return false end
     if type(module) ~= "table" then return false end
     if self.modules[normalizedName] and self.modules[normalizedName] ~= module then return false end
+    -- Flavor gate is enforced centrally: even a module that forgot its own
+    -- guard cannot register on a client that lacks its driving API.
+    if type(self.ModuleSupported) == "function" and not self:ModuleSupported(normalizedName) then
+        if type(self.Debug) == "function" then
+            self:Debug("[RGX] Refused module registration on unsupported client: " .. normalizedName)
+        end
+        return false
+    end
 
     module.name = module.name or normalizedName
     module.framework = self
