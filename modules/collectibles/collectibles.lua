@@ -16,6 +16,10 @@
 
 local addonName, RGX = ...
 
+-- Flavor-gated (compat.lua): this module's Blizzard namespace only exists on
+-- specific clients; without the required API the module must not register.
+if not (RGX and type(RGX.ModuleSupported) == 'function' and RGX:ModuleSupported("collectibles")) then return end
+
 local Collectibles = {}
 
 -- ── State ─────────────────────────────────────────────────────────────────────

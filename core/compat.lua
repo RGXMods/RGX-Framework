@@ -91,6 +91,27 @@ function RGX:HasCapability(name)
     return self.Capabilities[name] == true
 end
 
+-- Module load gating is capability-first: a module registers only when the
+-- client's own global surface contains what the module drives. Decisions are
+-- evidence-coded against the Ketho client dumps (Resources/GlobalAPI.lua):
+--   housing      C_Housing                        retail only
+--   delves       C_DelvesUI                       retail only
+--   tradingpost  C_PerksProgram                   retail only
+--   collectibles C_ToyBox/C_MountJournal          retail only
+--   prey         C_QuestLog.GetActivePreyQuest    retail + forever beta
+-- Deliberately keying on the namespace function keeps this correct even as
+-- flavor builds change; Blizzard's typo'd CURRENT_HOUSE_INFO_RECIEVED event
+-- exists on every flavor and is NOT a housing signal by itself.
+function RGX:ModuleSupported(name)
+    if name == "housing" then return type(C_Housing) == "table" or type(C_HousingDecor) == "table" end
+    if name == "delves" then return HasFunction(C_DelvesUI, "GetFactionForCompanion") or HasFunction(C_DelvesUI, "GetDelvesFactionForSeason") end
+    if name == "tradingpost" then return HasFunction(C_PerksProgram, "GetCurrencyAmount") end
+    if name == "collectibles" then return type(C_ToyBox) == "table" or type(C_MountJournal) == "table" end
+    if name == "prey" then return HasFunction(C_QuestLog, "GetActivePreyQuest") end
+    -- Unlisted modules are framework-structural and load everywhere.
+    return true
+end
+
 function RGX:HasEvent(name)
     return HasEvent(name)
 end
