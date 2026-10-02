@@ -670,4 +670,4 @@ end
 -- ── Wire into framework ───────────────────────────────────────────────────────
 
 _G.RGXAuras = Auras
-RGX:RegisterModule("auras", Auras)
+RGX:RegisterModule("auras", Auras, { category = "game" })
