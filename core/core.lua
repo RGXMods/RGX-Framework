@@ -132,6 +132,20 @@ function RGX:RegisterModule(name, module, opts)
     module.name = module.name or normalizedName
     module.framework = self
     module.available = true
+    -- Architectural metadata (additive; runtime semantics unchanged).
+    -- category: "library" (reusable framework capability) or "game"
+    -- depends: module names this module requires; recorded for the checker
+    -- stability: stable | experimental | deprecated | internal
+    -- flavors: flavor names the module is allowed on (nil/absent = all)
+    if type(opts) == "table" then
+        module.category = opts.category or module.category
+        module.depends = opts.depends or module.depends
+        module.stability = opts.stability or module.stability or "stable"
+        if opts.flavors ~= nil then
+            self.moduleFlavorMap = self.moduleFlavorMap or {}
+            self.moduleFlavorMap[normalizedName] = opts.flavors
+        end
+    end
 
     self.modules[normalizedName] = module
     self.loadedModules[normalizedName] = true
