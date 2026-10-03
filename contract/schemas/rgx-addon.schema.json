@@ -83,12 +83,12 @@
     },
     "options": {
       "x-rgx-ships": "today",
-      "description": "Tab name -> array of controls. Requires db. Every control binds to addon.db with automatic save AND restore. Layout model (one composable vocabulary, proven in BLU): panel -> main page + tabs -> tabs can be multi-paged -> 1-2 column card grid -> rows/cards holding the widgets. Tier 4 adds the reserved key 'columns' (1|2|3 card grid; 1-2 is the BLU-proven range), multi-page tab support, and one-line string controls per the contract grammar.",
+      "description": "Tab name -> array of controls. Requires db. Every control binds to addon.db with automatic save AND restore. Layout model (one composable vocabulary, proven in consumer addons): panel -> main page + tabs -> tabs can be multi-paged -> 1-2 column card grid -> rows/cards holding the widgets. Tier 4 adds the reserved key 'columns' (1|2|3 card grid; 1-2 is the proven range), multi-page tab support, and one-line string controls per the contract grammar.",
       "type": "object",
       "properties": {
         "columns": {
           "x-rgx-ships": "tier4",
-          "description": "Card-grid column count for all tabs. 1-2 proven in BLU; 3 contract-frozen.",
+          "description": "Card-grid column count for all tabs. 1-2 proven in consumer addons; 3 contract-frozen.",
           "enum": [1, 2, 3]
         }
       },

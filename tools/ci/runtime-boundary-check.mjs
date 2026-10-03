@@ -58,6 +58,25 @@ for (const root of RUNTIME_ROOTS) {
         assert.fail(`${file}:${line}: runtime references forbidden ${rule.label}`);
       }
     }
+    // Consumer-coupling: the framework is a framework. No consumer addon's
+    // name may appear anywhere in the runtime — code or comments. Consumers
+    // are siblings that depend on RGX, never ingredients of it, and a brand
+    // reference here is how addon-specific behavior starts leaking in.
+    const raw = readFileSync(file, "utf8");
+    for (const brand of [
+      { pattern: /\bSQP\b/, label: "SQP" },
+      { pattern: /SimpleQuestPlates/, label: "SimpleQuestPlates" },
+      { pattern: /\bBLU\b/, label: "BLU" },
+      { pattern: /BetterLevelUp/, label: "BetterLevelUp" },
+      { pattern: /RGXQoL/, label: "RGXQoL" },
+      { pattern: /RGXProfessions/, label: "RGXProfessions" },
+    ]) {
+      const match = raw.match(brand.pattern);
+      if (match) {
+        const line = raw.slice(0, raw.indexOf(match[0])).split("\n").length;
+        assert.fail(`${file}:${line}: runtime references consumer addon '${brand.label}' — the framework must stay consumer-agnostic`);
+      }
+    }
   }
 }
-console.log(`RUNTIME BOUNDARY OK ${scanned} runtime Lua files reference no tooling, contract engines, reference caches, or external loaders`);
+console.log(`RUNTIME BOUNDARY OK ${scanned} runtime Lua files reference no tooling, contract engines, reference caches, external loaders, or consumer addons`);
