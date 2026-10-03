@@ -282,6 +282,48 @@ UI:CreateCloseButton(myDialog, { point = "TOPRIGHT", x = -6, y = -6,
     tooltip = "Close", onClick = function() myDialog:Hide() end })
 ```
 
+### `UI:CreateConfigButton(anchor, opts)` → `button` and `UI:CreateConfigDialog(parent, opts)` → `dialog`
+
+The sub-menu configuration affordance: a small gear button attached to a
+control that opens a configuration dialog, so consumers never hand-roll
+"advanced settings" chrome.
+
+`UI:CreateConfigButton(anchor, opts)` — gear icon (desaturated until hovered)
+next to the anchor control:
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `anchor` | frame | Yes | — | Control the gear sits beside |
+| `opts.point` / `opts.relativePoint` | string | No | `"LEFT"` / `"RIGHT"` | Anchor points |
+| `opts.relativeTo` | frame | No | anchor | Anchor target |
+| `opts.x` / `opts.y` | number | No | 6 / 0 | Anchor offsets |
+| `opts.dialog` | frame | No | — | Dialog shown by the default click action |
+| `opts.onClick` | function | No | show `opts.dialog` | Custom click handler |
+| `opts.tooltip` | string | No | — | Hover tooltip text |
+| `opts.width` / `opts.height` | number | No | 18 | Gear size |
+| `opts.hidden` | boolean | No | false | Start hidden |
+
+The button is published as `anchor.configButton`.
+
+`UI:CreateConfigDialog(parent, opts)` — movable, design-skinned dialog frame
+with the framework close button and an optional Reset action; consumers
+populate the returned frame and show it from a config button:
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `parent` | frame | No | UIParent | Dialog parent |
+| `opts.title` | string | No | "Configuration" | Header title |
+| `opts.width` / `opts.height` | number | No | 420 / 260 | Dialog size |
+| `opts.onReset` | function | No | — | Adds a Reset button when present |
+| `opts.onShow` | function | No | — | Hooked to the dialog's OnShow |
+| `opts.strata` | string | No | `"FULLSCREEN_DIALOG"` | Frame strata |
+| `opts.hidden` | boolean | No | true | Start hidden |
+
+```lua
+local dialog = UI:CreateConfigDialog(myPanel, { title = "Advanced", onReset = ResetAdvanced })
+UI:CreateConfigButton(myToggle, { dialog = dialog, tooltip = "Advanced settings" })
+```
+
 For a single informational page without tab chrome, pass `content = function(frame)
 ... end` instead of `tabs`. Existing `tabs = { ... }` panels retain their tab
 row and page lifecycle. The framework's AddOns settings category uses this

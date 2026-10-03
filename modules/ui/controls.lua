@@ -829,6 +829,113 @@ function UI:CreateCloseButton(parent, opts)
     return button
 end
 
+-- Sub-menu configuration affordance: a small gear button attached to a
+-- control (or any anchor frame) that opens a configuration dialog, so
+-- consumers never hand-roll "advanced settings" chrome. opts: point /
+-- relativeTo / relativePoint / x / y (default RIGHT of the anchor, 6, 0),
+-- onClick (default: Show opts.dialog), dialog (frame to show), tooltip,
+-- width/height (default 18), hidden. The button publishes itself as
+-- opts.anchor.configButton when an anchor is given.
+function UI:CreateConfigButton(anchor, opts)
+    assert(anchor, "RGX UI: CreateConfigButton requires an anchor frame")
+    opts = opts or {}
+    local button = CreateFrame("Button", nil, anchor:GetParent() or anchor)
+    button:SetSize(opts.width or 18, opts.height or 18)
+    button:ClearAllPoints()
+    local point = opts.point or "LEFT"
+    local relativeTo = opts.relativeTo or anchor
+    local relativePoint = opts.relativePoint or "RIGHT"
+    button:SetPoint(point, relativeTo, relativePoint, opts.x or 6, opts.y or 0)
+    local gear = button:CreateTexture(nil, "ARTWORK")
+    gear:SetAllPoints()
+    gear:SetTexture("Interface\\WorldMap\\Gear_64.png")
+    gear:SetTexCoord(0, 0.5, 0, 0.5)
+    gear:SetDesaturated(true)
+    button.gear = gear
+    button:SetScript("OnEnter", function(self)
+        gear:SetDesaturated(false)
+        if opts.tooltip and GameTooltip then
+            GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+            GameTooltip:SetText(opts.tooltip, 1, 1, 1, 1, true)
+            GameTooltip:Show()
+        end
+    end)
+    button:SetScript("OnLeave", function()
+        gear:SetDesaturated(true)
+        if GameTooltip then GameTooltip:Hide() end
+    end)
+    local onClick = opts.onClick
+    if type(onClick) ~= "function" then
+        local dialog = opts.dialog
+        onClick = function()
+            if dialog and dialog.Show then dialog:Show() end
+        end
+    end
+    button:SetScript("OnClick", onClick)
+    if opts.hidden then
+        button:Hide()
+    end
+    anchor.configButton = button
+    return button
+end
+
+-- Titled configuration dialog for a control's advanced settings: design-skinned
+-- frame with the framework close button and an optional Reset action.
+-- opts: title (required), width/height (default 420x260), onReset (function),
+-- onShow (function), strata (default "FULLSCREEN_DIALOG"), hidden (bool).
+-- Consumers populate the returned frame; show it from a CreateConfigButton.
+function UI:CreateConfigDialog(parent, opts)
+    opts = opts or {}
+    local D = RGX:GetDesign()
+    local dialog = CreateFrame("Frame", nil, parent or UIParent, "BackdropTemplate")
+    dialog:SetSize(opts.width or 420, opts.height or 260)
+    dialog:SetFrameStrata(opts.strata or "FULLSCREEN_DIALOG")
+    dialog:SetClampedToScreen(true)
+    dialog:EnableMouse(true)
+    dialog:SetMovable(true)
+    dialog:RegisterForDrag("LeftButton")
+    dialog:SetScript("OnDragStart", function(self) self:StartMoving() end)
+    dialog:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+    dialog:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1,
+    })
+    if D then
+        dialog:SetBackdropColor(D:Unpack("surface"))
+        dialog:SetBackdropBorderColor(D:Unpack("border"))
+    else
+        dialog:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
+        dialog:SetBackdropBorderColor(0.137, 0.137, 0.173)
+    end
+
+    local title = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    title:SetPoint("TOPLEFT", 16, -12)
+    title:SetText(opts.title or "Configuration")
+    if D then
+        title:SetTextColor(D:Unpack("primary"))
+    end
+
+    self:CreateCloseButton(dialog, { onClick = function() dialog:Hide() end })
+
+    if type(opts.onReset) == "function" then
+        local reset = self:CreateButton(dialog, {
+            text = "Reset",
+            width = 90,
+            onClick = function() opts.onReset() end,
+        })
+        reset:SetPoint("BOTTOMLEFT", 16, 14)
+        dialog.resetButton = reset
+    end
+
+    if type(opts.onShow) == "function" then
+        dialog:HookScript("OnShow", opts.onShow)
+    end
+    if opts.hidden ~= false then
+        dialog:Hide()
+    end
+    return dialog
+end
+
 --[[============================================================================
     SECTION/PANEL
 ============================================================================]]
