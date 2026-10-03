@@ -58,7 +58,7 @@ local TAB_H        = 22
 local TAB_SPACING  = 6
 local TAB_ROW_PAD  = 8
 local TAB_ROW_GAP  = 3
-local HEADER_H     = 52
+local HEADER_H     = 64
 
 -- ── TOC metadata helper ───────────────────────────────────────────────────────
 
@@ -311,7 +311,7 @@ local function CreateOptionsPanel(UI, opts)
 
     -- ── Panel frame ───────────────────────────────────────────────────────────
     local panel = CreateFrame("Frame", "RGXOptionsPanel_" .. addonKey, UIParent, "BackdropTemplate")
-    panel:SetSize(opts.width or 760, opts.height or 620)
+    panel:SetSize(opts.width or 760, opts.height or 632)
     panel:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     panel:SetFrameStrata("DIALOG")
     panel:EnableMouse(true)
@@ -362,23 +362,23 @@ local function CreateOptionsPanel(UI, opts)
     -- Icon
     if opts.icon then
         local logo = header:CreateTexture(nil, "ARTWORK")
-        logo:SetSize(28, 28)
-        logo:SetPoint("LEFT", 10, 0)
+        logo:SetSize(42, 42)
+        logo:SetPoint("LEFT", 11, 0)
         logo:SetTexture(opts.icon)
     end
 
-    local leftX  = opts.icon and 50 or 14
+    local leftX  = opts.icon and 62 or 14
     local rightX = -14
 
     local titleStr = header:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    titleStr:SetPoint("LEFT", header, "TOPLEFT", leftX, -14)
+    titleStr:SetPoint("LEFT", header, "TOPLEFT", leftX, -16)
     titleStr:SetJustifyV("MIDDLE")
     titleStr:SetText(opts.title or tAddonName)
     ApplyDefaultFont(titleStr)
 
     if opts.subtitle then
         local sub = header:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        sub:SetPoint("LEFT", header, "TOPLEFT", leftX, -26)
+        sub:SetPoint("LEFT", header, "TOPLEFT", leftX, -30)
         sub:SetJustifyV("MIDDLE")
         sub:SetText(opts.subtitle)
         sub:SetTextColor(D:Unpack("subtext"))
@@ -387,7 +387,7 @@ local function CreateOptionsPanel(UI, opts)
 
     if opts.website then
         local site = header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        site:SetPoint("LEFT", header, "TOPLEFT", leftX, -38)
+        site:SetPoint("LEFT", header, "TOPLEFT", leftX, -44)
         site:SetJustifyV("MIDDLE")
         site:SetText(opts.website)
         site:SetTextColor(D:Unpack("text"))
@@ -398,7 +398,7 @@ local function CreateOptionsPanel(UI, opts)
     if verText ~= "" then
         if not verText:match("^v") then verText = "v" .. verText end
         local ver = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        ver:SetPoint("RIGHT", header, "TOPRIGHT", rightX, -14)
+        ver:SetPoint("RIGHT", header, "TOPRIGHT", rightX, -16)
         ver:SetJustifyV("MIDDLE")
         ver:SetText(verText)
         ver:SetJustifyH("RIGHT")
@@ -408,7 +408,7 @@ local function CreateOptionsPanel(UI, opts)
 
     if opts.author then
         local auth = header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        auth:SetPoint("RIGHT", header, "TOPRIGHT", rightX, -26)
+        auth:SetPoint("RIGHT", header, "TOPRIGHT", rightX, -30)
         auth:SetJustifyV("MIDDLE")
         auth:SetText("by " .. opts.author)
         auth:SetTextColor(D:Unpack("subtext"))
@@ -418,7 +418,7 @@ local function CreateOptionsPanel(UI, opts)
 
     if opts.brand then
         local brand = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        brand:SetPoint("RIGHT", header, "TOPRIGHT", rightX, -38)
+        brand:SetPoint("RIGHT", header, "TOPRIGHT", rightX, -44)
         brand:SetJustifyV("MIDDLE")
         brand:SetText(opts.brand)
         brand:SetJustifyH("RIGHT")
