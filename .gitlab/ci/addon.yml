@@ -43,6 +43,9 @@ addon:validate:
         if test -f module-gating-check.mjs; then
           node module-gating-check.mjs
         fi
+        if test -f module-graph-check.mjs && test -f runtime-boundary-check.mjs; then
+          npm run arch-check
+        fi
       fi
 
 # Build the versioned contract bundle (issue #6) separately from the player
