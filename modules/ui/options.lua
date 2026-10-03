@@ -425,19 +425,19 @@ local function CreateOptionsPanel(UI, opts)
         ApplyDefaultFont(brand)
     end
 
-    -- ── Close button (QoL absolute detail) ─────────────────────────────────
-    -- UIPanelCloseButton, 30x30, anchored TOPRIGHT 0,0. Hidden while the
-    -- panel is hosted inside the Settings canvas (which owns its own
-    -- chrome; hiding the canvas child would blank the category).
-    -- opts.closeButton == false skips it.
+    -- ── Close button ─────────────────────────────────────────────────────
+    -- The panel uses the shared framework close-button factory so consumers
+    -- see one chrome primitive everywhere. Hidden while the panel is hosted
+    -- inside the Settings canvas (which owns its own chrome; hiding the
+    -- canvas child would blank the category). opts.closeButton == false
+    -- skips it.
     local closeBtn
     if opts.closeButton ~= false then
-        closeBtn = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
-        closeBtn:SetSize(30, 30)
-        closeBtn:SetPoint("TOPRIGHT", 0, 0)
-        closeBtn:SetScript("OnClick", function()
-            if not panel._settingsEmbedded then panel:Hide() end
-        end)
+        closeBtn = GetUI():CreateCloseButton(panel, {
+            onClick = function()
+                if not panel._settingsEmbedded then panel:Hide() end
+            end,
+        })
         panel.closeButton = closeBtn
     end
 
