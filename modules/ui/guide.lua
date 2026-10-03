@@ -26,7 +26,7 @@ local function BuildGuide(content)
             for name in pairs(Design.THEME_PRESETS) do items[#items + 1] = { text = name, value = name } end
             table.sort(items, function(a, b) return a.value < b.value end)
             local themeDD = Drops:CreateNestedDropdown(theme.content, {
-                label = "Accent preset",
+                label = "Highlight color",
                 width = 300, buttonWidth = 290, triggerStyle = "retail",
                 value = Design:GetThemePreset() or "cyan",
                 items = items,
