@@ -208,7 +208,10 @@ async function publishCurseForge({ projectId, apiKey, flavors, version, releaseT
     changelogType: "markdown",
   });
   const form = new FormData();
-  form.append("metadata", new Blob([metadata], { type: "application/json" }));
+  // CurseForge requires metadata as a plain string form value (BigWigs
+  // parity: curl -F "metadata=..."); a Blob field becomes a file part and
+  // the API answers 1001 "Missing field `metadata`".
+  form.append("metadata", metadata);
   form.append("file", new Blob([readFileSync(archive)]), basename(archive));
 
   const uploadUrl = `https://wow.curseforge.com/api/projects/${projectId}/upload-file`;

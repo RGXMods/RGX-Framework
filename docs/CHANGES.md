@@ -2,6 +2,30 @@
 
 ## Current Release
 
+### [v2.7.11](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.11.md) - 2026-10-03
+
+- Fixed the CurseForge release upload (metadata must be a plain form
+  value, not a file part), completing the distribution chain.
+- Settings-embedded options panels now fill the canvas: no more double
+  frame or extra background inside the game's Settings window.
+- Taller 64px header band with the 42px square suite icon.
+- Round/square suite icons regenerated with proper edge-keyed alpha.
+- Runtime is consumer-agnostic and CI-enforced: no consumer addon names
+  anywhere in core/ or modules/ Lua.
+- Classic Era `11509` added to the base TOC.
+
+### Language coverage
+
+RGX-Framework ships complete WoW client locale coverage for its own
+user-facing output across all twelve WoW client locales: enUS (base), deDE,
+esES, esMX, frFR, itIT, koKR, ptBR, ptPT, ruRU, zhCN, zhTW. The same
+coverage list is published in every flavor TOC's `## X-Localizations:`
+header and in `README.md`. Consumer addons inherit the
+`RGXLocale:NewLocale(addonName, locale, isDefault)` registry convention.
+
+
+## Recent Releases
+
 ### [v2.7.10](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.10.md) - 2026-10-03
 
 - Database self-heal: metatable-poisoned SavedVariables tables no longer
@@ -17,18 +41,6 @@
 - Architecture hardening: contract promoted to `contract/` with shared
   engines, MCP thinned to a transport adapter, module taxonomy + frozen
   31-global public surface + runtime boundary enforcement in shared CI.
-
-### Language coverage
-
-RGX-Framework ships complete WoW client locale coverage for its own
-user-facing output across all twelve WoW client locales: enUS (base), deDE,
-esES, esMX, frFR, itIT, koKR, ptBR, ptPT, ruRU, zhCN, zhTW. The same
-coverage list is published in every flavor TOC's `## X-Localizations:`
-header and in `README.md`. Consumer addons inherit the
-`RGXLocale:NewLocale(addonName, locale, isDefault)` registry convention.
-
-
-## Recent Releases
 
 ### [v2.7.9](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.9.md) - 2026-09-29
 
