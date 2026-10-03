@@ -977,7 +977,7 @@ function UI:CreateSection(parent, options)
     local height = options.height or 200
     local D = RGX:GetDesign()
     assert(D and type(D.CreateSection) == "function", "RGX UI: section design unavailable")
-    -- Share BLU's section skin; RGXUI owns placement, RGXDesign textures.
+    -- Share the consumer-proven section skin; RGXUI owns placement, RGXDesign textures.
     local section = D:CreateSection(parent, title ~= "" and title or nil, options.icon,
         { square = options.square ~= false })
     section:SetSize(width, height)
@@ -1050,7 +1050,7 @@ function UI:CreatePreviewFrame(parent, options)
 end
 
 --[[============================================================================
-    SWITCH — sliding on/off control (BLU module-page style)
+    SWITCH — sliding on/off control (consumer module-page style)
 
     UI:CreateSwitch(parent, options)
     options:
@@ -1076,7 +1076,7 @@ function UI:CreateSwitch(parent, options)
     container:SetSize(200, 22)
     container:RegisterForClicks("LeftButtonUp")
 
-    -- Status text (right of label area, matches BLU module toggles)
+    -- Status text (right of label area, matches consumer module toggles)
     container.label = self:CreateLabel(container, {
         text = options.label or "",
         size = "small",

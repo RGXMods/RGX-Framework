@@ -295,8 +295,8 @@ if (!existsSync(changelogFile)) fail(`changelog file does not exist: ${changelog
 const tocText = readToc(tocPath);
 const tocVersion = (tocField(tocText, "Version") ?? "").replace(/^v/, "");
 if (!tocVersion) fail(`${basename(tocPath)} declares no Version`);
-// Release names use the color-cleaned TOC Title (BigWigs parity, e.g. BLU
-// publishes as "Better Level-Up!"); fall back to the TOC file stem.
+// Release names use the color-cleaned TOC Title (BigWigs parity, i.e. the
+// display name players see in the addon list); fall back to the TOC file stem.
 const tocTitle = (tocField(tocText, "Title") ?? "")
   .replace(/\|c[0-9a-fA-F]{8}/g, "")
   .replace(/\|r/g, "")

@@ -16,7 +16,7 @@
         flow:AddSpacer(6)
         local used = flow:Apply()   -- places children, returns used height
 
-        -- Columns: algorithmic BLU-style split (edge to center to edge)
+        -- Columns: consumer-proven split (edge to center to edge)
         -- Returns the content frame of each column (usable as a parent).
         local left, right = UI:CreateColumns(parent, 2, { gap = 8 })
 
@@ -35,7 +35,7 @@ if not RGX then
 end
 
 -- Constants kept in sync with UI:CreateSection content insets in controls.lua.
-local TITLED_CONTENT_TOP = 42   -- Design:CreateSection, matching BLU
+local TITLED_CONTENT_TOP = 42   -- Design:CreateSection content inset
 local UNTITLED_CONTENT_TOP = 10
 local CONTENT_BOTTOM = 12
 
@@ -271,7 +271,7 @@ end
 --[[============================================================================
     Pager
 
-    BLU-style tab content paging: a "Page X of Y" label with Prev/Next
+    Consumer-style tab content paging: a "Page X of Y" label with Prev/Next
     buttons anchored top-right of the host, and N full-size page frames of
     which only the active one is shown. Single-page pagers hide the chrome
     entirely. Visuals come from Design (buttons/labels); this module owns
