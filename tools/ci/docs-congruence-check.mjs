@@ -8,6 +8,7 @@ const read = (path) => readFileSync(join(ROOT, path), "utf8");
 const failures = [];
 const releaseSnapshot = JSON.parse(read("tools/ci/release-snapshot.json"));
 const publishedVersion = releaseSnapshot.publishedVersion ?? releaseSnapshot.version;
+const publishedRuntimeFiles = releaseSnapshot.publishedRuntimeFiles ?? releaseSnapshot.runtimeFiles;
 
 const flavorTocs = [
   ["retail", "Retail", "Retail", "RGX-Framework.toc", "120100"],
@@ -20,6 +21,8 @@ const flavorTocs = [
 
 const retailToc = read("RGX-Framework.toc");
 const version = retailToc.match(/^## Version:\s*(\S+)/m)?.[1];
+const sourceChannelWords = /-(?:beta|alpha)(?:[.-]|$)/.test(version ?? "")
+  ? /candidate|unreleased|beta|alpha/i : /candidate|unreleased/i;
 if (!version) failures.push("RGX-Framework.toc: missing Version");
 if (version !== releaseSnapshot.version) failures.push(`release snapshot is ${releaseSnapshot.version}, TOCs are ${version}`);
 
@@ -82,7 +85,7 @@ const candidateSurfaces = [
 if (publishedVersion !== version) {
   for (const path of candidateSurfaces) {
     const source = path in surfaceText ? surfaceText[path] : read(path);
-    if (!source.includes(`v${version}`) || !source.includes(`v${publishedVersion}`) || !/candidate|unreleased/i.test(source)) {
+    if (!source.includes(`v${version}`) || !source.includes(`v${publishedVersion}`) || !sourceChannelWords.test(source)) {
       failures.push(`${path}: candidate documentation must identify both v${version} and published v${publishedVersion}`);
     }
   }
@@ -121,7 +124,7 @@ for (const required of [
   "one product",
   "Source-Only Tooling",
   "docs/description.html",
-  `exactly ${releaseSnapshot.runtimeFiles}`,
+  `exactly ${publishedRuntimeFiles}`,
 ]) {
   if (!distribution.includes(required)) failures.push(`docs/DISTRIBUTION.md: missing ${required}`);
 }
@@ -146,7 +149,7 @@ for (const required of [`RGX-Framework-v${version}.zip`, `${releaseSnapshot.runt
   if (!currentChangelog.includes(required)) failures.push(`${currentChangelogPath}: missing ${required}`);
 }
 if (publishedVersion !== version) {
-  if (!/unreleased|candidate/i.test(currentChangelog) || !currentChangelog.includes(`v${publishedVersion}`)) {
+  if (!sourceChannelWords.test(currentChangelog) || !currentChangelog.includes(`v${publishedVersion}`)) {
     failures.push(`${currentChangelogPath}: candidate changelog must identify published v${publishedVersion}`);
   }
 } else if (/unreleased|candidate/i.test(currentChangelog)) {
