@@ -9,7 +9,7 @@
     "gitlab-ci-check": "node gitlab-pipeline-check.mjs",
     "module-gating-check": "node module-gating-check.mjs",
     "definition-check": "node definition-roundtrip-check.mjs",
-    "lua-runtime-check": "node lua-runtime-check.mjs && node aura-runtime-check.mjs && node events-runtime-check.mjs && node login-runtime-check.mjs && node database-runtime-check.mjs && node profile-persistence-check.mjs",
+    "lua-runtime-check": "node lua-runtime-check.mjs && node aura-runtime-check.mjs && node events-runtime-check.mjs && node login-runtime-check.mjs && node database-runtime-check.mjs && node profile-persistence-check.mjs && node layout-card-check.mjs",
     "package-build": "node package-manifest-check.mjs ../.. --out ../../artifacts",
     "package-check": "node package-manifest-check.mjs ../..",
     "docs-check": "node docs-congruence-check.mjs",
