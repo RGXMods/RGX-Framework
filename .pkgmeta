@@ -29,6 +29,8 @@ ignore:
   - .claude
   - media/kiwi.gif
   - media/logo.png
+  - media/round.png
+  - media/square.png
 
 # MCP and other executable tooling remain source-only. Public API/MCP/editor
 # distribution belongs to RGX Studio.
