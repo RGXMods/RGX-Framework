@@ -261,6 +261,31 @@ await scenario("config gear opens its dialog and config dialog owns its chrome",
   gear3.scripts.OnClick(gear3)
   assert(clicks == 1 and dialog.shown == true, "custom gear click must not touch the dialog")
 `);
+await scenario("metatable-poisoned profile store self-heals instead of looping", `
+  local db = RGX:NewDatabase("PoisonDB", { enabled = true, scale = 1.5 }, { profileIsGlobal = true })
+  local view = db.global
+  assert(view.enabled == true and view.scale == 1.5)
+
+  -- Poison the active profile with a proxy whose __index chains back through
+  -- the database: the exact loop that produces "C stack overflow" at
+  -- ActiveProfile in live sessions. The view must heal, not recurse.
+  local rawProfile = PoisonDB.profiles.Default
+  assert(getmetatable(rawProfile) == nil, "fresh profile must be plain")
+  setmetatable(rawProfile, { __index = function(t, key) return db[key] end })
+  local ok, value = pcall(function() return view.scale end)
+  assert(ok, "poisoned profile read must not overflow: " .. tostring(value))
+  assert(value == 1.5, "healed read must resolve the default, got " .. tostring(value))
+  assert(getmetatable(PoisonDB.profiles.Default) == nil, "profile must be rebuilt plain")
+
+  -- Poison the profile store itself (raw.profiles): same loop, same healing.
+  local rawStore = PoisonDB.profiles
+  setmetatable(rawStore, { __index = function(t, key) return db[key] end })
+  local ok2, value2 = pcall(function() return view.enabled end)
+  assert(ok2, "poisoned store read must not overflow: " .. tostring(value2))
+  assert(value2 == true, "healed store read must resolve the default")
+  assert(getmetatable(PoisonDB.profiles) == nil, "store must be rebuilt plain")
+  assert(view.scale == 1.5, "healed database keeps serving defaults")
+`);
 let serialized;
 try {
   serialized = first.doStringSync(`

@@ -336,7 +336,34 @@ end
 
 local function ActiveProfile(self)
     local raw = self._raw
-    return raw.profiles and raw.profiles[raw.activeProfile]
+    if type(raw) ~= "table" then return nil end
+    local profiles = raw.profiles
+    if type(profiles) ~= "table" then return nil end
+    -- SavedVariables data can never legitimately carry a metatable. A proxied
+    -- table stored as the profile store (or as a profile) loops every database
+    -- access: indexing it re-enters this function through __index chains and
+    -- exhausts the C stack at this exact line. Rebuild the entry as a plain
+    -- table so one bad write cannot hard-crash every consumer read.
+    if getmetatable(profiles) ~= nil then
+        if type(RGX.Error) == "function" then
+            pcall(RGX.Error, RGX, "database: profile store carried a metatable; rebuilt plain")
+        end
+        profiles = {}
+        raw.profiles = profiles
+    end
+    local profile = profiles[raw.activeProfile]
+    if type(profile) ~= "table" then return nil end
+    if getmetatable(profile) ~= nil then
+        if type(RGX.Error) == "function" then
+            pcall(RGX.Error, RGX, "database: active profile carried a metatable; rebuilt plain")
+        end
+        profile = {}
+        profiles[raw.activeProfile] = profile
+        if type(self._defaults) == "table" then
+            MergeTable(profile, self._defaults)
+        end
+    end
+    return profile
 end
 
 -- ── Internal: fire all "profile switched" callbacks ────────────────────────────
