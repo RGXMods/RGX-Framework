@@ -865,6 +865,17 @@ end
     end
 
     panel:SetScript("OnShow", function(self)
+        -- Settings-canvas hosting: Blizzard re-parents the category panel into
+        -- its own canvas container. Fill it so the panel IS the canvas page;
+        -- a fixed-size centered panel inside the canvas shows the container's
+        -- own frame and background as a visible border around ours.
+        local parent = self:GetParent()
+        if parent and parent ~= UIParent and not self._settingsEmbedded then
+            self._settingsEmbedded = true
+            self:ClearAllPoints()
+            self:SetAllPoints(parent)
+            if closeBtn then closeBtn:Hide() end
+        end
         if #self.tabs > 0 and not self._activeTab then
             local initialTab = opts.initialTab or 1
             local function selectInitialTab()
