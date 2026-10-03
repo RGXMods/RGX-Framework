@@ -26,7 +26,7 @@ for (const match of xml.matchAll(/file="([^"]+)"/g)) {
 }
 
 const metadata = readFileSync(join(ROOT, ".pkgmeta"), "utf8");
-for (const directory of ["docs", "schemas", "tools", "tests", ".github", ".reference", "artifacts", "graphify-out"]) {
+for (const directory of ["docs", "contract", "tools", "tests", ".github", ".reference", "artifacts", "graphify-out"]) {
   if (!metadata.includes(`- ${directory}`)) throw new Error(`.pkgmeta does not exclude ${directory}`);
 }
 
