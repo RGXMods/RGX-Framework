@@ -387,4 +387,4 @@ Do not pause framework work to create a Studio mock. Do not create the Tauri
 repository or prototype while RGX-Framework is pre-production. The first Studio
 implementation begins only after gate `#30` and consumes a production framework
 contract rather than defining missing framework behavior itself.
-> **Beta source:** v2.7.13-beta.1; stable remains v2.7.12. Studio remains downstream of the framework contract.
+> **Beta source:** v2.7.13-beta.2; stable remains v2.7.12. Studio remains downstream of the framework contract.
