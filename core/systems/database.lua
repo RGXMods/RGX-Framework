@@ -690,7 +690,7 @@ DB.__index = function(self, key)
 -- ══════════════════════════════════════════════════════════════════════════════
 
 -- Modern API: flat defaults, metamethod access.
---   local db = RGX:NewDatabase("BLUDB", { enabled = true, volume = 1.0 }, {
+--   local db = RGX:NewDatabase("MyAddonDB", { enabled = true, volume = 1.0 }, {
 --       global = { installedVersion = "1.0" },
 --       char   = { lastZone = nil },        -- per-character defaults
 --       profileIsGlobal = true,             -- db.global → active profile (legacy compat)
@@ -744,11 +744,11 @@ function RGX:NewDatabase(globalName, defaults, opts)
     raw.profiles[active].currentProfile = active
     FillDefaults(db, raw.profiles[active])
 
-    -- Step 6: fire the initial onSwitch callback (used by BLU for UI wiring)
+    -- Step 6: fire the initial onSwitch callback (used by consumers for UI wiring)
     if opts.onSwitch then NotifySwitch(db) end
 
     -- Step 6b: profileIsGlobal consumers capture db.global once (e.g.
-    -- SQPSettings = db.global). Return a live view proxy instead of the
+    -- MySettings = db.global). Return a live view proxy instead of the
     -- raw profile table so captured references keep routing to the active
     -- profile across SavedVariables adoption and profile switches.
     if db._profileIsGlobal then
@@ -790,7 +790,7 @@ function RGX:AdoptDatabases()
 end
 
 -- Backward-compat wrapper: same as NewDatabase but with opts.profile/{defaults} naming.
---   local handle = RGX:OpenDB("BLUDB", {
+--   local handle = RGX:OpenDB("MyAddonDB", {
 --       profile  = { enabled = true },
 --       global   = { installedVersion = "1.0" },
 --       onSwitch = function(name, profile) end,

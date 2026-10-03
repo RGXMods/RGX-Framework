@@ -1,5 +1,5 @@
 -- Database runtime tests (Lua 5.1 VM, WoW globals stubbed by the runner).
--- Mirrors the in-game /rgx dbtest harness (blocks 16-17) plus the SQP-style
+-- Mirrors the in-game /rgx dbtest harness (blocks 16-17) plus the consumer-style
 -- capture/adopt/persist flow that motivated the view + Adopt work.
 
 local _, RGX = ...
@@ -29,21 +29,21 @@ do
     _G[tName] = nil
 end
 
--- SQP-style flow: capture at chunk time, adopt at ADDON_LOADED, persist after
+-- Consumer-style flow: capture at chunk time, adopt at ADDON_LOADED, persist after
 do
-    local sName = "SIM_SQP_Settings"
+    local sName = "SIM_CONSUMER_Settings"
     _G[sName] = nil
     local sdb = RGX:NewDatabase(sName, { enabled = true, showQuestMarker = true }, { profileIsGlobal = true })
-    local S = sdb.global -- SQPSettings = SQP.db.global (captured once)
+    local S = sdb.global -- MySettings = MyAddon.db.global (captured once)
     S.enabled = false    -- in-session toggle (pre-adoption, lands in orphan)
     local saved = { profiles = { Default = { enabled = true, scale = 1.5 } }, global = {}, char = {} }
     _G[sName] = saved    -- client deserializes SavedVariables, replacing the global
-    check(sdb:Adopt() == true, "SQP: adopt should return true")
-    check(S.enabled == true, "SQP: view should read the loaded value after adoption")
+    check(sdb:Adopt() == true, "consumer: adopt should return true")
+    check(S.enabled == true, "consumer: view should read the loaded value after adoption")
     S.showQuestMarker = false -- post-adoption toggle
     check(saved.profiles.Default.showQuestMarker == false,
-        "SQP: post-adoption writes must land in the loaded table")
-    check(saved.profiles.Default.scale == 1.5, "SQP: loaded values must survive adoption")
+        "consumer: post-adoption writes must land in the loaded table")
+    check(saved.profiles.Default.scale == 1.5, "consumer: loaded values must survive adoption")
 end
 
 -- 16. profileIsGlobal basics (existing in-game asserts)
@@ -59,7 +59,7 @@ do
 end
 
 -- Session round-trip: profile selection and profile data must survive a full
--- write → simulated logout → reload cycle (the BLU-class bug: writes landed in
+-- write → simulated logout → reload cycle (the consumer-class bug: writes landed in
 -- a database the client never persisted). The client hand-back is modeled by
 -- reassigning the SavedVariables global with the same content, which is what
 -- happens when the serialised table deserializes before ADDON_LOADED.
@@ -87,7 +87,7 @@ do
     _G[tName] = nil
 end
 
--- profileIsGlobal round-trip: the captured db.global view (SQPSettings style)
+-- profileIsGlobal round-trip: the captured db.global view (settings-alias style)
 -- must survive a reload and keep addressing whichever profile is active.
 do
     local tName = "RGX_TestDB_GlobalViewRoundTrip"

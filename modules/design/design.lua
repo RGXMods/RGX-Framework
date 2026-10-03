@@ -191,7 +191,7 @@ end
 
 -- Scoped theme override for one addon's UI construction without mutating the
 -- shared defaults: applies the theme for fn's duration, then restores.
---   Design:WithTheme({ primary = SQP_GREEN }, function() ... build panel ... end)
+--   Design:WithTheme({ primary = MY_BRAND_GREEN }, function() ... build panel ... end)
 function Design:WithTheme(theme, fn)
     if type(fn) ~= "function" then return end
     local prevPrimary = self.Theme.primary
