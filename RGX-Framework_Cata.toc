@@ -1,4 +1,5 @@
 ## Interface: 40402
+## X-Wago-ID: E6gz1DN10
 ## Version: 2.7.9
 ## Title: RGX-Framework
 ## Notes: Modular WoW addon framework
