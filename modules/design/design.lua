@@ -49,6 +49,46 @@ Design.Theme = {
     accent  = {0.737, 0.435, 0.659}, -- #bc6fa8 brand purple (highlights/active states)
 }
 
+-- Named theme presets exposed through the framework settings panel. Each
+-- preset is a full {primary, accent} pair; the framework persists the
+-- operator's choice in RGXFrameworkDB.themePreset and re-applies it on
+-- login. "cyan" is the shipped default.
+Design.THEME_PRESETS = {
+    cyan   = { primary = {0.000, 0.902, 1.000}, accent = {0.737, 0.435, 0.659} },
+    gold   = { primary = {1.000, 0.843, 0.000}, accent = {0.737, 0.435, 0.659} },
+    green  = { primary = {0.345, 0.745, 0.506}, accent = {0.737, 0.435, 0.659} },
+    purple = { primary = {0.639, 0.529, 1.000}, accent = {0.000, 0.902, 1.000} },
+    rose   = { primary = {1.000, 0.416, 0.678}, accent = {0.000, 0.902, 1.000} },
+}
+
+-- Current preset name (nil = custom theme set directly via SetTheme).
+Design.currentPreset = "cyan"
+
+-- Global corner preference: "rounded" (default) or "square". Stored in
+-- RGXFrameworkDB.cornerStyle and honored by CreateFrame unless the caller
+-- explicitly opts into square with opts.square.
+Design.cornerStyle = "rounded"
+
+function Design:SetThemePreset(name)
+    local preset = self.THEME_PRESETS and self.THEME_PRESETS[name]
+    if not preset then return false end
+    self:SetTheme({ primary = preset.primary, accent = preset.accent })
+    self.currentPreset = name
+    return true
+end
+
+function Design:GetThemePreset()
+    return self.currentPreset
+end
+
+function Design:SetCornerStyle(style)
+    if style == "rounded" or style == "square" then
+        self.cornerStyle = style
+        return true
+    end
+    return false
+end
+
 -- Structural palette: dark navy foundation with cyan-friendly neutrals.
 Design.Colors = {
     surface    = {0.086, 0.086, 0.110}, -- panel
@@ -263,6 +303,12 @@ end
 
 function Design:CreateFrame(parent, opts)
     opts = opts or {}
+    -- Corner preference: an explicit opts.square wins (callers that need the
+    -- legacy backdrop say so); otherwise the framework-level cornerStyle
+    -- setting decides between rounded panels and square backdrops.
+    if opts.square == nil then
+        opts.square = self.cornerStyle == "square"
+    end
     if opts.square then
         local frame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
         if opts.width  then frame:SetWidth(opts.width)   end
