@@ -4,6 +4,11 @@
     One-call minimap button with circular drag, persistent angle, tooltip, and
     show/hide — shared across all RGX addons so no addon has to reimplement it.
 
+    Suite icons: the framework ships round and square brand icons — use
+    "Interface\\AddOns\\RGX-Framework\\media\\round.tga" for minimap buttons
+    and "Interface\\AddOns\\RGX-Framework\\media\\square.tga" for header/panel
+    icons so every RGX addon shares one identity.
+
     Quick start:
         local MM = RGX:GetMinimap()
 

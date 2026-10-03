@@ -30,9 +30,10 @@ for (const [flavor, , , path, expectedInterface] of flavorTocs) {
   if (actualVersion !== version) failures.push(`${path}: expected version ${version}, got ${actualVersion}`);
   if (actualInterface !== expectedInterface) failures.push(`${path}: expected Interface ${expectedInterface}, got ${actualInterface}`);
   if (!flavor) failures.push(`${path}: missing flavor key`);
-  if (path !== "RGX-Framework.toc" && /^## X-(?:Curse-Project-ID|Wago-ID|WoWI-ID):/m.test(toc)) {
+  if (path !== "RGX-Framework.toc" && /^## X-(?:Curse-Project-ID|WoWI-ID):/m.test(toc)) {
     failures.push(`${path}: addon-service project IDs belong only in RGX-Framework.toc`);
   }
+  // Wago identifies per-flavor packages, so X-Wago-ID is allowed in every TOC.
 }
 
 const currentSurfaces = [

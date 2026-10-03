@@ -24,9 +24,10 @@ gh release view v2.7.9 --repo RGXMods/RGX-Framework --json assets \
   --jq '.assets[] | select(.name == "RGX-Framework-v2.7.9.zip") | .digest'
 ```
 
-CurseForge is the currently configured addon service. Wago remains skipped
-because this project has no existing Wago connection; new connections are not
-added automatically.
+CurseForge is the currently configured addon service. Wago is configured with
+the suite connection `X-Wago-ID: E6gz1DN10`, carried in every flavor TOC so
+Wago can identify each per-flavor package; the existing connection and ID
+must be preserved exactly.
 
 ## Flavor Metadata
 
