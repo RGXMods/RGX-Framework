@@ -2,11 +2,21 @@
 
 ## Current Release
 
-### [v2.7.9](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.9.md) - 2026-09-29
+### [v2.7.10](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.10.md) - 2026-10-03
 
-- Hardened client metadata compatibility checks when APIs are unavailable.
-- Applied framework accent borders to section headers.
-- Documented flavor-specific consumer module and options boundaries.
+- Database self-heal: metatable-poisoned SavedVariables tables no longer
+  loop every read into a C stack overflow; the corrupted entry is logged
+  and rebuilt plain with defaults.
+- Fixed `card:AutoHeight()` crashing layout construction with an
+  arithmetic-on-table error.
+- New framework chrome: `UI:CreateCloseButton`, `UI:CreateConfigButton`, and
+  `UI:CreateConfigDialog` primitives; options panels consume the shared
+  close button.
+- Shipped suite brand icons `media/round.tga` (minimap) and
+  `media/square.tga` (headers); Wago project ID registered.
+- Architecture hardening: contract promoted to `contract/` with shared
+  engines, MCP thinned to a transport adapter, module taxonomy + frozen
+  31-global public surface + runtime boundary enforcement in shared CI.
 
 ### Language coverage
 
@@ -19,6 +29,12 @@ header and in `README.md`. Consumer addons inherit the
 
 
 ## Recent Releases
+
+### [v2.7.9](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.9.md) - 2026-09-29
+
+- Hardened client metadata compatibility checks when APIs are unavailable.
+- Applied framework accent borders to section headers.
+- Documented flavor-specific consumer module and options boundaries.
 
 ### [v2.7.8](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.8.md) - 2026-09-25
 
