@@ -453,6 +453,13 @@ local function CreateOptionsPanel(UI, opts)
         bannerFrame:SetHeight(opts.bannerHeight)
         bannerFrame:SetPoint("TOPLEFT",  header, "BOTTOMLEFT",  0, -2)
         bannerFrame:SetPoint("TOPRIGHT", header, "BOTTOMRIGHT", 0, -2)
+        -- Divider along the banner's bottom: separates banner content
+        -- (e.g. the preview's type buttons) from the tab row below.
+        local bannerDivider = bannerFrame:CreateTexture(nil, "ARTWORK")
+        bannerDivider:SetHeight(2)
+        bannerDivider:SetPoint("BOTTOMLEFT",  bannerFrame, "BOTTOMLEFT",  0, 0)
+        bannerDivider:SetPoint("BOTTOMRIGHT", bannerFrame, "BOTTOMRIGHT", 0, 0)
+        bannerDivider:SetColorTexture(D:Unpack("border"))
         panel.bannerFrame = bannerFrame
         tabAnchor = bannerFrame
     end
