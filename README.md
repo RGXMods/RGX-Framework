@@ -295,5 +295,5 @@ RGX-Framework publishes only the framework addon package. See
 ## License
 
 [MIT](LICENSE.txt) for framework code. Bundled fonts retain their own open licenses — see [docs/FONT-SOURCES.md](docs/FONT-SOURCES.md) for attribution.
-> **Beta testing:** v2.7.13-beta.1 adds shared UI/profile/layout improvements.
+> **Beta testing:** v2.7.13-beta.2 adds shared UI/profile/layout improvements.
 > Stable remains v2.7.12; enable beta updates for the framework separately.
