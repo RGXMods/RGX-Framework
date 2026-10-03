@@ -2,7 +2,7 @@
 
 ## Current Release
 
-### [v2.7.11](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.11.md) - 2026-10-03
+### [v2.7.12](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.12.md) - 2026-10-03
 
 - Fixed the CurseForge release upload (metadata must be a plain form
   value, not a file part), completing the distribution chain.
