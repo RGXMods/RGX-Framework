@@ -16,7 +16,7 @@ const compat = readFileSync(join(ROOT, "core/compat.lua"), "utf8");
 const modules = [];
 const moduleByName = new Map();
 for (const entry of entries) {
-  const src = readFileSync(join(ROOT, entry.replace(/\//g, "\\")), "utf8");
+  const src = readFileSync(join(ROOT, entry), "utf8");
   for (const match of src.matchAll(/RGX:RegisterModule\(\s*"([^"]+)"\s*,\s*([^),]+)\s*(,[^)]*)?\)/gs)) {
     const name = match[1];
     const opts = match[3] ? match[3].trim() : "";
@@ -98,7 +98,7 @@ const GLOBAL_ALLOWLIST = new Set([
 
 const writtenGlobals = new Set();
 for (const module of modules) {
-  const source = readFileSync(join(ROOT, module.file.replace(/\//g, "\\")), "utf8");
+  const source = readFileSync(join(ROOT, module.file), "utf8");
   // Direct assignments and global function definitions.
   for (const alias of source.matchAll(/_G\.(RGX\w*)\s*[=(]/g)) writtenGlobals.add(alias[1]);
   // Registry publication: RegisterModule({ global = "RGX..." }).
@@ -109,7 +109,7 @@ for (const module of modules) {
 // block so ordinary string fields elsewhere cannot masquerade as aliases.
 const coreFiles = ["core/core.lua", "core/initialization.lua", "core/systems/database.lua"];
 for (const coreFile of coreFiles) {
-  const source = readFileSync(join(ROOT, coreFile.replace(/\//g, "\\")), "utf8");
+  const source = readFileSync(join(ROOT, coreFile), "utf8");
   for (const alias of source.matchAll(/_G\.(RGX\w*)\s*[=(]/g)) writtenGlobals.add(alias[1]);
   const aliasBlock = source.match(/moduleAliases\s*=\s*\{([\s\S]*?)\n\}/);
   if (aliasBlock) {
