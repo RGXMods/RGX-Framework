@@ -407,7 +407,10 @@ function UI:CreateCard(parent, opts)
 
     -- Resize the card to exactly fit its flow content. Call after all
     -- flow:Add/AddRow calls. Extra px can be appended via the argument.
-    card.AutoHeight = function(extra)
+    card.AutoHeight = function(first, extra)
+        -- Normal method calls pass the card first. Keep the original dot-call
+        -- form available to consumers that already use AutoHeight(extra).
+        if first ~= card then extra = first end
         local used = card.flow:Apply()
         local top = card.headerBand and TITLED_CONTENT_TOP or UNTITLED_CONTENT_TOP
         card:SetHeight(top + used + CONTENT_BOTTOM + (extra or 0))
