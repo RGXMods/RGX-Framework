@@ -73,6 +73,8 @@ function generateAddonLua(spec) {
     if (s.label) parts.push(`label = ${luaQuote(s.label)}`);
     parts.push(`min = ${s.min ?? 0}`, `max = ${s.max ?? 100}`);
     if (s.suffix) parts.push(`suffix = ${luaQuote(s.suffix)}`);
+    if (s.valueDisplay) parts.push(`valueDisplay = ${luaQuote(s.valueDisplay)}`);
+    if (s.progress !== undefined) parts.push(`progress = ${Boolean(s.progress)}`);
     controls.push(`            { ${parts.join(", ")} },`);
   }
   if (controls.length) {

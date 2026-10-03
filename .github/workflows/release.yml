@@ -51,7 +51,10 @@ jobs:
       - name: Validate contract against RGX-Hello
         run: |
           git clone --depth 1 https://github.com/RGXMods/RGX-Hello.git "${RUNNER_TEMP}/RGX-Hello"
-          node tools/rgx-mcp/test/test-rgx-hello.mjs "${RUNNER_TEMP}/RGX-Hello"
+          case "${GITHUB_REF_NAME}" in
+            *-beta*|*-alpha*) node tools/rgx-mcp/test/test-rgx-hello.mjs "${RUNNER_TEMP}/RGX-Hello" --allow-older-minimum ;;
+            *) node tools/rgx-mcp/test/test-rgx-hello.mjs "${RUNNER_TEMP}/RGX-Hello" ;;
+          esac
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -128,7 +131,7 @@ jobs:
               exit 1
             fi
 
-            if [[ "$norm_tag" != "${published_version#v}" ]]; then
+            if [[ "$norm_tag" != "${published_version#v}" && "$norm_tag" != *-beta* && "$norm_tag" != *-alpha* ]]; then
               echo "::error::Tag '$tag' cannot publish while public surfaces still identify '$published_version' as the latest release."
               exit 1
             fi

@@ -191,3 +191,4 @@ on the supported Classic/Forever clients and record which clients were tested.
 | `Auras:CastReadiness(spellId[, blockedAuraSpellId])` | ready \| blocked \| unknown |
 
 Source: [`modules/auras/auras.lua`](https://github.com/RGXMods/RGX-Framework/blob/main/modules/auras/auras.lua). Test it in-game via [[RGX-Hello|Testing]]'s Auras tab.
+> **Beta source:** v2.7.13-beta.1; stable remains v2.7.12. This UI beta does not establish new in-game aura-safety evidence.
