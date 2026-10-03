@@ -786,6 +786,49 @@ function UI:CreateButton(parent, textOrOpts, w, h)
     return btn
 end
 
+-- Standard window close ("X") button attachable to any framework-built
+-- window, dialog, or panel, so consumers never hand-roll window chrome.
+-- Uses the native UIPanelCloseButton art on every supported flavor.
+-- opts: width/height (default 30), point/relativePoint (default TOPRIGHT),
+-- relativeTo (default parent), x/y (default 0), onClick (default hides the
+-- parent), tooltip (optional hover text), hidden (start hidden).
+-- Returns the button; find it later via parent.closeButton or your own ref.
+function UI:CreateCloseButton(parent, opts)
+    assert(parent, "RGX UI: CreateCloseButton requires a parent frame")
+    opts = opts or {}
+    local button = CreateFrame("Button", nil, parent, "UIPanelCloseButton")
+    button:SetSize(opts.width or 30, opts.height or 30)
+    button:ClearAllPoints()
+    local point = opts.point or "TOPRIGHT"
+    local relativeTo = opts.relativeTo or parent
+    local relativePoint = opts.relativePoint or point
+    button:SetPoint(point, relativeTo, relativePoint, opts.x or 0, opts.y or 0)
+    local onClick = opts.onClick
+    if type(onClick) ~= "function" then
+        onClick = function()
+            if parent and parent.Hide then parent:Hide() end
+        end
+    end
+    button:SetScript("OnClick", onClick)
+    if opts.tooltip then
+        button:SetScript("OnEnter", function(self)
+            if GameTooltip then
+                GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+                GameTooltip:SetText(opts.tooltip, 1, 1, 1, 1, true)
+                GameTooltip:Show()
+            end
+        end)
+        button:SetScript("OnLeave", function()
+            if GameTooltip then GameTooltip:Hide() end
+        end)
+    end
+    if opts.hidden then
+        button:Hide()
+    end
+    parent.closeButton = button
+    return button
+end
+
 --[[============================================================================
     SECTION/PANEL
 ============================================================================]]

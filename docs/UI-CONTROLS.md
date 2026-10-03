@@ -255,6 +255,33 @@ are available as `group.buttons[1]` and `group.buttons[2]`.
 inset (8px) and centers it vertically on the control rather than its label.
 Framework sliders and font dropdowns use this automatically.
 
+### `UI:CreateCloseButton(parent, opts)` → `button`
+
+The framework's standard window close ("X") button, attachable to any
+framework-built window, dialog, or panel so consumers never hand-roll window
+chrome. Uses the native `UIPanelCloseButton` art on every supported flavor.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `parent` | frame | Yes | — | Frame the button attaches to (also default hide target) |
+| `opts.width` / `opts.height` | number | No | 30 | Button size |
+| `opts.point` / `opts.relativePoint` | string | No | `"TOPRIGHT"` | Anchor points |
+| `opts.relativeTo` | frame | No | parent | Anchor target |
+| `opts.x` / `opts.y` | number | No | 0 | Anchor offsets |
+| `opts.onClick` | function | No | hides `parent` | Click handler |
+| `opts.tooltip` | string | No | — | Hover tooltip text |
+| `opts.hidden` | boolean | No | false | Start hidden (host owns the chrome) |
+
+The button is also stored as `parent.closeButton`. `CreateOptionsPanel` uses
+this factory for its own close button (hidden while the panel is embedded in
+the Settings canvas, which owns its chrome there); pass
+`opts.closeButton = false` to that panel to skip it.
+
+```lua
+UI:CreateCloseButton(myDialog, { point = "TOPRIGHT", x = -6, y = -6,
+    tooltip = "Close", onClick = function() myDialog:Hide() end })
+```
+
 For a single informational page without tab chrome, pass `content = function(frame)
 ... end` instead of `tabs`. Existing `tabs = { ... }` panels retain their tab
 row and page lifecycle. The framework's AddOns settings category uses this
