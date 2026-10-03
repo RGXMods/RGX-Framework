@@ -13,7 +13,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 
 ## Quick Start
 
-**Latest published release:** [`v2.7.11`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.11)
+**Latest published release:** [`v2.7.12`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.12)
 
 **1. Declare the dependency:**
 
@@ -255,7 +255,7 @@ RGX-Framework temporarily maintains an [MCP](https://modelcontextprotocol.io) se
 The source-development [definition round trip](docs/UI-CONTROLS.md#definition-round-trip-source-development-slice)
 adds a small external editor (`node tools/editor/serve.mjs`, loopback only) and
 in-game `/rgx editor` adapter over the same versioned data contract. This slice
-is not in the published `v2.7.11` package and is not a complete Studio application
+is not in the published `v2.7.12` package and is not a complete Studio application
 or Blizzard Edit Mode integration. Browser/WoW visual checks remain required.
 
 Read-only by design — it never edits repos, commits, or touches the game.
@@ -273,7 +273,7 @@ RGX-Framework publishes only the framework addon package. See
 
 ## Compatibility
 
-- **Latest published release:** [`v2.7.11`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.11)
+- **Latest published release:** [`v2.7.12`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.12)
 
 - **Clients:** Retail `120100`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
 - **Distribution:** one runtime-only addon package; see [Distribution](docs/DISTRIBUTION.md)

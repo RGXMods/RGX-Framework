@@ -261,7 +261,9 @@ async function publishWago({ projectId, token, flavors, version, releaseType, ch
   }
 
   const form = new FormData();
-  form.append("metadata", new Blob([JSON.stringify(payload)], { type: "application/json" }));
+  // Wago, like CurseForge, requires metadata as a plain string form value;
+  // a Blob part is rejected with 422 "The metadata must be a string."
+  form.append("metadata", JSON.stringify(payload));
   form.append("file", new Blob([readFileSync(archive)]), basename(archive));
 
   const uploadUrl = `https://addons.wago.io/api/projects/${projectId}/version`;
