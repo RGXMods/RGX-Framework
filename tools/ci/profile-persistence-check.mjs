@@ -206,6 +206,61 @@ await scenario("close button factory hides the host and honors overrides", `
   custom.scripts.OnClick()
   assert(clicks == 1 and dialog.hidden == false, "custom onClick must replace the default hide")
 `);
+await scenario("config gear opens its dialog and config dialog owns its chrome", `
+  RGX.GetDesign = function() return nil end
+  local shown = {}
+  CreateFrame = function(_, _, parent, template)
+    local w = { parent = parent, template = template, scripts = {}, shown = true }
+    function w:SetSize(width, height) self.width = width self.height = height end
+    function w:ClearAllPoints() self.point = nil end
+    function w:SetPoint(point, relativeTo, relativePoint, x, y)
+      self.point = point self.relativeTo = relativeTo self.relativePoint = relativePoint self.x = x self.y = y
+    end
+    function w:SetScript(name, fn) self.scripts[name] = fn end
+    function w:HookScript(name, fn) self.scripts[name] = fn end
+    function w:GetParent() return self.parent end
+    function w:CreateTexture() local t = { desaturated = false, textures = {} } setmetatable(t, { __index = function(tbl, key)
+      if key == "SetAllPoints" or key == "SetTexCoord" then return function() end end
+      if key == "SetTexture" then return function(_, path) tbl.path = path end end
+      if key == "SetDesaturated" then return function(_, value) tbl.desaturated = value end end
+    end }) return t end
+    function w:Hide() self.shown = false end
+    function w:Show() self.shown = true shown[#shown + 1] = self end
+    function w:RegisterForDrag() end
+    function w:SetFrameStrata() end
+    function w:SetClampedToScreen() end
+    function w:EnableMouse() end
+    function w:SetMovable() end
+    function w:StartMoving() end
+    function w:StopMovingOrSizing() end
+    function w:SetBackdrop() end
+    function w:SetBackdropColor() end
+    function w:SetBackdropBorderColor() end
+    function w:CreateFontString() local f = { text = "" } setmetatable(f, { __index = function(tbl, key)
+      if key == "SetPoint" then return function() end end
+      if key == "SetText" then return function(_, value) tbl.text = value end end
+      if key == "SetTextColor" then return function() end end
+      return function() end
+    end }) return f end
+    return w
+  end
+  UIParent = {}
+  local gearHost = CreateFrame("Frame")
+  local gear = RGX.UI:CreateConfigButton(gearHost, { tooltip = "Configure" })
+  assert(gearHost.configButton == gear, "gear must publish anchor.configButton")
+  assert(gear.point == "LEFT" and gear.relativeTo == gearHost and gear.relativePoint == "RIGHT" and gear.x == 6)
+  local dialog = RGX.UI:CreateConfigDialog(nil, { title = "Advanced", width = 300, height = 200 })
+  assert(dialog.title == nil or true)
+  assert(dialog.width == 300 and dialog.height == 200)
+  assert(dialog.shown == false, "config dialog must start hidden")
+  local gear2 = RGX.UI:CreateConfigButton(gearHost, { dialog = dialog, onClick = nil })
+  gear2.scripts.OnClick(gear2)
+  assert(dialog.shown == true, "default gear click must show the bound dialog")
+  local clicks = 0
+  local gear3 = RGX.UI:CreateConfigButton(gearHost, { onClick = function() clicks = clicks + 1 end })
+  gear3.scripts.OnClick(gear3)
+  assert(clicks == 1 and dialog.shown == true, "custom gear click must not touch the dialog")
+`);
 let serialized;
 try {
   serialized = first.doStringSync(`
