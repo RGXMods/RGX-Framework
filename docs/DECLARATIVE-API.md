@@ -93,6 +93,7 @@ UI work must still use RGX's safe helpers.
 { section = "Header Text" }
 { toggle = "dbKey", label = "Label", default = true }
 { slider = "dbKey", label = "Label", min = 0, max = 100, step = 1, suffix = "%" }
+{ slider = "dbKey", valueDisplay = "hover", progress = false }
 { color = "dbKey", label = "Label", default = { r = 1, g = 1, b = 1 } }
 { dropdown = "dbKey", label = "Label", items = { "a", "b" }, width = 260 }
 { button = "Button Text", action = function() ... end, width = 120, height = 22 }
@@ -102,6 +103,10 @@ Only the db key is required — labels assume the capitalized key, slider range
 assumes 0–100, color default assumes the db default for that key. Every
 control reads its initial state from `addon.db` and writes changes back —
 persistence *and visual restore* are not the author's job.
+
+Slider `valueDisplay` is `"always"` (default), `"hover"`, or `"none"`.
+`progress = false` removes the running fill without changing the stored value.
+These table-form customizations are shared with `UI:CreateSlider`.
 
 ### Section
 
@@ -124,6 +129,11 @@ the widgets**. What ships today is panel → tabs → a single column of control
 Tier 4 implements the rest of the hierarchy (`columns = 1|2|3` — 1–2 is the
 BLU-proven range — and multi-page tabs) without changing anything you write
 today.
+
+The imperative UI already provides `CreateFlowLayout`, `CreateColumns`,
+`CreatePager`, and `CreateCard` (including one/two internal columns and
+width-triggered auto-height reflow). These are the shared layout foundation;
+they do not make the planned declarative `options.columns` key executable.
 
 ## The addon object
 
@@ -148,3 +158,4 @@ handler ids) and routed through framework-managed, failure-isolated paths:
 - Inference: `slash` defaults to the lowercase addon name
 
 Everything above is additive; nothing on this page changes meaning.
+> **Beta source:** v2.7.13-beta.1; stable remains v2.7.12. Slider customization additions require the beta source/runtime.

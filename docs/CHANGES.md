@@ -157,3 +157,7 @@ header and in `README.md`. Consumer addons inherit the
 ## Historical Release Notes
 
 Full per-version notes remain in [`docs/changelogs/`](https://github.com/RGXMods/RGX-Framework/tree/main/docs/changelogs), including releases from v1.x through v2.5.0.
+## Beta — v2.7.13-beta.1
+
+Opt-in UI/profile/layout beta; stable remains v2.7.12. See
+[beta notes](changelogs/2.7.13-beta.1.md) for additions and tester checks.
