@@ -1,4 +1,4 @@
-## Interface: 120100, 16001
+## Interface: 120100, 16001, 11509
 ## X-Wago-ID: E6gz1DN1
 ## Version: 2.7.10
 ## Title: RGX-Framework
