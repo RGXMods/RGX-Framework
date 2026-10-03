@@ -4,6 +4,49 @@ Internals, load order, module registration, and conventions.
 
 ---
 
+## Architectural Boundaries
+
+RGX-Framework is one WoW addon with one loaded instance, one compatibility
+boundary, and one public contract. Internally it separates eight layers with a
+one-way dependency direction:
+
+```text
+Consumer addons
+      ↓  RequiredDeps: RGX-Framework
+Public RGX API (RGXFramework / RGXAddon / Get* / RegisterModule)
+      ↓
+Runtime (core → modules/libraries → modules/game)
+      ↔  conforms to
+Canonical contract (contract/schemas + contract/engine)
+      ↓  consumed by
+MCP adapter · editor · CI · future Studio
+```
+
+| Layer | Lives in | Ships to players | Rules |
+|---|---|---|---|
+| Runtime kernel | `core/` | Yes | Registry, events, timers, DB, compat, lifecycle only; feature systems belong in modules |
+| Framework libraries | `modules/<library>` | Yes | `category = "library"`; reusable by any consumer |
+| Game adapters | `modules/<game>` | Yes | `category = "game"`; WoW-domain events gated by flavor capability |
+| Public API | `RGXFramework`, `RGXAddon`, `Get*` | Yes | Frozen 31-global surface — `npm run arch-check` fails any new `_G` write |
+| Contract | `contract/schemas`, `contract/engine` | No | Machine form of the declarative API; runtime remains authoritative for behavior |
+| Tooling | `tools/rgx-mcp`, `tools/ci`, `tools/reference`, `tools/release`, `tools/wiki` | No | Adapters over the contract; never own RGX semantics |
+| Tests | `tools/ci/*-check.mjs`, `modules/*/tests/` | No | Headless seams; in-game verification stays with the operator |
+| WoW reference | `.reference/` (untracked trees + tracked manifests/provenance) | No | Generated cache; sync via `tools/reference/sync-*.mjs` |
+
+Two machine-enforced invariants (`npm run arch-check`, wired into shared CI):
+
+- **Module graph** (`tools/ci/module-graph-check.mjs`): registered names are
+  unique, declared `depends` exist and load earlier in the XML, the dependency
+  graph is acyclic, `flavors` declarations have matching central gates in
+  `core/compat.lua`, every module declares a `category`, and the public global
+  surface stays frozen.
+- **Runtime boundary** (`tools/ci/runtime-boundary-check.mjs`): no `core/` or
+  `modules/` Lua may reference `tools/`, `contract/`, `.reference/`,
+  `rgx-mcp`, or `node_modules`, and may never use `require`/`dofile`/`loadfile`
+  — WoW addons load exclusively through the TOC/XML manifest.
+
+---
+
 ## Global Object
 
 RGX-Framework exposes a single global table:
@@ -25,7 +68,8 @@ compat files preserve the shared `RGX.API` table (`RGX.API = RGX.API or {}`) —
 earlier revisions silently wiped predicates when the second file loaded, which
 is a load-order bug class we now test for (`tools/ci/compat-loader-check.mjs`).
 
-```textWoW loads files in the order declared in `RGX-Framework.xml`. The framework uses this sequence:
+```text
+WoW loads files in the order declared in `RGX-Framework.xml`. The framework uses this sequence:
 
 ```
 1. core/core.lua            — global object, module registry, Mixin, CopyTable, Clamp, Lerp, TableCount, Print/Warn/Error/Debug
@@ -157,7 +201,9 @@ sharedmedia, sound, locale) and `category = "game"` for WoW-domain adapters
 load earlier in `RGX-Framework.xml` — the checker proves it. `stability`
 (`stable | experimental | deprecated | internal`) is recorded alongside; the
 machine-readable API catalog milestone formalizes it further. The global
-namespace is frozen: the checker fails if any new `_G` write appears.
+namespace is frozen at 31 names: `module-graph-check.mjs` fails both when a
+new `_G.RGX*` write appears and when an allowlisted global stops being
+written.
 
 Previously dormant modules and when they were re-enabled:
 

@@ -76,22 +76,49 @@ assert.equal(missingCategory.length, 0, `modules missing category: ${missingCate
 const libraryCount = modules.filter((m) => /category\s*=\s*"library"/.test(m.opts)).length;
 const gameCount = modules.filter((m) => /category\s*=\s*"game"/.test(m.opts)).length;
 console.log(`TAXONOMY OK ${modules.length} modules declared (libraries ${libraryCount}, game ${gameCount})`);
-// Global namespace freeze: no new _G writes beyond the documented aliases.
-// Compat aliases are framework-owned legacy names; new code must register
-// through RGX:RegisterModule and rely on getters. Generated allowlist from
-// core globals + moduleAliases + per-module file-scope bindings (known dupes
-// in the fonts split are accounted for so we can fail on *new* growth).
+// Global namespace freeze: the RGX public surface is a fixed contract. New
+// _G writes fail this check until they are deliberately added here with a
+// consumer-compatibility justification. The list is frozen, NOT derived from
+// current writes — auto-expansion could never fail and enforced nothing.
+//   * core: framework object, its SavedVariables globals, RGXAddon function
+//   * modules: the compat aliases consumers may import directly
+//   * registry: moduleAliases values + RegisterModule({ global = ... }) names
 const GLOBAL_ALLOWLIST = new Set([
+  // core
   "RGXFramework", "RGXFrameworkDB", "RGXFrameworkDBChar", "RGXAddon",
+  // library modules
+  "RGXFonts", "RGXColors", "RGXColorPicker", "RGXTextures", "RGXDropdowns",
+  "RGXUI", "RGXDesign", "RGXMinimap", "RGXTooltip", "RGXLocale",
+  "RGXDataBroker", "RGXSharedMedia", "RGXSound",
+  // game adapters
+  "RGXAuras", "RGXCombat", "RGXPetBattles", "RGXReputation",
+  "RGXAchievement", "RGXLevelUp", "RGXQuest", "RGXHonor", "RGXDelves",
+  "RGXHousing", "RGXTradingPost", "RGXPrey", "RGXCollectibles", "RGXLoot",
 ]);
+
+const writtenGlobals = new Set();
 for (const module of modules) {
   const source = readFileSync(join(ROOT, module.file.replace(/\//g, "\\")), "utf8");
-  for (const alias of source.matchAll(/_G\.(RGX\w*)\s*=/g)) {
-    GLOBAL_ALLOWLIST.add(alias[1]);
+  // Direct assignments and global function definitions.
+  for (const alias of source.matchAll(/_G\.(RGX\w*)\s*[=(]/g)) writtenGlobals.add(alias[1]);
+  // Registry publication: RegisterModule({ global = "RGX..." }).
+  for (const alias of source.matchAll(/global\s*=\s*"(RGX\w+)"/g)) writtenGlobals.add(alias[1]);
+}
+// core files carry the framework globals, the RGXAddon function, and the
+// moduleAliases compatibility map. The alias map is parsed inside its table
+// block so ordinary string fields elsewhere cannot masquerade as aliases.
+const coreFiles = ["core/core.lua", "core/initialization.lua", "core/systems/database.lua"];
+for (const coreFile of coreFiles) {
+  const source = readFileSync(join(ROOT, coreFile.replace(/\//g, "\\")), "utf8");
+  for (const alias of source.matchAll(/_G\.(RGX\w*)\s*[=(]/g)) writtenGlobals.add(alias[1]);
+  const aliasBlock = source.match(/moduleAliases\s*=\s*\{([\s\S]*?)\n\}/);
+  if (aliasBlock) {
+    for (const alias of aliasBlock[1].matchAll(/"(RGX\w+)"/g)) writtenGlobals.add(alias[1]);
   }
 }
-// The fonts split performs the same write three times (init/Load normalization);
-// PCI revisit is tracked in #17-style work. Everything else must not add new
-// module globals outside this allowlist.
-console.log(`GLOBALS OK ${GLOBAL_ALLOWLIST.size} known framework aliases (frozen policy); new _G growth fails this check`);
+const unexpected = [...writtenGlobals].filter((name) => !GLOBAL_ALLOWLIST.has(name));
+assert.equal(unexpected.length, 0, `new _G writes outside the frozen public surface: ${unexpected.join(", ")}`);
+const stale = [...GLOBAL_ALLOWLIST].filter((name) => !writtenGlobals.has(name));
+assert.equal(stale.length, 0, `allowlist entries no longer written (remove or restore): ${stale.join(", ")}`);
+console.log(`GLOBALS OK ${GLOBAL_ALLOWLIST.size} frozen public globals; every write checked against the contract`);
 
