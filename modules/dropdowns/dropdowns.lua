@@ -837,7 +837,7 @@ function Dropdowns:CreateNestedDropdown_Legacy(parent, opts)
     InitializeDropdown(holder.dropdown, function(_, level, menuList)
         level = level or 1
         if level == 1 then
-            -- Rebuild data registry fresh on every open (BLU pattern).
+            -- Rebuild data registry fresh on every open (consumer-proven pattern).
             -- Prevents stale key accumulation and ensures TWW compat.
             holder._menuData = {}
             menuKeyCounter = 0
@@ -868,7 +868,7 @@ function Dropdowns:CreateNestedDropdown_Legacy(parent, opts)
     return holder
 end
 
--- BLU's retail trigger is a visual overlay for an existing nested dropdown.
+-- A consumer's retail trigger is a visual overlay for an existing nested dropdown.
 -- The existing MenuUtil / UIDropDownMenu menus still own items and selection;
 -- only the visible button changes. Consumers opt in per control.
 function Dropdowns:ApplyRetailTrigger(holder, opts)
