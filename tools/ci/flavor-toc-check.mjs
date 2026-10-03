@@ -23,8 +23,9 @@ for (const [file, value] of expected) {
   if (actual !== value) throw new Error(`${file}: expected ${value}, got ${actual}`);
   if (version !== expectedVersion) throw new Error(`${file}: expected version ${expectedVersion}, got ${version}`);
   if (!/^RGX-Framework\.xml\s*$/m.test(source)) throw new Error(`${file}: missing XML loader`);
-  if (file !== "RGX-Framework.toc" && /^## X-(?:Curse-Project-ID|Wago-ID|WoWI-ID):/m.test(source)) {
+  if (file !== "RGX-Framework.toc" && /^## X-(?:Curse-Project-ID|WoWI-ID):/m.test(source)) {
     throw new Error(`${file}: addon-service project IDs belong only in RGX-Framework.toc`);
   }
+  // Wago identifies per-flavor packages, so X-Wago-ID is allowed in every TOC.
   console.log(`${file} ${version} ${actual} OK`);
 }

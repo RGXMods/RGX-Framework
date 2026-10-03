@@ -97,6 +97,8 @@ function runtimeSourceFiles() {
     ...listFiles("modules"),
     "media/logo.tga",
     "media/panel_rounded.tga",
+    "media/round.tga",
+    "media/square.tga",
     ...listFiles("media/fonts"),
   ];
 }
@@ -242,6 +244,8 @@ function validateRuntime(entries, expectedPaths) {
       || /^(?:core|modules)\/.+\.lua$/.test(relativePath)
       || relativePath === "media/logo.tga"
       || relativePath === "media/panel_rounded.tga"
+      || relativePath === "media/round.tga"
+      || relativePath === "media/square.tga"
       || /^media\/fonts\/(?:.+\.(?:otf|ttf)|README\.md)$/.test(relativePath);
     if (!allowed) failures.push(`runtime archive: path is outside the player allowlist ${path}`);
     if (/^(?:core|modules)\/.+\.lua$/.test(relativePath) && !loadReferences.has(relativePath)) failures.push(`runtime archive: Lua file is not in the load graph ${path}`);
@@ -264,7 +268,7 @@ function validatePkgmeta() {
   const pkgmeta = text(".pkgmeta");
   const failures = [];
   if (/^\s*license\s*:/m.test(pkgmeta)) failures.push(".pkgmeta uses unsupported 'license'; keep tracked LICENSE.txt or use license-output");
-  for (const path of ["tools", "docs", "contract", "skills", ".reference", ".release", "artifacts", "graphify-out", "media/kiwi.gif", "media/logo.png"]) {
+  for (const path of ["tools", "docs", "contract", "skills", ".reference", ".release", "artifacts", "graphify-out", "media/kiwi.gif", "media/logo.png", "media/round.png", "media/square.png"]) {
     if (!new RegExp(`^\\s*- ${path.replace(".", "\\.")}\\s*$`, "m").test(pkgmeta)) failures.push(`.pkgmeta must exclude ${path}`);
   }
   if (/tools\/rgx-mcp intentionally ships|ships in the packaged zip/i.test(pkgmeta)) failures.push(".pkgmeta must not describe developer tooling as player payload");
