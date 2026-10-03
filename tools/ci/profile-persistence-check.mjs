@@ -171,6 +171,41 @@ await scenario("scroll pages have no native bar and retain bounded wheel scrolli
   canvas.scripts.OnSizeChanged(canvas)
   assert(offset == 20)
 `);
+await scenario("close button factory hides the host and honors overrides", `
+  CreateFrame = function(_, _, parent, template)
+    local w = { parent = parent, template = template, scripts = {}, shown = true }
+    function w:SetSize(width, height) self.width = width self.height = height end
+    function w:ClearAllPoints() self.point = nil end
+    function w:SetPoint(point, relativeTo, relativePoint, x, y)
+      self.point = point self.relativeTo = relativeTo self.relativePoint = relativePoint self.x = x self.y = y
+    end
+    function w:SetScript(name, fn) self.scripts[name] = fn end
+    function w:Hide() self.shown = false end
+    function w:Show() self.shown = true end
+    return w
+  end
+  local host = { hidden = false }
+  function host:Hide() self.hidden = true end
+  local standard = RGX.UI:CreateCloseButton(host)
+  assert(host.closeButton == standard, "factory must publish parent.closeButton")
+  assert(standard.template == "UIPanelCloseButton" and standard.width == 30 and standard.height == 30)
+  assert(standard.point == "TOPRIGHT" and standard.relativeTo == host and standard.x == 0 and standard.y == 0)
+  standard.scripts.OnClick()
+  assert(host.hidden, "default click must hide the parent")
+  local dialog = { hidden = false }
+  function dialog:Hide() self.hidden = true end
+  local clicks = 0
+  local custom = RGX.UI:CreateCloseButton(dialog, {
+    width = 24, height = 24, point = "TOPLEFT", relativePoint = "TOPLEFT",
+    x = -4, y = 8, hidden = true,
+    onClick = function() clicks = clicks + 1 end,
+  })
+  assert(dialog.closeButton == custom)
+  assert(custom.width == 24 and custom.point == "TOPLEFT" and custom.relativeTo == dialog and custom.x == -4 and custom.y == 8)
+  assert(custom.shown == false, "hidden opt must start hidden")
+  custom.scripts.OnClick()
+  assert(clicks == 1 and dialog.hidden == false, "custom onClick must replace the default hide")
+`);
 let serialized;
 try {
   serialized = first.doStringSync(`
