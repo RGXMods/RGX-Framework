@@ -445,18 +445,14 @@ local function CreateOptionsPanel(UI, opts)
     local tabAnchor = header  -- tabs anchor to this; swapped to banner when present
 
     if opts.bannerHeight and opts.bannerHeight > 0 then
-        local bannerFrame = CreateFrame("Frame", nil, container, "BackdropTemplate")
+        -- The banner is a plain content area on the panel surface, not a
+        -- second card: the panel container already provides the backdrop,
+        -- so a boxed frame here renders as extra chrome around consumer
+        -- content (reported around a consumer's nameplate preview).
+        local bannerFrame = CreateFrame("Frame", nil, container)
         bannerFrame:SetHeight(opts.bannerHeight)
         bannerFrame:SetPoint("TOPLEFT",  header, "BOTTOMLEFT",  0, -2)
         bannerFrame:SetPoint("TOPRIGHT", header, "BOTTOMRIGHT", 0, -2)
-        bannerFrame:SetBackdrop({
-            bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            tile = true, tileSize = 16, edgeSize = 1,
-            insets = {left=1, right=1, top=1, bottom=1},
-        })
-        bannerFrame:SetBackdropColor(sr, sg, sb, 0.95)
-        bannerFrame:SetBackdropBorderColor(D:Unpack("border"))
         panel.bannerFrame = bannerFrame
         tabAnchor = bannerFrame
     end
