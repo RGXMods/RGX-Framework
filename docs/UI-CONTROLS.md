@@ -6,11 +6,89 @@ The UI module (`RGXUI`) provides widget factories for common interface controls 
 
 ## Widget Factories
 
+### Shared frame and alignment model
+
+A frame is a styled layout host: a page, tab content, card, or popout uses the
+same Design surfaces and UI geometry. Layout owns placement; Design owns
+theme colors/textures/corners. Pages can combine one/two columns, lists,
+rows and pagination without introducing a second layout/scroll owner.
+
+- Standard row gap: **8px**. Control-row left/right inset: **8px**.
+- `AnchorRowReset(row, reset, control, inset?)` centers Reset on the actual
+  track/trigger/swatch and keeps the shared right inset, independent of labels.
+- Flow rows vertically center elements and allocate flexible widths after
+  reserving fixed/right-aligned controls; natural dimensions are remeasured.
+- `CreateCard(parent, { columns = 1|2, columnGap = 8 })` exposes `.columns`
+  and `.flows`; `.flow` aliases the first flow. `AutoHeight()` uses the tallest
+  column. Once enabled, width/show changes reflow it automatically; an explicit
+  fixed-height card remains fixed until the caller asks for AutoHeight.
+
+```lua
+local card = UI:CreateCard(column, { title = "Display", columns = 2 })
+card.flows[1]:Add(firstControl, { fill = true })
+card.flows[2]:AddRow({ { child = secondControl, fill = true },
+    { child = actionButton, align = "right" } })
+card:AutoHeight()
+```
+
+### `UI:CreateProfilesPanel(parent, { db, title?, onChange? })` → `Card`
+
+Use an existing framework database owner. The shared card supplies profile
+selection, Create, Copy, Rename, Reset and Delete controls. Duplicate names
+are rejected, Default cannot be deleted/renamed, and all operations use public
+DB methods. `onChange(activeName, db)` is failure-isolated. `.Refresh()` updates
+the current selection; no accumulating DB observers are installed by the UI.
+Settings refresh remains the consumer's existing database-switch callback.
+
+`UI:CreateConfigDialog` also accepts `resizable = true`, `minWidth/minHeight`,
+`maxWidth/maxHeight` and `onResize(width, height, dialog)`. Resizing is opt-in;
+the shared widget adapter applies bounds and a grip is created only when
+supported. Dialog surfaces use Design, including its corner preference;
+`square` explicitly overrides it. Consumers own any requested size persistence.
+
 `UI:CreateSwitch(parent, opts)` returns a db-bound on/off button. Its entire
 element, including the label and surrounding hit area, toggles on click; the
 smaller inset square is visual only. `UI:CreateCheckbox(parent, text)` returns
 an unbound 18px checkbox row with `.checkbox` and `.label`, for consumers that
-manage their own state callbacks.
+manage their own state callbacks. Clicking the text calls the checkbox's current
+native click path once, including its checked-state change and `OnClick`
+handler. Disabled checkboxes reject text clicks. The text hit target follows
+the label's bounds and does not cover adjacent inline controls.
+
+### `UI:CreateButton(parent, opts)` → `Button`
+
+The table form accepts `text`, `width`, `height`, `tooltip`, `tooltipBody`,
+`onClick`, `onEnter`, and `onLeave`. Hover callbacks run after the framework's
+skin/tooltip behavior and are failure-isolated. The positional form
+`UI:CreateButton(parent, text, width, height)` remains supported.
+
+```lua
+local button = UI:CreateButton(parent, {
+    text = "Preview",
+    onClick = function(button, mouseButton) SelectPage() end,
+    onEnter = function(button) ShowPreview() end,
+    onLeave = function(button) RestorePreview() end,
+})
+```
+
+**Script-composition quirk:** WoW `SetScript("OnEnter", ...)` or
+`SetScript("OnLeave", ...)` replaces the framework's hover styling and tooltip
+handler. Use the table callbacks above, or `HookScript` when extending an
+existing button. `SetScript("OnClick", ...)` remains available for legacy
+click behavior; table `onClick` adds failure isolation.
+
+### `UI:SetResizeBounds(frame, minWidth, minHeight, maxWidth, maxHeight)` → `boolean`
+
+Apply resize limits to a caller-owned frame through the client's supported
+widget API. Prefer the combined `SetResizeBounds`; older clients can use the
+paired setters when both maximum dimensions are supplied. Returns `false`
+when the requested limits cannot be applied. Does not enable resizing, create
+a grip, persist dimensions, or grant permission to modify protected frames.
+
+Options panels with a banner expose `panel.bannerFrame.divider` and
+`panel.bannerFrame.dividerGap`. Banner controls can anchor above the divider
+using that gap to mirror the first tab row below it, independently of any
+consumer content-frame insets.
 
 ### `UI:CreateSlider(parent, opts)` → `Frame`
 
@@ -30,6 +108,7 @@ Create a horizontal slider control bound to a storage table — it saves **and r
 | `opts.suffix` | string | No | `""` | Appended to the displayed value, e.g. `"%"` |
 | `opts.width` | number | No | 200 | Track width |
 | `opts.progress` | boolean | No | `true` | Show the brand-colored fill behind the thumb; `false` for a bare track |
+| `opts.valueDisplay` | string | No | `"always"` | `"always"` keeps the value above the track, `"hover"` shows only the hover value, `"none"` hides both |
 | `opts.onChange` | function | No | — | `onChange(value)` |
 
 > The thumb re-positions itself on `OnShow`, so a slider built on a panel that
@@ -49,7 +128,8 @@ local slider = UI:CreateSlider(parent, {
 
 ### `UI:CreateToggle(parent, opts)` → `Frame`
 
-Create a checkbox toggle bound to a storage table.
+Create a checkbox toggle bound to a storage table. Both the checkbox and its
+text activate the same persisted change callback; Reset restores the default.
 
 **Parameters:**
 

@@ -58,6 +58,7 @@ local TAB_H        = 22
 local TAB_SPACING  = 6
 local TAB_ROW_PAD  = 8
 local TAB_ROW_GAP  = 3
+local TAB_AREA_GAP = 2
 local HEADER_H     = 64
 
 -- ── TOC metadata helper ───────────────────────────────────────────────────────
@@ -460,6 +461,8 @@ local function CreateOptionsPanel(UI, opts)
         bannerDivider:SetPoint("BOTTOMLEFT",  bannerFrame, "BOTTOMLEFT",  0, 0)
         bannerDivider:SetPoint("BOTTOMRIGHT", bannerFrame, "BOTTOMRIGHT", 0, 0)
         bannerDivider:SetColorTexture(D:Unpack("border"))
+        bannerFrame.divider = bannerDivider
+        bannerFrame.dividerGap = TAB_AREA_GAP + TAB_ROW_PAD
         panel.bannerFrame = bannerFrame
         tabAnchor = bannerFrame
     end
@@ -469,8 +472,8 @@ local function CreateOptionsPanel(UI, opts)
     local tabAreaHeight = singlePage and 0 or GetTabContainerHeight(rowCount)
 
     local tabArea = CreateFrame("Frame", nil, container)
-    tabArea:SetPoint("TOPLEFT",  tabAnchor, "BOTTOMLEFT",  0, -2)
-    tabArea:SetPoint("TOPRIGHT", tabAnchor, "BOTTOMRIGHT", 0, -2)
+    tabArea:SetPoint("TOPLEFT",  tabAnchor, "BOTTOMLEFT",  0, -TAB_AREA_GAP)
+    tabArea:SetPoint("TOPRIGHT", tabAnchor, "BOTTOMRIGHT", 0, -TAB_AREA_GAP)
     tabArea:SetHeight(tabAreaHeight)
 
     local tabBg = tabArea:CreateTexture(nil, "BACKGROUND")

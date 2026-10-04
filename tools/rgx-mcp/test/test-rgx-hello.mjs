@@ -34,11 +34,26 @@ const minimumFrameworkVersion = realToc.match(/^## X-RGX-Framework-MinVersion:\s
 const frameworkVersion = JSON.parse(readFileSync(join(HERE, "..", "..", "ci", "release-snapshot.json"), "utf8")).version;
 
 function compareVersions(left, right) {
-  const a = left.split(".").map(Number);
-  const b = right.split(".").map(Number);
-  for (let index = 0; index < Math.max(a.length, b.length); index++) {
-    const difference = (a[index] ?? 0) - (b[index] ?? 0);
+  const parse = (value) => {
+    const match = (value === "0" ? "0.0.0" : value).match(/^v?(\d+)\.(\d+)\.(\d+)(?:-([\w.-]+))?$/);
+    if (!match) throw new Error(`invalid Framework version: ${value}`);
+    return { base: match.slice(1, 4).map(Number), pre: match[4]?.split(".") };
+  };
+  const a = parse(left), b = parse(right);
+  for (let index = 0; index < 3; index++) {
+    const difference = a.base[index] - b.base[index];
     if (difference) return difference;
+  }
+  if (!a.pre || !b.pre) return a.pre ? -1 : b.pre ? 1 : 0;
+  for (let index = 0; index < Math.max(a.pre.length, b.pre.length); index++) {
+    const x = a.pre[index], y = b.pre[index];
+    if (x === y) continue;
+    if (x === undefined) return -1;
+    if (y === undefined) return 1;
+    const nx = /^\d+$/.test(x), ny = /^\d+$/.test(y);
+    if (nx && ny) return Number(x) - Number(y);
+    if (nx !== ny) return nx ? -1 : 1;
+    return x < y ? -1 : 1;
   }
   return 0;
 }
@@ -155,6 +170,11 @@ try {
     generatedParseError = error.message;
   }
   check("generated addon parses as Lua 5.1", generatedParses, generatedParseError);
+  const sliderGen = await client.callTool({ name: "rgx_generate_addon", arguments: {
+    name: "SliderModes", db: { amount: 25 }, sliders: [{ key: "amount", valueDisplay: "hover", progress: false }],
+  } });
+  const sliderLua = sliderGen.content?.[0]?.text ?? "";
+  check("generator preserves hover-only slider values and disabled fill", sliderLua.includes('valueDisplay = "hover"') && sliderLua.includes('progress = false'));
 
   const namedTimerGen = await client.callTool({
     name: "rgx_generate_addon",
@@ -177,6 +197,14 @@ try {
   console.log(JSON.stringify(report, null, 2));
   check("RGX-Hello's opts validate against the shipped schema", report.valid === true, JSON.stringify(report.errors));
   check("no tier4-only keys used", (report.tier4KeysUsed ?? []).length === 0, JSON.stringify(report.tier4KeysUsed));
+  const sliderValidation = await client.callTool({ name: "rgx_validate_addon", arguments: {
+    opts: { options: { General: [{ slider: "amount", valueDisplay: "hover", progress: false }] } },
+  } });
+  check("slider customizations validate against the shared contract", JSON.parse(sliderValidation.content[0].text).valid === true);
+  const invalidSlider = await client.callTool({ name: "rgx_validate_addon", arguments: {
+    opts: { options: { General: [{ slider: "amount", valueDisplay: "sometimes" }] } },
+  } });
+  check("invalid slider value-display modes are rejected", JSON.parse(invalidSlider.content[0].text).valid === false);
 
   const everyVal = await client.callTool({
     name: "rgx_validate_addon",

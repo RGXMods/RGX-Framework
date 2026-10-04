@@ -238,6 +238,8 @@ server.tool(
         min: z.number().optional(),
         max: z.number().optional(),
         suffix: z.string().optional().describe('Appended to the displayed value, e.g. "%"'),
+        valueDisplay: z.enum(["always", "hover", "none"]).optional(),
+        progress: z.boolean().optional(),
       }))
       .optional(),
   },
