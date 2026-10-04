@@ -109,9 +109,9 @@ try {
     assert(card.intro and card.intro.points and card.intro.points[4] == 16,
       "intro must clear the card border")
     assert(card.buttons.create and card.buttons.copy and card.buttons.rename
-      and card.buttons.reset and card.buttons.delete, "panel must expose all five actions")
-    assert(card.buttons.delete:IsEnabled() == false
-      and card.buttons.rename:IsEnabled() == false, "Default profile is not protected")
+      and card.buttons.reset, "panel must expose the four reference actions")
+    assert(card.buttons.delete == nil, "Delete must not occupy the stacked column")
+    assert(card.buttons.rename:IsEnabled() == false, "Default profile is not protected")
     -- Create/Rename go through the name dialog: button opens it, OK commits.
     card.buttons.create:Click()
     assert(card.openNameDialog and card._nameDialog,
@@ -147,12 +147,10 @@ try {
     -- Reset and Delete act directly on the current profile.
     card.buttons.reset:Click()
     assert(view.enabled == true and view.nested.amount == 10, "reset missed defaults")
-    card.buttons.delete:Click()
-    assert(db:GetActiveProfile() ~= "Renamed", "delete did not leave the profile")
+    -- Delete is no longer in the stack; the Default guard stays on Rename.
     card.dropdown.opts.onChange("Default")
     assert(db:GetActiveProfile() == "Default", "dropdown did not switch profiles")
-    assert(card.buttons.delete:IsEnabled() == false
-      and card.buttons.rename:IsEnabled() == false, "returned Default is not protected")
+    assert(card.buttons.rename:IsEnabled() == false, "returned Default is not protected")
     assert(RGXFramework.errors > 0, "observer failures were not isolated")
     -- Active info: name in the theme primary color with the character key line.
     assert(card.activeInfo and card.activeInfo.character, "active info missing character line")
