@@ -33,7 +33,10 @@ try {
       end
       function w:CreateFontString() return widget("FontString", self) end
       function w:CreateTexture() return widget("Texture", self) end
-      for _, key in ipairs({ "SetPoint", "ClearAllPoints", "SetAllPoints", "SetAutoFocus",
+      function w:SetPoint(point, relative, relativePoint, x, y)
+        self.points = { point, relative, relativePoint, x, y }
+      end
+      for _, key in ipairs({ "ClearAllPoints", "SetAllPoints", "SetAutoFocus",
         "SetMaxLetters", "ClearFocus", "SetBackdrop", "SetBackdropBorderColor",
         "SetColorTexture", "SetTextColor", "SetFontObject", "SetJustifyH",
         "SetJustifyV", "SetWordWrap" }) do w[key] = function() end end
@@ -93,6 +96,8 @@ try {
       title = "Profiles", icon = "icon", description = "desc",
       onChange = function() error("expected observer failure") end })
     assert(card.input and card.dropdown and card.status, "panel must expose input, dropdown, status")
+    assert(card.intro and card.intro.points and card.intro.points[4] == 16,
+      "intro must clear the card border")
     assert(card.buttons.create and card.buttons.copy and card.buttons.rename
       and card.buttons.reset and card.buttons.delete, "panel must expose all five actions")
     assert(card.buttons.delete:IsEnabled() == false

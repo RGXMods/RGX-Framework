@@ -20,9 +20,10 @@ function UI:CreateProfilesPanel(parent, opts)
     local intro = self:CreateLabel(parent, {
         text = opts.description or "Create, switch, and manage your saved profiles.",
         color = "muted",
-        width = 560,
+        width = 544,
     })
-    intro:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -8)
+    -- Inset matches the card content so the first word clears the card border.
+    intro:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 16, -8)
 
     -- Main card: highlight box (left), dropdown column (middle),
     -- stacked actions (right). Fixed zones like the reference layout;
@@ -152,6 +153,7 @@ function UI:CreateProfilesPanel(parent, opts)
         setButtonEnabled(self.buttons.rename, not protected)
     end
     card.input, card.dropdown, card.status = input, picker, status
+    card.intro = intro
     card:HookScript("OnShow", function(self) self:Refresh() end)
     card:Refresh()
     return card
