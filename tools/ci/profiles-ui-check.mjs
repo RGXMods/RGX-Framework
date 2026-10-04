@@ -22,7 +22,9 @@ try {
       end
       function w:SetText(text) self.text = text end
       function w:GetText() return self.text end
+      function w:SetTextColor(r, g, b) self.color = { r, g, b } end
       function w:SetWidth(width) self.width = width end
+      function w:GetWidth() return self.width end
       function w:SetHeight(height) self.height = height end
       function w:SetSize(width, height) self.width, self.height = width, height end
       function w:Enable() self.enabled = true end
@@ -38,7 +40,7 @@ try {
       end
       for _, key in ipairs({ "ClearAllPoints", "SetAllPoints", "SetAutoFocus",
         "SetMaxLetters", "ClearFocus", "SetBackdrop", "SetBackdropBorderColor",
-        "SetColorTexture", "SetTextColor", "SetFontObject", "SetJustifyH",
+        "SetColorTexture", "SetFontObject", "SetJustifyH",
         "SetJustifyV", "SetWordWrap" }) do w[key] = function() end end
       return w
     end
@@ -128,6 +130,18 @@ try {
     assert(card.buttons.delete:IsEnabled() == false
       and card.buttons.rename:IsEnabled() == false, "returned Default is not protected")
     assert(RGXFramework.errors > 0, "observer failures were not isolated")
+    -- Active info: name in the theme primary color with the character key line.
+    assert(card.activeInfo and card.activeInfo.character, "active info missing character line")
+    assert(card.activeInfo.character:GetText() == "Character: " .. tostring(db:GetCharKey()),
+      "character line mismatch")
+    card.dropdown.opts.onChange("Renamed")
+    assert(card.activeInfo.character:GetText() == "Character: " .. tostring(db:GetCharKey())
+      and card.activeInfo.value.color and card.activeInfo.value.color[1] == 1,
+      "active info did not refresh with selection")
+    assert(card.dropdown.opts.width == 220, "dropdown width drift from reference layout")
+    card.dropdown.opts.onChange("Default")
+    assert(card.buttons.create:GetWidth() == 84
+      and card.buttons.reset:GetWidth() == 84, "action button width drift from reference layout")
     local pdb = RGXFramework:NewDatabase("PresetUITestDB", { enabled = true }, { profileIsGlobal = true })
     local applied = {}
     local pcard = UI:CreateProfilesPanel(widget("Frame"), { db = pdb,

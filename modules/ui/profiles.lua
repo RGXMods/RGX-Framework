@@ -40,7 +40,7 @@ function UI:CreateProfilesPanel(parent, opts)
     card:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -8)
     local content = card.content
 
-    local status = self:CreateLabel(content, { text = "", color = "muted", width = 240 })
+    local status = self:CreateLabel(content, { text = "", color = "muted", width = 220 })
 
     local function changed()
         card:Refresh()
@@ -91,8 +91,8 @@ function UI:CreateProfilesPanel(parent, opts)
     local buttonY = -8
     for _, spec in ipairs(actionSpecs) do
         local button = self:CreateButton(content, {
-            text = spec[1], width = 100, height = 22, onClick = action(spec[2], spec[3]),
-        })
+                text = spec[1], width = 84, height = 22, onClick = action(spec[2], spec[3]),
+            })
         button:SetPoint("TOPRIGHT", content, "TOPRIGHT", -8, buttonY)
         card.buttons[spec[1]:lower()] = button
         buttonY = buttonY - 28
@@ -110,13 +110,18 @@ function UI:CreateProfilesPanel(parent, opts)
         text = db:GetActiveProfile() or "Default", width = 146,
     })
     activeValue:SetPoint("TOPLEFT", activeLabel, "BOTTOMLEFT", 0, -2)
+    activeValue:SetTextColor(D:Unpack("primary"))
+    local characterValue = self:CreateLabel(highlight, {
+        text = "Character: " .. tostring(db:GetCharKey()), color = "muted", width = 146,
+    })
+    characterValue:SetPoint("TOPLEFT", activeValue, "BOTTOMLEFT", 0, -10)
 
     -- MIDDLE: dropdown, count, name input, status — each chained under the
     -- previous element so dropdown height never needs measuring.
     local profileLabel = self:CreateLabel(content, { text = "Profile", color = "accent" })
     profileLabel:SetPoint("TOPLEFT", highlight, "TOPRIGHT", 8, 0)
-    local picker = dropdowns:CreateNestedDropdown(content, {
-        label = "", width = 240, buttonWidth = 230,
+    local     picker = dropdowns:CreateNestedDropdown(content, {
+        label = "", width = 220, buttonWidth = 220,
         items = function()
             local items = {}
             for _, name in ipairs(db:ListProfiles()) do items[#items + 1] = { text = name, value = name } end
@@ -133,7 +138,7 @@ function UI:CreateProfilesPanel(parent, opts)
     local nameLabel = self:CreateLabel(content, { text = "New profile name", color = "muted" })
     nameLabel:SetPoint("TOPLEFT", count, "BOTTOMLEFT", 0, -8)
     local inputRow = CreateFrame("Frame", nil, content)
-    inputRow:SetSize(240, 26)
+    inputRow:SetSize(220, 26)
     inputRow:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -4)
     local input = CreateFrame("EditBox", nil, inputRow, "InputBoxTemplate")
     input:SetAutoFocus(false)
@@ -186,6 +191,7 @@ function UI:CreateProfilesPanel(parent, opts)
         local active = db:GetActiveProfile()
         picker:Refresh(active)
         activeValue:SetText(active or "Default")
+        characterValue:SetText("Character: " .. tostring(db:GetCharKey()))
         count:SetText(profileCountText())
         local protected = active == "Default"
         setButtonEnabled(self.buttons.delete, not protected)
@@ -193,6 +199,7 @@ function UI:CreateProfilesPanel(parent, opts)
     end
     card.input, card.dropdown, card.status = input, picker, status
     card.intro = intro
+    card.activeInfo = { label = activeLabel, value = activeValue, character = characterValue }
     card:HookScript("OnShow", function(self) self:Refresh() end)
     card:Refresh()
     return card
