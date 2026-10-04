@@ -5,8 +5,14 @@
 local _, UI = ...
 local RGX = _G.RGXFramework
 
+if not RGX then
+    error("RGX UI Profiles: RGX-Framework not loaded")
+    return
+end
+
 -- opts: db (required database owner), title, icon (texture path),
--- description (intro line), onChange(activeName, db).
+-- description (intro line), onChange(activeName, db),
+-- presets (array of { name, description?, ... }), onPreset(preset, db).
 function UI:CreateProfilesPanel(parent, opts)
     opts = opts or {}
     local db = assert(opts.db, "RGX UI: profile controls require a database")
@@ -141,6 +147,39 @@ function UI:CreateProfilesPanel(parent, opts)
     local function profileCountText()
         local n = #db:ListProfiles()
         return n == 1 and "1 profile" or (n .. " profiles")
+    end
+
+    -- Presets: optional second card under the main one. The consumer owns
+    -- preset data and application; the framework only renders the button
+    -- grid and isolates applier failures. Absent when no presets given.
+    if opts.presets and #opts.presets > 0 then
+        assert(type(opts.onPreset) == "function", "RGX UI: presets require onPreset")
+        local rows = math.ceil(#opts.presets / 3)
+        -- Titled-card insets (42 top, 12 bottom) + 12px pad + one 30px row each.
+        local presetsCard = self:CreateCard(parent, { title = "Presets", height = 66 + rows * 30 })
+        presetsCard:ClearAllPoints()
+        presetsCard:SetPoint("TOPLEFT", card, "BOTTOMLEFT", 0, -8)
+        presetsCard:SetPoint("TOPRIGHT", card, "BOTTOMRIGHT", 0, -8)
+        card.presetsCard = presetsCard
+        card.presetButtons = {}
+        for i, preset in ipairs(opts.presets) do
+            local col = (i - 1) % 3
+            local row = math.floor((i - 1) / 3)
+            local button = self:CreateButton(presetsCard.content, {
+                text = preset.name or ("Preset " .. i), width = 170, height = 22,
+                onClick = function()
+                    local ok, err = pcall(opts.onPreset, preset, db)
+                    if not ok then
+                        status:SetText("Preset could not be applied.")
+                        RGX:Error("[RGXUI] preset failed: " .. tostring(err))
+                    else
+                        changed()
+                    end
+                end,
+            })
+            button:SetPoint("TOPLEFT", presetsCard.content, "TOPLEFT", 12 + col * 182, -12 - row * 30)
+            card.presetButtons[#card.presetButtons + 1] = button
+        end
     end
 
     function card:Refresh()

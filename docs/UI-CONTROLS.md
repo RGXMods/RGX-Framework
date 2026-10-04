@@ -162,11 +162,15 @@ isolated without breaking the panel.
 | `opts.icon` | string | No | — | Title-band texture path |
 | `opts.description` | string | No | `"Create, switch, and manage your saved profiles."` | Intro line |
 | `opts.onChange` | function | No | — | `onChange(activeName, db)` after any change |
+| `opts.presets` | table | No | — | Array of `{ name, description?, ... }`; renders a Presets card, hidden when empty |
+| `opts.onPreset` | function | No | — | Required with presets: `onPreset(preset, db)` applies one; failures isolated |
 
 ```lua
 local card = UI:CreateProfilesPanel(tab, {
     db = MyAddon.db, title = "Profiles", icon = MY_ICON,
     onChange = function(active) MyAddon:Refresh() end,
+    presets = { { name = "Raid", mode = "raid" } },
+    onPreset = function(preset, db) MyAddon:ApplyPreset(preset) end,
 })
 -- card:Refresh() re-syncs the panel; card.input/dropdown/status/buttons
 -- expose the controls for tests and advanced use.
