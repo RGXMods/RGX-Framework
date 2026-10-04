@@ -31,15 +31,6 @@ card.flows[2]:AddRow({ { child = secondControl, fill = true },
 card:AutoHeight()
 ```
 
-### `UI:CreateProfilesPanel(parent, { db, title?, onChange? })` → `Card`
-
-Use an existing framework database owner. The shared card supplies profile
-selection, Create, Copy, Rename, Reset and Delete controls. Duplicate names
-are rejected, Default cannot be deleted/renamed, and all operations use public
-DB methods. `onChange(activeName, db)` is failure-isolated. `.Refresh()` updates
-the current selection; no accumulating DB observers are installed by the UI.
-Settings refresh remains the consumer's existing database-switch callback.
-
 `UI:CreateConfigDialog` also accepts `resizable = true`, `minWidth/minHeight`,
 `maxWidth/maxHeight` and `onResize(width, height, dialog)`. Resizing is opt-in;
 the shared widget adapter applies bounds and a grip is created only when
