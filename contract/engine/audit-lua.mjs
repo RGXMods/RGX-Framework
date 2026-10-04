@@ -63,12 +63,16 @@ function walkLuaAst(node, visit) {
 function auditSecretAuraSource(source, file) {
   let ast;
   try {
-    ast = _parseLua(source, {
+    // Lua strings contain bytes. Decode UTF-8 as a one-byte representation
+    // for the parser; raw JS Unicode is not x-user-defined encoded input.
+    // Keep excerpts in the original source and scope/range comparisons in
+    // this consistent byte coordinate space.
+    ast = _parseLua(Buffer.from(source, "utf8").toString("latin1"), {
       luaVersion: "5.1",
       locations: true,
       ranges: true,
       scope: true,
-      encodingMode: "x-user-defined",
+      encodingMode: "pseudo-latin1",
     });
   } catch (error) {
     const line = Number.isInteger(error?.line) ? error.line : 1;

@@ -31,7 +31,8 @@
       "title": "Reference",
       "pages": [
         { "doc": "API.md",          "wiki": "API-Reference" },
-        { "doc": "ARCHITECTURE.md", "wiki": "Architecture" }
+        { "doc": "ARCHITECTURE.md", "wiki": "Architecture" },
+        { "doc": "COMPATIBILITY-VERIFICATION.md", "wiki": "Compatibility-Verification" }
       ]
     },
     {

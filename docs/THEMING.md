@@ -6,20 +6,50 @@ Visual identity, color palette, textures, and styling conventions.
 
 ## Design Palette (`RGXDesign`)
 
-`RGXDesign` provides a static color palette used across all RGX-family addons. Access colors directly:
+`RGXDesign` combines theme colors with a structural palette. Use its getters so
+main-color shades follow the active theme:
 
 ```lua
 local Design = RGX:GetDesign()
-local primary = Design.Colors.primary    -- {r=0.345, g=0.745, b=0.506}
-local accent  = Design.Colors.accent     -- {r=0.737, g=0.435, b=0.659}
+local primary = Design:GetColor("main")  -- {r, g, b}; alias of primary
+local accent  = Design:GetColor("accent")
 ```
 
-### Brand Colors
+### Main Color and Derived Shades
 
 | Key | Hex | RGB | Usage |
 |---|---|---|---|
-| `primary` | `#58be81` | Green | Brand identity, positive actions, `[RGX]` chat prefix |
+| `primary` / `main` / `mainColor` | `#00e6ff` | Cyan | Main theme color; overridden by the active theme |
 | `accent` | `#bc6fa8` | Purple | Brand secondary, highlights, active states |
+
+The framework settings **Main color** preset selector stores its choice in
+`RGXFrameworkDB.themePreset`; the corner selector stores `cornerStyle`.
+Existing widgets need a reload to rebuild with the selected theme/corners.
+Explicit consumer themes and corner options continue to take precedence.
+
+`SetTheme({ main = {r, g, b} })` and `SetMainColor(color, accent)` use the
+existing primary/accent theme contract. `primary`, `highlight`, and the older
+setter names remain supported. Shared shade tokens derive from the current
+main color without consumer-side color arithmetic:
+
+| Token | Main-color intensity |
+|---|---|
+| `mainSurface` | 10% |
+| `mainHover` | 20% |
+| `mainBorder` | 35% |
+
+```lua
+local panel = Design:CreateFrame(parent, {
+    color = "mainSurface", borderColor = "mainBorder", square = false,
+})
+panel:SetPanelColor(Design:GetColor("mainHover")) -- recolor its rounded fill
+```
+
+For rounded frames, recolor the existing fill with `SetPanelColor` rather
+than covering it with a rectangular highlight texture. The fill retains the
+panel's existing nine-slice silhouette and one-pixel border inset. WoW does
+not apply CSS `overflow: hidden`; rectangular child clipping alone does not
+provide rounded-corner clipping. Square frames use their backdrop methods.
 
 ### Surface Colors
 
@@ -59,8 +89,7 @@ local accent  = Design.Colors.accent     -- {r=0.737, g=0.435, b=0.659}
 
 ```lua
 local Design = RGX:GetDesign()
-local c = Design.Colors.primary
-myFontString:SetTextColor(c.r, c.g, c.b, c.a or 1)
+myFontString:SetTextColor(Design:Unpack("main"))
 ```
 
 ### Via Colors module

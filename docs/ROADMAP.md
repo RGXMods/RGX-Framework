@@ -289,3 +289,4 @@ Small utility addon. Needs: TOC RequiredDeps, basic event/timer/slash wiring.
 - Not a general-purpose Lua library — everything is WoW-specific
 - Consuming addons should never need to understand RGX internals to benefit from it
 - BLU_Classic will never use RGX-Framework — it is TBC Classic only and intentionally stays on Ace3
+> **Beta source:** v2.7.13-beta.2; stable remains v2.7.12. New beta UI is awaiting tester feedback.
