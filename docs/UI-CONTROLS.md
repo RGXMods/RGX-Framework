@@ -72,6 +72,37 @@ local toggle = UI:CreateToggle(parent, {
 
 ---
 
+### `UI:CreateProfilesPanel(parent, opts)` → `Frame` (card)
+
+A complete profile manager bound to an existing framework database owner:
+title band with icon, intro line, and a card with an active-profile highlight
+box, a profile dropdown with count, a name field, and stacked
+Create/Copy/Rename/Reset/Delete buttons. Duplicate names are rejected, the
+`Default` profile cannot be renamed or deleted, and `onChange` failures are
+isolated without breaking the panel.
+
+**Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `parent` | Frame | Yes | — | Parent frame |
+| `opts.db` | database | Yes | — | Framework database owner |
+| `opts.title` | string | No | `"Profiles"` | Title band and card title |
+| `opts.icon` | string | No | — | Title-band texture path |
+| `opts.description` | string | No | `"Create, switch, and manage your saved profiles."` | Intro line |
+| `opts.onChange` | function | No | — | `onChange(activeName, db)` after any change |
+
+```lua
+local card = UI:CreateProfilesPanel(tab, {
+    db = MyAddon.db, title = "Profiles", icon = MY_ICON,
+    onChange = function(active) MyAddon:Refresh() end,
+})
+-- card:Refresh() re-syncs the panel; card.input/dropdown/status/buttons
+-- expose the controls for tests and advanced use.
+```
+
+---
+
 ### `UI:CreateLabel(parent, opts)` → `FontString`
 
 Create a styled label using the theme's named sizes and colors.
