@@ -128,8 +128,29 @@ try {
     assert(card.buttons.delete:IsEnabled() == false
       and card.buttons.rename:IsEnabled() == false, "returned Default is not protected")
     assert(RGXFramework.errors > 0, "observer failures were not isolated")
+    local pdb = RGXFramework:NewDatabase("PresetUITestDB", { enabled = true }, { profileIsGlobal = true })
+    local applied = {}
+    local pcard = UI:CreateProfilesPanel(widget("Frame"), { db = pdb,
+      presets = { { name = "Classic", mode = "icon" }, { name = "Forever", mode = "chip" } },
+      onPreset = function(preset, passedDb)
+        assert(preset and passedDb == pdb, "preset applier got wrong arguments")
+        applied[#applied + 1] = preset.name
+      end })
+    assert(pcard.presetsCard and #pcard.presetButtons == 2, "presets card or buttons missing")
+    pcard.presetButtons[1]:Click()
+    pcard.presetButtons[2]:Click()
+    assert(applied[1] == "Classic" and applied[2] == "Forever", "preset clicks did not apply in order")
+    local errorsBefore = RGXFramework.errors
+    local fcard = UI:CreateProfilesPanel(widget("Frame"), { db = pdb,
+      presets = { { name = "Boom" } },
+      onPreset = function() error("expected preset failure") end })
+    fcard.presetButtons[1]:Click()
+    assert(RGXFramework.errors > errorsBefore
+      and fcard.status:GetText() == "Preset could not be applied.", "preset failure was not isolated")
+    local ncard = UI:CreateProfilesPanel(widget("Frame"), { db = pdb })
+    assert(ncard.presetsCard == nil and ncard.presetButtons == nil, "presets card built without presets")
   `);
-  console.log("PROFILES UI OK real factories/DB CRUD, duplicate/protected names, deep copy, live settings view, callback isolation");
+  console.log("PROFILES UI OK real factories/DB CRUD, duplicate/protected names, deep copy, live settings view, callback isolation, preset grid");
 } finally {
   lua.global.close();
 }
