@@ -1,9 +1,9 @@
 -- Shared profile editor; consumers supply their existing database owner.
 -- Reference layout: title band, intro line, and a three-zone card —
 -- active-profile highlight box, profile dropdown with count, and the stacked
--- Create/Rename/Reset/Copy/Delete actions — using only framework skin
--- primitives. Create/Rename enter the name through a small framework dialog;
--- Copy auto-generates its name. No consumer colors, icons, or presets here.
+-- Create/Rename/Reset/Copy actions — using only framework skin primitives.
+-- Create/Rename enter the name through a small framework dialog; Copy
+-- auto-generates its name. No consumer colors, icons, or presets here.
 local _, UI = ...
 local RGX = _G.RGXFramework
 
@@ -138,7 +138,6 @@ function UI:CreateProfilesPanel(parent, opts)
         end) end) },
         { "Reset",  makeAction("reset",  function() return db:ResetProfile(db:GetActiveProfile()) end) },
         { "Copy",   makeAction("copy",   function() return db:CopyProfile(db:GetActiveProfile(), suggestedCopyName()) end) },
-        { "Delete", makeAction("delete", function() return db:DeleteProfile(db:GetActiveProfile()) end) },
     }
     local buttonY = -8
     for _, spec in ipairs(actionSpecs) do
@@ -172,8 +171,9 @@ function UI:CreateProfilesPanel(parent, opts)
     -- element so dropdown height never needs measuring.
     local profileLabel = self:CreateLabel(content, { text = "Profile", color = "accent" })
     profileLabel:SetPoint("TOPLEFT", highlight, "TOPRIGHT", 8, 0)
+    -- Reference-styled dropdown trigger from the shared dropdowns module.
     local picker = dropdowns:CreateNestedDropdown(content, {
-        label = "", width = 220, buttonWidth = 220,
+        label = "", width = 220, buttonWidth = 220, triggerStyle = "retail",
         items = function()
             local items = {}
             for _, name in ipairs(db:ListProfiles()) do items[#items + 1] = { text = name, value = name } end
@@ -234,7 +234,7 @@ function UI:CreateProfilesPanel(parent, opts)
         characterValue:SetText("Character: " .. tostring(db:GetCharKey()))
         count:SetText(profileCountText())
         local protected = active == "Default"
-        setButtonEnabled(self.buttons.delete, not protected)
+        if self.buttons.delete then setButtonEnabled(self.buttons.delete, not protected) end
         setButtonEnabled(self.buttons.rename, not protected)
     end
     card.dropdown, card.status = picker, status
