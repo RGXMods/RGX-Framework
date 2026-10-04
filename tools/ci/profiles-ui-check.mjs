@@ -38,10 +38,18 @@ try {
       function w:SetPoint(point, relative, relativePoint, x, y)
         self.points = { point, relative, relativePoint, x, y }
       end
+      function w:Show()
+        self.shown = true
+        if self.scripts.OnShow then self.scripts.OnShow(self) end
+      end
+      function w:Hide() self.shown = false end
+      function w:IsShown() return self.shown == true end
       for _, key in ipairs({ "ClearAllPoints", "SetAllPoints", "SetAutoFocus",
         "SetMaxLetters", "ClearFocus", "SetBackdrop", "SetBackdropBorderColor",
-        "SetColorTexture", "SetFontObject", "SetJustifyH",
-        "SetJustifyV", "SetWordWrap" }) do w[key] = function() end end
+        "SetColorTexture", "SetFontObject", "SetJustifyH", "SetBackdropColor",
+        "SetJustifyV", "SetWordWrap", "SetFrameStrata", "SetClampedToScreen",
+        "EnableMouse", "SetMovable", "RegisterForDrag", "SetNormalTexture",
+        "SetPushedTexture", "SetHighlightTexture", "SetCheckedTexture" }) do w[key] = function() end end
       return w
     end
     function CreateFrame(kind, _, parent) return widget(kind, parent) end
@@ -97,30 +105,46 @@ try {
     local card = UI:CreateProfilesPanel(widget("Frame"), { db = db,
       title = "Profiles", icon = "icon", description = "desc",
       onChange = function() error("expected observer failure") end })
-    assert(card.input and card.dropdown and card.status, "panel must expose input, dropdown, status")
+    assert(card.dropdown and card.status, "panel must expose dropdown and status")
     assert(card.intro and card.intro.points and card.intro.points[4] == 16,
       "intro must clear the card border")
     assert(card.buttons.create and card.buttons.copy and card.buttons.rename
       and card.buttons.reset and card.buttons.delete, "panel must expose all five actions")
     assert(card.buttons.delete:IsEnabled() == false
       and card.buttons.rename:IsEnabled() == false, "Default profile is not protected")
-    card.input:SetText("Raid"); card.buttons.create:Click()
+    -- Create/Rename go through the name dialog: button opens it, OK commits.
+    card.buttons.create:Click()
+    assert(card.openNameDialog and card._nameDialog,
+      "Create did not open the name dialog (status: " .. tostring(card.status:GetText()) .. ")")
+    card._nameDialog.input:SetText("Raid")
+    card._nameDialog.okButton:Click()
     assert(db:GetActiveProfile() == "Raid" and card.dropdown.value == "Raid",
-      "create did not switch to the new profile")
+      "create did not switch to the new profile (active=" .. tostring(db:GetActiveProfile())
+        .. ", dropdown=" .. tostring(card.dropdown.value)
+        .. ", status=" .. tostring(card.status:GetText()) .. ")")
+    -- Empty name and duplicates are rejected at the dialog without changing state.
+    card.buttons.create:Click()
+    card._nameDialog.input:SetText("")
+    card._nameDialog.okButton:Click()
+    assert(card.status:GetText() == "Enter a profile name.", "empty name accepted")
+    card._nameDialog.input:SetText("Raid")
+    card._nameDialog.okButton:Click()
+    assert(card.status:GetText() == "That profile already exists."
+      and db:GetActiveProfile() == "Raid", "duplicate overwrote data")
+    -- Copy: auto-generates its name; settings deep-copied, never aliased.
     view.enabled = false; view.nested.amount = 42
-    card.input:SetText("Quiet"); card.buttons.copy:Click()
-    assert(db:GetActiveProfile() == "Quiet" and view.enabled == false
+    card.buttons.copy:Click()
+    assert(db:GetActiveProfile() == "Copy" and view.enabled == false
       and view.nested.amount == 42, "copy lost settings or shared nested data")
     view.nested.amount = 9
     db:LoadProfile("Raid")
     assert(view.nested.amount == 42, "copy aliased nested data")
-    card:Refresh(); card.input:SetText("Raid"); card.buttons.create:Click()
-    assert(view.enabled == false
-      and card.status:GetText() == "That profile already exists.", "duplicate overwrote data")
-    card.input:SetText(""); card.buttons.create:Click()
-    assert(card.status:GetText() == "Enter a profile name.", "empty name accepted")
-    card.input:SetText("Renamed"); card.buttons.rename:Click()
+    -- Rename goes through the same dialog.
+    card.buttons.rename:Click()
+    card._nameDialog.input:SetText("Renamed")
+    card._nameDialog.okButton:Click()
     assert(db:GetActiveProfile() == "Renamed" and view.enabled == false, "rename failed")
+    -- Reset and Delete act directly on the current profile.
     card.buttons.reset:Click()
     assert(view.enabled == true and view.nested.amount == 10, "reset missed defaults")
     card.buttons.delete:Click()

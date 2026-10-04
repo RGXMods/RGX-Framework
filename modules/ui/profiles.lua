@@ -1,7 +1,9 @@
 -- Shared profile editor; consumers supply their existing database owner.
--- Three-zone layout (title band, intro, active-profile highlight box,
--- profile dropdown, stacked action buttons) using only framework skin
--- primitives: no consumer colors, icons, or presets here.
+-- Reference layout: title band, intro line, and a three-zone card —
+-- active-profile highlight box, profile dropdown with count, and the stacked
+-- Create/Rename/Reset/Copy/Delete actions — using only framework skin
+-- primitives. Create/Rename enter the name through a small framework dialog;
+-- Copy auto-generates its name. No consumer colors, icons, or presets here.
 local _, UI = ...
 local RGX = _G.RGXFramework
 
@@ -55,43 +57,93 @@ function UI:CreateProfilesPanel(parent, opts)
         if enabled then button:Enable() else button:Disable() end
     end
 
-    -- RIGHT: stacked action buttons (created first: the middle column
-    -- anchors against them).
-    card.buttons = {}
-    local actionSpecs = {
-        { "Create", "CreateProfile", true },
-        { "Copy", "CopyProfile", true },
-        { "Rename", "RenameProfile", true },
-        { "Reset", "ResetProfile" },
-        { "Delete", "DeleteProfile" },
-    }
-    local function action(method, needsName)
-        return function()
-            local name
-            if needsName then
-                name = (card.input:GetText() or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    -- Name dialog for Create/Rename: small framework dialog with an editbox
+    -- and confirm. Errors and empty names report through the panel status.
+    local nameDialog, nameInput, nameCommit
+    local function openNameDialog(title, commit)
+        if not nameDialog then
+            nameDialog = self:CreateConfigDialog(parent, { title = title, width = 320, height = 130 })
+            nameInput = CreateFrame("EditBox", nil, nameDialog, "InputBoxTemplate")
+            nameInput:SetSize(220, 26)
+            nameInput:SetPoint("TOPLEFT", nameDialog, "TOPLEFT", 16, -44)
+            nameInput:SetAutoFocus(true)
+            nameInput:SetMaxLetters(80)
+            nameInput:SetScript("OnEscapePressed", function() nameDialog:Hide() end)
+            local okBtn = self:CreateButton(nameDialog, { text = "OK", width = 80, height = 22, onClick = function()
+                local name = (nameInput:GetText() or ""):gsub("^%s+", ""):gsub("%s+$", "")
                 if name == "" then status:SetText("Enter a profile name."); return end
                 for _, existing in ipairs(db:ListProfiles()) do
                     if existing == name then status:SetText("That profile already exists."); return end
                 end
+                nameDialog:Hide()
+                if nameCommit(name) then
+                    status:SetText("Profile updated.")
+                    changed()
+                else
+                    status:SetText("Profile could not be changed.")
+                end
+            end })
+            okBtn:SetPoint("BOTTOMLEFT", nameDialog, "BOTTOMLEFT", 16, 14)
+            local cancelBtn = self:CreateButton(nameDialog, { text = "Cancel", width = 80, height = 22, onClick = function() nameDialog:Hide() end })
+            cancelBtn:SetPoint("LEFT", okBtn, "RIGHT", 8, 0)
+            nameDialog.okButton, nameDialog.cancelButton = okBtn, cancelBtn
+            nameDialog.input = nameInput
+        end
+        nameDialog.titleText:SetText(title)
+        nameInput:SetText("")
+        nameCommit = commit
+        card._nameDialog = nameDialog
+        nameDialog:Show()
+    end
+    card.openNameDialog = openNameDialog
+
+    -- Copy auto-names: "Copy", then "Copy 2", "Copy 3"… (reference behavior).
+    local nestedCopy = { current = 0 }
+    local function suggestedCopyName()
+        nestedCopy.current = nestedCopy.current or 0
+        local base = "Copy"
+        local function exists(name)
+            for _, existing in ipairs(db:ListProfiles()) do
+                if existing == name then return true end
             end
-            local active = db:GetActiveProfile()
-            local ok
-            if method == "CreateProfile" then ok = db:CreateProfile(name)
-            elseif method == "CopyProfile" then ok = db:CopyProfile(active, name)
-            elseif method == "RenameProfile" then ok = db:RenameProfile(active, name)
-            else ok = db[method](db, active) end
-            if ok then
-                card.input:SetText("")
-                status:SetText("Profile updated.")
-                changed()
-            else status:SetText("Profile could not be changed.") end
+            return false
+        end
+        if not exists(base) then return base end
+        local n = nestedCopy.current + 1
+        while exists(base .. " " .. n) do n = n + 1 end
+        nestedCopy.current = n
+        return base .. " " .. n
+    end
+
+    -- RIGHT: stacked actions in the reference order/geometry (84x22, 6px gap).
+    card.buttons = {}
+    local function makeAction(label, commit)
+        return function()
+            local ok, err = pcall(commit)
+            if not ok then
+                status:SetText("Profile action failed: " .. tostring(err))
+                RGX:Error("[RGXUI] profile action failed: " .. tostring(err))
+                return
+            end
+            status:SetText(ok == false and "Profile could not be changed." or "Profile updated.")
+            if ok then changed() end
         end
     end
+    local actionSpecs = {
+        { "Create", makeAction("create", function() openNameDialog("Create Profile", function(name)
+            return db:CreateProfile(name)
+        end) end) },
+        { "Rename", makeAction("rename", function() openNameDialog("Rename Profile", function(name)
+            return db:RenameProfile(db:GetActiveProfile(), name)
+        end) end) },
+        { "Reset",  makeAction("reset",  function() return db:ResetProfile(db:GetActiveProfile()) end) },
+        { "Copy",   makeAction("copy",   function() return db:CopyProfile(db:GetActiveProfile(), suggestedCopyName()) end) },
+        { "Delete", makeAction("delete", function() return db:DeleteProfile(db:GetActiveProfile()) end) },
+    }
     local buttonY = -8
     for _, spec in ipairs(actionSpecs) do
         local button = self:CreateButton(content, {
-                text = spec[1], width = 84, height = 22, onClick = action(spec[2], spec[3]),
+                text = spec[1], width = 84, height = 22, onClick = spec[2],
             })
         button:SetPoint("TOPRIGHT", content, "TOPRIGHT", -8, buttonY)
         card.buttons[spec[1]:lower()] = button
@@ -116,11 +168,11 @@ function UI:CreateProfilesPanel(parent, opts)
     })
     characterValue:SetPoint("TOPLEFT", activeValue, "BOTTOMLEFT", 0, -10)
 
-    -- MIDDLE: dropdown, count, name input, status — each chained under the
-    -- previous element so dropdown height never needs measuring.
+    -- MIDDLE: dropdown → count → status, each chained under the previous
+    -- element so dropdown height never needs measuring.
     local profileLabel = self:CreateLabel(content, { text = "Profile", color = "accent" })
     profileLabel:SetPoint("TOPLEFT", highlight, "TOPRIGHT", 8, 0)
-    local     picker = dropdowns:CreateNestedDropdown(content, {
+    local picker = dropdowns:CreateNestedDropdown(content, {
         label = "", width = 220, buttonWidth = 220,
         items = function()
             local items = {}
@@ -135,19 +187,7 @@ function UI:CreateProfilesPanel(parent, opts)
     picker:SetPoint("TOPLEFT", profileLabel, "BOTTOMLEFT", 0, -4)
     local count = self:CreateLabel(content, { text = "", color = "muted" })
     count:SetPoint("TOPLEFT", picker, "BOTTOMLEFT", 0, -4)
-    local nameLabel = self:CreateLabel(content, { text = "New profile name", color = "muted" })
-    nameLabel:SetPoint("TOPLEFT", count, "BOTTOMLEFT", 0, -8)
-    local inputRow = CreateFrame("Frame", nil, content)
-    inputRow:SetSize(220, 26)
-    inputRow:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -4)
-    local input = CreateFrame("EditBox", nil, inputRow, "InputBoxTemplate")
-    input:SetAutoFocus(false)
-    input:SetMaxLetters(80)
-    input:SetPoint("TOPLEFT", inputRow, "TOPLEFT", 8, -3)
-    input:SetPoint("BOTTOMRIGHT", inputRow, "BOTTOMRIGHT", -8, 3)
-    input:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-    input:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    status:SetPoint("TOPLEFT", inputRow, "BOTTOMLEFT", 0, -4)
+    status:SetPoint("TOPLEFT", count, "BOTTOMLEFT", 0, -8)
 
     local function profileCountText()
         local n = #db:ListProfiles()
@@ -197,7 +237,7 @@ function UI:CreateProfilesPanel(parent, opts)
         setButtonEnabled(self.buttons.delete, not protected)
         setButtonEnabled(self.buttons.rename, not protected)
     end
-    card.input, card.dropdown, card.status = input, picker, status
+    card.dropdown, card.status = picker, status
     card.intro = intro
     card.activeInfo = { label = activeLabel, value = activeValue, character = characterValue }
     card:HookScript("OnShow", function(self) self:Refresh() end)
