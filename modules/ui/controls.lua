@@ -1000,6 +1000,7 @@ function UI:CreateConfigDialog(parent, opts)
     if D then
         title:SetTextColor(D:Unpack("primary"))
     end
+    dialog.titleText = title
 
     self:CreateCloseButton(dialog, { onClick = function() dialog:Hide() end })
 

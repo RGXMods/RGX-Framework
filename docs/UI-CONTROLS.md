@@ -147,10 +147,11 @@ local toggle = UI:CreateToggle(parent, {
 
 A complete profile manager bound to an existing framework database owner:
 title band with icon, intro line, and a card with an active-profile highlight
-box, a profile dropdown with count, a name field, and stacked
-Create/Copy/Rename/Reset/Delete buttons. Duplicate names are rejected, the
-`Default` profile cannot be renamed or deleted, and `onChange` failures are
-isolated without breaking the panel.
+box (name + current character), a profile dropdown with count, and stacked
+Create/Rename/Reset/Copy/Delete buttons. Create and Rename enter the name in
+a small dialog; Copy auto-generates a name; duplicates are rejected, the
+`Default` profile cannot be renamed or deleted, and failures are isolated
+to panel feedback instead of breaking the UI.
 
 **Parameters:**
 
@@ -172,8 +173,9 @@ local card = UI:CreateProfilesPanel(tab, {
     presets = { { name = "Raid", mode = "raid" } },
     onPreset = function(preset, db) MyAddon:ApplyPreset(preset) end,
 })
--- card:Refresh() re-syncs the panel; card.input/dropdown/status/buttons
--- expose the controls for tests and advanced use.
+-- card:Refresh() re-syncs the panel; card.dropdown/status/buttons,
+-- card.activeInfo, and card.openNameDialog expose the seams for tests
+-- and advanced use.
 ```
 
 ---
