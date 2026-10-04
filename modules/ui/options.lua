@@ -494,7 +494,7 @@ local function CreateOptionsPanel(UI, opts)
 
         -- Content frame for this tab
         local content = CreateFrame("Frame", nil, container, "BackdropTemplate")
-        content:SetPoint("TOPLEFT",     tabArea, "BOTTOMLEFT",          1, -8)
+        content:SetPoint("TOPLEFT",     tabArea, "BOTTOMLEFT",          1, -2)
         content:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT",      -7,  8)
         content:SetBackdrop({
             bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -551,7 +551,7 @@ local function CreateOptionsPanel(UI, opts)
         self.tabs[i]._tabInfo = tabInfo
 
         local content = CreateFrame("Frame", nil, container, "BackdropTemplate")
-        content:SetPoint("TOPLEFT",     tabArea, "BOTTOMLEFT",          1, -8)
+        content:SetPoint("TOPLEFT",     tabArea, "BOTTOMLEFT",          1, -2)
         content:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT",      -7,  8)
         content:SetBackdrop({
             bgFile   = "Interface\\Tooltips\\UI-Tooltip-Background",
