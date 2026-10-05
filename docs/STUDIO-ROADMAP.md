@@ -54,11 +54,16 @@ Framework production readiness requires all of the following:
 
 ## Product Boundary
 
-RGX Studio will be a cross-platform Tauri application for visually authoring,
-previewing, testing, and exporting WoW addons. It is not a WoW addon and does
-not belong inside this repository's player package.
+**Direction update (2026-10-05):** Studio is conceived as a tooling surface
+rather than a desktop product: a chat window, a file browser, and a live
+addon preview — the Figma model applied to WoW addons. The shared render
+engine and the MCP/API contract are the product; an installable shell is
+optional and deferred. A cross-platform Tauri desktop app remains a possible
+later packaging, but the preview engine must be consumable without it (IDE
+surface, web view, or embedded harness). It is not a WoW addon and does not
+belong inside this repository's player package.
 
-The application has one deliberately narrow product rule:
+The engine has one deliberately narrow product rule:
 
 > RGX Studio authors and previews only addons built with the shipped
 > `RGXAddon` DSL and approved RGX-Framework APIs. Every export declares
@@ -76,17 +81,17 @@ not under `tools/` and not in the WoW addon aggregation repository:
 ```text
 C:\Users\Joey\Projects\rgxmods\
     warcraft\        suite inventory and integration corpus
-    rgx-studio\      Tauri desktop application (new repository)
+    rgx-studio\      Studio engine + surface (new repository, shell-agnostic)
 
 C:\Users\Joey\RGX-Framework\
     WoW runtime and canonical contract producer
 ```
 
 The roadmap tracks bootstrap work under `rgx-studio`; the boundary should not
-change even if the final display name does.
-Tauri/Rust/web code needs its own release cadence, OS build matrix, code-signing
-secrets, updater, issue board, and version namespace. Putting it in
-RGX-Framework would couple desktop releases to `RGX-Framework.toc` and create a
+change even if the final display name does. WebTypeScript/preview code and any
+later desktop shell need their own release cadence, OS build matrix, code-signing
+secrets, updater, issue board, and version namespace. Putting them in
+RGX-Framework would couple those releases to `RGX-Framework.toc` and create a
 permanent risk of desktop source or binaries entering the player archive.
 
 ## Dependency Rules
@@ -190,7 +195,9 @@ Studio may emit only catalog-approved calls. Raw `CreateFrame`, `C_Timer`,
 
 ## Preview Model
 
-Studio is a structural and interaction preview, not a WoW emulator.
+Studio is a structural and interaction preview, not a WoW emulator. The preview
+pipeline is the same for every surface — IDE panel, browser tab, or (if ever
+needed) a desktop shell:
 
 ```text
 Studio project
@@ -198,8 +205,15 @@ Studio project
     -> normalized RGX model
        -> addon Lua/TOC exporter
        -> neutral Preview IR
-          -> HTML/CSS renderer in the Tauri WebView
+          -> HTML/CSS renderer (surface-agnostic WebView; no Tauri dependency)
 ```
+
+The surrounding surface is deliberately minimal: a chat channel talking through
+the MCP/contract layer, a file browser for the project, and the live preview.
+All three describe the same normalized model — the DSL is the human authoring
+layer, the MCP catalog is the agent authoring layer, and the renderer proves
+out the model visually. Studio builds on the same contract for all three;
+no adapters may redefine semantics.
 
 The preview renderer models RGX concepts such as options panels, tabs, controls,
 minimap interactions, saved state, and synthetic human triggers. It does not
@@ -216,24 +230,26 @@ lockdown, taint, secret values, event payloads, and exact rendering.
 
 ## Studio Repository Shape
 
+The preview engine is the reusable core; application shells consume it. Shape
+(sketch, updated for the surface-first direction):
+
 ```text
-rgx-studio/
-    apps/desktop/
-        src/                    TypeScript editor and preview UI
-        src-tauri/              Rust filesystem/export/update boundary
+rgx-studio/                       (when the gate opens)
     packages/
-        project-model/          versioned Studio document format
-        contract-client/        bundle verification, cache, and pinning
-        preview-compiler/       normalized RGX model -> Preview IR
-        preview-web/            Preview IR -> mock game-window UI
-        exporter/               deterministic Lua/TOC/media output
-    contracts/bundled/          generated pinned baseline bundle
+        project-model/            versioned Studio document format
+        contract-client/          bundle verification, cache, and pinning
+        preview-compiler/         normalized RGX model -> Preview IR
+        preview-web/              Preview IR -> mock surface (browser/WebView)
+        exporter/                 deterministic Lua/TOC/media output
+    contracts/bundled/            generated pinned baseline bundle
     tests/
         contract/
         golden/
         preview/
-        e2e/
 ```
+
+A desktop Tauri app (`apps/desktop/`) is a possible later shell only; nothing in
+the engine may depend on Rust/Tauri.
 
 A user's authoring project and its installable output stay separate:
 
