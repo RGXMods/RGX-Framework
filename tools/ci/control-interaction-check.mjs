@@ -128,6 +128,24 @@ try {
       D:SetMainColor({0, 0.902, 1})
       assert(D:GetColor('primary')[1] == 0)
     `],
+    ["selected buttons keep hover styling after the pointer leaves", `
+      local first = UI:CreateButton({}, 'Kill')
+      local second = UI:CreateButton({}, 'Loot')
+      first.scripts.OnEnter(first)
+      first:SetSelected(true)
+      first.scripts.OnLeave(first)
+      assert(first:IsSelected() and first.bg.color[1] ~= D:GetColor('surface')[1])
+      assert(first.label.textColor[1] == D:GetColor('primary')[1])
+      second.scripts.OnEnter(second)
+      second:SetSelected(true)
+      first:SetSelected(false)
+      assert(second.bg.color[1] ~= D:GetColor('surface')[1])
+      assert(first.bg.color[1] == D:GetColor('surface')[1])
+      assert(first.label.textColor[1] == D:GetColor('subtext')[1])
+      second:SetSelected(false)
+      second.scripts.OnLeave(second)
+      assert(second.bg.color[1] == D:GetColor('surface')[1])
+    `],
     ["unbound label forwards one native checkbox click and current handler", `
       local row = UI:CreateCheckbox({}, 'Enable option')
       local calls = 0
