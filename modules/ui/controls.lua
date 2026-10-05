@@ -233,12 +233,17 @@ function UI:CreateSlider(parent, options)
 	local container = CreateFrame("Frame", nil, parent)
 	container:SetSize(sliderWidth + 32, 38)
 
-	container.label = self:CreateLabel(container, {
-		text = label,
-		size = "normal",
-		color = "muted"
-	})
-	container.label:SetPoint("TOPLEFT", 0, 0)
+	-- Static label above the track is the default. opts.noLabel drops it and
+	-- the label moves into the track hover tooltip instead ("label: value").
+	local hasLabel = options.noLabel ~= true
+	if hasLabel then
+		container.label = self:CreateLabel(container, {
+			text = label,
+			size = "normal",
+			color = "muted"
+		})
+		container.label:SetPoint("TOPLEFT", 0, 0)
+	end
 
 	container.valueLabel = self:CreateLabel(container, {
 		text = (storage[key] or default) .. suffix,
@@ -247,9 +252,27 @@ function UI:CreateSlider(parent, options)
 	container.valueLabel:SetPoint("TOPRIGHT", -28, 0)
 	if valueDisplay ~= "always" then container.valueLabel:Hide() end
 
+	-- Label-less controls expose meaning via the track hover tooltip instead
+	-- of a static row label; value stays governed by valueDisplay.
+	-- Compose with the hover-value handlers set above so both stay active.
+	if not hasLabel then
+		local enterHandler = button:GetScript("OnEnter")
+		local leaveHandler = button:GetScript("OnLeave")
+		button:SetScript("OnEnter", function(self)
+			if enterHandler then enterHandler(self) end
+			GameTooltip:SetOwner(self, "ANCHOR_TOP")
+			GameTooltip:SetText(label .. ": " .. (storage[key] or default) .. suffix)
+			GameTooltip:Show()
+		end)
+		button:SetScript("OnLeave", function(self)
+			if leaveHandler then leaveHandler(self) end
+			GameTooltip:Hide()
+		end)
+	end
+
 	local trackFrame = CreateFrame("Frame", nil, container)
-	trackFrame:SetPoint("TOPLEFT", container.label, "BOTTOMLEFT", 0, -4)
-	trackFrame:SetPoint("TOPRIGHT", container.valueLabel, "BOTTOMRIGHT", 0, -4)
+	trackFrame:SetPoint("TOPLEFT", container.label or container, hasLabel and "BOTTOMLEFT" or "TOPLEFT", 0, hasLabel and -4 or 0)
+	trackFrame:SetPoint("TOPRIGHT", container.valueLabel, "BOTTOMRIGHT", 0, hasLabel and -4 or 0)
 	trackFrame:SetHeight(18)
 
 	local button = CreateFrame("Button", nil, trackFrame)
