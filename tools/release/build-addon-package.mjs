@@ -26,8 +26,8 @@ const toc=files.get(tocName.replaceAll('\\','/')).toString('utf8');
 const version=toc.match(/^## Version:\s*(\S+)/m)?.[1]?.replace(/^v/,'');
 assert(version,'TOC Version missing');
 for(const line of toc.split(/\r?\n/)) {
- const file=line.trim().replace(/^\[AllowLoadGameType[^\]]*\]\s*/,'');
- if(file && !file.startsWith('#'))add(file);
+  const file=line.trim().replace(/^\[AllowLoadGameType[^\]]*\]\s*/,'').replace(/\s*\[AllowLoadGameType[^\]]*\]\s*$/,'').trim();
+  if(file && !file.startsWith('#'))add(file);
 }
 function assets(dir='') {
  for(const entry of readdirSync(join(root,dir),{withFileTypes:true})) {
