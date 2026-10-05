@@ -19,7 +19,7 @@ function add(file) {
  assert(!lstatSync(full).isSymbolicLink(),'runtime symlinks are not packaged');
  if(files.has(key))return;
  const bytes=readFileSync(full);files.set(key,bytes);
- if(key.endsWith('.xml'))for(const m of bytes.toString('utf8').replace(/<!--[\s\S]*?-->/g,'').matchAll(/<(?:Script|Include)\b[^>]*\bfile\s*=\s*["']([^"']+)["']/gi))add(join(dirname(key),m[1]));
+  if(key.endsWith('.xml'))for(const m of bytes.toString('utf8').replace(/<!--[\s\S]*?-->/g,'').matchAll(/<(?:Script|Include)\b[^>]*\bfile\s*=\s*["']([^"']+)["']/gi)){const ref=m[1];add(existsSync(resolve(root,ref.replaceAll('\\','/')))?ref:join(dirname(key),ref));}
 }
 add(tocName);
 const toc=files.get(tocName.replaceAll('\\','/')).toString('utf8');
