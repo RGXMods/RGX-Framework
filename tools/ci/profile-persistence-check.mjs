@@ -9,10 +9,12 @@ import { Lua } from "wasmoon-lua5.1";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const database = readFileSync(join(ROOT, "core/systems/database.lua"), "utf8");
 const controls = readFileSync(join(ROOT, "modules/ui/controls.lua"), "utf8");
+const minimap = readFileSync(join(ROOT, "modules/minimap/minimap.lua"), "utf8");
 async function vm() {
   const lua = await Lua.create();
   lua.ctx.__database = database;
   lua.ctx.__controls = controls;
+  lua.ctx.__minimap = minimap;
   lua.doStringSync(`
     RGX = { _databases = {} }
     _G.RGXFramework = RGX
@@ -70,6 +72,48 @@ await scenario("client-loaded nil storage remains bound to declared global", `
   db.enabled = false
   assert(type(NilDB) == "table" and NilDB == db._raw, "writes detached from SavedVariables")
   assert(NilDB.profiles.Default.enabled == false)
+`);
+await scenario("flat migration preserves values at construction and late adoption", `
+  FlatDB={enabled=false,offset=43,color={0.2,0.4,0.6}}
+  local original=FlatDB.color
+  local db=RGX:NewDatabase('FlatDB',{enabled=true,offset=1,color={1,1,1}},{profileIsGlobal=true,legacyFlat=true})
+  local settings=db.global
+  assert(settings.enabled==false and settings.offset==43 and settings.color[2]==0.4)
+  settings.color[2]=0.7;assert(original[2]==0.4,'migration aliased old nested values')
+  FlatDB={enabled=false,offset=44,color={0.1,0.3,0.5}}
+  assert(db:Adopt() and settings.offset==44 and settings.color[2]==0.3)
+  assert(db:CreateProfile('Custom'));settings.offset=55
+  assert(db:Adopt()==false and db:GetActiveProfile()=='Custom' and settings.offset==55)
+`);
+await scenario("collector backdrops and layout remain separate from minimap textures", `
+  local function widget(kind,parent)
+    local w={kind=kind,parent=parent,scripts={},shown=true}
+    for _,method in ipairs({'SetSize','SetFrameStrata','SetMovable','EnableMouse','RegisterForClicks','RegisterForDrag','SetHighlightTexture','SetTexture','SetMask','SetVertexColor','SetTexCoord'})do w[method]=function()end end
+    function w:GetWidth()return 140 end;function w:GetHeight()return 140 end
+    function w:GetFrameLevel()return 1 end;function w:GetParent()return self.parent end
+    function w:SetParent(p)self.parent=p end;function w:SetPoint(...)self.point={...}end
+    function w:ClearAllPoints()self.point=nil end;function w:SetScript(key,fn)self.scripts[key]=fn end
+    function w:Show()self.shown=true end;function w:Hide()self.shown=false end
+    function w:IsShown()return self.shown end
+    function w:CreateTexture()return widget('Texture',self)end
+    if kind~='Texture'then function w:SetFrameLevel(level)self.level=level end end
+    return w
+  end
+  CreateFrame=function(kind,_,parent)return widget(kind,parent)end
+  Minimap=widget('Frame');local module
+  RGX.RegisterModule=function(_,name,value)if name=='minimap'then module=value end end
+  assert(loadstring(__minimap))('RGX-Framework',RGX)
+  local button=module:Create({name='CollectorTestButton',icon='test',storage={}})
+  assert(button.frame.backgroundTexture.kind=='Texture' and button.frame.backdrop==nil)
+  -- ElvUI's backdrop slot must remain free for the Frame used by WindTools.
+  button.frame.backdrop=CreateFrame('Frame',nil,button.frame)
+  button.frame.backdrop:SetFrameLevel(3)
+  local bar=widget('Frame');button.frame:SetParent(bar)
+  button.frame:SetPoint('TOPLEFT',bar,'TOPLEFT',4,-4)
+  button:SetVisible(true)
+  assert(button.frame.point[1]=='TOPLEFT' and button.frame.point[2]==bar,'framework displaced collected icon')
+  button.frame:SetParent(Minimap);button:PlaceAtAngle()
+  assert(button.frame.point[1]=='CENTER' and button.frame.point[2]==Minimap)
 `);
 await scenario("late defaults apply to existing, new and reset profiles", `
   local db = RGX:NewDatabase("LateDB", {})
