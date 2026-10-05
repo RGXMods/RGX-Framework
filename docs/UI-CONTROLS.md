@@ -148,7 +148,8 @@ local toggle = UI:CreateToggle(parent, {
 A complete profile manager bound to an existing framework database owner:
 title band with icon, intro line, and a card with an active-profile highlight
 box (name + current character), a profile dropdown with count, and stacked
-Create/Rename/Reset/Copy/Delete buttons. Create and Rename enter the name in
+Create/Rename/Reset/Copy buttons, with a confirmed Delete action beside each
+non-Default profile in the dropdown. Create and Rename enter the name in
 a small dialog; Copy auto-generates a name; duplicates are rejected, the
 `Default` profile cannot be renamed or deleted, and failures are isolated
 to panel feedback instead of breaking the UI.
@@ -160,10 +161,14 @@ to panel feedback instead of breaking the UI.
 | `parent` | Frame | Yes | — | Parent frame |
 | `opts.db` | database | Yes | — | Framework database owner |
 | `opts.title` | string | No | `"Profiles"` | Title band and card title |
+| `opts.height` | number | No | `214` | Profile-management card height; allow room for all four action buttons |
 | `opts.icon` | string | No | — | Title-band texture path |
 | `opts.description` | string | No | `"Create, switch, and manage your saved profiles."` | Intro line |
 | `opts.onChange` | function | No | — | `onChange(activeName, db)` after any change |
-| `opts.presets` | table | No | — | Array of `{ name, description?, ... }`; renders a Presets card, hidden when empty |
+| `opts.createFromCurrent` | boolean | No | `false` | Create deep-copies the current profile, including nested colors; otherwise creates from defaults |
+| `opts.pagedPresets` | boolean | No | `false` | Paginates only the Presets card; navigation lives in its header; exposes `card.presetsCard.pager` |
+| `opts.presetsPerPage` | number | No | `3` | Presets per page, a positive multiple of three; `6` gives two rows per page |
+| `opts.presets` | table | No | — | Array of `{ name, description?, disabled?, ... }`; disabled entries are future slots that cannot apply settings; hidden when empty |
 | `opts.onPreset` | function | No | — | Required with presets: `onPreset(preset, db)` applies one; failures isolated |
 
 ```lua
@@ -504,6 +509,12 @@ Open the panel and navigate to it in Interface Options:
 ```lua
 panel:Open()
 ```
+
+#### `panel:Close()` / `panel:Toggle()`
+
+`Close()` hides the floating panel or its Settings host through the framework's
+safe-hide boundary. `Toggle()` closes a visible panel and otherwise opens it;
+visibility includes the host so a hidden Settings window can reopen normally.
 
 #### `panel:SelectTab(index)`
 
