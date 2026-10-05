@@ -252,7 +252,7 @@ Callback signature: `function(original, self, ...) return original(self, ...) en
 
 | Method | Description |
 |---|---|
-| `RGX:NewDatabase(name, defaults, opts)` | Profile-aware SavedVariables proxy with metamethod access; `opts`: `{ global, onSwitch }` |
+| `RGX:NewDatabase(name, defaults, opts)` | Profile-aware SavedVariables proxy with metamethod access; `opts`: `{ global, char, profileIsGlobal, legacyFlat, onSwitch }`. `legacyFlat=true` migrates an older flat settings table into the Default profile instead of discarding or aliasing it. |
 | `RGX:DB(name, defaults)` | Simple (non-profile) SavedVariables table with deep-merged defaults |
 | `RGX:GetDB()` | The framework's own `RGXFrameworkDB` reference |
 | `RGX:DBGet(db, path, fallback)` / `RGX:DBSet(db, path, value)` | Dotted-path get/set (`"a.b.c"`) |
