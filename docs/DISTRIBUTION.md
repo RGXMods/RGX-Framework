@@ -7,21 +7,21 @@ World of Warcraft addon archive.
 
 ## Current Release
 
-[`v2.7.12`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.12)
+[`v2.7.13`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.13)
 publishes exactly two GitHub assets:
 
 | Asset | Purpose |
 |---|---|
-| `RGX-Framework-v2.7.12.zip` | The only product archive; install this addon |
+| `RGX-Framework-v2.7.13.zip` | The only product archive; install this addon |
 | `release.json` | In-house packager metadata for automation |
 
-The `v2.7.12` ZIP is expected to contain one `RGX-Framework/` root and exactly 108
+The `v2.7.13` ZIP is expected to contain one `RGX-Framework/` root and exactly 109
 runtime files. Verify the asset and digest after publishing with
 GitHub CLI:
 
 ```bash
-gh release view v2.7.12 --repo RGXMods/RGX-Framework --json assets \
-  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.12.zip") | .digest'
+gh release view v2.7.13 --repo RGXMods/RGX-Framework --json assets \
+  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.13.zip") | .digest'
 ```
 
 CurseForge is the currently configured addon service. Wago is configured with
@@ -158,5 +158,5 @@ release workflow packages and uploads the addon but does not update service-page
 HTML. Description changes must be applied to the configured service separately
 and verified against this file; the GitHub Wiki is generated automatically from
 the Markdown pages listed in `tools/wiki/manifest.json`.
-> **Beta channel:** v2.7.13-beta.2 is opt-in; stable remains v2.7.12.
+> The v2.7.13-beta channel was promoted to stable v2.7.13.
 > Beta artifacts contain 109 runtime files; stable artifacts retain 108.

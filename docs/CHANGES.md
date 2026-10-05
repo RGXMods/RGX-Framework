@@ -2,6 +2,22 @@
 
 ## Current Release
 
+### [v2.7.13](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.13.md) - 2026-10-05
+
+First stable release of the shared UI batch (tested as v2.7.13-beta.1/beta.2):
+
+- Profiles panel preset pagination, confirmed per-row Delete, and
+  create-from-current copying.
+- Panel `Close()`/`Toggle()` through the safe-hide boundary, including the
+  Settings-embedded host.
+- New `UI:CreateSwitch` module toggles plus config gear/dialog chrome.
+- Slider purpose labels visible with hover-only values; dropdown modern-menu
+  restoration and reclaimed inline rows; card layout and reset alignment fixes.
+- Regression coverage across profiles, controls, layout, dropdowns, options,
+  reset/poison recovery, and six-flavor packaging.
+
+## Recent Releases
+
 ### [v2.7.12](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.12.md) - 2026-10-03
 
 - Fixed the CurseForge release upload (metadata must be a plain form
@@ -23,8 +39,6 @@ coverage list is published in every flavor TOC's `## X-Localizations:`
 header and in `README.md`. Consumer addons inherit the
 `RGXLocale:NewLocale(addonName, locale, isDefault)` registry convention.
 
-
-## Recent Releases
 
 ### [v2.7.10](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.10.md) - 2026-10-03
 
@@ -156,8 +170,4 @@ header and in `README.md`. Consumer addons inherit the
 
 ## Historical Release Notes
 
-Full per-version notes remain in [`docs/changelogs/`](https://github.com/RGXMods/RGX-Framework/tree/main/docs/changelogs), including releases from v1.x through v2.5.0.
-## Beta — v2.7.13-beta.2
-
-Opt-in UI/profile/layout beta; stable remains v2.7.12. See
-[beta notes](changelogs/2.7.13-beta.2.md) for additions and tester checks.
+Full per-version notes remain in [`docs/changelogs/`](https://github.com/RGXMods/RGX-Framework/tree/main/docs/changelogs), including releases from v1.x through v2.5.0. The 2.7.13 beta channel (beta.1, beta.2) was promoted to stable as v2.7.13; its notes remain in [`docs/changelogs/`](https://github.com/RGXMods/RGX-Framework/tree/main/docs/changelogs).
