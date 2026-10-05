@@ -158,5 +158,5 @@ release workflow packages and uploads the addon but does not update service-page
 HTML. Description changes must be applied to the configured service separately
 and verified against this file; the GitHub Wiki is generated automatically from
 the Markdown pages listed in `tools/wiki/manifest.json`.
-> The v2.7.13-beta channel was promoted to stable v2.7.13.
+> **Beta channel:** v2.7.14-beta.1 is opt-in; stable remains v2.7.13.
 > Beta artifacts contain 109 runtime files; stable artifacts retain 108.
