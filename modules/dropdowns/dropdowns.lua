@@ -399,6 +399,9 @@ function Dropdowns:AddInlineButton(buttonFrame, opts)
 
         existing:SetScript("OnLeave", function() GameTooltip:Hide() end)
         buttonFrame[key] = existing
+        -- Native menu rows are recycled by other dropdowns after closing.
+        -- An inline action must be explicitly shown for its new row owner.
+        buttonFrame:HookScript("OnHide", function() existing:Hide() end)
     end
 
     -- Update per-call properties

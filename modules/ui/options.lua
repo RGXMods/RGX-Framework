@@ -809,6 +809,21 @@ local function DeferOptionsOpen(fn)
   end
 end
 
+    -- Visibility must include the host: a Settings page can remain shown
+    -- internally even while the containing Settings window is hidden.
+    function panel:Close()
+        local host = self
+        if self._settingsEmbedded then
+            if SettingsPanel and SettingsPanel:IsShown() then host = SettingsPanel
+            elseif InterfaceOptionsFrame and InterfaceOptionsFrame:IsShown() then host = InterfaceOptionsFrame end
+        end
+        RGX:SafeHide(host)
+    end
+
+    function panel:Toggle()
+        if self:IsVisible() then self:Close() else self:Open() end
+    end
+
     -- ── Open ──────────────────────────────────────────────────────────────────
     function panel:Open()
         if InCombatLockdown and InCombatLockdown() then

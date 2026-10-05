@@ -32,14 +32,15 @@ function UI:CreateProfilesPanel(parent, opts)
     })
     -- Inset matches the card content so the first word clears the card border.
     intro:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 16, -8)
+    intro:SetPoint("TOPRIGHT", header, "BOTTOMRIGHT", -16, -8)
 
     -- Main card: highlight box (left), dropdown column (middle),
     -- stacked actions (right). Fixed zones like the reference layout;
     -- middle content is anchored, never measured.
-    local card = self:CreateCard(parent, { title = opts.title or "Profiles", height = 214 })
+    local card = self:CreateCard(parent, { title = opts.title or "Profiles", height = opts.height or 214 })
     card:ClearAllPoints()
     card:SetPoint("TOPLEFT", intro, "BOTTOMLEFT", 0, -8)
-    card:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -8)
+    card:SetPoint("TOPRIGHT", intro, "BOTTOMRIGHT", 0, -8)
     local content = card.content
 
     local status = self:CreateLabel(content, { text = "", color = "muted", width = 220 })
@@ -63,17 +64,29 @@ function UI:CreateProfilesPanel(parent, opts)
     local function openNameDialog(title, commit)
         if not nameDialog then
             nameDialog = self:CreateConfigDialog(parent, { title = title, width = 320, height = 130 })
+            nameDialog:SetPoint("CENTER", parent, "CENTER", 0, 0)
             nameInput = CreateFrame("EditBox", nil, nameDialog, "InputBoxTemplate")
             nameInput:SetSize(220, 26)
             nameInput:SetPoint("TOPLEFT", nameDialog, "TOPLEFT", 16, -44)
             nameInput:SetAutoFocus(true)
             nameInput:SetMaxLetters(80)
             nameInput:SetScript("OnEscapePressed", function() nameDialog:Hide() end)
+            local feedback = self:CreateLabel(nameDialog, { text = "", width = 288, color = "muted" })
+            feedback:SetPoint("TOPLEFT", nameInput, "BOTTOMLEFT", 0, -4)
+            nameDialog.feedback = feedback
             local okBtn = self:CreateButton(nameDialog, { text = "OK", width = 80, height = 22, onClick = function()
                 local name = (nameInput:GetText() or ""):gsub("^%s+", ""):gsub("%s+$", "")
-                if name == "" then status:SetText("Enter a profile name."); return end
+                if name == "" then
+                    status:SetText("Enter a profile name.")
+                    feedback:SetText("Enter a profile name.")
+                    return
+                end
                 for _, existing in ipairs(db:ListProfiles()) do
-                    if existing == name then status:SetText("That profile already exists."); return end
+                    if existing == name then
+                        status:SetText("That profile already exists.")
+                        feedback:SetText("That profile already exists.")
+                        return
+                    end
                 end
                 nameDialog:Hide()
                 if nameCommit(name) then
@@ -88,9 +101,11 @@ function UI:CreateProfilesPanel(parent, opts)
             cancelBtn:SetPoint("LEFT", okBtn, "RIGHT", 8, 0)
             nameDialog.okButton, nameDialog.cancelButton = okBtn, cancelBtn
             nameDialog.input = nameInput
+            nameInput:SetScript("OnEnterPressed", function() okBtn:Click() end)
         end
         nameDialog.titleText:SetText(title)
         nameInput:SetText("")
+        nameDialog.feedback:SetText("")
         nameCommit = commit
         card._nameDialog = nameDialog
         nameDialog:Show()
@@ -119,18 +134,21 @@ function UI:CreateProfilesPanel(parent, opts)
     card.buttons = {}
     local function makeAction(label, commit)
         return function()
-            local ok, err = pcall(commit)
+            local ok, result = pcall(commit)
             if not ok then
-                status:SetText("Profile action failed: " .. tostring(err))
-                RGX:Error("[RGXUI] profile action failed: " .. tostring(err))
+                status:SetText("Profile action failed: " .. tostring(result))
+                RGX:Error("[RGXUI] profile action failed: " .. tostring(result))
                 return
             end
-            status:SetText(ok == false and "Profile could not be changed." or "Profile updated.")
-            if ok then changed() end
+            -- Opening a name dialog is not a completed database operation.
+            if result == nil then return end
+            status:SetText(result == false and "Profile could not be changed." or "Profile updated.")
+            if result then changed() end
         end
     end
     local actionSpecs = {
         { "Create", makeAction("create", function() openNameDialog("Create Profile", function(name)
+            if opts.createFromCurrent then return db:CopyProfile(db:GetActiveProfile(), name) end
             return db:CreateProfile(name)
         end) end) },
         { "Rename", makeAction("rename", function() openNameDialog("Rename Profile", function(name)
@@ -171,9 +189,42 @@ function UI:CreateProfilesPanel(parent, opts)
     -- element so dropdown height never needs measuring.
     local profileLabel = self:CreateLabel(content, { text = "Profile", color = "accent" })
     profileLabel:SetPoint("TOPLEFT", highlight, "TOPRIGHT", 8, 0)
+    local deleteDialog, pendingDelete
+    local function requestDelete(name)
+        if name == "Default" then return end
+        if type(RGX.SafeCloseDropDownMenus) == "function" then RGX:SafeCloseDropDownMenus() end
+        pendingDelete = name
+        if not deleteDialog then
+            deleteDialog = self:CreateConfigDialog(parent, { title = "Delete Profile", width = 320, height = 140 })
+            deleteDialog:SetFrameStrata("FULLSCREEN_DIALOG")
+            deleteDialog:SetPoint("CENTER", parent, "CENTER", 0, 0)
+            deleteDialog.message = self:CreateLabel(deleteDialog, { text = "", width = 288 })
+            deleteDialog.message:SetPoint("TOPLEFT", deleteDialog, "TOPLEFT", 16, -44)
+            local confirm = self:CreateButton(deleteDialog, { text = "Delete", width = 84, height = 22,
+                onClick = function()
+                    local nameToDelete = pendingDelete
+                    deleteDialog:Hide()
+                    if nameToDelete and nameToDelete ~= "Default" and db:DeleteProfile(nameToDelete) then
+                        status:SetText("Profile deleted.")
+                        changed()
+                    end
+                end })
+            confirm:SetPoint("BOTTOMLEFT", deleteDialog, "BOTTOMLEFT", 16, 14)
+            local cancel = self:CreateButton(deleteDialog, { text = "Cancel", width = 84, height = 22,
+                onClick = function() deleteDialog:Hide() end })
+            cancel:SetPoint("LEFT", confirm, "RIGHT", 8, 0)
+            deleteDialog.confirmButton, deleteDialog.cancelButton = confirm, cancel
+            card._deleteDialog = deleteDialog
+        end
+        deleteDialog.message:SetText("Delete profile \"" .. name .. "\"?")
+        deleteDialog:Show()
+    end
     -- Reference-styled dropdown trigger from the shared dropdowns module.
     local picker = dropdowns:CreateNestedDropdown(content, {
         label = "", width = 220, buttonWidth = 220, triggerStyle = "retail",
+        menuWidth = 220,
+        autoWidth = { minWidth = 220, leftInset = 24,
+            opts = { inlineKeys = { "rgxProfileDelete" }, compactRight = true } },
         items = function()
             local items = {}
             for _, name in ipairs(db:ListProfiles()) do items[#items + 1] = { text = name, value = name } end
@@ -182,6 +233,17 @@ function UI:CreateProfilesPanel(parent, opts)
         value = db:GetActiveProfile(),
         getValueText = function(value) return value or "Default" end,
         onChange = function(value) if db:LoadProfile(value) then changed() end end,
+        onButtonCreated = function(row, item)
+            if row.rgxProfileDelete then row.rgxProfileDelete:Hide() end
+            if not item or item.value == "Default" or not item.value then return end
+            local name = item.value
+            local button = dropdowns:AddInlineButton(row, {
+                key = "rgxProfileDelete", text = "Delete", width = 44, height = 16,
+                onClick = function() requestDelete(name) end,
+            })
+            button:ClearAllPoints()
+            button:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+        end,
     })
     assert(picker, "RGX UI: no supported profile dropdown capability")
     picker:SetPoint("TOPLEFT", profileLabel, "BOTTOMLEFT", 0, -4)
@@ -200,19 +262,45 @@ function UI:CreateProfilesPanel(parent, opts)
     if opts.presets and #opts.presets > 0 then
         assert(type(opts.onPreset) == "function", "RGX UI: presets require onPreset")
         local rows = math.ceil(#opts.presets / 3)
+        local perPage = opts.presetsPerPage or 3
+        assert(type(perPage) == "number" and perPage >= 3 and perPage % 3 == 0,
+            "RGX UI: presetsPerPage must be a positive multiple of three")
+        local pageCount = math.ceil(#opts.presets / perPage)
+        local paged = opts.pagedPresets and pageCount > 1
+        local visibleRows = opts.pagedPresets and math.ceil(math.min(#opts.presets, perPage) / 3) or rows
         -- Titled-card insets (42 top, 12 bottom) + 12px pad + one 30px row each.
-        local presetsCard = self:CreateCard(parent, { title = "Presets", height = 66 + rows * 30 })
+        local presetsCard = self:CreateCard(parent, {
+            title = "Presets", height = 66 + visibleRows * 30,
+        })
         presetsCard:ClearAllPoints()
         presetsCard:SetPoint("TOPLEFT", card, "BOTTOMLEFT", 0, -8)
         presetsCard:SetPoint("TOPRIGHT", card, "BOTTOMRIGHT", 0, -8)
+        local pager
+        if paged then
+            pager = self:CreatePager(presetsCard.content, { pages = pageCount })
+            pager.nav:SetParent(presetsCard.headerBand)
+            pager.nav:ClearAllPoints()
+            pager.nav:SetPoint("RIGHT", presetsCard.headerBand, "RIGHT", -8, 0)
+            -- Navigation lives in the header; page bodies no longer need
+            -- the standalone pager's reserved navigation strip.
+            for _, page in ipairs(pager.frames) do
+                page:ClearAllPoints()
+                page:SetPoint("TOPLEFT", presetsCard.content, "TOPLEFT", 0, 0)
+                page:SetPoint("BOTTOMRIGHT", presetsCard.content, "BOTTOMRIGHT", 0, 0)
+            end
+            presetsCard.pager = pager
+        end
         card.presetsCard = presetsCard
         card.presetButtons = {}
         for i, preset in ipairs(opts.presets) do
             local col = (i - 1) % 3
-            local row = math.floor((i - 1) / 3)
-            local button = self:CreateButton(presetsCard.content, {
+            local localIndex = pager and ((i - 1) % perPage) or (i - 1)
+            local row = math.floor(localIndex / 3)
+            local host = pager and pager.frames[math.floor((i - 1) / perPage) + 1] or presetsCard.content
+            local button = self:CreateButton(host, {
                 text = preset.name or ("Preset " .. i), width = 170, height = 22,
                 onClick = function()
+                    if preset.disabled then return end
                     local ok, err = pcall(opts.onPreset, preset, db)
                     if not ok then
                         status:SetText("Preset could not be applied.")
@@ -222,7 +310,8 @@ function UI:CreateProfilesPanel(parent, opts)
                     end
                 end,
             })
-            button:SetPoint("TOPLEFT", presetsCard.content, "TOPLEFT", 12 + col * 182, -12 - row * 30)
+            button:SetPoint("TOPLEFT", host, "TOPLEFT", 12 + col * 182, -12 - row * 30)
+            if preset.disabled then button:Disable() end
             card.presetButtons[#card.presetButtons + 1] = button
         end
     end
