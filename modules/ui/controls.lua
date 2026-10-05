@@ -252,24 +252,6 @@ function UI:CreateSlider(parent, options)
 	container.valueLabel:SetPoint("TOPRIGHT", -28, 0)
 	if valueDisplay ~= "always" then container.valueLabel:Hide() end
 
-	-- Label-less controls expose meaning via the track hover tooltip instead
-	-- of a static row label; value stays governed by valueDisplay.
-	-- Compose with the hover-value handlers set above so both stay active.
-	if not hasLabel then
-		local enterHandler = button:GetScript("OnEnter")
-		local leaveHandler = button:GetScript("OnLeave")
-		button:SetScript("OnEnter", function(self)
-			if enterHandler then enterHandler(self) end
-			GameTooltip:SetOwner(self, "ANCHOR_TOP")
-			GameTooltip:SetText(label .. ": " .. (storage[key] or default) .. suffix)
-			GameTooltip:Show()
-		end)
-		button:SetScript("OnLeave", function(self)
-			if leaveHandler then leaveHandler(self) end
-			GameTooltip:Hide()
-		end)
-	end
-
 	local trackFrame = CreateFrame("Frame", nil, container)
 	trackFrame:SetPoint("TOPLEFT", container.label or container, hasLabel and "BOTTOMLEFT" or "TOPLEFT", 0, hasLabel and -4 or 0)
 	trackFrame:SetPoint("TOPRIGHT", container.valueLabel, "BOTTOMRIGHT", 0, hasLabel and -4 or 0)
@@ -284,10 +266,18 @@ function UI:CreateSlider(parent, options)
 	valueLabel:SetPoint("TOP", button, "BOTTOM", 0, 2)
 	valueLabel:Hide()
 
-	button:SetScript("OnEnter", function()
+	button:SetScript("OnEnter", function(self)
 		if valueDisplay ~= "none" then valueLabel:Show() end
+		if not hasLabel and GameTooltip then
+			GameTooltip:SetOwner(self, "ANCHOR_TOP")
+			GameTooltip:SetText(label .. ": " .. (storage[key] or default) .. suffix)
+			GameTooltip:Show()
+		end
 	end)
-	button:SetScript("OnLeave", function() valueLabel:Hide() end)
+	button:SetScript("OnLeave", function()
+		valueLabel:Hide()
+		if not hasLabel and GameTooltip then GameTooltip:Hide() end
+	end)
 
 	local track = trackFrame:CreateTexture(nil, "ARTWORK")
 	track:SetHeight(4)
