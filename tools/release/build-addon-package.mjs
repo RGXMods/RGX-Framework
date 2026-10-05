@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Source-only packer for thin consumers: TOC/XML load graph plus runtime assets.
 import assert from 'node:assert/strict';
-import {readFileSync,readdirSync,lstatSync,mkdirSync,writeFileSync} from 'node:fs';
+import {readFileSync,readdirSync,lstatSync,mkdirSync,writeFileSync,existsSync} from 'node:fs';
 import {resolve,relative,isAbsolute,join,dirname,basename} from 'node:path';
 import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
