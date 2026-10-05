@@ -158,4 +158,4 @@ handler ids) and routed through framework-managed, failure-isolated paths:
 - Inference: `slash` defaults to the lowercase addon name
 
 Everything above is additive; nothing on this page changes meaning.
-> **Stable:** v2.7.13, including slider customization.
+> **Beta:** v2.7.14-beta.1; stable remains v2.7.13. Slider customization is included since v2.7.13.
