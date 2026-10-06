@@ -2,6 +2,19 @@
 
 ## Current Release
 
+### [v2.7.14](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.14.md) - 2026-10-06
+
+Stable release of the beta-validated UI/minimap batch:
+
+- `UI:CreateButton` selected-state support for option tabs and toggles.
+- Minimap-button ownership respects ElvUI-style collectors; the backdrop frame
+  background moves to `frame.backgroundTexture` for collector compatibility.
+- Opt-in `legacyFlat` database migration preserves pre-existing flat settings
+  when adopting profiles.
+- Framework no longer prints its own startup banner to chat.
+
+## Recent Releases
+
 ### [v2.7.13](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.13.md) - 2026-10-05
 
 First stable release of the shared UI batch (tested as v2.7.13-beta.1/beta.2):
@@ -15,8 +28,6 @@ First stable release of the shared UI batch (tested as v2.7.13-beta.1/beta.2):
   restoration and reclaimed inline rows; card layout and reset alignment fixes.
 - Regression coverage across profiles, controls, layout, dropdowns, options,
   reset/poison recovery, and six-flavor packaging.
-
-## Recent Releases
 
 ### [v2.7.12](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.12.md) - 2026-10-03
 
