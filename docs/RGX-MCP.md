@@ -9,7 +9,7 @@
 | Runtime API | Lua calls such as `RGXAddon`, `addon:After`, and `RGX:GetUI()`; shared behavior runs inside WoW | Dependent addons; see [[API Reference]] |
 | Compatibility adapters | `RGX.API` normalizes Blizzard client differences internally; it is not an external service | Framework modules; documented consumer methods remain the front door |
 | Declarative contract | Canonical schema plus [[Declarative API]] describe addon definitions and shipped versus planned keys | Framework contributors, validation/generation tools, future Studio |
-| MCP adapter | Exposes four developer tools and two resources using stdio JSON-RPC | MCP-capable AI/developer clients and the source conformance test |
+| MCP adapter | Exposes authoring, audit, contract and reference tools/resources using stdio JSON-RPC | MCP-capable AI/developer clients and the source conformance test |
 | Studio application | Planned editor, project workflow, and preview UI consuming the shared contract | Future authors; see [[Studio Roadmap]] |
 
 The runtime API is essential; MCP is optional. MCP cannot query the live WoW
@@ -19,12 +19,24 @@ directly; it does not inherently require an MCP server.
 
 Keep the in-tree fixture today because existing CI/release workflows exercise
 its validation, generation, and audits against the actual RGX-Hello source. The
-implementation currently lives inside `src/server.js` alongside protocol code.
-Extracting a transport-independent shared engine is tracked in
+implementation now includes shared modules in `contract/engine/` for validation,
+generation, audit and definition editing. In this branch, addon validation and
+generation preflight delegate to `createValidateAddon`; the server formats the
+report for MCP rather than maintaining a second availability/grammar list.
+Remaining shared authoring-engine scope is tracked in
 [framework #8](https://gitlab.dicematrix.cloud/rgxmods/warcraft/RGX-Framework/-/issues/8),
-not a shipped package. Preserve equivalent coverage before relocating or replacing
+and is not a separately released authoring package. Preserve equivalent coverage before relocating or replacing
 the fixture. Runtime correctness and contract congruence take priority over new
 MCP transport features.
+
+**Local congruence correction (2026-10-06):** one-line controls now validate
+as implemented through the same engine in MCP and non-MCP callers. Shared
+vectors cover malformed grammar, signed ranges and numeric constraints, and
+E2E compares transport reports with direct engine reports. Future-key reports
+derive from schema `x-rgx-ships` annotations, including nested and referenced
+control forms; they are not a separately maintained MCP vocabulary. These
+corrections still require integration/publication; a long-running MCP process
+must restart to load edited source.
 
 ## Tools
 
@@ -86,7 +98,7 @@ MCP server. See [[Distribution]].
 
 ## The tandem loop
 
-`tools/rgx-mcp/test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK against the real [RGX-Hello](https://github.com/RGXMods/RGX-Hello) repo. It parses the actual curried `RGXAddon` table as Lua 5.1, validates that complete options object, generates the matching supported surface including named timers, and audits the actual Lua tree. It also verifies that `every` is shipped while `on` remains Tier 4, and proves with paired fixtures that RGXAuras consumer code passes while raw aura event/API references are reported, including references passed through `pcall` or stored for later use. An unparseable Lua source fails the audit closed. The validator separately reports `tier4KeysUsed`: schema validity alone does not establish runtime availability. The generator emits only its supported shipped forms.
+`tools/rgx-mcp/test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK against the real [RGX-Hello](https://github.com/RGXMods/RGX-Hello) repo. It parses the actual curried `RGXAddon` table as Lua 5.1, validates that complete options object, generates the matching supported surface including named timers and option columns, and audits the actual Lua tree. It also verifies that `every` is shipped while `on` remains Tier 4, and proves with paired fixtures that RGXAuras consumer code passes while raw aura event/API references are reported, including references passed through `pcall` or stored for later use. An unparseable Lua source fails the audit closed. The validator separately reports `tier4KeysUsed`: schema validity alone does not establish runtime availability. The generator emits only its supported shipped forms.
 
 ```bash
 node tools/rgx-mcp/test/test-rgx-hello.mjs "<RGX-Hello-checkout>"

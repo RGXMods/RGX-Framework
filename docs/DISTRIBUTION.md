@@ -153,10 +153,13 @@ byte-identical on the default branch, tags, and merge requests.
 
 ## Addon-Service Description
 
-`docs/description.html` is the canonical addon-service description source. The
+`docs/curse_description.html` is the CurseForge description source;
+`docs/wago_description.md` is the Wago description source. The
 release workflow packages and uploads the addon but does not update service-page
 HTML. Description changes must be applied to the configured service separately
 and verified against this file; the GitHub Wiki is generated automatically from
 the Markdown pages listed in `tools/wiki/manifest.json`.
+Service-page Markdown is explicitly listed as `sourceOnly` in that manifest
+so it remains maintained source without generating a duplicate Wiki page.
 > **Beta channel:** v2.7.14-beta.1 is opt-in; stable remains v2.7.14.
-> Beta channel: v2.7.15-beta.2 artifacts contain 109 runtime files, same as stable v2.7.14.
+> Beta candidate: v2.7.15-beta.3 artifacts contain 109 runtime files, same as stable v2.7.14.

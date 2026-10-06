@@ -2,6 +2,28 @@
 
 Visual identity, color palette, textures, and styling conventions.
 
+## Current Scope and Modular Skin Direction
+
+The current implementation supplies color themes, main-color presets, derived
+shades, corner preferences and shared frame primitives. `Design:SetTheme`
+updates primary/accent (and their aliases); structural colors still come from
+`Design.Colors`. A table containing `surface` or `border` is not a supported
+complete skin override just because those names are readable color tokens.
+
+Complete texture/frame skin selection remains tracked in
+[#21](https://gitlab.dicematrix.cloud/rgxmods/warcraft/RGX-Framework/-/issues/21).
+Its intended ownership is:
+
+- **Design/media:** theme keys, resolution/fallback, textures, borders and fonts.
+- **UI/layout:** frame geometry, scrolling, pages/cards, interaction and binding.
+- **Consumer:** choose presentation; supply feature-specific content and behavior.
+
+Build on the existing `SetTheme`/`WithTheme` and UI factories. A skin swap must
+preserve layout, callbacks and saved settings, including controls created lazily
+after panel construction. A color preset does not prove native Forever styling.
+Follow #21's phase order: stabilize the BLU-derived SQP layout before switching
+skins, then verify actual flavor assets/build and in-game rendering.
+
 ---
 
 ## Design Palette (`RGXDesign`)

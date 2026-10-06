@@ -10,7 +10,7 @@
 --       icon      = "Interface\\AddOns\\MyAddon\\icon.tga",
 --       version   = nil,            -- auto-read from TOC if nil
 --       author    = "Me",
---       website   = "discord.gg/...",
+--       website   = "https://realmgx.com",
 --       closeButton = true,         -- standard window close button (hidden when embedded in Settings)
 --       maxPerRow = 6,              -- tabs per row before wrapping
 --       tabs = {

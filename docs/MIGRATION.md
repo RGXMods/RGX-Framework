@@ -72,7 +72,10 @@ RGX timers use a native `OnUpdate` driver — no `C_Timer` dependency. The `Ever
 | `self:Hook(target, "Method", handler)` | `RGX:Hook(target, "Method", handler)` |
 | `self:Unhook(target, "Method")` | Not supported — RGX uses `hooksecurefunc` (unhookable) |
 
-RGX hooks are post-only and permanent. If you need pre-hooks or unhooking, use your own wrapper.
+RGX hooks are post-only and permanent. Pre-hooks/unhooking are not interchangeable
+with this interface; retain the existing supported implementation until a
+framework-owned alternative satisfies the consumer requirement. Do not replace
+Blizzard functions as a migration shortcut.
 
 ### Slash Commands
 
@@ -85,9 +88,14 @@ RGX hooks are post-only and permanent. If you need pre-hooks or unhooking, use y
 | Ace3 | RGX |
 |---|---|
 | `LibStub("AceDB-3.0"):New("MyAddonDB", defaults)` | `RGX:DB("MyAddonDB", defaults)` (basic) |
-| Profiles, namespaces, char/realm scopes | Not yet available — see roadmap |
+| Profiles and defaults | `RGX:NewDatabase(name, defaults, opts)`; profile switching and global data |
+| Namespaces and char/realm scopes | No blanket AceDB-equivalence claim; map actual consumer storage explicitly |
 
-RGX's current DB is simpler than AceDB. Profile support is planned (see [docs/ROADMAP.md](ROADMAP.md)).
+Profiles, migrations and `SerializeProfile`/`DeserializeProfile` are implemented
+in `core/systems/database.lua`. Preserve explicit `false`, nested defaults,
+global data and reload persistence when migrating. See [API](API.md) and
+[Testing](TESTING.md); do not treat a visually correct options panel as proof
+that its SavedVariables owner is correct.
 
 ---
 

@@ -2,6 +2,47 @@
 
 Internals, load order, module registration, and conventions.
 
+## Modularity Review — 2026-10-06
+
+RGX has a modular registry, but implementation ownership is uneven. Modularity
+means a coherent responsibility behind a small interface, not a directory per
+helper or a new public module for every file.
+
+| Area | Verified current structure | Ownership / next correction |
+|---|---|---|
+| Core systems | events, runtime/timers, DB and compatibility have dedicated implementations | Keep one owner per mechanic; addon-scoped methods delegate to these systems |
+| Fonts | registry/query/apply/styles/selectors are separate files sharing one module | Useful internal decomposition; retain one public Fonts interface |
+| UI | controls/options/layout/profiles are separate files sharing one UI module | Controls own interaction, layout owns geometry, options owns panel orchestration; split further only along real responsibilities |
+| Addon factory | `core/core.lua` contains timer declaration compilation, scoped methods, lifecycle wiring, inline grammar and control/layout rendering | Core should coordinate lifecycle; UI should interpret/render supported options through existing factories. Extract existing behavior without changing `RGXAddon` semantics or adding a second builder |
+| Design/media | theme colors and frame primitives in Design; registries in media modules | Extend existing presentation contracts for skins; keep geometry/state in UI, not per-skin consumer forks |
+| Game modules | registered with `category = "game"`, capability/flavor gates and lifecycle initialization | Keep domain state separate; verify callback contracts and missing capabilities before new DSL routes |
+| Contract/MCP | local validation/preflight now delegate to the shared engine; availability comes from schema annotations | Shared vectors verify MCP/direct reports; remaining normalization/generation/editor scope stays in #8 |
+| Runtime tests | most checks are developer-only, but `core/systems/database_test.lua` is XML-loaded | This is an explicit shipped diagnostic exception, not evidence that test relocation is complete |
+
+### Ordered Structural Work
+
+1. Preserve and reconcile current correctness fixes before moving their owners.
+   Several local feature slices touch the same addon factory; a parked change
+   is not integrated behavior.
+2. Integrate the local shared-validation correction in `contract/engine/` and MCP;
+   retain runtime Lua validation and conformance against the same supported forms.
+3. Separate addon lifecycle/registration from options compilation and rendering.
+   Use existing UI/layout primitives and private internal seams; preserve lazy
+   construction, DB ownership, callback arguments, ordering and scoped themes.
+4. Complete page/card composition and modular skin resolution through their
+   existing owners, with consumer/client evidence. Column distribution alone
+   is not a card model; palette selection alone is not a native frame skin.
+5. Relocate the runtime DB diagnostic only with an explicit supported replacement
+   for `/rgx dbtest`. Directory taxonomy moves come after dependency checks,
+   not before correctness or as a substitute for responsibility separation.
+
+These are scoped follow-ups under
+[#32](https://gitlab.dicematrix.cloud/rgxmods/warcraft/RGX-Framework/-/issues/32),
+contract engine [#8](https://gitlab.dicematrix.cloud/rgxmods/warcraft/RGX-Framework/-/issues/8),
+layout [#11](https://gitlab.dicematrix.cloud/rgxmods/warcraft/RGX-Framework/-/issues/11)
+and themes [#21](https://gitlab.dicematrix.cloud/rgxmods/warcraft/RGX-Framework/-/issues/21).
+This review records implementation seams, not completed refactors.
+
 ---
 
 ## Architectural Boundaries
@@ -30,7 +71,7 @@ MCP adapter · editor · CI · future Studio
 | Public API | `RGXFramework`, `RGXAddon`, `Get*` | Yes | Frozen 31-global surface — `npm run arch-check` fails any new `_G` write |
 | Contract | `contract/schemas`, `contract/engine` | No | Machine form of the declarative API; runtime remains authoritative for behavior |
 | Tooling | `tools/rgx-mcp`, `tools/ci`, `tools/reference`, `tools/release`, `tools/wiki` | No | Adapters over the contract; never own RGX semantics |
-| Tests | `tools/ci/*-check.mjs`, `modules/*/tests/` | No | Headless seams; in-game verification stays with the operator |
+| Tests | `tools/ci/*-check.mjs`, `modules/*/tests/` | Normally no | Headless checks stay outside runtime; XML still explicitly loads the `/rgx dbtest` diagnostic |
 | WoW reference | `.reference/` (untracked trees + tracked manifests/provenance) | No | Generated cache; sync via `tools/reference/sync-*.mjs` |
 
 Two machine-enforced invariants (`npm run arch-check`, wired into shared CI):
@@ -68,10 +109,10 @@ compat files preserve the shared `RGX.API` table (`RGX.API = RGX.API or {}`) —
 earlier revisions silently wiped predicates when the second file loaded, which
 is a load-order bug class we now test for (`tools/ci/compat-loader-check.mjs`).
 
-```text
 WoW loads files in the order declared in `RGX-Framework.xml`. The framework uses this sequence:
 
-```
+```text
+0. core/compat.lua, core/compat_api.lua — capability foundation before registration
 1. core/core.lua            — global object, module registry, Mixin, CopyTable, Clamp, Lerp, TableCount, Print/Warn/Error/Debug
 2. core/systems/config.lua  — framework defaults (debugMode, default font, size, flags)
 3. core/systems/database.lua— RGX:DB(name, defaults), RGX:InitDatabase()
@@ -80,6 +121,7 @@ WoW loads files in the order declared in `RGX-Framework.xml`. The framework uses
 5. core/systems/runtime.lua — After, Every, CancelTimer, Hook, RegisterSlashCommand, combat queue, Safe* helpers
 6. core/systems/utils.lua   — Trim, Split, TableKeys/Values/Contains/Map/Filter/Find, MergeTable, Round, Format, Clamp, StartsWith, EndsWith
 
+6b. modules/locale/locale.lua, overrides.lua — locale registry and framework translations
 7. modules/dropdowns/dropdowns.lua  — CreateNestedDropdown, CopyItem, NormalizeItems, ForceWidth, AddInlineButton
 8. modules/fonts/definitions.lua    — 36 font definitions, unavailableFonts blocklist
 9. modules/fonts/init.lua           — Fonts:Init(), RegisterModule("fonts")
@@ -96,16 +138,18 @@ WoW loads files in the order declared in `RGX-Framework.xml`. The framework uses
 20. modules/fonts/selectors.lua     — CreateStyleSelector, CreateSimpleFontSelector, AttachStyleSelector, AttachFontSelector
 21. modules/fonts/preview.lua       — FontPreview:Create, _ApplyPreviewSelection
 22. modules/colors/colors.lua       — full color API (lookup, math, wrapping, apply, picker)
-23. modules/colors/colorpicker.lua  — rectangular HSV color picker widget
+23. modules/colors/colorpicker.lua  — HSV color picker widget
 24. modules/textures/textures.lua   — statusbar texture registry, LSM import
 25. modules/design/design.lua       — Design.Colors static palette, visual building blocks
 26. modules/ui/controls.lua         — UI control factory (slider, toggle, label, dropdown, etc.)
 27. modules/ui/options.lua          — CreateOptionsPanel (tabbed settings window)
+27b. modules/ui/layout.lua, profiles.lua, guide.lua — composition, profiles and guide
 28. modules/minimap/minimap.lua     — circular-drag minimap button
 29. modules/sharedmedia/sharedmedia.lua — multi-type media registry, DBM/known-addon/generic scanners
 30. modules/combat/combat.lua       — combat enter/leave/kill/crit/low-health/encounter callbacks
 31. modules/petbattles/petbattles.lua — pet battle level/capture/state callbacks
 32. modules/reputation/reputation.lua — reputation and renown tracking callbacks
+32b. modules/auras/auras.lua, modules/tooltip/tooltip.lua — aura boundary and tooltip composition
 33. modules/databroker/databroker.lua — NewDataObject, LDB bridge
 34. modules/sound/sound.lua         — Sound:Register, variant playback, SavedVar integration
 35. modules/achievement/achievement.lua — achievement unlock callbacks
@@ -123,9 +167,13 @@ WoW loads files in the order declared in `RGX-Framework.xml`. The framework uses
 46. core/initialization.lua  — ADDON_LOADED handler, database init, module TryInit, OnReady lifecycle
 ```
 
-> Load order is authoritatively defined by `RGX-Framework.xml`. As of v2.1.0 every in-tree module is loaded — there are no dormant modules.
+> Exact load order is authoritative in `RGX-Framework.xml`; the labels above
+> summarize it and are not manifest indices. File existence alone does not prove
+> registration, initialization or availability on every flavor.
 
-Consumer addons with `RequiredDeps: RGX-Framework` are guaranteed to load after step 32 completes.
+Required dependencies load before the consumer's Lua files. This does not make
+gameplay data or consumer SavedVariables ready at chunk load: use the proper
+readiness/`ADDON_LOADED` lifecycle and capability gates.
 
 ---
 

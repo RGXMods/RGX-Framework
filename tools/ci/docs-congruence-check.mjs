@@ -43,7 +43,8 @@ const currentSurfaces = [
   "README.md",
   "docs/HOME.md",
   "docs/DISTRIBUTION.md",
-  "docs/description.html",
+  "docs/curse_description.html",
+  "docs/wago_description.md",
   "docs/CHANGES.md",
   "docs/RGX-MCP.md",
   "docs/STUDIO-ROADMAP.md",
@@ -53,7 +54,7 @@ const currentSurfaces = [
 ];
 const surfaceText = Object.fromEntries(currentSurfaces.map((path) => [path, read(path)]));
 
-for (const path of ["README.md", "docs/HOME.md", "docs/DISTRIBUTION.md", "docs/description.html", "docs/CHANGES.md"]) {
+for (const path of ["README.md", "docs/HOME.md", "docs/DISTRIBUTION.md", "docs/curse_description.html", "docs/wago_description.md", "docs/CHANGES.md"]) {
   if (!surfaceText[path].includes(`v${publishedVersion}`)) failures.push(`${path}: missing published release v${publishedVersion}`);
 }
 
@@ -61,7 +62,8 @@ const exactPublishedMarkers = [
   ["README.md", `**Latest published release:** [\`v${publishedVersion}\`]`],
   ["docs/HOME.md", `Current release \`v${publishedVersion}\``],
   ["docs/DISTRIBUTION.md", `[\`v${publishedVersion}\`](https://github.com/RGXMods/RGX-Framework/releases/tag/v${publishedVersion})`],
-  ["docs/description.html", `releases/tag/v${publishedVersion}\" style=\"color:#58a6ff\">v${publishedVersion}</a>`],
+  ["docs/curse_description.html", `releases/tag/v${publishedVersion}\" style=\"color:#58a6ff\">v${publishedVersion}</a>`],
+  ["docs/wago_description.md", `**Latest stable release:** [\`v${publishedVersion}\`]`],
 ];
 for (const [path, marker] of exactPublishedMarkers) {
   if (!surfaceText[path].includes(marker)) failures.push(`${path}: missing exact latest-published marker for v${publishedVersion}`);
@@ -96,7 +98,7 @@ if (publishedVersion !== version) {
   }
 }
 
-for (const path of ["README.md", "docs/HOME.md", "docs/DISTRIBUTION.md", "docs/description.html"]) {
+for (const path of ["README.md", "docs/HOME.md", "docs/DISTRIBUTION.md", "docs/curse_description.html", "docs/wago_description.md"]) {
   for (const [, , , , wowInterface] of flavorTocs) {
     if (!surfaceText[path].includes(wowInterface)) failures.push(`${path}: missing Interface ${wowInterface}`);
   }
@@ -110,12 +112,12 @@ for (const path of ["README.md", "docs/HOME.md"]) {
 }
 
 const distribution = surfaceText["docs/DISTRIBUTION.md"];
-const description = surfaceText["docs/description.html"];
+const description = surfaceText["docs/curse_description.html"];
 for (const [, docsLabel, descriptionLabel, tocPath, wowInterface] of flavorTocs) {
   const distributionRow = `| ${docsLabel} | \`${tocPath}\` | \`${wowInterface}\` |`;
   if (!distribution.includes(distributionRow)) failures.push(`docs/DISTRIBUTION.md: missing exact row ${distributionRow}`);
   const descriptionEntry = `&bull; ${descriptionLabel}: <span style="color:#58a6ff">${wowInterface}</span>`;
-  if (!description.includes(descriptionEntry)) failures.push(`docs/description.html: missing exact ${descriptionLabel}/${wowInterface} pairing`);
+  if (!description.includes(descriptionEntry)) failures.push(`docs/curse_description.html: missing exact ${descriptionLabel}/${wowInterface} pairing`);
 }
 
 for (const required of [
@@ -123,7 +125,7 @@ for (const required of [
   "release.json",
   "one product",
   "Source-Only Tooling",
-  "docs/description.html",
+  "docs/curse_description.html",
   `exactly ${publishedRuntimeFiles}`,
 ]) {
   if (!distribution.includes(required)) failures.push(`docs/DISTRIBUTION.md: missing ${required}`);
@@ -138,10 +140,17 @@ for (const [path, source] of Object.entries(surfaceText)) {
 const readme = surfaceText["README.md"];
 if (/\n\s*on\s*=\s*\{/.test(readme)) failures.push("README.md: primary example uses future declarative on form");
 if (!/\n\s*every\s*=\s*\{/.test(readme)) failures.push("README.md: primary example is missing shipped declarative every form");
-for (const path of ["README.md", "docs/HOME.md", "docs/description.html", "docs/SUPER-SIMPLE.md"]) {
+for (const path of ["README.md", "docs/HOME.md", "docs/curse_description.html", "docs/SUPER-SIMPLE.md"]) {
   if (!surfaceText[path].includes("SavedVariables: MyAddonDB")) failures.push(`${path}: persisted DB example is missing SavedVariables: MyAddonDB`);
 }
-if (!description.includes("/RGX-Framework/wiki")) failures.push("docs/description.html: wiki URL is not canonical");
+if (!description.includes("/RGX-Framework/wiki")) failures.push("docs/curse_description.html: wiki URL is not canonical");
+for (const path of ["README.md", "docs/curse_description.html", "docs/wago_description.md"]) {
+  if (!surfaceText[path].includes("https://realmgx.com")) failures.push(`${path}: missing current community URL`);
+  if (/discord\.gg\//.test(surfaceText[path])) failures.push(`${path}: uses a retired Discord invite URL`);
+}
+if (/\]\((?!https?:\/\/|#)[^)]+\)/.test(surfaceText["docs/wago_description.md"])) {
+  failures.push("docs/wago_description.md: service-page links must use absolute destinations");
+}
 
 const currentChangelogPath = `docs/changelogs/${version}.md`;
 const currentChangelog = existsSync(join(ROOT, currentChangelogPath)) ? read(currentChangelogPath) : "";
@@ -159,6 +168,7 @@ if (publishedVersion !== version) {
 const schema = JSON.parse(read("contract/schemas/rgx-addon.schema.json"));
 if (schema.properties?.on?.["x-rgx-ships"] !== "tier4") failures.push("schema: on must remain tier4 until runtime implementation lands");
 if (schema.properties?.every?.["x-rgx-ships"] !== "today") failures.push("schema: every must ship today with its runtime implementation");
+if (schema.properties?.options?.properties?.columns?.["x-rgx-ships"] !== "today") failures.push("schema: options.columns must ship today with its runtime implementation");
 
 const studio = surfaceText["docs/STUDIO-ROADMAP.md"];
 for (const required of ["work_items/30", "work_items/36", "Studio is still blocked"]) {
@@ -170,8 +180,14 @@ for (const required of ["accessible-only aura boundary", "fail closed", "raw UNI
   if (!auras.includes(required)) failures.push(`docs/AURAS.md: missing restricted-value boundary '${required}'`);
 }
 const mcpServer = read("tools/rgx-mcp/src/server.js") + read("contract/engine/audit-lua.mjs");
-for (const required of ["pcall catches errors but does not prevent taint", "fails closed and withholds restricted AuraData", "raw event payloads remain unsanitized", "typeof control === \"string\""]) {
+for (const required of ["pcall catches errors but does not prevent taint", "fails closed and withholds restricted AuraData", "raw event payloads remain unsanitized"]) {
   if (!mcpServer.includes(required)) failures.push(`tools/rgx-mcp/src/server.js: secret-aura advice missing '${required}'`);
+}
+if (!read("tools/rgx-mcp/src/server.js").includes("createValidateAddon({ schema: getSchema(), Ajv: Ajv2020 })")) {
+  failures.push("tools/rgx-mcp/src/server.js: addon validation must use the shared contract engine");
+}
+if (!read("contract/engine/validate-addon.mjs").includes("controlGrammar")) {
+  failures.push("contract/engine/validate-addon.mjs: missing shared one-line grammar validation");
 }
 
 const normalizedDistribution = distribution.replace(/\s+/g, " ");

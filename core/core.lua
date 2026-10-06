@@ -403,6 +403,66 @@ end
 
 -- ── RGX.Addon — one call spins up an addon ────────────────────────────────────
 
+-- Compile before registering resources; malformed strings must not silently
+-- disappear when a lazy tab is first opened. Tooling mirrors this grammar.
+local function ParseInlineControl(raw, owner)
+    raw = raw:gsub("%s+$", "")
+    local function invalid()
+        error("RGXAddon: invalid control string: " .. tostring(raw), 3)
+    end
+    local kind, rest = raw:match("^(%l+)%s+(.+)$")
+    if not kind then return invalid() end
+    if kind == "header" or kind == "label" then
+        local text = rest:match("^'([^']*)'%s*$")
+        if not text then return invalid() end
+        return { section = text }
+    elseif kind == "button" then
+        local text, method = rest:match("^'([^']*)'%s+([%a_][%w_]*)%s*$")
+        if not text then return invalid() end
+        return { button = text, action = function()
+            local fn = owner[method]
+            if type(fn) ~= "function" then error("RGXAddon: missing button method '" .. method .. "'") end
+            return fn(owner)
+        end }
+    end
+    local core, label = rest:match("^(.-)%s+'([^']*)'%s*$")
+    core = core or rest
+    if kind == "toggle" or kind == "color" or kind == "font" then
+        local key = core:match("^([^%s'\"]+)$")
+        if not key then return invalid() end
+        return { [kind] = key, label = label }
+    elseif kind == "slider" then
+        local key, range, step = core:match("^([^%s'\"]+)%s+(%S+)%s*(%S*)$")
+        local low, high
+        if range then low, high = range:match("^([+-]?%d*%.?%d+)%-([+-]?%d*%.?%d+)$") end
+        low, high = tonumber(low), tonumber(high)
+        local increment = step == "" and 1 or tonumber(step)
+        if not key or not low or not high or low > high or high >= math.huge or low <= -math.huge
+            or not increment or increment <= 0 or increment >= math.huge
+            or (step ~= "" and not step:match("^[+-]?%d*%.?%d+$")) then return invalid() end
+        return { slider = key, min = low, max = high, step = increment, label = label }
+    elseif kind == "dropdown" then
+        local key, list = core:match("^([^%s'\"]+)%s+([^%s'\"]+)$")
+        if not key or list:sub(1, 1) == "|" or list:sub(-1) == "|" or list:find("||", 1, true) then return invalid() end
+        local items = {}
+        for value in list:gmatch("[^|]+") do items[#items + 1] = value end
+        return { dropdown = key, label = label, items = items }
+    end
+    return invalid()
+end
+
+-- options.columns selects the tab content grid (1-3); anything else is
+-- rejected before the addon registers, like every other declaration error.
+local function CompileDeclarativeColumns(options)
+    if type(options) ~= "table" then return 1 end
+    local columns = options.columns
+    if columns == nil then return 1 end
+    if columns ~= 1 and columns ~= 2 and columns ~= 3 then
+        error("RGXAddon: options.columns must be 1, 2, or 3", 3)
+    end
+    return columns
+end
+
 function RGX.Addon(name, opts)
     if type(name) ~= "string" or name == "" then return end
     if opts == nil then
@@ -412,6 +472,7 @@ function RGX.Addon(name, opts)
     end
     local RGX = _G.RGXFramework
     local declarativeEvery = CompileDeclarativeEvery(opts.every)
+    local declarativeColumns = CompileDeclarativeColumns(opts.options)
 
     if RGX._addons and RGX._addons[name] then
         error("RGXAddon: addon '" .. name .. "' is already registered", 2)
@@ -421,6 +482,22 @@ function RGX.Addon(name, opts)
     end
 
     local addon = opts.table or {}
+    local compiledOptions
+    local compiledStrings = {}
+    if type(opts.options) == "table" then
+        compiledOptions = {}
+        for tab, controls in pairs(opts.options) do
+            if tab ~= "columns" then
+                if type(controls) ~= "table" then error("RGXAddon: options tab '" .. tostring(tab) .. "' must be a control list", 2) end
+                for _, control in ipairs(controls) do
+                    if type(control) == "string" then compiledStrings[control] = ParseInlineControl(control, addon) end
+                end
+                -- Keep the existing table list live: imperative setup may
+                -- append/replace table controls before lazy tab construction.
+                compiledOptions[tab] = controls
+            end
+        end
+    end
     addon.name = name
     RGX._addons = RGX._addons or {}
     RGX._addons[name] = addon
@@ -624,100 +701,82 @@ function RGX.Addon(name, opts)
             if UI and UI.CreateOptionsPanel then
                 -- One-line control grammar (docs/DECLARATIVE-API.md): strings
                 -- compile to the same table control forms before rendering.
-                local function ParseInlineControl(raw)
-                    if type(raw) ~= "string" then return raw end
-                    local kind, rest = raw:match("^(%w+)%s+(.+)$")
-                    if not kind then return nil end
-                    -- trailing quoted label: "slider volume 0-100 'Volume'"
-                    local core, label = rest:match("^(.-)%s+'(.-)'%s*$")
-                    if not core then core = rest end
-                    kind = kind:lower()
-                    if kind == "toggle" then
-                        local key = core:match("^(%S+)$")
-                        return key and { toggle = key, label = label } or nil
-                    end
-                    if kind == "slider" then
-                        local key, minv, maxv, step = core:match("^(%S+)%s+(%S+)%-(%S+)%s*(%S*)$")
-                        if not key then key = core:match("^(%S+)$") end
-                        return key and { slider = key, label = label,
-                            min = tonumber(minv), max = tonumber(maxv),
-                            step = tonumber(step) } or nil
-                    end
-                    if kind == "dropdown" then
-                        local key, list = core:match("^(%S+)%s+(.+)$")
-                        if not key then return nil end
-                        local items = {}
-                        for v in list:gmatch("[^|]+") do items[#items + 1] = v end
-                        return { dropdown = key, label = label, items = items }
-                    end
-                    if kind == "color" then
-                        local key = core:match("^(%S+)$")
-                        return key and { color = key, label = label } or nil
-                    end
-                    if kind == "font" then
-                        -- Compiles to a dropdown of registered font names.
-                        local key = core:match("^(%S+)$")
-                        if not key then return nil end
-                        local Fonts = RGX:GetFonts()
-                        local items = {}
-                        if Fonts and type(Fonts.GetOptionValues) == "function" then
-                            local values = Fonts:GetOptionValues() or {}
-                            for name in pairs(values) do
-                                items[#items + 1] = name
-                            end
-                            table.sort(items)
-                        end
-                        return { dropdown = key, label = label or "Font", items = items }
-                    end
-                    if kind == "button" then
-                        local text, method = raw:match("^button%s+'([^']*)'%s+(%S+)%s*$")
-                        if not text then return nil end
-                        return { button = text, action = function(self)
-                            local fn = type(self) == "table" and self[method]
-                            if type(fn) == "function" then fn(self) end
-                        end }
-                    end
-                    if kind == "header" or kind == "label" then
-                        local text = rest:match("^'([^']*)'") or core
-                        return { section = text }
-                    end
-                    return nil
-                end
                 local tabs = {}
-                for tabName, controls in pairs(opts.options) do
+                for tabName, controls in pairs(compiledOptions) do
                     tabs[#tabs + 1] = {
                         text = tabName,
                         content = function(frame)
-                            -- Scroll page + flow layout: controls render in
+                            -- Scroll page + column flows: controls render in
                             -- declaration order with no overlap and scroll
                             -- when the page is taller than the content area.
+                            -- Balanced sequential chunks keep related controls
+                            -- adjacent down each column.
                             local canvas = UI:CreateScrollPage(frame)
-                            local flow = UI:CreateFlowLayout(canvas)
-                            for _, ctrl0 in ipairs(controls) do
-                                local ctrl = ParseInlineControl(ctrl0)
+                            local hosts, flows
+                            if declarativeColumns > 1 and UI.CreateColumns then
+                                hosts = { UI:CreateColumns(canvas, declarativeColumns) }
+                                flows = {}
+                                for _, host in ipairs(hosts) do
+                                    flows[#flows + 1] = UI:CreateFlowLayout(host)
+                                end
+                            else
+                                hosts = { canvas }
+                                flows = { UI:CreateFlowLayout(canvas) }
+                            end
+                            local perColumn, remainder =
+                                math.floor(#controls / #flows), #controls % #flows
+                            local boundaries, start = {}, 1
+                            for i = 1, #flows do
+                                local size = perColumn + (i <= remainder and 1 or 0)
+                                boundaries[i] = { start = start, stop = start + size - 1 }
+                                start = start + size
+                            end
+                            local index = 0
+                            for _, rawControl in ipairs(controls) do
+                                index = index + 1
+                                local slot = #flows
+                                for i = 1, #flows do
+                                    if index <= boundaries[i].stop then slot = i break end
+                                end
+                                local host, flow = hosts[slot], flows[slot]
+                                local ctrl = rawControl
+                                if type(ctrl) == "string" then
+                                    ctrl = compiledStrings[ctrl] or ParseInlineControl(ctrl, addon)
+                                end
                                 if ctrl and type(ctrl) == "table" then
                                     local w
                                     if type(ctrl.toggle) == "string" then
-                                        w = UI:CreateToggle(canvas, { key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default })
+                                        w = UI:CreateToggle(host, { key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default })
                                     elseif type(ctrl.slider) == "string" then
-                                        w = UI:CreateSlider(canvas, { key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper), storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100, step = ctrl.step or 1, suffix = ctrl.suffix, progress = ctrl.progress, valueDisplay = ctrl.valueDisplay })
+                                        w = UI:CreateSlider(host, { key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper), storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100, step = ctrl.step or 1, suffix = ctrl.suffix, progress = ctrl.progress, valueDisplay = ctrl.valueDisplay })
                                     elseif type(ctrl.color) == "string" then
-                                        w = UI:CreateColorPicker(canvas, { key = ctrl.color, label = ctrl.label or ctrl.color:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default or addon.db[ctrl.color], onChange = function(r, g, b) addon.db[ctrl.color] = { r = r, g = g, b = b } end })
+                                        w = UI:CreateColorPicker(host, { key = ctrl.color, label = ctrl.label or ctrl.color:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default or addon.db[ctrl.color], onChange = function(r, g, b) addon.db[ctrl.color] = { r = r, g = g, b = b } end })
+                                    elseif type(ctrl.font) == "string" then
+                                        local Fonts = RGX:GetFonts()
+                                        if Fonts and Fonts.AttachFontSelector then
+                                            w = Fonts:AttachFontSelector(host, addon.db, ctrl.font, { label = ctrl.label or "Font" })
+                                            if w and w.HookScript then
+                                                w:HookScript("OnShow", function() w:RefreshFromDB() end)
+                                            end
+                                        end
                                     elseif type(ctrl.dropdown) == "string" and Drops then
                                         local items = {}
                                         for _, v in ipairs(ctrl.items or {}) do items[#items + 1] = { text = tostring(v), value = v } end
-                                        w = Drops:CreateNestedDropdown(canvas, { label = ctrl.label or ctrl.dropdown:gsub("^%l", string.upper), items = items, width = ctrl.width or 260, value = addon.db[ctrl.dropdown], onChange = function(v) addon.db[ctrl.dropdown] = v end })
+                                        w = Drops:CreateNestedDropdown(host, { label = ctrl.label or ctrl.dropdown:gsub("^%l", string.upper), items = items, width = ctrl.width or 260, value = addon.db[ctrl.dropdown], onChange = function(v) addon.db[ctrl.dropdown] = v end })
                                     elseif type(ctrl.button) == "string" and type(ctrl.action) == "function" then
-                                        w = UI:CreateButton(canvas, { text = ctrl.button, width = ctrl.width, height = ctrl.height, onClick = ctrl.action })
+                                        w = UI:CreateButton(host, { text = ctrl.button, width = ctrl.width, height = ctrl.height, onClick = ctrl.action })
                                     elseif type(ctrl.section) == "string" then
-                                        w = UI:CreateLabel(canvas, { text = ctrl.section, size = "normal", color = "accent" })
+                                        w = UI:CreateLabel(host, { text = ctrl.section, size = "normal", color = "accent" })
                                     end
                                     if w then flow:Add(w) end
                                 end
                             end
                             local function reflow()
                                 if canvas:GetWidth() <= 0 then return end
-                                local used = flow:Apply()
+                                local used = 0
+                                for _, flow in ipairs(flows) do
+                                    used = math.max(used, flow:Apply())
+                                end
                                 canvas:SetHeight(math.max(1, used))
                             end
                             reflow()
@@ -760,6 +819,14 @@ function RGX.Addon(name, opts)
                     maxPerRow = pick(opts.maxPerRow,   geom.maxPerRow),
                     theme     = theme,
                 })
+                if addon.db.OnProfileChanged then
+                    addon.db:OnProfileChanged(function()
+                        if addon.panel then
+                            addon.panel:InvalidateAllTabs()
+                            addon.panel:Refresh()
+                        end
+                    end)
+                end
             end -- UI check
         end -- addon.db check
 

@@ -52,6 +52,9 @@ RGXAddon "MyAddon" {
   slash = "myaddon",
   minimap = true,
   db = { enabled = true },
+  options = {
+    General = { { toggle = "enabled", label = "Enable Addon" } },
+  },
 }</pre>
     <div style="margin-top:8px;line-height:1.6">
       That is a complete addon: profile-aware saved settings, a tabbed options panel with db-bound controls, a slash command, a minimap button, and branded chat output. Individual systems are also available &agrave; la carte through <code>RGX:RegisterEvent</code>, <code>RGX:After</code>, <code>RGX:GetFonts()</code>, <code>RGX:GetColors()</code>, <code>RGX:CreateMinimapButton</code>, and friends.
@@ -71,7 +74,7 @@ RGXAddon "MyAddon" {
       &bull; <a href="https://github.com/RGXMods/RGX-Framework/wiki" style="color:#58a6ff">Full Wiki</a> &mdash; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/SUPER-SIMPLE.md" style="color:#58a6ff">Super Simple Integration</a> &middot; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/MIGRATION.md" style="color:#58a6ff">Migration Guide</a><br/>
       &bull; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/API.md" style="color:#58a6ff">API Reference</a> &middot; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/ARCHITECTURE.md" style="color:#58a6ff">Architecture</a> &middot; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/DECLARATIVE-API.md" style="color:#58a6ff">Declarative API</a> &middot; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/TROUBLESHOOTING.md" style="color:#58a6ff">Troubleshooting</a><br/>
       &bull; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/FONTS.md" style="color:#58a6ff">Fonts</a> &middot; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/DROPDOWNS.md" style="color:#58a6ff">Dropdowns</a> &middot; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/THEMING.md" style="color:#58a6ff">Theming &amp; Design</a> &middot; <a href="https://github.com/RGXMods/RGX-Framework/blob/main/docs/CHANGES.md" style="color:#58a6ff">Changelog</a><br/>
-      &bull; <a href="https://github.com/RGXMods/RGX-Framework/issues" style="color:#58a6ff">GitHub Issues</a> &middot; Discord: <span style="color:#58a6ff">https://discord.gg/N7kdKAHVVF</span>
+      &bull; <a href="https://gitlab.dicematrix.cloud/rgxmods/warcraft/RGX-Framework/-/issues" style="color:#58a6ff">Development Issues</a> &middot; <a href="https://realmgx.com" style="color:#58a6ff">Community / Discord</a>
     </div>
   </div>
 

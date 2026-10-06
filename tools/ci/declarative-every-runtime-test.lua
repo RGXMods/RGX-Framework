@@ -258,6 +258,94 @@ imperativeAddon:CancelTimer(afterTimer)
 imperativeAddon:CancelTimer(everyTimer)
 RGX:UpdateTimers(0)
 
+-- Verify declaration-time rejection and the actual lazy rendering/callback
+-- path. Extend the existing fixture rather than introducing another runner.
+for index, control in ipairs({ "toggle enabled extra", "button nonsense", "slider offset nonsense",
+    "slider offset 5-1", "slider offset 0-1 0", "dropdown mode low||high", "header 'Title' extra" }) do
+    local name = "InvalidControl" .. index
+    local handlers = loadHandlerCount()
+    local ok, err = pcall(RGXAddon, name, { slash = name:lower(), options = { General = { control } } })
+    check(not ok and contains(err, "invalid control string"), "malformed control must explain its rejection")
+    check(not RGX:GetAddon(name) and loadHandlerCount() == handlers, "malformed control must not leak registration")
+    check(not SlashCmdList[name:upper()], "malformed control must not leak slash registration")
+end
+local installPanelRefresh = assert(loadstring("return function(panel, QueueBannerBuild, ClearContent, CreateAddHelper, ReflowScrollContent)\n"
+    .. __rgxPanelRefreshSource .. "\nend"))()
+local widgets, fontBindings, fontRefreshes, panelRefreshes = {}, 0, 0, 0
+local profileChanged, panelOpts
+local storage = { titleFont = "Friz Quadrata" }
+function storage:OnProfileChanged(callback) profileChanged = callback end
+function RGX:NewDatabase() return storage end
+local function widget()
+    return { GetWidth = function() return 100 end, SetHeight = function() end,
+        HookScript = function(self, event, callback) self[event] = callback end }
+end
+local ui = {
+    CreateScrollPage = function() return widget() end,
+    CreateFlowLayout = function() return { Add = function() end, Apply = function() return 80 end } end,
+    CreateSlider = function(_, _, opts) widgets[opts.key] = opts return widget() end,
+    CreateToggle = function() return widget() end,
+    CreateLabel = function() return widget() end,
+    CreateColorPicker = function() return widget() end,
+    CreateButton = function(_, _, opts)
+        local button = widget() button.click = opts.onClick widgets[opts.text] = button return button
+    end,
+    CreateOptionsPanel = function(_, opts)
+        panelOpts = opts
+        local content, hidden = widget(), widget()
+        function content:IsShown() return true end
+        function hidden:IsShown() return false end
+        local panel = { contents = { content, hidden }, tabs = { { _tabInfo = opts.tabs[1] } } }
+        installPanelRefresh(panel, function() end,
+            function() panelRefreshes = panelRefreshes + 1 end,
+            function(frame) return frame end, function() end)
+        return panel
+    end,
+}
+function RGX:GetUI() return ui end
+function RGX:GetFonts()
+    return { AttachFontSelector = function(_, _, db, key)
+        check(db == storage and key == "titleFont", "font must use the existing DB-bound selector")
+        fontBindings = fontBindings + 1
+        local selector = widget()
+        function selector:RefreshFromDB() self.value = db[key] fontRefreshes = fontRefreshes + 1 end
+        selector:RefreshFromDB()
+        widgets.font = selector
+        return selector
+    end }
+end
+function RGX:GetDropdowns() return { CreateNestedDropdown = function() return widget() end } end
+local tableClickOwner
+local owner = {}
+local inlineControls = {
+    "slider negative -10--5", "slider decimal -1.5-0.5 .25 'Offset'", "font titleFont",
+    "button 'Reset' ResetSettings", "dropdown mode low|high", "header 'Settings'", "toggle enabled",
+    { button = "Table", action = function(frame) tableClickOwner = frame end },
+    { slider = "original", min = 0, max = 1 },
+}
+local inlineAddon = RGXAddon("InlineControls", { table = owner, db = {}, options = { General = inlineControls }, onInit = function(addon)
+    function addon:ResetSettings() self.resetCount = (self.resetCount or 0) + 1 end
+    inlineControls[#inlineControls + 1] = { slider = "late", min = 1, max = 2 }
+    inlineControls[9] = { slider = "replaced", min = -20, max = -10 }
+end })
+RGX:FireEvent("ADDON_LOADED", "InlineControls")
+panelOpts.tabs[1].content(widget())
+check(widgets.negative.min == -10 and widgets.negative.max == -5, "negative range must not default or change signs")
+check(widgets.replaced.min == -20 and widgets.replaced.max == -10 and not widgets.original, "table list replacement during onInit must remain visible")
+check(widgets.late.min == 1 and widgets.late.max == 2, "table list append during onInit must remain visible")
+check(widgets.decimal.min == -1.5 and widgets.decimal.max == 0.5 and widgets.decimal.step == 0.25, "signed decimal bounds and step must survive rendering")
+widgets.Reset.click(widgets.Reset)
+check(inlineAddon.resetCount == 1, "string method must receive its owning addon, including methods added during onInit")
+widgets.Table.click(widgets.Table)
+check(tableClickOwner == widgets.Table, "existing table-form callback arguments must remain unchanged")
+storage.titleFont = "Arial Narrow"
+widgets.font.OnShow()
+check(widgets.font.value == "Arial Narrow" and fontRefreshes == 2, "font selection must restore when shown")
+storage.titleFont = "Morpheus"
+profileChanged()
+check(panelRefreshes == 1 and fontBindings == 2 and widgets.font.value == "Morpheus", "profile change must rebuild visible controls against current storage")
+check(inlineAddon.panel.contents[2]._dirty == true, "hidden tabs must remain dirty until next selected")
+
 _G.__rgxRuntimeTestResult = string.format(
     "LUA RUNTIME OK  declarative every (%d checks, Lua %s)",
     checks,

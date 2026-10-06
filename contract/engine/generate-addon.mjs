@@ -77,8 +77,9 @@ function generateAddonLua(spec) {
     if (s.progress !== undefined) parts.push(`progress = ${Boolean(s.progress)}`);
     controls.push(`            { ${parts.join(", ")} },`);
   }
-  if (controls.length) {
+  if (controls.length || spec.columns !== undefined) {
     out.push(`    options = {`);
+    if (spec.columns !== undefined) out.push(`        columns = ${spec.columns},`);
     out.push(`        General = {`);
     out.push(...controls);
     out.push(`        },`);
