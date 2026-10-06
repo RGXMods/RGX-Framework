@@ -34,16 +34,11 @@ check(RGX.version == "2.7.5",
 -- ── 1: login messages default ON
 check(RGX:IsLoginMessagesEnabled() == true, "login messages default ON")
 
--- ── framework startup: exactly one login line, icon + [RGX] tag
+-- ── framework startup: never announces itself to chat
 startCapture()
 RGX.eventFrame.scripts.OnEvent(RGX.eventFrame, "ADDON_LOADED", "RGX-Framework")
 stopCapture()
-check(#captured == 1, "framework init should emit exactly one startup line, got " .. #captured)
-check(contains(captured[1], "RGX-Framework v2.7.5 loaded."), "startup line text")
-check(contains(captured[1], "[|r|cff58be81RGX|r|cffffffff]|r"),
-    "startup line carries the colored [RGX] tag")
-check(contains(captured[1], "logo.tga"), "startup line carries the framework icon")
-check(contains(captured[1], " - "), "startup line carries the icon-tag spacer")
+check(#captured == 0, "framework init must not emit a startup line, got " .. #captured)
 
 -- ── 6: CreateChatPrefix bare form = icon + spacer + [RGX]
 local prefix = RGX:CreateChatPrefix()
