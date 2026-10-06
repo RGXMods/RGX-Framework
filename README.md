@@ -4,7 +4,7 @@
 **One dependency. Everything your addon suite needs.**
 
 RGX-Framework is a modern, self-contained WoW addon framework for Retail,
-Classic Era, TBC, Wrath/Titan, Cataclysm, and Mists. One shared dependency
+WoW Forever (beta), Classic Era, TBC, Wrath/Titan, Cataclysm, and Mists. One shared dependency
 provides events, timers, hooks, slash commands, minimap buttons, options panels,
 database profiles, DataBroker, media, dropdowns, UI controls, and a visual design
 system. It is not a player-facing addon; it loads silently and exposes an API.
@@ -211,7 +211,7 @@ RGX-Framework ships complete WoW client locale coverage for its own
 user-facing output across all twelve WoW client locales: **enUS** (base),
 **deDE**, **esES**, **esMX**, **frFR**, **itIT**, **koKR**, **ptBR**,
 **ptPT**, **ruRU**, **zhCN**, **zhTW**. The framework's own slash-command
-output, login line, control fallback labels, and reputation rank names are
+output, control fallback labels, and reputation rank names are
 read from a single locale registry (`modules/locale/locale.lua` +
 `modules/locale/overrides.lua`). The English base loads unconditionally and
 every non-English block is guarded on `GetLocale()`, so untranslated keys
@@ -275,7 +275,7 @@ RGX-Framework publishes only the framework addon package. See
 
 - **Latest published release:** [`v2.7.14`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.14)
 
-- **Clients:** Retail `120100`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
+- **Clients:** Retail `120100`, WoW Forever (beta) `16001`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
 - **Distribution:** one runtime-only addon package; see [Distribution](docs/DISTRIBUTION.md)
 - `C_AddOns.GetAddOnMetadata` and `GetAddOnMetadata` both handled
 - `ColorPickerFrame` old API and `ColorPickerInteraction` new API both handled
