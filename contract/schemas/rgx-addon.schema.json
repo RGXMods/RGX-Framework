@@ -180,8 +180,8 @@
       ]
     },
     "controlString": {
-      "x-rgx-ships": "tier4",
-      "description": "One-line control string, contract grammar: \"toggle <key> ['Label']\" | \"slider <key> <min>-<max> [step] ['Label']\" | \"dropdown <key> a|b|c ['Label']\" | \"color <key> ['Label']\" | \"font <key> ['Label']\" | \"button 'Text' <method>\" | \"header 'Text'\" | \"label 'Text'\". Labels inferred from keys when omitted.",
+      "x-rgx-ships": "today",
+      "description": "One-line control string, contract grammar: \"toggle <key> ['Label']\" | \"slider <key> <min>-<max> [step] ['Label']\" | \"dropdown <key> a|b|c ['Label']\" | \"color <key> ['Label']\" | \"font <key> ['Label']\" | \"button 'Text' <method>\" | \"header 'Text'\" | \"label 'Text'\". Labels inferred from keys when omitted. Compiles to the same table control forms at render time in core/core.lua.",
       "type": "string",
       "pattern": "^(toggle|slider|dropdown|color|font|button|header|label)\\s+.+$"
     },

@@ -99,6 +99,30 @@ UI work must still use RGX's safe helpers.
 { button = "Button Text", action = function() ... end, width = 120, height = 22 }
 ```
 
+### One-line control strings (shipped)
+
+Strings compile to the same table forms:
+
+```lua
+options = {
+    General = {
+        "header 'Settings'",
+        "toggle enabled 'Enable Addon'",
+        "slider volume 0-100 'Volume'",
+        "dropdown quality low|high 'Quality'",
+        "color alertColor 'Alert Color'",
+        "font titleFont 'Title Font'",
+        "button 'Reset All' ResetSettings",
+        "label 'Notes:'",
+    },
+}
+```
+
+`font` renders a dropdown of registered font names from the framework's font
+registry. `header`/`label` render the section-style text row. Unparseable
+strings are ignored silently at render time—use the validators to catch them
+at authoring time.
+
 Only the db key is required — labels assume the capitalized key, slider range
 assumes 0–100, color default assumes the db default for that key. Every
 control reads its initial state from `addon.db` and writes changes back —
@@ -153,7 +177,6 @@ handler ids) and routed through framework-managed, failure-isolated paths:
 ## Coming in Tier 4 (frozen contract)
 
 - `on = { levelup = fn, ["quest.turnin"] = fn, ... }` — human trigger words, never WoW event names
-- One-line control strings: `"toggle enabled"`, `"slider volume 0-100"`
 - `options.columns = 1|2|3` — card-grid layouts
 - Inference: `slash` defaults to the lowercase addon name
 
