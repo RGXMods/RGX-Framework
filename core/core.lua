@@ -622,6 +622,67 @@ function RGX.Addon(name, opts)
             local UI = RGX:GetUI()
             local Drops = RGX:GetDropdowns()
             if UI and UI.CreateOptionsPanel then
+                -- One-line control grammar (docs/DECLARATIVE-API.md): strings
+                -- compile to the same table control forms before rendering.
+                local function ParseInlineControl(raw)
+                    if type(raw) ~= "string" then return raw end
+                    local kind, rest = raw:match("^(%w+)%s+(.+)$")
+                    if not kind then return nil end
+                    -- trailing quoted label: "slider volume 0-100 'Volume'"
+                    local core, label = rest:match("^(.-)%s+'(.-)'%s*$")
+                    if not core then core = rest end
+                    kind = kind:lower()
+                    if kind == "toggle" then
+                        local key = core:match("^(%S+)$")
+                        return key and { toggle = key, label = label } or nil
+                    end
+                    if kind == "slider" then
+                        local key, minv, maxv, step = core:match("^(%S+)%s+(%S+)%-(%S+)%s*(%S*)$")
+                        if not key then key = core:match("^(%S+)$") end
+                        return key and { slider = key, label = label,
+                            min = tonumber(minv), max = tonumber(maxv),
+                            step = tonumber(step) } or nil
+                    end
+                    if kind == "dropdown" then
+                        local key, list = core:match("^(%S+)%s+(.+)$")
+                        if not key then return nil end
+                        local items = {}
+                        for v in list:gmatch("[^|]+") do items[#items + 1] = v end
+                        return { dropdown = key, label = label, items = items }
+                    end
+                    if kind == "color" then
+                        local key = core:match("^(%S+)$")
+                        return key and { color = key, label = label } or nil
+                    end
+                    if kind == "font" then
+                        -- Compiles to a dropdown of registered font names.
+                        local key = core:match("^(%S+)$")
+                        if not key then return nil end
+                        local Fonts = RGX:GetFonts()
+                        local items = {}
+                        if Fonts and type(Fonts.GetOptionValues) == "function" then
+                            local values = Fonts:GetOptionValues() or {}
+                            for name in pairs(values) do
+                                items[#items + 1] = name
+                            end
+                            table.sort(items)
+                        end
+                        return { dropdown = key, label = label or "Font", items = items }
+                    end
+                    if kind == "button" then
+                        local text, method = raw:match("^button%s+'([^']*)'%s+(%S+)%s*$")
+                        if not text then return nil end
+                        return { button = text, action = function(self)
+                            local fn = type(self) == "table" and self[method]
+                            if type(fn) == "function" then fn(self) end
+                        end }
+                    end
+                    if kind == "header" or kind == "label" then
+                        local text = rest:match("^'([^']*)'") or core
+                        return { section = text }
+                    end
+                    return nil
+                end
                 local tabs = {}
                 for tabName, controls in pairs(opts.options) do
                     tabs[#tabs + 1] = {
@@ -632,8 +693,9 @@ function RGX.Addon(name, opts)
                             -- when the page is taller than the content area.
                             local canvas = UI:CreateScrollPage(frame)
                             local flow = UI:CreateFlowLayout(canvas)
-                            for _, ctrl in ipairs(controls) do
-                                if type(ctrl) == "table" then
+                            for _, ctrl0 in ipairs(controls) do
+                                local ctrl = ParseInlineControl(ctrl0)
+                                if ctrl and type(ctrl) == "table" then
                                     local w
                                     if type(ctrl.toggle) == "string" then
                                         w = UI:CreateToggle(canvas, { key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default })
