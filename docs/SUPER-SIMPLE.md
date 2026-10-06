@@ -57,8 +57,9 @@ Repeating work uses named `every` timers:
 ```
 
 > **This surface is governed by the frozen [[Declarative API]] contract.** Named
-> timers ship today. Tier 4 adds human trigger words (`on = { levelup = fn }`),
-> one-line control strings (`"slider volume 0-100"`), and grid card layouts.
+> timers ship today. One-line control strings (`"slider volume 0-100"`) ship
+> in v2.7.15-beta.2; stable authors can use the table forms above.
+> Human trigger words (`on = { levelup = fn }`) remain Tier 4.
 > Everything is additive: what you write today keeps working forever.
 
 ## Just Want Fonts?
@@ -152,4 +153,4 @@ RGX:Font(myText, selectedFont)
 3. Module globals like `_G.RGXFonts` are created by RGX-Framework, so à la carte helpers are one line each
 
 No bridge layer, no per-addon plumbing, and no need to rebuild dropdowns by hand.
-> **Beta:** v2.7.15-beta.2; stable remains v2.7.14. Beta features do not change the existing stable bare forms.
+> **Beta candidate:** v2.7.15-beta.3; stable remains v2.7.14. Beta features do not change the existing stable bare forms.

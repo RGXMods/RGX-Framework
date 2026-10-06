@@ -1,4 +1,4 @@
-# Why Authors Use Ace3
+# Ace3 and RGX: Capabilities, Architecture, and Direction
 
 This document is not here to dismiss Ace3.
 
@@ -6,15 +6,70 @@ Ace3 became popular because it solved a real problem:
 
 - WoW addon authors kept rebuilding the same boring infrastructure
 
-If RGX wants to be better, it needs to beat Ace3 at the outcome, not just replace names.
+RGX should preserve that outcome: remove repeated infrastructure work while
+keeping consumer addons simple. It is not an Ace3 clone or a ranking of libraries.
 
-BLU already points in the right direction here:
+BLU supplied useful design references. RGX's current ownership model is:
 
-- one addon-owned runtime
-- one addon-owned module registry
-- one addon-owned event system
+- one shared framework runtime
+- one framework-owned module registry
+- one framework-owned event system
 
-RGX should build on that style of framework design instead of rebuilding Ace's embedded-library architecture.
+Consumers depend on that instance through `RequiredDeps: RGX-Framework`.
+Actual adoption must be verified per addon and flavor; BLU_Classic still uses Ace3.
+
+## The Architectural Distinction
+
+Ace3 supplies reusable runtime libraries. RGX combines reusable runtime
+infrastructure with a declarative authoring contract, design/media primitives,
+development-time validation and generation, and centralized WoW compatibility
+and safety infrastructure.
+
+The distinction is the authoring path, not a blanket claim that each RGX module
+is better or that Ace3 has no safety features or surrounding tooling ecosystem.
+
+```text
+Human / agent / editor
+        │
+        ├─ RGXAddon definition ────────┐
+        └─ supported direct Lua API ──┤
+                                      ▼
+                        RGX runtime (Lua, in WoW)
+                        ├─ core lifecycle/events/timers/DB
+                        ├─ library UI/design/media modules
+                        └─ capability-gated game modules
+                                      │
+                                compatibility → WoW API
+
+Development time only:
+canonical contract/schema/docs → shared authoring engine → MCP/editor/CI
+                 ↕ conformance with the same runtime forms
+```
+
+Tools can validate and generate supported definitions before WoW loads them.
+Hand-written Lua uses the same public forms without requiring those tools.
+The runtime never imports the JSON schema, Node engine, MCP, or Studio.
+
+Five capabilities distinguish RGX's framework direction:
+
+1. **Declarative authoring:** `RGXAddon "Name" { ... }` composes existing
+   runtime primitives. Simple forms supply defaults; advanced forms expose
+   supported choices. Future keys are explicitly marked, not silently promised.
+2. **Machine-checkable contract:** the canonical schema, shared engine and
+   conformance fixtures connect docs, validation, generation and runtime. Their
+   agreement is a maintained invariant, not something the schema guarantees alone.
+3. **Centralized safety:** isolated callback dispatch, combat queues, flavor
+   gates and restricted-data adapters remove repeated consumer plumbing.
+   `pcall` isolates failures; it does not establish taint safety.
+4. **Design and UI ownership:** controls and layout consume shared design/media
+   primitives. Color presets are available; complete flavor-native swappable
+   frame skins remain a separate implementation and client-validation task.
+5. **Repeatable verification:** Lua/runtime, DB/control, flavor, contract,
+   packaging and MCP/RGX-Hello checks support regression evidence. In-game
+   geometry, taint and protected execution still require client evidence.
+
+See [Architecture](ARCHITECTURE.md), [Declarative API](DECLARATIVE-API.md),
+[Theming](THEMING.md), and [Testing](TESTING.md) for the concrete contracts.
 
 ## The Real Reason People Use Ace3
 
@@ -92,11 +147,11 @@ Problem solved:
 
 What RGX should keep:
 
-- a simple timer/defer utility if real addons need it
+- the shipped `After`, `Every`, and `CancelTimer` timer interface
 
 What RGX should avoid:
 
-- adding timer machinery before the suite actually depends on it
+- duplicating timer drivers in consumers or adding a second scheduling system
 
 ### `AceHook-3.0`
 
@@ -107,11 +162,11 @@ Problem solved:
 
 What RGX should keep:
 
-- a lightweight hook helper only if the suite repeatedly needs it
+- the shipped secure post-hook helper, with its permanent-hook limitation explicit
 
 What RGX should avoid:
 
-- shipping hook infrastructure just because frameworks usually do
+- implying AceHook's pre-hook and unhook semantics are interchangeable with RGX hooks
 
 ### `AceDB-3.0`
 
@@ -126,7 +181,7 @@ What RGX should keep:
 
 - strong defaults
 - simple storage model
-- optional profile support only if the suite truly benefits from profiles
+- shipped profile-aware defaults, switching, persistence and profile import/export
 
 What RGX should avoid:
 
@@ -167,7 +222,8 @@ What RGX should avoid:
 
 - giant declarative config tables that are harder to maintain than the UI they generate
 
-This is one of the biggest places RGX can be better.
+The goal is fewer consumer layout repairs and consistent persisted visual state,
+not a claim of universal widget parity.
 
 ### `AceComm-3.0` + `AceSerializer-3.0`
 
@@ -179,7 +235,8 @@ Problem solved:
 
 What RGX should keep:
 
-- comm + serialization only when RGX or RGX-Mod truly need cross-addon traffic or import/export
+- existing profile serialization/import-export, distinguished from network transport
+- addon communication only when a maintained consumer needs it
 
 What RGX should avoid:
 
@@ -193,11 +250,11 @@ Problem solved:
 
 What RGX should keep:
 
-- a straightforward localization pattern if the suite needs multi-language support
+- the shipped locale registry and framework translation blocks
 
 What RGX should avoid:
 
-- localization framework weight before localization work actually begins
+- assuming framework localization automatically translates every consumer
 
 ### `LibStub`
 
@@ -215,48 +272,26 @@ What RGX should avoid:
 
 Preferred RGX replacement:
 
-- BLU-style native framework services inside RGX itself
+- native framework services shared by dependent consumers
 
-## What Is Actually Required For RGX
+## What Remains To Build
 
-If the goal is "Ace3 but better and simpler," the real required foundation is:
+Timers, hooks, profiles, profile serialization, localization, sound, shared
+media, minimap and broker infrastructure are already implemented. The priority
+is reliability and coherent composition, not reintroducing them as future work.
 
-### Required now
+The [Roadmap](ROADMAP.md) and GitLab track remaining outcomes: consumer
+persistence/adoption, authoring-contract congruence, full declarative page/card
+composition, and modular native skins with real flavor evidence. Cross-client
+communication and higher-level RGXMod systems remain need-driven.
 
-- core framework object
-- module registry and lifecycle
-- shared media registries for fonts, textures, colors, then sounds
-- event/message/callback dispatch
-- native runtime services such as timers, hooks, and slash helpers
-- defaults + SavedVariables helpers
-- shared option controls
-- one-line apply helpers
-- simple command helpers
-
-### Required soon
-
-- timer/defer helpers if the suite needs them
-- tab/group/frame layout primitives
-- better settings binding
-- sound preview and sound registry support
-- BLU-compatible shared media bridging where useful
-
-### Required later
-
-- hook helpers if repeated real use appears
-- serialization
-- addon comm
-- import/export
-- localization support
-- RGX-Mod-oriented higher-level systems
-
-## How RGX Beats Ace3
+## How RGX Reduces Consumer Work
 
 RGX should not try to win by having more tiny libraries.
 
 RGX should win by being easier to consume.
 
-### 1. One dependency, not a library pile
+### 1. One shared dependency
 
 Ace3 often feels powerful because it is broad.
 
@@ -268,11 +303,9 @@ RGX should feel like:
 - depend on one addon
 - call one family of APIs
 
-### 2. Better defaults
+### 2. Strong defaults
 
-Ace3 gives capability.
-
-RGX should give capability plus polished defaults:
+RGX's common path should combine capability with defaults:
 
 - curated media
 - ready-made controls
@@ -292,7 +325,7 @@ RGX should prefer APIs like:
 
 instead of pushing authors toward big generic setup tables whenever a direct helper would be clearer.
 
-### 4. Better visual integration
+### 4. Consistent visual integration
 
 Ace3 is often used because it is functional.
 
@@ -328,17 +361,17 @@ The strongest position for RGX is not:
 
 The strongest position is:
 
-- RGX keeps the handful of framework capabilities addon authors actually need
-- RGX removes the dependency clutter and historical baggage
-- RGX gives much better shared media and shared controls
-- RGX makes addon integration faster than Ace-style assembly
+- RGX owns reusable mechanics once, behind small supported interfaces
+- consumers describe their content, settings and feature behavior
+- runtime, declarative forms and authoring tools agree on one contract
+- shared design/layout and compatibility fixes benefit multiple consumers
 
 ## Final Standard
 
 When deciding whether a new RGX subsystem belongs in the framework, ask:
 
 1. What real addon problem is this solving?
-2. Is that problem already showing up in SQP, BPU, BLU, or planned RGX-Mod work?
+2. Does it benefit a current maintained consumer and, where relevant, the RGXMod foundation?
 3. Can RGX solve it with one clean native system instead of another external-style compatibility layer?
 4. Will this make addon authors faster, or just make RGX look more like Ace3?
 
@@ -348,52 +381,57 @@ If the answer is "Ace3 had one, so we should too," it probably does not.
 
 ---
 
-## Where We Actually Stand (audited 2026-07-04)
+## Source Capability Review — 2026-10-06
 
-Everything below verified against shipped source, not aspiration.
+Baseline: the TOC identifies candidate `2.7.15-beta.3`; [Roadmap](ROADMAP.md) records
+`2.7.14` stable. This is a source/load-path review, not a new release or an
+all-client certification. Local changes do not inherit the TOC's publication status.
 
-### Parity map
-
-| Ace3 piece | RGX today | Verdict |
+| Capability / comparison reference | RGX baseline | Evidence and limits |
 |---|---|---|
-| AceAddon (lifecycle/modules) | `RGXAddon` declarative front door + `RGX:RegisterModule` | **Better** — one call replaces the OnInitialize/OnEnable ceremony |
-| AceEvent + CallbackHandler | `RGX:RegisterEvent`/`RegisterUnitEvent`, messages, house `AddCb` pattern (returns unsubscribe closures) | **Parity, safer** — dispatch is pcall-wrapped |
-| AceTimer | `RGX:After`/`Every`/`CancelTimer` (`core/systems/runtime.lua`) | **Better** — labeled, budgeted, diagnosable |
-| AceConsole | `RGX:RegisterSlashCommand` + the `slash` key | **Better** — assumed handler opens the panel |
-| AceDB (profiles) | `core/systems/database.lua`: profiles, defaults fallback, `OnProfileChanged`, `Serialize/DeserializeProfile` | **Parity+** — serialize included; no namespaces (not needed yet) |
-| AceConfig/AceConfigDialog | `options` table → panel | **Better where it counts** — a fraction of the table weight; fewer control types so far (by design, growing with real need) |
-| AceGUI | RGXUI + **RGXDesign** | **Better** — Ace has no design system; AceGUI widgets are unstyled |
-| AceHook | `RGX:Hook` (`runtime.lua`) | Parity |
-| AceBucket | Tier 6 #17 | Planned, need-driven |
-| AceComm + AceSerializer | none (profile serialize only) | **Intentionally absent** until a real addon needs cross-client traffic (OmniCD-style sync is the likely first consumer) |
-| AceLocale | `RGXLocale` (`modules/locale/locale.lua`) | Parity for the framework's own strings — `RGXLocale:NewLocale(addonName, locale, isDefault)` registry with an always-loaded enUS base plus guarded per-locale override blocks; consumer addons keep the frozen per-addon `Handle:SetLocale` wire-scope contract |
-| LibSharedMedia | RGXSharedMedia | Parity |
-| LibDBIcon/LDB | RGXMinimap + databroker | **Better** — persistence and tooltip composed in |
+| Lifecycle/modules (AceAddon) | `RGXAddon`, `RegisterModule`, readiness lifecycle | `core/core.lua`, `core/initialization.lua`; one shared runtime, not embedded modules |
+| Events/messages (AceEvent/CallbackHandler) | events, unit events, messages and emitters | `core/systems/events.lua`; isolated dispatch, addon-scoped registrations |
+| Timers (AceTimer) | `After`, `Every`, `CancelTimer` | `core/systems/runtime.lua`; named declarative `every` binds through these primitives |
+| Hooks (AceHook) | `RGX:Hook` | `core/systems/runtime.lua`; secure permanent post-hooks, not full AceHook parity |
+| DB/profiles (AceDB) | defaults, profiles, switching, migrations and global data | `core/systems/database.lua`; not an interchangeable AceDB scope/namespace model |
+| Serialization (AceSerializer use case) | profile serialization/import-export | `SerializeProfile`/`DeserializeProfile` in the DB; not generic network transport |
+| Commands (AceConsole) | centralized slash registration and declarative `slash` | `core/systems/runtime.lua`, addon factory |
+| Options/widgets (AceConfig/AceGUI) | DB-bound declarative controls and imperative UI/layout | `modules/ui/`; supported forms in [Declarative API](DECLARATIVE-API.md) |
+| Localization (AceLocale) | locale registry and framework translations | `modules/locale/locale.lua`, `overrides.lua`; consumer translations remain consumer content |
+| Shared media (LibSharedMedia, adjacent to Ace3) | native registries and media bridge | `modules/fonts/`, `modules/textures/`, `modules/sound/`, `modules/sharedmedia/`; adoption varies by consumer |
+| Minimap/broker (LibDBIcon/LDB, adjacent to Ace3) | minimap persistence and broker module | `modules/minimap/`, `modules/databroker/`; not an Ace3 library comparison |
+| Auras/tooltip | restricted-data aura adapter and tooltip composition | `modules/auras/`, `modules/tooltip/`; capabilities and client evidence vary by flavor |
+| Buckets/cross-client comm | no equivalent implemented baseline | need-driven roadmap work; in-process framework messages are not addon network traffic |
 
-### What Ace3 cannot answer at all
+Module files are loaded through `RGX-Framework.xml`; registration and
+`core/initialization.lua` govern activation. A loaded game module is not proof
+that its APIs/events exist on every flavor.
 
-These are the reasons RGX is a replacement, not a clone — protect them:
+### Layout and Skin Status
 
-1. **The DSL** — `RGXAddon "Name" { }` with progressive disclosure: every key
-   works bare with assumed arguments and accepts an advanced form. Ace3's
-   equivalent is assembling five libraries and a config mega-table.
-2. **The machine-checkable contract** — `contract/schemas/rgx-addon.schema.json` +
-   `tools/rgx-mcp` (validate/audit/generate) + an end-to-end test that runs
-   the real MCP server against the real reference addon. Ace3 has zero
-   tooling; its options tables fail at runtime or never.
-3. **Centralized WoW safety infrastructure** — a guaranteed player-aura fast
-   path, explicit restricted-value boundaries, combat-lockdown guards, and
-   failure-isolated native tooltip hooks. This does not make arbitrary secret
-   value reads safe; those values must remain opaque.
-4. **A shipped visual identity** — RGXDesign tokens/theming; AceGUI addons
-   all look like AceGUI.
-5. **A living test suite** — RGX-Hello's `/rgxvisual` covers every
-   user-facing module in-game.
+The composable target remains **panel → main page/tabs → pages → card grid →
+rows/cards → widgets**. Imperative `CreateScrollPage`, `CreateColumns`,
+`CreatePager`, and `CreateCard` exist in the UI implementation.
 
-### The layout model (BLU-proven, Tier 4 target)
+The published beta's one-line controls are distinct from the local
+`options.columns = 1|2|3` work. That local slice distributes controls into
+balanced sequential column flows; it does not create declarative cards or
+multi-page tabs and does not complete [#11](https://gitlab.dicematrix.cloud/rgxmods/warcraft/RGX-Framework/-/issues/11).
+Human `on` triggers remain outside this branch's implemented contract.
 
-Options panels are one composable vocabulary: **panel → main page + tabs →
-tabs can be multi-paged → 1–2 column card grid → rows/cards holding the
-widgets**. BLU built this to 1–2 columns with paged tabs
-(`COMBAT_TRIGGER_PAGES`); the contract freezes `columns = 1|2|3`. Tier 4
-implements it declaratively without changing anything authors write today.
+Design currently owns primary/accent themes, derived shades, presets and frame
+primitives. Complete per-consumer texture/frame skin selection, predictable
+structural token overrides and a verified Forever skin remain
+[#21](https://gitlab.dicematrix.cloud/rgxmods/warcraft/RGX-Framework/-/issues/21).
+UI owns geometry and interaction; Design/media own presentation resources.
+Switching a skin must not fork consumer layout, DB ownership or callback behavior.
+
+### Modularity Is An Implementation Requirement
+
+The registry and system/module directories provide useful separation. They do
+not make every implementation modular: the addon factory still combines
+lifecycle, declaration interpretation and options rendering. Local MCP validation
+now delegates to the shared engine; see [Architecture](ARCHITECTURE.md) for the
+verified ownership seams and ordered changes. Extend existing modules before
+creating new ones; modularity means coherent ownership and intentional
+dependencies, not more files or more public APIs.

@@ -7,8 +7,15 @@ machine-checkable shape lives in
 [`contract/schemas/rgx-addon.schema.json`](https://github.com/RGXMods/RGX-Framework/blob/main/contract/schemas/rgx-addon.schema.json); keys are
 annotated `x-rgx-ships: "today"` (implemented) or `"tier4"` (frozen target).
 
-This page documents **what ships today**, verified against
-`core/core.lua` (`RGX.Addon`, `_G.RGXAddon`).
+This page describes supported forms against `core/core.lua`
+(`RGX.Addon`, `_G.RGXAddon`). **Local-worktree exception:** the `options.columns` slice described
+below is implemented in this branch, but is not part of the published
+`2.7.15-beta.2` release and does not implement the full declarative card/page model.
+
+This branch also hardens the beta's one-line implementation: malformed strings
+are rejected before registration, signed slider ranges are preserved, method
+buttons bind to their addon, and fonts use the existing bound selector. These
+corrections are local source changes until integrated and released.
 
 ---
 
@@ -44,7 +51,7 @@ framework bug — report it.
 | `slash` | string \| string[] — registers `/cmd`; assumed handler opens the options panel | same table + `handler = function(addon, msg)` |
 | `minimap` | `true` (default icon) \| string (icon path) — assumed left-click opens the panel; dragged angle persists to `addon.db` | full opts table passed through to the minimap module (`tooltip`, `defaultAngle`, `onRightClick`, `onCtrlRight`, ...) |
 | `db` | table of profile defaults; creates `addon.db` on ADDON_LOADED. SavedVariables name assumes `<Name>DB` with non-identifier characters stripped (`"RGX-Hello"` → `RGXHelloDB`) — declare it in your TOC | `dbName` overrides the name; `global` (cross-character), `onSwitch` (profile-switch callback) |
-| `options` | `TabName = { controls... }`; requires `db`; builds a tabbed panel with db-bound controls (automatic save **and** restore) | per-control advanced keys below; Tier 4 adds `columns` and multi-page tabs |
+| `options` | `TabName = { controls... }`; requires `db`; builds a tabbed panel with db-bound controls (automatic save **and** restore) | per-control advanced keys below; local `columns = 1\|2\|3` distributes controls into column flows, not declarative cards; multi-page tabs stay Tier 4 |
 | `title` | — | Panel title; assumes the addon name |
 | `welcome` | startup string printed with the framework icon and `[RGX]` prefix on load; obeys the global `/rgx login on|off` preference | — |
 | `onInit` | function(addon), runs on ADDON_LOADED after `db`/`options` exist — the imperative escape hatch | — |
@@ -118,13 +125,45 @@ options = {
 }
 ```
 
-`font` renders a dropdown of registered font names from the framework's font
-registry. `header`/`label` render the section-style text row. Unparseable
-strings are ignored silently at render time—use the validators to catch them
-at authoring time.
+The supported grammar is case-sensitive. Keys contain no ASCII whitespace or
+quotes; labels use single quotes. ASCII whitespace separates tokens and may
+trail the declaration. Sliders require a signed-decimal `min-max` range
+(for example `-10--5`), optional positive step, and optional label. Bounds and
+step must be finite; reversed bounds and non-positive steps are rejected.
+Dropdown items use `|` separators without empty entries. Headers/labels require
+quoted text, and button methods must be Lua identifiers.
 
-Only the db key is required — labels assume the capitalized key, slider range
-assumes 0–100, color default assumes the db default for that key. Every
+Strings supplied at declaration raise a deterministic `RGXAddon` error when malformed, before the addon,
+slash command or load callback is registered. The shared engine enforces the
+same grammar and numeric rules; JSON Schema checks shape and lexical grammar,
+while cross-value numeric constraints require the engine or runtime.
+
+### Column flows (local implementation)
+
+```lua
+options = {
+    columns = 2,
+    General = {
+        { toggle = "enabled", label = "Enable Addon" },
+        { slider = "volume", label = "Volume", min = 0, max = 100 },
+        { toggle = "verbose", label = "Verbose" },
+        { slider = "scale", label = "Scale", min = 0.5, max = 2 },
+    },
+}
+```
+
+`columns = 1|2|3` lays every tab out in that many column flows (default 1,
+today's single column). Controls fill down each column in declaration order,
+balanced so related controls stay adjacent. Anything else is rejected before
+the addon registers. The reserved `columns` key is never treated as a tab.
+
+`font` delegates to `Fonts:AttachFontSelector`, including name resolution and
+DB-bound restoration when shown. `header`/`label` render the section-style text
+row. Profile changes refresh the lazy options panel against its current storage.
+
+For table-form bound controls, only the db key is required — labels assume the
+capitalized key, slider range assumes 0–100, color default assumes the db default
+for that key. String sliders require their explicit range. Every
 control reads its initial state from `addon.db` and writes changes back —
 persistence *and visual restore* are not the author's job.
 
@@ -141,23 +180,32 @@ than the panel.
 
 ### Button
 
-`{ button = "Button Text", action = function(addon) ... end, width, height }`
+`{ button = "Button Text", action = function(frame, mouseButton) ... end, width, height }`
 hooks `action` straight into a click handler through `UI:CreateButton`'s
 table form. The handler is pcall-isolated and cannot break the panel.
+
+Existing table control lists remain live for imperative additions/replacements
+in `onInit` before lazy construction. Strings added later are validated when
+rendered; use declaration-time strings for early, registration-free rejection.
+
+The string form `"button 'Reset All' ResetSettings"` resolves `ResetSettings`
+on the owning addon at click time and calls it with that addon as `self`.
+The method may be assigned in `onInit`; a missing method reports an error
+through the existing isolated button callback. Table-form callback arguments
+remain unchanged.
 
 ### Layout model
 
 One composable vocabulary, top to bottom (proven in BLU): **panel → main page
 + tabs → tabs can be multi-paged → 1–2 column card grid → rows/cards holding
-the widgets**. What ships today is panel → tabs → a single column of controls;
-Tier 4 implements the rest of the hierarchy (`columns = 1|2|3` — 1–2 is the
-BLU-proven range — and multi-page tabs) without changing anything you write
-today.
+the widgets**. The local columns slice is panel → tabs → controls in 1–3
+column flows (`options.columns`, default 1). It creates no declarative cards
+or multi-page tabs; those remain additive target work.
 
 The imperative UI already provides `CreateFlowLayout`, `CreateColumns`,
 `CreatePager`, and `CreateCard` (including one/two internal columns and
 width-triggered auto-height reflow). These are the shared layout foundation;
-they do not make the planned declarative `options.columns` key executable.
+their existence alone does not implement the full declarative page/card model.
 
 ## The addon object
 
@@ -177,8 +225,7 @@ handler ids) and routed through framework-managed, failure-isolated paths:
 ## Coming in Tier 4 (frozen contract)
 
 - `on = { levelup = fn, ["quest.turnin"] = fn, ... }` — human trigger words, never WoW event names
-- `options.columns = 1|2|3` — card-grid layouts
 - Inference: `slash` defaults to the lowercase addon name
 
 Everything above is additive; nothing on this page changes meaning.
-> **Beta:** v2.7.15-beta.2; stable remains v2.7.14. Slider customization is included since v2.7.13.
+> **Beta candidate:** v2.7.15-beta.3; stable remains v2.7.14. Slider customization is included since v2.7.13.

@@ -16,6 +16,9 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
 import { createDefinitionEngine, exampleDefinition } from "../../../contract/engine/definition.mjs";
+import Ajv2020 from "ajv/dist/2020.js";
+import { createValidateAddon } from "../../../contract/engine/validate-addon.mjs";
+import { engineCases } from "../../ci/contract-vectors.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SERVER_ENTRY = join(HERE, "..", "src", "server.js");
@@ -214,6 +217,37 @@ try {
   check("declarative every validates as shipped", everyReport.valid === true, JSON.stringify(everyReport.errors));
   check("declarative every is not reported as tier4", (everyReport.tier4KeysUsed ?? []).length === 0, JSON.stringify(everyReport));
 
+  const columnsVal = await client.callTool({
+    name: "rgx_validate_addon",
+    arguments: { opts: { options: { columns: 2, General: [{ toggle: "enabled" }] } } },
+  });
+  const columnsReport = JSON.parse(columnsVal.content[0].text);
+  check("option columns validate as shipped", columnsReport.valid === true, JSON.stringify(columnsReport.errors));
+  check("option columns are not reported as tier4", (columnsReport.tier4KeysUsed ?? []).length === 0, JSON.stringify(columnsReport));
+
+  const invalidColumnsVal = await client.callTool({
+    name: "rgx_validate_addon",
+    arguments: { opts: { options: { columns: 5 } } },
+  });
+  const invalidColumnsReport = JSON.parse(invalidColumnsVal.content[0].text);
+  check("invalid column counts are rejected", invalidColumnsReport.valid === false, JSON.stringify(invalidColumnsReport.errors));
+
+  const columnsGen = await client.callTool({
+    name: "rgx_generate_addon",
+    arguments: { name: "ColumnKeys", columns: 2, toggles: ["enabled"] },
+  });
+  const columnsLua = columnsGen.content?.[0]?.text ?? "";
+  check("generator emits the column count", columnsLua.includes("columns = 2"));
+  let columnsParses = true;
+  let columnsParseError = "";
+  try {
+    luaparse.parse(columnsLua, { luaVersion: "5.1" });
+  } catch (error) {
+    columnsParses = false;
+    columnsParseError = error.message;
+  }
+  check("generated columns parse as Lua 5.1", columnsParses, columnsParseError);
+
   const invalidEveryVal = await client.callTool({
     name: "rgx_validate_addon",
     arguments: { opts: { every: { "   ": [0, { $lua: "function" }, "extra"] } } },
@@ -234,10 +268,22 @@ try {
   });
   const tier4StringReport = JSON.parse(tier4String.content[0].text);
   check(
-    "one-line controls are reported as tier4",
-    tier4StringReport.tier4KeysUsed?.includes("options.General[0]"),
+    "one-line controls validate as shipped",
+    tier4StringReport.valid && tier4StringReport.tier4KeysUsed.length === 0,
     JSON.stringify(tier4StringReport)
   );
+
+  const addonSchema = JSON.parse(readFileSync(join(HERE, "../../../contract/schemas/rgx-addon.schema.json"), "utf8"));
+  const validateAddon = createValidateAddon({ schema: addonSchema, Ajv: Ajv2020 });
+  for (const { name, opts, valid: expected, tier4 = [] } of engineCases) {
+    if (opts === null) continue; // MCP's transport requires a JSON object.
+    const reply = await client.callTool({ name: "rgx_validate_addon", arguments: { opts } });
+    const report = JSON.parse(reply.content[0].text);
+    const { note, ...engineReport } = report;
+    check("shared validation parity: " + name,
+      JSON.stringify(engineReport) === JSON.stringify(validateAddon(opts)) && report.valid === expected
+        && JSON.stringify(report.tier4KeysUsed) === JSON.stringify(tier4), JSON.stringify(report));
+  }
 
   console.log("\n== rgx_audit_lua (RGX-Hello's actual Lua files) ==");
   const audit = await client.callTool({ name: "rgx_audit_lua", arguments: { path: helloPath } });

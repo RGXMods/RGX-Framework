@@ -4,7 +4,7 @@
 **One dependency. Everything your addon suite needs.**
 
 RGX-Framework is a modern, self-contained WoW addon framework for Retail,
-Classic Era, TBC, Wrath/Titan, Cataclysm, and Mists. One shared dependency
+WoW Forever beta, Classic Era, TBC, Wrath/Titan, Cataclysm, and Mists. One shared dependency
 provides events, timers, hooks, slash commands, minimap buttons, options panels,
 database profiles, DataBroker, media, dropdowns, UI controls, and a visual design
 system. It is not a player-facing addon; it loads silently and exposes an API.
@@ -13,7 +13,8 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 
 ## Quick Start
 
-**Latest published release:** [`v2.7.9`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.9)
+**Latest stable release:** [`v2.7.14`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.14)
+The source beta candidate is `v2.7.15-beta.3`; follow the release page for published tester builds.
 
 **1. Declare the dependency:**
 
@@ -58,8 +59,9 @@ output, and lifecycle work routed through scoped framework methods. The `addon`
 object carries `RegisterEvent`, `RegisterUnitEvent`, `RegisterMessage`, `After`,
 `Every`, `Print`, `Warn`, and `Error`, so consumers do not need raw WoW plumbing.
 
-> Human `on` triggers, one-line controls, and grid card layouts remain frozen
-> future contract forms. Named `every` timers ship today; use scoped methods for
+> Human `on` triggers and full declarative card/page layouts remain future forms.
+> Named `every` timers are implemented; one-line controls ship in `v2.7.15-beta.2`.
+> Use scoped methods for
 > events and other behavior that is not yet declarative.
 
 **3. À la carte — individual systems when you need them:**
@@ -186,24 +188,24 @@ Font pack addons can extend the registry at runtime with `Fonts:RegisterFontPack
 
 ## Wiki
 
-Full documentation lives in the [`docs/`](docs/) directory:
+Full documentation lives in the [`docs/`](https://github.com/RGXMods/RGX-Framework/tree/main/docs) directory and the [generated Wiki](https://github.com/RGXMods/RGX-Framework/wiki):
 
 ### Getting Started
 
-- **[Super Simple Integration](docs/SUPER-SIMPLE.md)** — the absolute minimum code to use RGX
-- **[Migration Guide](docs/MIGRATION.md)** — moving from Ace3, LibSharedMedia, or standalone implementations
+- **[Super Simple Integration](https://github.com/RGXMods/RGX-Framework/blob/main/docs/SUPER-SIMPLE.md)** — the absolute minimum code to use RGX
+- **[Migration Guide](https://github.com/RGXMods/RGX-Framework/blob/main/docs/MIGRATION.md)** — moving from Ace3, LibSharedMedia, or standalone implementations
 
 ### Core Systems
 
-- **[Architecture](docs/ARCHITECTURE.md)** — load order, module registration, `...` varargs pattern, lifecycle, timer driver, event dispatch, combat queue
-- **[API Reference](docs/API.md)** — complete public API by module (every method, every parameter)
-- **[Troubleshooting](docs/TROUBLESHOOTING.md)** — common issues and fixes
+- **[Architecture](https://github.com/RGXMods/RGX-Framework/blob/main/docs/ARCHITECTURE.md)** — load order, module registration, `...` varargs pattern, lifecycle, timer driver, event dispatch, combat queue
+- **[API Reference](https://github.com/RGXMods/RGX-Framework/blob/main/docs/API.md)** — documented public APIs by module
+- **[Troubleshooting](https://github.com/RGXMods/RGX-Framework/blob/main/docs/TROUBLESHOOTING.md)** — common issues and fixes
 
 ### Module Deep-Dives
 
-- **[Fonts System](docs/FONTS.md)** — registry, blocklist, style objects, dropdown schemas, UI controls, flag helpers, dual-schema design
-- **[Dropdowns System](docs/DROPDOWNS.md)** — nested menus, auto-width, inline buttons, item normalization, MenuUtil vs legacy compat
-- **[Theming & Design](docs/THEMING.md)** — color palette, font styling conventions, texture system, consistent UI patterns
+- **[Fonts System](https://github.com/RGXMods/RGX-Framework/blob/main/docs/FONTS.md)** — registry, blocklist, style objects, dropdown schemas, UI controls, flag helpers, dual-schema design
+- **[Dropdowns System](https://github.com/RGXMods/RGX-Framework/blob/main/docs/DROPDOWNS.md)** — nested menus, auto-width, inline buttons, item normalization, MenuUtil vs legacy compat
+- **[Theming & Design](https://github.com/RGXMods/RGX-Framework/blob/main/docs/THEMING.md)** — color palette, font styling conventions, texture system, consistent UI patterns
 
 ### Localization
 
@@ -226,23 +228,23 @@ table plus guarded per-locale blocks. The frozen per-consumer
 
 ### Design & Philosophy
 
-- **[Foundation Decisions](docs/FOUNDATION.md)** — what RGX keeps vs drops from Ace3, and why
-- **[Ace3 Analysis](docs/ACE3-ANALYSIS.md)** — how each Ace3 piece maps to RGX, and where RGX aims to be better
-- **[Roadmap](docs/ROADMAP.md)** — profile/database system, SharedMedia drop-in, pack system, localization, longer-term plans
-- **[Studio Roadmap](docs/STUDIO-ROADMAP.md)** — separate Tauri visual authoring product, contract and preview boundaries, phased delivery
-- **[Distribution](docs/DISTRIBUTION.md)** — runtime package boundary, checksums, and installation
+- **[Foundation Decisions](https://github.com/RGXMods/RGX-Framework/blob/main/docs/FOUNDATION.md)** — capability ownership and modularity standards
+- **[Ace3 Analysis](https://github.com/RGXMods/RGX-Framework/blob/main/docs/ACE3-ANALYSIS.md)** — current capabilities and runtime/contract/design/tooling architecture
+- **[Roadmap](https://github.com/RGXMods/RGX-Framework/blob/main/docs/ROADMAP.md)** — implemented baseline, current hardening and need-driven future work
+- **[Studio Roadmap](https://github.com/RGXMods/RGX-Framework/blob/main/docs/STUDIO-ROADMAP.md)** — planned authoring application, contract and preview boundaries, phased delivery
+- **[Distribution](https://github.com/RGXMods/RGX-Framework/blob/main/docs/DISTRIBUTION.md)** — runtime package boundary, checksums, and installation
 
 ### Other
 
-- **[Changelog](docs/CHANGES.md)** — current version release notes
-- **[Font Sources & Licenses](docs/FONT-SOURCES.md)** — attribution for all bundled fonts
-- **[Declarative API](docs/DECLARATIVE-API.md)** — the `RGXAddon` authoring surface, verified against source
+- **[Changelog](https://github.com/RGXMods/RGX-Framework/blob/main/docs/CHANGES.md)** — current version release notes
+- **[Font Sources & Licenses](https://github.com/RGXMods/RGX-Framework/blob/main/docs/FONT-SOURCES.md)** — attribution for all bundled fonts
+- **[Declarative API](https://github.com/RGXMods/RGX-Framework/blob/main/docs/DECLARATIVE-API.md)** — the `RGXAddon` authoring surface, verified against source
 
 ---
 
 ## Source Contract Conformance
 
-RGX-Framework temporarily maintains an [MCP](https://modelcontextprotocol.io) server at [`tools/rgx-mcp/`](tools/rgx-mcp/) as a source-tree contract-conformance fixture. It gives CI and framework contributors tools that read the canonical schema and docs:
+RGX-Framework temporarily maintains an [MCP](https://modelcontextprotocol.io) server at [`tools/rgx-mcp/`](https://github.com/RGXMods/RGX-Framework/tree/main/tools/rgx-mcp) as a source-tree contract-conformance fixture. It gives CI and framework contributors tools that read the canonical schema and docs:
 
 | Tool | What it does |
 |---|---|
@@ -252,31 +254,31 @@ RGX-Framework temporarily maintains an [MCP](https://modelcontextprotocol.io) se
 | `rgx_get_contract` | Return the schema + declarative API reference for agent context |
 | `rgx_edit_definition` | Source-development slice: strictly normalize/import/patch/export one label definition using shared authoring logic; emits data only |
 
-The source-development [definition round trip](docs/UI-CONTROLS.md#definition-round-trip-source-development-slice)
+The source-development [definition round trip](https://github.com/RGXMods/RGX-Framework/blob/main/docs/UI-CONTROLS.md#definition-round-trip-source-development-slice)
 adds a small external editor (`node tools/editor/serve.mjs`, loopback only) and
 in-game `/rgx editor` adapter over the same versioned data contract. This slice
-is not in the published `v2.7.9` package and is not a complete Studio application
+is not in the published `v2.7.14` package and is not a complete Studio application
 or Blizzard Edit Mode integration. Browser/WoW visual checks remain required.
 
 Read-only by design — it never edits repos, commits, or touches the game.
 An MCP-capable harness can configure it using the source `.mcp.json` example (run
 `npm ci` once in `tools/rgx-mcp/`); discovery varies by harness. It is optional,
 source-only, and excluded from the WoW addon release. The framework's essential
-API is the [runtime Lua interface](docs/API.md) used by dependent addons. Its
+API is the [runtime Lua interface](https://github.com/RGXMods/RGX-Framework/blob/main/docs/API.md) used by dependent addons. Its
 schema and reusable authoring logic also remain framework-owned; future Studio
 consumes that foundation rather than replacing it. See the
-[API/contract/MCP comparison](docs/RGX-MCP.md#runtime-api-contract-and-mcp).
+[API/contract/MCP comparison](https://github.com/RGXMods/RGX-Framework/blob/main/docs/RGX-MCP.md#runtime-api-contract-and-mcp).
 RGX-Framework publishes only the framework addon package. See
-[`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md).
+[`docs/DISTRIBUTION.md`](https://github.com/RGXMods/RGX-Framework/blob/main/docs/DISTRIBUTION.md).
 
 ---
 
 ## Compatibility
 
-- **Latest published release:** [`v2.7.9`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.9)
+- **Latest stable release:** [`v2.7.14`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.14)
 
-- **Clients:** Retail `120100`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
-- **Distribution:** one runtime-only addon package; see [Distribution](docs/DISTRIBUTION.md)
+- **Clients:** Retail `120100`, WoW Forever beta `16001`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
+- **Distribution:** one runtime-only addon package; see [Distribution](https://github.com/RGXMods/RGX-Framework/blob/main/docs/DISTRIBUTION.md)
 - `C_AddOns.GetAddOnMetadata` and `GetAddOnMetadata` both handled
 - `ColorPickerFrame` old API and `ColorPickerInteraction` new API both handled
 - `Settings.RegisterCanvasLayoutCategory` and `InterfaceOptions_AddCategory` both handled
@@ -287,11 +289,11 @@ RGX-Framework publishes only the framework addon package. See
 ## Support
 
 - **GitHub:** https://github.com/RGXMods/RGX-Framework
-- **Issues:** https://github.com/RGXMods/RGX-Framework/issues
-- **Discord:** https://discord.gg/N7kdKAHVVF
+- **Issues:** https://gitlab.dicematrix.cloud/rgxmods/warcraft/RGX-Framework/-/issues
+- **Discord:** https://realmgx.com
 
 ---
 
 ## License
 
-[MIT](LICENSE.txt) for framework code. Bundled fonts retain their own open licenses — see [docs/FONT-SOURCES.md](docs/FONT-SOURCES.md) for attribution.
+[MIT](https://github.com/RGXMods/RGX-Framework/blob/main/LICENSE.txt) for framework code. Bundled fonts retain their own open licenses — see [docs/FONT-SOURCES.md](https://github.com/RGXMods/RGX-Framework/blob/main/docs/FONT-SOURCES.md) for attribution.

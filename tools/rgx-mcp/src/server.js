@@ -100,8 +100,7 @@ function getSchema() {
 let validatorCache = null;
 function getValidator() {
   if (!validatorCache) {
-    const ajv = new Ajv2020({ allErrors: true, strict: false, strictNumbers: true });
-    validatorCache = ajv.compile(getSchema());
+    validatorCache = createValidateAddon({ schema: getSchema(), Ajv: Ajv2020 });
   }
   return validatorCache;
 }
@@ -157,24 +156,10 @@ server.tool(
   { opts: z.record(z.any()).describe("The RGXAddon opts table as JSON") },
   async ({ opts }) => {
     const validate = getValidator();
-    const valid = validate(opts);
-    const tier4Used = ["on"].filter((k) => k in opts);
-    if (opts.options && typeof opts.options === "object" && "columns" in opts.options) {
-      tier4Used.push("options.columns");
-    }
-    if (opts.options && typeof opts.options === "object") {
-      for (const [tab, controls] of Object.entries(opts.options)) {
-        if (!Array.isArray(controls)) continue;
-        controls.forEach((control, index) => {
-          if (typeof control === "string") tier4Used.push(`options.${tab}[${index}]`);
-        });
-      }
-    }
+    const result = validate(opts);
     const report = {
-      valid,
-      errors: validate.errors ?? [],
-      tier4KeysUsed: tier4Used,
-      note: tier4Used.length
+      ...result,
+      note: result.tier4KeysUsed.length
         ? "tier4 keys are contract-frozen but NOT implemented yet — they validate but will not run on the current framework."
         : undefined,
     };
@@ -231,6 +216,8 @@ server.tool(
     db: z.record(z.union([z.string(), z.number(), z.boolean()])).optional()
       .describe("Saved-setting defaults"),
     toggles: z.array(z.string()).optional().describe("db keys to expose as toggles"),
+    columns: z.number().int().min(1).max(3).optional()
+      .describe("Local option column-flow count (1-3); full declarative cards/pages remain target work"),
     sliders: z
       .array(z.object({
         key: z.string(),
@@ -251,12 +238,16 @@ server.tool(
         Object.entries(spec.every).map(([name, seconds]) => [name, [seconds, { $lua: "function" }]])
       );
     }
-    if (!validate(opts)) {
+    if (spec.columns !== undefined) {
+      opts.options = { columns: spec.columns };
+    }
+    const report = validate(opts);
+    if (!report.valid || report.tier4KeysUsed.length) {
       return {
         isError: true,
         content: [{
           type: "text",
-          text: "Generation spec is not supported by the shipped RGX contract:\n" + JSON.stringify(validate.errors, null, 2),
+          text: "Generation spec is not supported by the shipped RGX contract:\n" + JSON.stringify(report, null, 2),
         }],
       };
     }

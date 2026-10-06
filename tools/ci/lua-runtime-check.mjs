@@ -13,6 +13,7 @@ const files = {
   events: join(ROOT, "core", "systems", "events.lua"),
   runtime: join(ROOT, "core", "systems", "runtime.lua"),
   test: join(HERE, "declarative-every-runtime-test.lua"),
+  columnsTest: join(HERE, "declarative-columns-runtime-test.lua"),
 };
 
 const lua = await Lua.create();
@@ -21,6 +22,12 @@ try {
   lua.ctx.__rgxEventsSource = readFileSync(files.events, "utf8");
   lua.ctx.__rgxRuntimeSource = readFileSync(files.runtime, "utf8");
   lua.ctx.__rgxTestSource = readFileSync(files.test, "utf8");
+  lua.ctx.__rgxColumnsTestSource = readFileSync(files.columnsTest, "utf8");
+  const panelSource = readFileSync(join(ROOT, "modules/ui/options.lua"), "utf8");
+  const refreshStart = panelSource.indexOf("    function panel:InvalidateAllTabs()");
+  const refreshEnd = panelSource.indexOf("    local function ExtractCategoryID", refreshStart);
+  if (refreshStart < 0 || refreshEnd < 0) throw new Error("Real panel refresh methods not found");
+  lua.ctx.__rgxPanelRefreshSource = panelSource.slice(refreshStart, refreshEnd);
 
   lua.doStringSync(`
     local RGX = {}
@@ -54,9 +61,11 @@ try {
     loadSource(__rgxEventsSource, "core/systems/events.lua")("RGX-Framework", RGX)
     loadSource(__rgxRuntimeSource, "core/systems/runtime.lua")("RGX-Framework", RGX)
     loadSource(__rgxTestSource, "tools/ci/declarative-every-runtime-test.lua")()
+    loadSource(__rgxColumnsTestSource, "tools/ci/declarative-columns-runtime-test.lua")()
   `);
 
   console.log(lua.ctx.__rgxRuntimeTestResult);
+  console.log(lua.ctx.__rgxRuntimeColumnsTestResult);
 } finally {
   lua.global.close();
 }

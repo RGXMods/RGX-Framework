@@ -43,8 +43,15 @@ const canonicalDocs = readdirSync(DOCS, { withFileTypes: true })
   .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
   .map((entry) => entry.name)
   .sort();
+// Service-page Markdown remains canonical source without becoming a duplicate
+// wiki landing page. Keep these exceptions explicit and checked in the manifest.
+const sourceOnlyDocs = new Set(manifest.sourceOnly ?? []);
+for (const doc of sourceOnlyDocs) {
+  if (!canonicalDocs.includes(doc)) manifestErrors.push(`source-only doc does not exist: ${doc}`);
+  if (docToWiki[doc]) manifestErrors.push(`source-only doc is also mapped to the wiki: ${doc}`);
+}
 for (const doc of canonicalDocs) {
-  if (!docToWiki[doc]) manifestErrors.push(`canonical doc is not mapped to the wiki: ${doc}`);
+  if (!docToWiki[doc] && !sourceOnlyDocs.has(doc)) manifestErrors.push(`canonical doc is not mapped to the wiki: ${doc}`);
 }
 
 const knownWikiTargets = new Set(
