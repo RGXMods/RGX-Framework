@@ -159,4 +159,4 @@ HTML. Description changes must be applied to the configured service separately
 and verified against this file; the GitHub Wiki is generated automatically from
 the Markdown pages listed in `tools/wiki/manifest.json`.
 > **Beta channel:** v2.7.14-beta.1 is opt-in; stable remains v2.7.14.
-> Beta channel: v2.7.15-beta.1 artifacts contain 109 runtime files, same as stable v2.7.14.
+> Beta channel: v2.7.15-beta.2 artifacts contain 109 runtime files, same as stable v2.7.14.
