@@ -5,7 +5,7 @@
 
 RGX-Framework is a single `RequiredDeps` entry that provides a declarative addon front door, events, timers, hooks, combat queueing, slash commands, saved-variable profiles, fonts, colors, a color picker, textures, dropdowns, UI controls, a theming system, tooltips, aura scanning, minimap buttons, sound playback, DataBroker support, and more. No embedding. No version conflicts. No library chains.
 
-Current release `v2.7.13` supports Retail `120100`, Classic Era `11509`, TBC
+Current release `v2.7.14` supports Retail `120100`, Classic Era `11509`, TBC
 `20506`, Wrath/Titan `38002`, Cataclysm `40402`, and Mists `50504` from one
 runtime-only addon package.
 
@@ -126,4 +126,4 @@ All modules load from `RGX-Framework.xml`; the dormant tier was re-enabled in v2
 Framework releases are tagged `vX.Y.Z`, published to GitHub, and uploaded to
 CurseForge when its project ID and secret are configured. The canonical
 changelog is [[Changelog]].
-> **Beta testing:** v2.7.14-beta.1 is the opt-in test build; stable remains v2.7.13.
+> **Beta testing:** v2.7.14-beta.1 is the opt-in test build; stable remains v2.7.14.
