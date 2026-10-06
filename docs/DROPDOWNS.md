@@ -47,6 +47,7 @@ local dd = Drops:CreateNestedDropdown(parent, {
     -- Optional BLU-derived retail button face; the same nested menu remains.
     -- Omit for the client-default dropdown presentation.
     triggerStyle = "retail",
+    justifyH = "LEFT", -- retail trigger text alignment: LEFT (default), CENTER, or RIGHT
 
     onButtonCreated = function(buttonFrame, item) end, -- after each button is rendered
 })
@@ -55,6 +56,9 @@ local dd = Drops:CreateNestedDropdown(parent, {
 `Fonts:CreateFontDropdown` and `Fonts:CreateFontSettingControl` pass
 `triggerStyle` through to this factory. The visible retail trigger is styled
 with the current RGXDesign theme; the existing native menu handles selection.
+`justifyH` only affects the closed retail trigger face, not menu rows, and
+CENTER/RIGHT move the arrow inset so the label keeps symmetric (or
+right-anchored) room.
 
 ### Item schema
 
