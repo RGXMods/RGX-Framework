@@ -126,4 +126,4 @@ All modules load from `RGX-Framework.xml`; the dormant tier was re-enabled in v2
 Framework releases are tagged `vX.Y.Z`, published to GitHub, and uploaded to
 CurseForge when its project ID and secret are configured. The canonical
 changelog is [[Changelog]].
-> **Beta testing:** v2.7.14-beta.1 is the opt-in test build; stable remains v2.7.14.
+> **Beta testing:** v2.7.15-beta.1 is the opt-in test build; stable remains v2.7.14.
