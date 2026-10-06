@@ -183,7 +183,7 @@ header and in `README.md`. Consumer addons inherit the
 
 Full per-version notes remain in [`docs/changelogs/`](https://github.com/RGXMods/RGX-Framework/tree/main/docs/changelogs), including releases from v1.x through v2.5.0. The 2.7.13 beta channel (beta.1, beta.2) was promoted to stable as v2.7.13; its notes remain in [`docs/changelogs/`](https://github.com/RGXMods/RGX-Framework/tree/main/docs/changelogs).
 
-## Beta - v2.7.15-beta.1
+## Beta - v2.7.15-beta.2
 
 Opt-in beta; stable remains v2.7.14. See
-[beta notes](changelogs/2.7.15-beta.1.md) for additions and tester checks.
+[beta notes](changelogs/2.7.15-beta.2.md) for additions and tester checks.
