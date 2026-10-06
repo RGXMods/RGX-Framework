@@ -11,14 +11,6 @@ export function createValidateAddon({ schema, Ajv }) {
     if (opts.options && typeof opts.options === "object" && "columns" in opts.options) {
       tier4Used.push("options.columns");
     }
-    if (opts.options && typeof opts.options === "object") {
-      for (const [tab, controls] of Object.entries(opts.options)) {
-        if (!Array.isArray(controls)) continue;
-        controls.forEach((control, index) => {
-          if (typeof control === "string") tier4Used.push(`options.${tab}[${index}]`);
-        });
-      }
-    }
     return { valid, errors: validate.errors ?? [], tier4KeysUsed: tier4Used };
   };
 }
