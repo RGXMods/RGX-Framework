@@ -49,7 +49,7 @@ framework bug — report it.
 | `welcome` | startup string printed with the framework icon and `[RGX]` prefix on load; obeys the global `/rgx login on|off` preference | — |
 | `onInit` | function(addon), runs on ADDON_LOADED after `db`/`options` exist — the imperative escape hatch | — |
 | `every` | `name = { seconds, function(addon, timer) }`; starts after ADDON_LOADED and first fires after the interval | multiple deterministically named repeating timers; handlers may self-cancel with `addon:CancelTimer(timer)` |
-| `brand` | — | Hex color (no `#`) for the chat prefix; assumes `58be81` |
+| `brand` | — | Hex color (no `#`) for the chat prefix; also themes the options panel (tab/header accents). Assumes `58be81` |
 | `table` | — | Use an existing table as the addon object |
 
 ## Named repeating timers

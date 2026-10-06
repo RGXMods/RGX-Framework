@@ -679,6 +679,16 @@ function RGX.Addon(name, opts)
                     if hint and hint > 0 then return hint end
                     return nil
                 end
+                -- The brand color selected for chat also themes the panel
+                -- (tabs, header emphasis) so bare declarative addons get their
+                -- brand look without writing theme tables.
+                local theme = opts.theme or opts.colors
+                if not theme and type(opts.brand) == "string" and #opts.brand == 6 then
+                    local r = tonumber(opts.brand:sub(1, 2), 16) / 255
+                    local g = tonumber(opts.brand:sub(3, 4), 16) / 255
+                    local b = tonumber(opts.brand:sub(5, 6), 16) / 255
+                    theme = { primary = { r, g, b } }
+                end
                 addon.panel = UI:CreateOptionsPanel({
                     addonName = name,
                     title     = opts.title or name,
@@ -686,6 +696,7 @@ function RGX.Addon(name, opts)
                     width     = pick(opts.panelWidth,  geom.width),
                     height    = pick(opts.panelHeight, geom.height),
                     maxPerRow = pick(opts.maxPerRow,   geom.maxPerRow),
+                    theme     = theme,
                 })
             end -- UI check
         end -- addon.db check
