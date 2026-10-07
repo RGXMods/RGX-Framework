@@ -859,6 +859,10 @@
           ]
         },
         {
+          "name": "GetStyle",
+          "params": []
+        },
+        {
           "name": "GetThemePreset",
           "params": []
         },
@@ -881,6 +885,12 @@
           "params": [
             "color",
             "accent"
+          ]
+        },
+        {
+          "name": "SetStyle",
+          "params": [
+            "name"
           ]
         },
         {
