@@ -481,7 +481,7 @@ See [docs/FONTS.md](FONTS.md) for complete documentation.
 
 ```lua
 Colors:OpenPicker({
-    color = "brand",
+    color = "primary",
     hasOpacity = false,
     onChanged = function(color, r, g, b, a, cancelled) end,
 })
@@ -576,24 +576,32 @@ See [docs/DROPDOWNS.md](DROPDOWNS.md) for complete documentation.
 
 ## Design (`RGXDesign`)
 
-### Static Color Palette
+### Theme Tokens
 
-| Key | Hex | Usage |
+| Key | Default | Usage |
 |---|---|---|
-| `primary` | `#58be81` | Brand green |
-| `accent` | `#bc6fa8` | Brand purple |
-| `surface` | — | Panel backgrounds |
-| `background` | — | Main backgrounds |
-| `text` | — | Primary text |
-| `subtext` | — | Secondary text |
-| `success` | — | Positive indicators |
-| `warning` | — | Caution indicators |
-| `error` | — | Error/negative indicators |
-| `border` | — | Default borders |
-| `borderActive` | — | Focused borders |
-| `hover` | — | Hover highlights |
+| `primary` (also `main`, `mainColor`, `highlight`) | `#00e6ff` | Main theme color; overridden by the active theme or preset |
+| `accent` | `#bc6fa8` | Secondary highlight; active states |
+| `borderActive` | `primary` | Focused / selected borders |
+| `mainSurface` / `mainHover` / `mainBorder` | derived from `primary` | 10% / 20% / 35% brightness shades |
 
-Access via `Design.Colors.primary`, `Design.Colors.accent`, etc.
+Access tokens via `Design:GetColor("primary")` / `Design:GetColor("accent")` or
+`Design:Unpack(key)`. `SetTheme`, `SetHighlightColor`, and the aliases
+`SetMainColor` / `SetColors` / `UseTheme` override the tokens; the framework
+settings preset selector stores its choice in `RGXFrameworkDB.themePreset`.
+
+### Structural Palette (`Design.Colors`)
+
+| Key | Usage |
+|---|---|
+| `surface` / `panelAlt` | Panel and card backgrounds |
+| `background` | Main window backgrounds |
+| `text` / `subtext` / `label` | Text tiers |
+| `success` / `warning` / `error` | Semantic colors |
+| `border` / `hover` / `track` | Borders and widget tracks |
+
+Access via `Design.Colors.surface`, etc. `Design:GetColor` resolves theme
+tokens first and falls back to this table.
 
 ---
 

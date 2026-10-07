@@ -370,7 +370,7 @@ local function CreateOptionsPanel(UI, opts)
     opts = opts or {}
     local D = GetDesign()
     -- Apply the requested theme for the build, then restore the previous
-    -- global theme so addons do not leak brand colors into later panels.
+    -- global theme so addons do not leak theme colors into later panels.
     -- Tab buttons honor panel.theme at runtime via GetTabPrimary.
     local _prevPrimary = D and D.Theme and D.Theme.primary
     local _prevAccent  = D and D.Theme and D.Theme.accent

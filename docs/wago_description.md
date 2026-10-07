@@ -126,7 +126,7 @@ Core-only APIs (events, timers, hooks, slash commands) are available immediately
 | **UI Controls** | Slider, toggle, label, dropdown, color picker, section, preview, reset button |
 | **Options Panels** | Tabbed settings windows registered with WoW Settings |
 | **Minimap** | Circular-drag buttons with persistent angle, tooltip, show/hide |
-| **Design** | Static brand palette (`primary`, `accent`, `border`, etc.) + visual building blocks |
+| **Design** | Theme tokens (`primary`, `accent`) + static structural palette (`surface`, `text`, `border`, etc.) + visual building blocks |
 | **DataBroker** | LibDataBroker-compatible proxy data sources |
 | **Sound** | Level-up sound system with variant playback and SavedVar integration |
 

@@ -18,8 +18,8 @@ The Colors module (`RGXColors`) provides a named color palette, class/quality/po
 | `white` | `#ffffff` | Normal text |
 | `gray` | `#9e9e9e` | Disabled/muted |
 | `black` | `#000000` | Backgrounds |
-| `primary` | `#58be81` | Brand primary |
-| `accent` | `#bc6fa8` | Brand accent |
+| `primary` | `#00a2ff` | UI primary (`Colors.ui`) |
+| `secondary` | `#4d4d4d` | UI secondary (`Colors.ui`) |
 | `epic` | `#a335ee` | Epic quality |
 | `rare` | `#0070dd` | Rare quality |
 | `uncommon` | `#1eff00` | Uncommon quality |
@@ -118,11 +118,11 @@ myTexture:SetColorTexture(r, g, b, 1)
 
 ### `Colors:GetHex(name)` → `string`
 
-Get the full hex color string with alpha prefix:
+Get the hex color string without `#` or an alpha prefix:
 
 ```lua
 local hex = Colors:GetHex("primary")
--- → "ff58be81"
+-- → "00a2ff"
 ```
 
 ### `Colors:Create(r, g, b, a)` → `ColorMixin`
@@ -175,7 +175,7 @@ myFontString:SetText(wrapped)
 -- Renders as red "Important!"
 ```
 
-Works with any named palette color: `"primary"`, `"accent"`, `"success"`, `"warning"`, `"error"`, etc.
+Works with any named palette color: `"primary"`, `"success"`, `"warning"`, `"error"`, etc.
 
 ---
 

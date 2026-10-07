@@ -184,7 +184,7 @@ end
 --[[============================================================================
 SLIDER CONTROL
 
-Custom track-style slider using RGX brand colors.
+Custom track-style slider using RGX theme colors.
 - Drag, click, or scroll to change value
 - Value label appears on hover
 - Reset button snaps to default
@@ -222,7 +222,7 @@ function UI:CreateSlider(parent, options)
 	local valueDisplay = options.valueDisplay or "always"
 	assert(valueDisplay == "always" or valueDisplay == "hover" or valueDisplay == "none",
 		"RGX UI: slider valueDisplay must be always, hover, or none")
-	-- progress: show the brand-colored fill behind the thumb. Defaults on so
+	-- progress: show the primary-colored fill behind the thumb. Defaults on so
 	-- existing sliders are unchanged; pass progress = false for a bare track
 	-- (some panels want the thumb without a running fill).
 	local showProgress = options.progress
@@ -422,7 +422,7 @@ end
 --[[============================================================================
 VOLUME SLIDER CONTROL
 
-3-position discrete slider (Low / Medium / High) using the RGX brand colors.
+3-position discrete slider (Low / Medium / High) using RGX theme colors.
 Click or scroll to cycle. Label appears below on hover.
 
 Usage:

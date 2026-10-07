@@ -42,7 +42,7 @@ local accent  = Design:GetColor("accent")
 | Key | Hex | RGB | Usage |
 |---|---|---|---|
 | `primary` / `main` / `mainColor` | `#00e6ff` | Cyan | Main theme color; overridden by the active theme |
-| `accent` | `#bc6fa8` | Purple | Brand secondary, highlights, active states |
+| `accent` | `#bc6fa8` | Purple | Secondary highlight; active states |
 
 The framework settings **Main color** preset selector stores its choice in
 `RGXFrameworkDB.themePreset`; the corner selector stores `cornerStyle`.
@@ -118,7 +118,7 @@ myFontString:SetTextColor(Design:Unpack("main"))
 
 ```lua
 local Colors = RGX:GetColors()
-Colors:ApplyText(myFontString, "primary")     -- if registered as named color
+Colors:ApplyText(myFontString, "primary")     -- named RGXColors palette color
 Colors:ApplyStatusBar(myBar, "success")
 ```
 
@@ -126,7 +126,7 @@ Colors:ApplyStatusBar(myBar, "success")
 
 ```lua
 local Colors = RGX:GetColors()
-local wrapped = Colors:Wrap("Hello", "primary")  -- |cff58be81Hello|r
+local wrapped = Colors:Wrap("Hello", "primary")  -- |cff00a2ffHello|r
 local classText = Colors:WrapClass("Hunter", "HUNTER")
 local qualText = Colors:WrapQuality("Epic", 4)
 ```
@@ -136,8 +136,8 @@ local qualText = Colors:WrapQuality("Epic", 4)
 ```lua
 local Colors = RGX:GetColors()
 local dimmed = Colors:Darken("primary", 0.3)      -- 30% darker
-local bright = Colors:Lighten("accent", 0.2)      -- 20% lighter
-local mid    = Colors:Lerp(Colors:Get("primary"), Colors:Get("accent"), 0.5)
+local bright = Colors:Lighten("blue", 0.2)        -- 20% lighter
+local mid    = Colors:Lerp(Colors:Get("primary"), Colors:Get("blue"), 0.5)
 local health = Colors:Health(0.75)                  -- green → yellow → red gradient
 ```
 
@@ -148,7 +148,7 @@ local health = Colors:Health(0.75)                  -- green → yellow → red 
 `RGXDesign` provides helper methods for creating consistent UI elements:
 
 - Panel backgrounds with the RGX surface color
-- Section headers using brand fonts and primary/accent colors
+- Section headers using RGX fonts with the theme's primary/accent colors
 - Consistent border styling with `border` and `borderActive`
 
 ---
@@ -180,7 +180,7 @@ local style = Fonts:CreateStyle({
     font = "Inter-Regular",
     size = 13,
     flags = "OUTLINE",
-    color = "primary",       -- resolved from Design.Colors
+    color = "primary",       -- resolved via the RGXColors palette
     justifyH = "LEFT",
 })
 Fonts:ApplyStyle(myFontString, style)
@@ -218,7 +218,7 @@ local panel = RGX:Options({
 })
 ```
 
-### Minimap button with brand colors
+### Minimap button with theme colors
 
 ```lua
 RGX:CreateMinimapButton({
@@ -228,7 +228,7 @@ RGX:CreateMinimapButton({
         title = Colors:Wrap("My Addon", "primary"),
         lines = {
             { left = Colors:Wrap("Left-Click", "primary"), right = "Open options" },
-            { left = Colors:Wrap("Drag", "accent"), right = "Reposition" },
+            { left = Colors:Wrap("Drag", "purple"), right = "Reposition" },
         },
     },
     onLeftClick = function() panel:Open() end,

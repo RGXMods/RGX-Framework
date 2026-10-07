@@ -46,7 +46,7 @@ end
 -- Theme tokens. Addons should override these before building UI.
 Design.Theme = {
     primary = {0.000, 0.902, 1.000}, -- #00e6ff cyan
-    accent  = {0.737, 0.435, 0.659}, -- #bc6fa8 brand purple (highlights/active states)
+    accent  = {0.737, 0.435, 0.659}, -- #bc6fa8 purple (highlights/active states)
 }
 
 -- Named theme presets exposed through the framework settings panel. Each
@@ -239,7 +239,7 @@ Design.SetMainColor = Design.SetHighlightColor
 
 -- Scoped theme override for one addon's UI construction without mutating the
 -- shared defaults: applies the theme for fn's duration, then restores.
---   Design:WithTheme({ primary = MY_BRAND_GREEN }, function() ... build panel ... end)
+--   Design:WithTheme({ primary = MY_PRIMARY }, function() ... build panel ... end)
 function Design:WithTheme(theme, fn)
     if type(fn) ~= "function" then return end
     local prevPrimary = self.Theme.primary
@@ -402,9 +402,9 @@ function Design:CreateSectionHeader(parent, text, icon)
     local header = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     header:SetHeight(32)
     self:ApplyBackdrop(header, "solid", 0.95)
-    -- Section headers frame in a muted version of the theme's brand color:
-    -- the primary token dimmed down, never the full-brightness or accent
-    -- variant, so every addon gets its own subdued brand frame.
+    -- Section headers frame in a muted version of the theme's primary color:
+    -- the primary token dimmed down, never the full-brightness variant, so
+    -- every addon gets a subdued frame that follows its theme.
     header:SetBackdropBorderColor(self:Unpack("mainBorder"))
 
     local leftInset = 10
