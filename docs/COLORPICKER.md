@@ -37,6 +37,11 @@ CP:Show(color, callback, { rgb = false, presets = false })
 
 Keys default to shown; passing `false` hides the matching section, collapses the panel to fit, and re-anchors the remaining sections and the OK/Cancel buttons. The next `Show` without `opts` restores every section. Sections: `classes` (Class Colors label + row), `preview` (circular preview, HEX field, eyedropper), `rgb` (R/G/B inputs), `presets` (Quality/Basic swatches).
 
+`opts.scale` (positive number, default `1`) uniformly scales the dialog for
+compact consumers — e.g. `{ rgb = false, presets = false, scale = 0.85 }`.
+The frame is a singleton, so the scale resets to `1` on every `Show` without
+the key; non-numeric or non-positive values are ignored.
+
 ### Via the declarative DSL
 
 ```lua

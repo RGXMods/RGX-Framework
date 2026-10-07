@@ -1078,6 +1078,10 @@ function ColorPicker:Show(color, callback, opts)
     
     local f = self:GetFrame()
     ApplySections(f, opts)
+    -- Compact popups (e.g. SQP) scale the whole dialog. The frame is a
+    -- singleton shared across consumers, so the scale resets every Show.
+    local scale = (opts and type(opts.scale) == "number" and opts.scale > 0) and opts.scale or 1
+    f:SetScale(scale)
     self:UpdateUI()
     f:Show()
 end
