@@ -262,6 +262,10 @@ scenario("class row renders live client colors inside its declared width", funct
     assert(yoff <= 0.5 and yoff - s.height >= -(rowH + 0.5),
       "swatch rectangle overflows row height: " .. tostring(yoff - s.height) .. " < " .. tostring(-rowH))
   end
+  -- All 13 classes fit the 260px content width on a single line.
+  for _, s in ipairs(sw) do
+    assert(s.points[1][5] == 0, "class swatch wrapped to a second line")
+  end
 end)
 
 scenario("class row hides itself when the client palette is absent", function()
@@ -409,6 +413,122 @@ scenario("embedded OnShow re-projects storage written by a peer", function()
   w.scripts.OnShow(w)
   local r, _, b = w:GetColor()
   assert(math.abs(b - 1) < 1e-6 and math.abs(r) < 1e-6, "OnShow did not re-read storage")
+end)
+
+scenario("Show opts collapse RGB and presets and shrink the panel", function()
+  CP:Show({ r = 0, g = 0, b = 1 }, function() end, { rgb = false, presets = false })
+  assert(not f.rgbRow:IsShown(), "rgb row stayed visible")
+  for _, el in ipairs(f.rgbGroup) do assert(not el:IsShown(), "rgb element stayed visible") end
+  for _, el in ipairs(f.presetsGroup) do assert(not el:IsShown(), "preset element stayed visible") end
+  -- Visible sections chain onto the previous visible one; the centred
+  -- OK/Cancel pair sits at a panel-absolute position below the content.
+  local pt = f.previewRing.points[1]
+  assert(pt and pt[1] == "TOPLEFT" and pt[2] == f.classRow.frame and pt[4] == 0 and pt[5] == -14,
+    "preview did not re-anchor under the class row")
+  local okPt = f.okBtn.points[1]
+  local okY = -(46 + f.spectrum.gridH + f.sections[1].flow + f.sections[2].flow + 16)
+  assert(okPt and okPt[1] == "TOPLEFT" and okPt[2] == f and okPt[4] == 155 and okPt[5] == okY,
+    "OK button is not centred below the content")
+  -- RGB flow (14 + 46) and presets flow no longer matter: the height is
+  -- derived from the visible content plus buttons and one bottom margin.
+  local expected = 46 + f.spectrum.gridH + f.sections[1].flow + f.sections[2].flow + 16 + 28 + 20
+  assert(f.height == expected, "panel height is not content-derived: " .. tostring(f.height))
+  -- First visible section aligns back to the 20px content margin, not to the
+  -- centred spectrum's left edge (36).
+  local cpt = f.classLabel.points[1]
+  assert(cpt and cpt[4] == 20 - 36, "class label did not align to the content margin")
+end)
+
+scenario("Show without opts restores every section and the full panel", function()
+  CP:Show({ r = 1, g = 1, b = 1 }, function() end)
+  for _, el in ipairs(f.rgbGroup) do assert(el:IsShown(), "rgb element did not return") end
+  for _, el in ipairs(f.presetsGroup) do assert(el:IsShown(), "preset element did not return") end
+  local pt = f.presetsLabel.points[1]
+  assert(pt and pt[1] == "TOPLEFT" and pt[2] == f.rgbRow and pt[4] == 0 and pt[5] == -14,
+    "presets did not re-anchor under RGB")
+  local okPt = f.okBtn.points[1]
+  local okY = -(46 + f.spectrum.gridH
+    + f.sections[1].flow + f.sections[2].flow + f.sections[3].flow + f.sections[4].flow + 16)
+  assert(okPt and okPt[1] == "TOPLEFT" and okPt[2] == f and okPt[4] == 155 and okPt[5] == okY,
+    "OK button is not centred below the full content")
+  local full = 46 + f.spectrum.gridH
+    + f.sections[1].flow + f.sections[2].flow + f.sections[3].flow + f.sections[4].flow
+    + 16 + 28 + 20
+  assert(f.height == full, "full panel height is not content-derived: " .. tostring(f.height))
+end)
+
+scenario("spectrum and brightness bar are centred as one group", function()
+  local spt = f.spectrum.frame.points[1]
+  local centred = (300 - (f.spectrum.gridW + 14 + 18)) / 2
+  assert(spt and spt[4] == centred and centred == 36,
+    "spectrum is not centred: " .. tostring(spt and spt[4]))
+end)
+
+scenario("classes=false moves the preview up to the spectrum", function()
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { classes = false })
+  for _, el in ipairs(f.classGroup) do assert(not el:IsShown(), "class element stayed visible") end
+  local pt = f.previewRing.points[1]
+  assert(pt and pt[1] == "TOPLEFT" and pt[2] == f.spectrum.frame and pt[4] == 20 - 36 and pt[5] == -14,
+    "preview did not align to the content margin under the spectrum")
+  local noClass = 46 + f.spectrum.gridH + f.sections[2].flow + f.sections[3].flow + f.sections[4].flow + 16 + 28 + 20
+  assert(f.height == noClass, "panel height ignored the class flow: " .. tostring(f.height))
+end)
+
+scenario("preview=false chains RGB and buttons onto the class row", function()
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { preview = false, presets = false })
+  for _, el in ipairs(f.previewGroup) do assert(not el:IsShown(), "preview element stayed visible") end
+  local pt = f.rgbRow.points[1]
+  assert(pt and pt[1] == "TOPLEFT" and pt[2] == f.classRow.frame and pt[5] == -14,
+    "RGB row did not re-anchor under the class row")
+  local okPt = f.okBtn.points[1]
+  local okY = -(46 + f.spectrum.gridH + f.sections[1].flow + f.sections[3].flow + 16)
+  assert(okPt and okPt[4] == 155 and okPt[5] == okY,
+    "OK button is not centred below the chained content")
+end)
+
+scenario("Show accepts a dialog scale and resets it", function()
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { scale = 0.85 })
+  assert(f.dialogScale == 0.85, "dialog scale was not applied: " .. tostring(f.dialogScale))
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end)
+  assert(f.dialogScale == 1, "dialog scale did not reset: " .. tostring(f.dialogScale))
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { scale = 0 })
+  assert(f.dialogScale == 1, "non-positive scale was not rejected")
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { scale = "big" })
+  assert(f.dialogScale == 1, "non-numeric scale was not rejected")
+end)
+
+scenario("Cancel is safe before first open and ESC can close the dialog", function()
+  local saved = CP.frame
+  CP.frame = nil
+  CP:Cancel()
+  UISpecialFrames = {}
+  CP.frame = nil
+  CP:GetFrame()
+  local found = false
+  for _, name in ipairs(UISpecialFrames) do
+    if name == "RGXColorPicker" then found = true end
+  end
+  assert(found, "dialog did not join UISpecialFrames")
+  CP.frame = saved
+end)
+
+scenario("a short class row centres instead of hugging the left margin", function()
+  local saved = RAID_CLASS_COLORS
+  RAID_CLASS_COLORS = {}
+  for _, name in ipairs({ "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST",
+      "DEATHKNIGHT", "SHAMAN", "MAGE", "WARLOCK", "MONK" }) do
+    RAID_CLASS_COLORS[name] = saved[name]
+  end
+  CP.frame = nil
+  local slim = CP:GetFrame()
+  assert(#slim.classRow.swatches == 10, "expected 10 class swatches, got " .. #slim.classRow.swatches)
+  local first = slim.classRow.swatches[1].points[1]
+  assert(first and first[4] == (260 - 10 * 20) / 2,
+    "short class row is not centred: " .. tostring(first and first[4]))
+  local last = slim.classRow.swatches[10]
+  local lastPt = last.points[1]
+  assert(lastPt[4] + last.width <= 260.5, "centred row overhangs the content width")
+  RAID_CLASS_COLORS = saved
 end)
 
 print(string.format("COLORPICKER %d passed, %d failed", pass, fail))
