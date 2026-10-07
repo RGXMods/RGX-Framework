@@ -21,7 +21,7 @@ The temporary source-only MCP conformance fixture for RGX-Framework. It validate
 - **Read-only first.** Tools inspect and generate text; they never write to repos, never commit, never call the game. Write-capable tools require an explicit roadmap decision.
 - **Dependency direction is one-way.** The tool reads the framework's schema/docs at runtime (repo root by default; `RGX_FRAMEWORK_PATH` to override). Never duplicate the schema into `tools/` (one source of truth), and the addon runtime (`core/`, `modules/`, XML, TOC) must never reference `tools/`.
 - **Congruence over invention.** Every tool behavior derives from the contract/schema. A new detector or generator feature must correspond to a rule the framework actually enforces. If the contract does not cover it, update runtime, `docs/DECLARATIVE-API.md`, schema, fixture, and RGX-Hello together.
-- **Generated code uses shipped keys only** (`x-rgx-ships: "today"`), in `RGXAddon "Name" { }` form. Never generate tier4 syntax as if it runs.
+- **Generated code uses shipped keys only** (`x-rgx-ships: "today"`), in `RGXAddon "Name" { }` form. Never generate tier4 syntax as if it runs. Escape every authored string and table key and reject non-finite numbers; raw `CreateFrame`, `C_Timer`, `SLASH_*`, and hook replacement must be unrepresentable in generated output.
 
 ## Structure
 

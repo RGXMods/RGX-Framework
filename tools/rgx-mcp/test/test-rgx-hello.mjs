@@ -18,6 +18,7 @@ import { readFileSync } from "node:fs";
 import { createDefinitionEngine, exampleDefinition } from "../../../contract/engine/definition.mjs";
 import Ajv2020 from "ajv/dist/2020.js";
 import { createValidateAddon } from "../../../contract/engine/validate-addon.mjs";
+import { generateAddonLua } from "../../../contract/engine/generate-addon.mjs";
 import { engineCases } from "../../ci/contract-vectors.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -265,6 +266,139 @@ try {
     columnsParseError = error.message;
   }
   check("generated columns parse as Lua 5.1", columnsParses, columnsParseError);
+
+  console.log("\n== Generation restrictions (issue #7) ==");
+  const bannedCallers = /^(CreateFrame|hooksecurefunc|C_Timer(\.|$)|_G(\.|$)|SLASH_)/;
+  function astNames(lua) {
+    const ast = luaparse.parse(lua, { luaVersion: "5.1" });
+    const called = [];
+    const assigned = [];
+    const resolve = (node) => {
+      if (node?.type === "Identifier") return node.name;
+      if (node?.type === "MemberExpression" && node.base?.type === "Identifier") {
+        return `${node.base.name}.${node.identifier?.name ?? ""}`;
+      }
+      return null;
+    };
+    const walk = (node) => {
+      if (!node || typeof node !== "object") return;
+      if (Array.isArray(node)) {
+        node.forEach(walk);
+        return;
+      }
+      if (node.type === "CallExpression") {
+        const name = resolve(node.base);
+        if (name) called.push(name);
+      }
+      if (node.type === "AssignmentStatement") {
+        for (const target of node.variables) {
+          const name = resolve(target);
+          if (name) assigned.push(name);
+        }
+      }
+      for (const value of Object.values(node)) walk(value);
+    };
+    walk(ast);
+    return { called, assigned };
+  }
+  const offending = (names) => [...names.called, ...names.assigned].filter((name) => bannedCallers.test(name));
+  const offendingSafely = (lua) => {
+    try {
+      return offending(astNames(lua));
+    } catch (error) {
+      return [`unparseable: ${error.message}`];
+    }
+  };
+  const baselineNames = astNames(generatedLua);
+  check(
+    "generated addon has no raw CreateFrame/C_Timer/SLASH_/hook writes",
+    offending(baselineNames).length === 0,
+    JSON.stringify(baselineNames)
+  );
+  const dependencyLines = generatedLua.split("\n").filter((line) => line.includes("RequiredDeps"));
+  check(
+    "generated addon declares only the listed RGX-Framework dependency",
+    dependencyLines.length === 1
+      && dependencyLines[0].includes("RequiredDeps: RGX-Framework")
+      && !/OptionalDeps/.test(generatedLua)
+      && !/\brequire\s*\(/.test(generatedLua)
+      && !/LoadAddOn/.test(generatedLua),
+    JSON.stringify(dependencyLines)
+  );
+
+  const hostileNameGen = await client.callTool({ name: "rgx_generate_addon", arguments: {
+    name: 'Evil\nCreateFrame("Frame")\nos.exit()',
+  } });
+  const hostileNameLua = hostileNameGen.content?.[0]?.text ?? "";
+  let hostileNameParses = true;
+  let hostileNameError = "";
+  try {
+    luaparse.parse(hostileNameLua, { luaVersion: "5.1" });
+  } catch (error) {
+    hostileNameParses = false;
+    hostileNameError = error.message;
+  }
+  check("hostile addon names cannot break out of the header comment", hostileNameParses, hostileNameError);
+  check(
+    "hostile addon names keep the TOC hint line intact",
+    hostileNameLua.split("\n")[1]?.startsWith("-- TOC needs:"),
+    JSON.stringify(hostileNameLua.split("\n").slice(0, 3))
+  );
+  check(
+    "hostile addon names introduce no raw CreateFrame call",
+    offendingSafely(hostileNameLua).length === 0,
+    hostileNameLua
+  );
+
+  const hostileKey = 'x"] = 1, f = CreateFrame("Frame") or t["';
+  const hostileDbGen = await client.callTool({ name: "rgx_generate_addon", arguments: {
+    name: "HostileDb", db: { [hostileKey]: true },
+  } });
+  const hostileDbLua = hostileDbGen.content?.[0]?.text ?? "";
+  let hostileDbParses = true;
+  let hostileDbError = "";
+  try {
+    luaparse.parse(hostileDbLua, { luaVersion: "5.1" });
+  } catch (error) {
+    hostileDbParses = false;
+    hostileDbError = error.message;
+  }
+  check("hostile db keys cannot break out of the db table", hostileDbParses, hostileDbError);
+  check(
+    "hostile db keys are emitted as escaped string keys",
+    hostileDbLua.includes('["x\\"] = 1, f = CreateFrame(\\"Frame\\") or t[\\""] = true'),
+    hostileDbLua
+  );
+  check(
+    "hostile db keys introduce no raw CreateFrame call",
+    offendingSafely(hostileDbLua).length === 0,
+    hostileDbLua
+  );
+
+  const injectedSeconds = await client.callTool({ name: "rgx_generate_addon", arguments: {
+    name: "InjectedSeconds", every: { tick: "1) end os.exit() --" },
+  } });
+  check(
+    "generator rejects non-numeric timer seconds at the tool boundary",
+    injectedSeconds.isError === true,
+    JSON.stringify(injectedSeconds).slice(0, 200)
+  );
+
+  let engineRejectedSeconds = false;
+  try {
+    generateAddonLua({ name: "DirectSeconds", every: { tick: "1) end os.exit() --" } });
+  } catch {
+    engineRejectedSeconds = true;
+  }
+  check("shared generation engine rejects non-numeric timer seconds", engineRejectedSeconds);
+
+  let engineRejectedDbValue = false;
+  try {
+    generateAddonLua({ name: "DirectDb", db: { evil: { nested: true } } });
+  } catch {
+    engineRejectedDbValue = true;
+  }
+  check("shared generation engine rejects non-scalar db values", engineRejectedDbValue);
 
   const invalidEveryVal = await client.callTool({
     name: "rgx_validate_addon",
