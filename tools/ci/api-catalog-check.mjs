@@ -10,9 +10,13 @@
 // introduced, docs, approval flags) are preserved as authored and validated
 // for shape only.
 //
-// Unknown is not absent: `methods: null` means "not yet enumerated" and is
-// treated as fail-closed (no method may be generated) until reviewed; an empty
-// array is rejected because it would claim the module has no public methods.
+// Methods are derived too: every non-underscore function definition on the
+// module's registered table (lifecycle Init excluded) with its raw parameter
+// names. A file may only contribute methods when its receiver is verifiably
+// bound to the module table (owner declaration, addon vararg slot, addon
+// handoff, published RGX global, or RGX getter); name collisions fail loudly
+// instead of mis-attributing. The list is a complete static enumeration of
+// shipped definitions, not yet a per-method approval.
 //
 // Usage:
 //   node tools/ci/api-catalog-check.mjs            # verify
@@ -36,14 +40,27 @@ const write = process.argv.includes("--write");
 
 const xml = readFileSync(join(ROOT, "RGX-Framework.xml"), "utf8");
 const entries = [...xml.matchAll(/<Script file="([^"]+)"/g)].map((m) => m[1].replace(/\\/g, "/"));
+const sources = new Map(entries.map((entry) => [entry, readFileSync(join(ROOT, entry), "utf8")]));
 
 // Registered modules straight from XML order, same parse module-graph uses.
+// The registration receiver (second argument, or the enclosing table when the
+// call passes `self`) is how method definitions are attributed to a module.
 const registered = new Map();
+const receivers = new Map();
 for (const entry of entries) {
-  const src = readFileSync(join(ROOT, entry), "utf8");
+  const src = sources.get(entry);
   for (const match of src.matchAll(/RGX:RegisterModule\(\s*"([^"]+)"\s*,\s*([^),]+)\s*(,[^)]*)?\)/gs)) {
     const name = match[1];
     assert(!registered.has(name), `duplicate module name '${name}' (${registered.get(name)?.owner} and ${entry})`);
+    const target = match[2].trim();
+    let receiver = target;
+    if (target === "self") {
+      const enclosing = [...src.slice(0, match.index).matchAll(/^function (\w+)[:.]/gm)].pop();
+      assert(enclosing, `${entry}: module '${name}' registers self outside any method`);
+      receiver = enclosing[1];
+    }
+    assert(!receivers.has(receiver), `receiver '${receiver}' claimed by both '${receivers.get(receiver)}' and '${name}'`);
+    receivers.set(receiver, name);
     const opts = match[3] ? match[3].trim() : "";
     const category = opts.match(/category\s*=\s*"([^"]+)"/)?.[1];
     assert(category, `${entry}: module '${name}' declares no category`);
@@ -53,7 +70,7 @@ for (const entry of entries) {
     const flavors = opts.match(/flavors\s*=\s*\{([^}]*)\}/)?.[1]
       ? [...opts.match(/flavors\s*=\s*\{([^}]*)\}/)[1].matchAll(/"([^"]+)"/g)].map((m) => m[1])
       : null;
-    registered.set(name, { owner: entry, category, stability, flavors });
+    registered.set(name, { owner: entry, category, stability, flavors, receiver, target });
   }
 }
 assert(registered.size > 0, "no RGX:RegisterModule calls found");
@@ -68,7 +85,7 @@ const aliasMap = new Map(
   [...aliasBlock[1].matchAll(/(\w+)\s*=\s*"(RGX\w+)"/g)].map((m) => [m[1], m[2]]),
 );
 for (const [name, info] of registered) {
-  const src = readFileSync(join(ROOT, info.owner), "utf8");
+  const src = sources.get(info.owner);
   const direct = new Set([...src.matchAll(/_G\.(RGX\w+)\s*=/g)].map((m) => m[1]));
   if (aliasMap.has(name)) direct.add(aliasMap.get(name));
   assert.equal(direct.size, 1, `module '${name}': expected one public global, derivable candidates: ${[...direct].join(", ") || "none"}`);
@@ -82,6 +99,75 @@ for (const match of coreSrc.matchAll(/function RGX:(Get\w+)\(\)\s+return self:Ge
   getters.set(match[2], `RGX:${match[1]}()`);
 }
 
+// Methods: definitions on the module's registered table across every file the
+// loader ships. Receiver names repeat across the codebase (core's NewDatabase
+// method table is also called DB), so a file contributes only when it
+// verifiably binds that receiver to the module table: owner declaration,
+// addon vararg slot, addon handoff, published RGX global, or RGX getter.
+const METHOD_DEF = /^\s*(?:function\s+([A-Za-z_]\w*)[:.](\w+)\s*\(([^)]*)\)|([A-Za-z_]\w*)\.(\w+)\s*=\s*function\s*\(([^)]*)\))/;
+const methods = new Map();
+const redefinitions = [];
+const bindCache = new Map();
+
+function fileBinds(receiver, file) {
+  const key = `${file}::${receiver}`;
+  if (bindCache.has(key)) return bindCache.get(key);
+  const src = sources.get(file);
+  const module = receivers.get(receiver);
+  const info = registered.get(module);
+  const vararg = new RegExp(`local\\s+[^,\\n]+,\\s*${receiver}\\s*=\\s*\\.\\.\\.`);
+  let bound = false;
+  if (vararg.test(src)) {
+    assert.equal(info.target, "self",
+      `${file}: binds '${receiver}' from the addon vararg, but module '${module}' registers an explicit table instead`);
+    bound = true;
+  } else {
+    const patterns = [
+      `local\\s+${receiver}\\s*=\\s*addon\\._\\w+`,
+      `local\\s+${receiver}\\s*=\\s*_G\\.RGX\\w+`,
+      `local\\s+${receiver}\\s*=\\s*RGX:Get(?:Module\\(|\\w+\\()`,
+      `addon\\._\\w+\\s*=\\s*${receiver}\\b`,
+    ];
+    if (file === info.owner) patterns.push(`local\\s+${receiver}\\s*=\\s*\\{`);
+    bound = patterns.some((pattern) => new RegExp(pattern).test(src));
+  }
+  bindCache.set(key, bound);
+  return bound;
+}
+
+function paramsOf(text) {
+  return text.split(",").map((param) => param.trim()).filter((param) => param.length > 0);
+}
+
+for (const entry of entries) {
+  const lines = sources.get(entry).split("\n");
+  for (let index = 0; index < lines.length; index++) {
+    const match = lines[index].match(METHOD_DEF);
+    if (!match) continue;
+    const receiver = match[1] ?? match[4];
+    const name = match[2] ?? match[5];
+    const module = receivers.get(receiver);
+    if (!module || name.startsWith("_") || name === "Init") continue;
+    if (!fileBinds(receiver, entry)) continue;
+    if (!methods.has(module)) methods.set(module, new Map());
+    const bucket = methods.get(module);
+    const params = paramsOf(match[3] ?? match[6] ?? "");
+    const prior = bucket.get(name);
+    if (prior) {
+      // Identical redefinition is harmless for the catalog (flavor branches);
+      // different parameters make the shipped signature ambiguous.
+      redefinitions.push({ module, name, prior, next: { params, file: entry, line: index + 1 } });
+    }
+    bucket.set(name, { params, file: entry, line: index + 1 });
+  }
+}
+
+const ambiguous = redefinitions.filter((entry) => JSON.stringify(entry.prior.params) !== JSON.stringify(entry.next.params));
+assert.equal(ambiguous.length, 0,
+  `ambiguous method redefinitions (same name, different parameters):\n  - ${ambiguous
+    .map((entry) => `'${entry.module}:${entry.name}' (${entry.prior.params.join(", ")}) at ${entry.prior.file}:${entry.prior.line} vs (${entry.next.params.join(", ")}) at ${entry.next.file}:${entry.next.line}`)
+    .join("\n  - ")}`);
+
 function deriveEntry(name) {
   const info = registered.get(name);
   return {
@@ -92,7 +178,9 @@ function deriveEntry(name) {
     category: info.category,
     stability: info.stability,
     flavors: info.flavors,
-    methods: null,
+    methods: [...(methods.get(name) ?? new Map()).entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([methodName, method]) => ({ name: methodName, params: method.params })),
     introduced: null,
     authorable: false,
     preview: "unavailable",
@@ -127,15 +215,36 @@ function checkEntryField(entry, field, problems) {
         }
       }
       break;
-    case "methods":
-      // null = not yet reviewed (fail-closed). An empty array would claim the
-      // module has no public methods; only reviewed non-empty lists may land.
-      if (value !== null) {
-        if (!Array.isArray(value) || value.length === 0 || value.some((m) => typeof m !== "string" || m.length === 0)) {
-          problems.push(`${at} must be null (unreviewed) or a non-empty string array`);
+    case "methods": {
+      // Derived: every non-underscore function definition on the module's
+      // registered table (lifecycle Init excluded) with raw parameter names.
+      if (!Array.isArray(value)) {
+        problems.push(`${at} must be an array of {name, params} objects`);
+        break;
+      }
+      const names = new Set();
+      for (const method of value) {
+        if (typeof method !== "object" || method === null || Array.isArray(method)) {
+          problems.push(`${at} entries must be {name, params} objects (found: ${JSON.stringify(method)})`);
+          continue;
+        }
+        const keys = Object.keys(method).sort().join(",");
+        if (keys !== "name,params") {
+          problems.push(`${at} entry has unknown shape (found keys: ${keys || "none"})`);
+          continue;
+        }
+        if (typeof method.name !== "string" || !/^[A-Za-z]\w*$/.test(method.name)) {
+          problems.push(`${at} entry name must be a Lua identifier (found: ${JSON.stringify(method.name)})`);
+        } else {
+          if (names.has(method.name)) problems.push(`${at} lists '${method.name}' twice`);
+          names.add(method.name);
+        }
+        if (!Array.isArray(method.params) || method.params.some((param) => typeof param !== "string" || param.length === 0)) {
+          problems.push(`${at} entry '${method.name ?? "?"}'.params must be a non-empty string array (varargs as '...')`);
         }
       }
       break;
+    }
     case "introduced":
       if (value !== null && (typeof value !== "string" || value.length === 0)) problems.push(`${at} must be null or a version string`);
       break;
@@ -161,7 +270,7 @@ function buildFromExisting(existingByName) {
     const derived = deriveEntry(name);
     const prior = existingByName.get(name);
     if (prior) {
-      for (const field of ["methods", "introduced", "authorable", "preview", "docs"]) {
+      for (const field of ["introduced", "authorable", "preview", "docs"]) {
         if (field in prior) derived[field] = prior[field];
       }
     }
@@ -177,7 +286,7 @@ if (write) {
   const catalog = {
     catalogVersion: CATALOG_VERSION,
     description: existing?.description
-      ?? "Approved RGX module API catalog (issue #7). Module, getter, global, owner, category, stability and flavors are generated by tools/ci/api-catalog-check.mjs from RGX-Framework.xml, the module registrations and core/core.lua; --write regenerates them. null flavors = no flavor restriction declared (the centralized compat gate still applies). null methods = not yet enumerated and fail-closed for authoring. null introduced/docs and authorable=false / preview=unavailable = not yet reviewed; filled during catalog review.",
+      ?? "Approved RGX module API catalog (issue #7). Module, getter, global, owner, category, stability, flavors and methods are generated by tools/ci/api-catalog-check.mjs from RGX-Framework.xml, the module registrations and core/core.lua; --write regenerates them. null flavors = no flavor restriction declared (the centralized compat gate still applies). methods lists every non-underscore function definition on the module's registered table (lifecycle Init excluded) with raw parameter names; it is a complete static enumeration of shipped definitions, not yet a per-method approval. null introduced/docs and authorable=false / preview=unavailable = not yet reviewed; filled during catalog review.",
     entries: buildFromExisting(existingByName),
   };
   writeFileSync(CATALOG_PATH, JSON.stringify(catalog, null, 2) + "\n");
@@ -220,7 +329,7 @@ for (const name of registered.keys()) {
 for (const entry of catalog.entries) {
   if (!registered.has(entry.module)) continue;
   const derived = deriveEntry(entry.module);
-  for (const field of ["getter", "global", "owner", "category", "stability", "flavors"]) {
+  for (const field of ["getter", "global", "owner", "category", "stability", "flavors", "methods"]) {
     const expected = JSON.stringify(derived[field]);
     const actual = JSON.stringify(entry[field]);
     if (expected !== actual) problems.push(`entry '${entry.module}'.${field} is ${actual}, derived from the runtime: ${expected}`);
@@ -235,5 +344,5 @@ assert.equal(problems.length, 0, `api catalog drift:\n  - ${problems.join("\n  -
 
 const library = catalog.entries.filter((entry) => entry.category === "library").length;
 const game = catalog.entries.filter((entry) => entry.category === "game").length;
-const reviewed = catalog.entries.filter((entry) => entry.methods !== null).length;
-console.log(`API CATALOG OK ${catalog.entries.length} modules (libraries ${library}, game ${game}), ${reviewed} reviewed method list(s)`);
+const totalMethods = catalog.entries.reduce((sum, entry) => sum + (Array.isArray(entry.methods) ? entry.methods.length : 0), 0);
+console.log(`API CATALOG OK ${catalog.entries.length} modules (libraries ${library}, game ${game}), ${totalMethods} enumerated method(s)`);
