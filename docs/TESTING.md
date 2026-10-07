@@ -17,7 +17,7 @@
 
 | Tab | Framework features exercised |
 |-----|------------------------------|
-| Colors | `RGXColorPicker` (SV box, hue bar, HEX/RGB, presets), `UI:CreateColorPicker` swatches + Reset |
+| Colors | `RGXColorPicker` (honeycomb spectrum, brightness bar, class colors, HEX/RGB, presets), `UI:CreateColorPicker` swatches + Reset |
 | Controls | `UI:CreateToggle` / `CreateSlider` / `CreateVolumeSlider`, reset buttons, label word-wrap |
 | Dropdowns | `RGXDropdowns:CreateNestedDropdown` (groups, separators, checked state) |
 | Media | `RGXFonts` font dropdown, `RGXTextures` statusbar textures |
