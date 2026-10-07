@@ -24,7 +24,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "2.1.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": null
@@ -131,7 +131,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "2.2.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#auras-rgxauras"
@@ -172,7 +172,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "1.9.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": null
@@ -347,7 +347,7 @@
           "params": []
         }
       ],
-      "introduced": null,
+      "introduced": "1.0.1",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#colorpicker-rgxcolorpicker"
@@ -540,7 +540,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "1.0.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#colors-rgxcolors"
@@ -669,7 +669,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "1.3.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#combat-rgxcombat"
@@ -713,7 +713,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "1.3.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#databroker-rgxdatabroker"
@@ -781,7 +781,7 @@
           "params": []
         }
       ],
-      "introduced": null,
+      "introduced": "2.1.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": null
@@ -908,7 +908,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "1.3.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#design-rgxdesign"
@@ -999,7 +999,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "1.0.1",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#dropdowns-rgxdropdowns"
@@ -1422,7 +1422,7 @@
           "params": []
         }
       ],
-      "introduced": null,
+      "introduced": "1.0.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#fonts-rgxfonts"
@@ -1456,7 +1456,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "2.1.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": null
@@ -1503,7 +1503,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "2.1.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": null
@@ -1524,7 +1524,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "2.1.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": null
@@ -1553,7 +1553,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "2.7.10",
       "authorable": false,
       "preview": "unavailable",
       "docs": null
@@ -1580,7 +1580,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "1.9.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": null
@@ -1607,7 +1607,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "1.3.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#minimap-rgxminimap"
@@ -1722,7 +1722,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "1.3.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#petbattles-rgxpetbattles"
@@ -1781,7 +1781,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "2.1.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": null
@@ -1824,7 +1824,7 @@
           "params": []
         }
       ],
-      "introduced": null,
+      "introduced": "2.1.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": null
@@ -1891,7 +1891,7 @@
           "params": []
         }
       ],
-      "introduced": null,
+      "introduced": "1.3.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#reputation-rgxreputation"
@@ -2000,7 +2000,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "1.3.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#sharedmedia-rgxsharedmedia"
@@ -2044,7 +2044,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "1.6.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#sound-rgxsound"
@@ -2172,7 +2172,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "1.0.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#textures-rgxtextures"
@@ -2212,7 +2212,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "2.3.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#tooltip-rgxtooltip"
@@ -2246,7 +2246,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "2.1.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": null
@@ -2484,7 +2484,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "1.0.1",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#ui-controls-rgxui"
