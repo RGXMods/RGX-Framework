@@ -15,7 +15,7 @@ const sources = {
 
 const flavors = [
     ["retail", "WOW_PROJECT_MAINLINE", ["auras", "quest", "reputation", "achievement", "petbattles", "honor", "delves", "housing", "tradingpost", "prey"], []],
-    ["forever", "WOW_PROJECT_MAINLINE", ["auras", "quest", "reputation", "achievement", "petbattles", "honor", "delves", "housing", "tradingpost", "prey"], []],
+    ["forever", "WOW_PROJECT_CAMELOT", ["auras", "quest", "reputation", "achievement", "petbattles", "honor", "delves", "housing", "tradingpost", "prey"], []],
   ["classic_era", "WOW_PROJECT_CLASSIC", ["auras", "quest", "reputation", "achievement", "petbattles", "honor"], ["delves", "housing", "tradingpost", "prey"]],
   ["tbc", "WOW_PROJECT_BURNING_CRUSADE_CLASSIC", ["auras", "quest", "reputation", "achievement", "petbattles", "honor"], ["delves", "housing", "tradingpost", "prey"]],
   ["wrath", "WOW_PROJECT_WRATH_CLASSIC", ["auras", "quest", "reputation", "achievement", "petbattles", "honor"], ["delves", "housing", "tradingpost", "prey"]],
@@ -38,6 +38,7 @@ for (const [flavor, projectConstant, available, unavailable] of flavors) {
     });
     lua.doStringSync(`
       WOW_PROJECT_MAINLINE = 1
+      WOW_PROJECT_CAMELOT = 18
       WOW_PROJECT_CLASSIC = 2
       WOW_PROJECT_BURNING_CRUSADE_CLASSIC = 3
       WOW_PROJECT_WRATH_CLASSIC = 4
