@@ -3,7 +3,7 @@
 
     Algorithmic placement for option pages. Pure geometry only: this module
     never touches textures, fonts, or colors. Visual styling lives in
-    modules/design/design.lua and the section factory in controls.lua
+    library/design/design.lua and the section factory in controls.lua
     (UI:CreateSection). Layout and skin stay separate modules.
 
     Usage:

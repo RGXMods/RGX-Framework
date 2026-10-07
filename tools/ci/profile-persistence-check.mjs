@@ -8,8 +8,8 @@ import { fileURLToPath } from "node:url";
 import { Lua } from "wasmoon-lua5.1";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const database = readFileSync(join(ROOT, "core/systems/database.lua"), "utf8");
-const controls = readFileSync(join(ROOT, "modules/ui/controls.lua"), "utf8");
-const minimap = readFileSync(join(ROOT, "modules/minimap/minimap.lua"), "utf8");
+const controls = readFileSync(join(ROOT, "library/ui/controls.lua"), "utf8");
+const minimap = readFileSync(join(ROOT, "library/minimap/minimap.lua"), "utf8");
 async function vm() {
   const lua = await Lua.create();
   lua.ctx.__database = database;

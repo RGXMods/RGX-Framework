@@ -95,6 +95,7 @@ function runtimeSourceFiles() {
     "LICENSE.txt",
     ...listFiles("core"),
     ...listFiles("modules"),
+    ...listFiles("library"),
     "media/hexmask.tga",
     "media/hexring.tga",
     "media/logo.tga",
@@ -243,7 +244,7 @@ function validateRuntime(entries, expectedPaths) {
     const allowed = /^RGX-Framework(?:_(?:Vanilla|TBC|Wrath|Cata|Mists))?\.toc$/.test(relativePath)
       || relativePath === "RGX-Framework.xml"
       || relativePath === "LICENSE.txt"
-      || /^(?:core|modules)\/.+\.lua$/.test(relativePath)
+      || /^(?:core|modules|library)\/.+\.lua$/.test(relativePath)
       || relativePath === "media/hexmask.tga"
       || relativePath === "media/hexring.tga"
       || relativePath === "media/logo.tga"
@@ -252,7 +253,7 @@ function validateRuntime(entries, expectedPaths) {
       || relativePath === "media/square.tga"
       || /^media\/fonts\/(?:.+\.(?:otf|ttf)|README\.md)$/.test(relativePath);
     if (!allowed) failures.push(`runtime archive: path is outside the player allowlist ${path}`);
-    if (/^(?:core|modules)\/.+\.lua$/.test(relativePath) && !loadReferences.has(relativePath)) failures.push(`runtime archive: Lua file is not in the load graph ${path}`);
+    if (/^(?:core|modules|library)\/.+\.lua$/.test(relativePath) && !loadReferences.has(relativePath)) failures.push(`runtime archive: Lua file is not in the load graph ${path}`);
   }
   failures.push(...validateRuntimeMetadata(entries, RUNTIME_ROOT, "runtime archive"));
   return failures;

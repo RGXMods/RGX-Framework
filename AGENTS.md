@@ -7,7 +7,7 @@
 - **Consumers:** addons supply feature-specific definitions, content, settings, presentation choices, and behavior through framework APIs. Put reusable mechanics and fixes here; keep consumer declarations thin.
 - **Dependency architecture:** RGX addons are intended to depend on the framework through `RequiredDeps: RGX-Framework`, sharing one runtime instance. Verify each product's actual TOC and code before claiming it has migrated; legacy exceptions such as BLU_Classic still require real implementation work.
 - **North star:** RGXMod is a WeakAuras-replacement consumer using the model `Trigger → Conditions → Display → Actions → Load`. Its rules/content consume framework primitives; reusable rule/editor machinery belongs in the framework.
-- **Execution boundary:** WoW runtime is Lua 5.1-era Lua (`core/`, `modules/`, `media/`). Developer tooling is Node.js (`tools/`). Tooling, MCP, knowledge graphs, editors, external models, CI helpers, and local reference mirrors are never runtime dependencies or player-package contents.
+- **Execution boundary:** WoW runtime is Lua 5.1-era Lua (`core/`, `library/`, `modules/`, `media/`). Developer tooling is Node.js (`tools/`). Tooling, MCP, knowledge graphs, editors, external models, CI helpers, and local reference mirrors are never runtime dependencies or player-package contents.
 - **Compatibility:** preserve existing public semantics and consumer behavior. Retail, Classic flavors, and Forever are separate capability targets, not interchangeable copies of one addon.
 - **Authority:** GitLab `rgxmods/warcraft/RGX-Framework` owns development, issues, merge requests, and CI. GitHub `RGXMods/RGX-Framework` is downstream distribution. `docs/` is canonical; the Wiki is generated. Read versions and Interfaces from TOCs, not this file, the Wiki, or session summaries.
 - **Shipped versus planned:** a design document, schema draft, parked branch, module file, passing mock, future syntax example, or roadmap entry does not prove support. Verify runtime loading, lifecycle wiring, contract/schema availability, and observable consumer behavior before claiming something ships.
@@ -97,10 +97,12 @@ Examples include reusable UI, design, media, tooltip, layout, or similar infrast
 Primary location:
 
 ```text
-modules/
+library/
 ```
 
-with the appropriate library/module category.
+with the appropriate library/module category. Game-domain modules live
+under `modules/` instead; the directory is the boundary, the category
+confirms it.
 
 ### Game Module
 
@@ -288,6 +290,7 @@ AGENTS.md
 README.md
 docs/
 core/
+library/
 modules/
 contract/
 tools/
@@ -564,7 +567,7 @@ Do not claim partial work is complete.
 | Version / Interfaces / SavedVariables | `RGX-Framework.toc`, `RGX-Framework_*.toc`; consumer TOCs separately |
 | Lifecycle, events, timers, combat queue, DB | `core/core.lua`, `core/systems/`, `docs/API.md`, `docs/FOUNDATION.md` |
 | Client capabilities / restricted data | `core/compat.lua`, `core/compat_api.lua`, relevant game modules, `docs/`, and the WoW API reference process below |
-| Options, controls, layout, themes, media | `modules/ui/`, `modules/design/`, media modules, `docs/UI-CONTROLS.md`, `docs/THEMING.md` |
+| Options, controls, layout, themes, media | `library/ui/`, `library/design/`, media modules, `docs/UI-CONTROLS.md`, `docs/THEMING.md` |
 | Shipped declarative API / DSL | runtime implementation, `contract/schemas/rgx-addon.schema.json`, `docs/DECLARATIVE-API.md`; verify each key |
 | Contract behavior / reusable authoring logic | current `contract/` implementation; verify what actually exists before claiming a shared engine/capability |
 | Authoring, validation, generation, audit | `tools/rgx-mcp/`, scoped `tools/rgx-mcp/AGENTS.md`, `docs/RGX-MCP.md`; tooling follows the canonical contract |
@@ -735,7 +738,7 @@ Never:
 - embed RGX inside consumers;
 - add Ace3 as a framework runtime dependency.
 
-A file under `modules/` is not active merely because it exists.
+A file under `library/` or `modules/` is not active merely because it exists.
 
 It must actually participate in the runtime load/registration path, including `RGX-Framework.xml` and relevant initialization.
 

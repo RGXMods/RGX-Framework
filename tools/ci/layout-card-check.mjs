@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { Lua } from 'wasmoon-lua5.1';
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const lua = await Lua.create();
-lua.ctx.source = readFileSync(join(root, 'modules/ui/layout.lua'), 'utf8');
-const controls = readFileSync(join(root, 'modules/ui/controls.lua'), 'utf8');
+lua.ctx.source = readFileSync(join(root, 'library/ui/layout.lua'), 'utf8');
+const controls = readFileSync(join(root, 'library/ui/controls.lua'), 'utf8');
 lua.ctx.columns = controls.slice(controls.indexOf('function UI:CreateColumns'), controls.indexOf('-- Versioned label definitions'));
 try {
   lua.doStringSync(`

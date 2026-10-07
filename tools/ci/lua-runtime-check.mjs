@@ -23,7 +23,7 @@ try {
   lua.ctx.__rgxRuntimeSource = readFileSync(files.runtime, "utf8");
   lua.ctx.__rgxTestSource = readFileSync(files.test, "utf8");
   lua.ctx.__rgxColumnsTestSource = readFileSync(files.columnsTest, "utf8");
-  const panelSource = readFileSync(join(ROOT, "modules/ui/options.lua"), "utf8");
+  const panelSource = readFileSync(join(ROOT, "library/ui/options.lua"), "utf8");
   const refreshStart = panelSource.indexOf("    function panel:InvalidateAllTabs()");
   const refreshEnd = panelSource.indexOf("    local function ExtractCategoryID", refreshStart);
   if (refreshStart < 0 || refreshEnd < 0) throw new Error("Real panel refresh methods not found");
@@ -65,7 +65,7 @@ try {
     loadSource(__rgxEventsSource, "core/systems/events.lua")("RGX-Framework", RGX)
     loadSource(__rgxRuntimeSource, "core/systems/runtime.lua")("RGX-Framework", RGX)
     __rgxBuildAddonOptionTabs = loadSource("return function(RGX)\\n" .. __rgxOptionCompositorSource
-        .. "\\nreturn BuildAddonOptionTabs end", "modules/ui/options.lua")()(RGX)
+        .. "\\nreturn BuildAddonOptionTabs end", "library/ui/options.lua")()(RGX)
     loadSource(__rgxTestSource, "tools/ci/declarative-every-runtime-test.lua")()
     loadSource(__rgxColumnsTestSource, "tools/ci/declarative-columns-runtime-test.lua")()
   `);
