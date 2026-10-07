@@ -1,16 +1,17 @@
 # ColorPicker — `RGXColorPicker`
 
-A modern HSV color picker (`modules/colors/colorpicker.lua`) replacing WoW's default circular picker. Redesigned in v2.4.0 with a circular control vocabulary built on [[RGXDesign|Theming]] tokens: ring-and-fill drag handles, circular preset swatches and preview, themed focus states.
+A custom RGX HSV color picker (`modules/colors/colorpicker.lua`). The panel is a honeycomb spectrum plus a vertical brightness bar, styled with [[RGXDesign|Theming]] tokens: ring-and-fill drag handles, a live class-color row, circular swatches/preview, and themed focus states. The separate `Colors:OpenPicker()` API opens Blizzard's picker.
 
 ---
 
 ## Features
 
-- **Saturation/Value box** — drag to select saturation (white→hue, horizontal) and value (black overlay, vertical); ring-and-fill cursor tracks the live color
-- **Horizontal hue bar** — 6-segment true rainbow gradient with a circular drag handle
+- **Honeycomb spectrum** — a flat-top hexagon grid where hue is the angle from the white centre (cyan top-left, blue top, purple right, red bottom-right, yellow bottom, green left) and saturation is the ring distance. The palette stays at full value so every color remains visible while brightness changes. Click or drag any cell; the selected cell is outlined (grayscale values mark the neutral centre).
+- **Vertical brightness bar** — to the right of the spectrum. It shades from black at the bottom to the current hue **at the selected saturation** at the top (so white and pastels do not show a misleading saturated gradient) and keeps the picked hue/saturation even when driven to black. The handle and preview show the current brightness; the hexagons stay at full value.
+- **Class Colors row** — rendered from the live client `RAID_CLASS_COLORS` palette for the current flavor (fewer swatches on Classic); no class swatches are added when the client exposes no palette.
+- **HEX input** and **R/G/B inputs** (0–255) with primary-themed focus borders; invalid hex is ignored rather than clamped to black
+- **Preset palettes** — Quality and Basic — as circular swatches with hover rings
 - **Circular preview** of the current color
-- **HEX input** and **R/G/B inputs** (0–255) with primary-themed focus borders
-- **Preset palettes** — Class colors, Quality colors, Basic — as circular swatches with hover rings ("Recent" fills as you pick)
 - **OK / Cancel / ×** themed via `Design:CreateButton`; the panel is draggable
 
 ---
@@ -52,6 +53,7 @@ Binds a swatch control to `addon.db.accentColor` (`{r,g,b}`); clicking the swatc
 
 ## History
 
+- **Unreleased** — honeycomb spectrum, vertical brightness bar, and live Class Colors row replace the circular SV/hue-bar layout
 - **v2.4.0** — circular redesign (RGXDesign tokens, ring-and-fill handles, circular swatches/preview, focus states)
 - **v2.3.0** — first release that actually rendered: fixed six missing `BackdropTemplate` mixins that silently aborted construction, and completed two stub features (the hue-bar rainbow and the saturation gradient)
 - **v2.0.0** — module introduced

@@ -498,15 +498,15 @@ Colors:OpenPicker({
 
 ## ColorPicker (`RGXColorPicker`)
 
-Custom rectangular HSV color picker widget. Features:
+Custom HSV color picker widget. Features:
 
-- Figma-style rectangular selector (saturation/value box)
-- Hue bar
+- Flat-top hexagonal honeycomb spectrum (hue by angle, saturation by ring distance, white centre) that stays at full value so every color stays readable
+- Vertical brightness bar shaded to black, using the current saturation, that retains hue/saturation at black
+- Live Class Colors row from `RAID_CLASS_COLORS`
 - RGB and HEX input fields
-- Color history
-- Class, quality, and basic palettes
+- Quality and Basic preset palettes
 
-Called via `Colors:OpenPicker()` or `Colors:CreateColorPicker()`. Not typically used directly.
+Open it with `RGX:GetColorPicker():Show(color, callback)` or a `UI:CreateColorPicker()` swatch. `Colors:OpenPicker()` and `Colors:CreateColorPicker()` use Blizzard's picker instead.
 
 ---
 
