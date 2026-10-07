@@ -9,8 +9,8 @@ import { Lua } from "wasmoon-lua5.1";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const lua = await Lua.create();
-lua.ctx.colorpicker = readFileSync(join(root, "modules/colors/colorpicker.lua"), "utf8");
-lua.ctx.design = readFileSync(join(root, "modules/design/design.lua"), "utf8");
+lua.ctx.colorpicker = readFileSync(join(root, "library/colors/colorpicker.lua"), "utf8");
+lua.ctx.design = readFileSync(join(root, "library/design/design.lua"), "utf8");
 lua.ctx.scenarios = readFileSync(join(root, "tools/ci/colorpicker-runtime-test.lua"), "utf8");
 
 // Asset verification: the runtime reads media/hexmask.tga and media/hexring.tga

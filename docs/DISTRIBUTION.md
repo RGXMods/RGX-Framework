@@ -56,6 +56,7 @@ RGX-Framework_Mists.toc
 RGX-Framework.xml
 LICENSE.txt
 core/**/*.lua
+library/**/*.lua
 modules/**/*.lua
 media/logo.tga
 media/fonts/*.ttf

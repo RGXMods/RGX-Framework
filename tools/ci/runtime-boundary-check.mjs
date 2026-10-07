@@ -10,7 +10,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const RUNTIME_ROOTS = [join(ROOT, "core"), join(ROOT, "modules")];
+const RUNTIME_ROOTS = [join(ROOT, "core"), join(ROOT, "modules"), join(ROOT, "library")];
 
 // [^[\]]* nested-bracket-free body: strip --[[ ... ]] block comments first,
 // then -- line comments, then scan for forbidden references.

@@ -176,7 +176,7 @@ Drops:NormalizeItems(items)         -- normalize item list in place
 `CreateFontDropdown` (in the Fonts module) delegates to `Drops:CreateNestedDropdown` with font-specific item data from `BuildGroupedFontItems`:
 
 ```lua
--- modules/fonts/dropdowns.lua
+-- library/fonts/dropdowns.lua
 function Fonts:CreateFontDropdown(parent, opts)
     local function buildItems()
         return Fonts:BuildGroupedFontItems({ keepShownOnClick = true })
@@ -219,6 +219,6 @@ After `CopyItem` / `NormalizeItems`, both fields reference the same table.
 ## File Layout
 
 ```
-modules/dropdowns/
+library/dropdowns/
 └── dropdowns.lua   — CreateNestedDropdown, CopyItem, NormalizeItems, ForceWidth, AddInlineButton, HideInlineButtons, GetListFrame, ShortenLabel
 ```

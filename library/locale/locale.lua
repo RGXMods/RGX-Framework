@@ -23,7 +23,7 @@ blocks are guarded by a locale match and return nil when not active, so a
 caller can write `if L then ... end` (or simply skip when nil).
 
 This module never changes the frozen consumer SetLocale/GetLocale contract
-exposed by modules/sound/sound.lua:249-253 (Handle:SetLocale(localeTable) /
+exposed by library/sound/sound.lua:249-253 (Handle:SetLocale(localeTable) /
 Handle:GetLocale()); consumer addons keep their own per-addon locale tables.
 
 Usage inside the framework:
@@ -134,7 +134,7 @@ L["COMMAND_LIST"]                 = "Commands: modules, fonts, debug, dbtest, lo
 -- Login line (core/initialization.lua)
 L["LOGIN_LOADED_FORMAT"]          = "RGX-Framework v%s loaded."
 
--- UI control fallback labels (modules/ui/controls.lua)
+-- UI control fallback labels (library/ui/controls.lua)
 L["UI_COLORPICKER_NOT_LOADED"]    = "RGX ColorPicker not loaded"
 L["UI_COLOR_DEFAULT_LABEL"]       = "Color"
 L["UI_SLIDER_DEFAULT_LABEL"]      = "Slider"

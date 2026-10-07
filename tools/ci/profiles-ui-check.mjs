@@ -9,10 +9,10 @@ import { Lua } from "wasmoon-lua5.1";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const lua = await Lua.create();
 lua.ctx.__database = readFileSync(join(ROOT, "core/systems/database.lua"), "utf8");
-lua.ctx.__controls = readFileSync(join(ROOT, "modules/ui/controls.lua"), "utf8");
-lua.ctx.__profiles = readFileSync(join(ROOT, "modules/ui/profiles.lua"), "utf8");
-lua.ctx.__layout = readFileSync(join(ROOT, "modules/ui/layout.lua"), "utf8");
-const dropdownSource = readFileSync(join(ROOT, "modules/dropdowns/dropdowns.lua"), "utf8");
+lua.ctx.__controls = readFileSync(join(ROOT, "library/ui/controls.lua"), "utf8");
+lua.ctx.__profiles = readFileSync(join(ROOT, "library/ui/profiles.lua"), "utf8");
+lua.ctx.__layout = readFileSync(join(ROOT, "library/ui/layout.lua"), "utf8");
+const dropdownSource = readFileSync(join(ROOT, "library/dropdowns/dropdowns.lua"), "utf8");
 lua.ctx.__inline = dropdownSource.slice(dropdownSource.indexOf("function Dropdowns:AddInlineButton"), dropdownSource.indexOf("--- Hide all inline buttons"));
 try {
   lua.doStringSync(`

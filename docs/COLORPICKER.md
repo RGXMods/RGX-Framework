@@ -1,6 +1,6 @@
 # ColorPicker — `RGXColorPicker`
 
-A custom RGX HSV color picker (`modules/colors/colorpicker.lua`). The panel is a honeycomb spectrum plus a vertical brightness bar, styled with [[RGXDesign|Theming]] tokens: ring-and-fill drag handles, a live class-color row, circular swatches/preview, and themed focus states. The separate `Colors:OpenPicker()` API opens Blizzard's picker.
+A custom RGX HSV color picker (`library/colors/colorpicker.lua`). The panel is a honeycomb spectrum plus a vertical brightness bar, styled with [[RGXDesign|Theming]] tokens: ring-and-fill drag handles, a live class-color row, circular swatches/preview, and themed focus states. The separate `Colors:OpenPicker()` API opens Blizzard's picker.
 
 ---
 

@@ -1,6 +1,6 @@
 -- Runtime scenarios for the honeycomb ColorPicker. Executed by
 -- tools/ci/colorpicker-runtime-check.mjs, which has already installed the
--- widget mock and loaded modules/colors/colorpicker.lua as `CP`.
+-- widget mock and loaded library/colors/colorpicker.lua as `CP`.
 --
 -- Geometry the mock cannot provide (frame left/bottom) is assigned directly,
 -- mirroring how control-interaction-check treats mouse delivery as an engine

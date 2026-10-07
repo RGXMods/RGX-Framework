@@ -10,7 +10,7 @@ const xml = readFileSync(join(ROOT, "RGX-Framework.xml"), "utf8");
 
 assert(xml.indexOf("core/compat.lua") < xml.indexOf("core/core.lua"), "compat must load before core");
 assert(xml.indexOf("core/compat_api.lua") < xml.indexOf("core/core.lua"), "compat_api must load before core");
-assert(xml.indexOf("core/compat.lua") < xml.indexOf("modules/dropdowns/dropdowns.lua"), "compat must precede all modules");
+assert(xml.indexOf("core/compat.lua") < xml.indexOf("library/dropdowns/dropdowns.lua"), "compat must precede all modules");
 
 async function orderCase(name, order) {
   const lua = await Lua.create();

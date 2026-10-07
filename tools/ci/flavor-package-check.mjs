@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = join(import.meta.dirname, "..", "..");
-const allowedRoots = new Set(["core", "modules", "media"]);
+const allowedRoots = new Set(["core", "modules", "library", "media"]);
 const rootFiles = new Set([
   "LICENSE.txt",
   "RGX-Framework.xml",

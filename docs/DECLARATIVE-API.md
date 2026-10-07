@@ -18,7 +18,7 @@ buttons bind to their addon, and fonts use the existing bound selector. These
 corrections are local source changes until integrated and released.
 
 The current untagged structural follow-on moves lazy tab/control construction
-to `modules/ui/options.lua` while core retains grammar validation and lifecycle.
+to `library/ui/options.lua` while core retains grammar validation and lifecycle.
 It changes implementation ownership, not the consumer declaration vocabulary.
 
 ---
