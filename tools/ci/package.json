@@ -10,7 +10,7 @@
     "module-gating-check": "node module-gating-check.mjs",
     "definition-check": "node definition-roundtrip-check.mjs",
     "lua-runtime-check": "node lua-runtime-check.mjs && node aura-runtime-check.mjs && node events-runtime-check.mjs && node login-runtime-check.mjs && node database-runtime-check.mjs && node profile-persistence-check.mjs && node layout-card-check.mjs && node control-interaction-check.mjs && node dropdown-capability-check.mjs && node profiles-ui-check.mjs && node options-toggle-check.mjs",
-    "arch-check": "node module-graph-check.mjs && node runtime-boundary-check.mjs && node audit-encoding-check.mjs",
+    "arch-check": "node module-graph-check.mjs && node runtime-boundary-check.mjs && node audit-encoding-check.mjs && node api-ownership-check.mjs && node compat-loader-check.mjs",
     "package-build": "node package-manifest-check.mjs ../.. --out ../../artifacts",
     "package-check": "node package-manifest-check.mjs ../.. && node build-addon-package-check.mjs",
     "docs-check": "node docs-congruence-check.mjs",

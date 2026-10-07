@@ -110,6 +110,10 @@ load time, and `RGX:RegisterModule` refuses gated registrations centrally. Both
 compat files preserve the shared `RGX.API` table (`RGX.API = RGX.API or {}`) —
 earlier revisions silently wiped predicates when the second file loaded, which
 is a load-order bug class we now test for (`tools/ci/compat-loader-check.mjs`).
+Every `RGX.API` name has exactly one defining file: `core/compat.lua` owns the
+normalized implementations and `core/compat_api.lua` only adds names it does
+not define, enforced across the XML load list by
+`tools/ci/api-ownership-check.mjs`.
 
 WoW loads files in the order declared in `RGX-Framework.xml`. The framework uses this sequence:
 

@@ -468,7 +468,8 @@ function RGX.API.GetItemIcon(itemID)
     if C_Item and C_Item.GetItemIconByID then
         return C_Item.GetItemIconByID(itemID)
     end
-    return type(GetItemIcon) == "function" and GetItemIcon(itemID) or nil
+    return type(GetItemIcon) == "function" and GetItemIcon(itemID)
+        or "Interface\\Icons\\INV_Misc_QuestionMark"
 end
 
 function RGX.API.GetGossipOptions()
