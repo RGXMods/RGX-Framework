@@ -45,6 +45,12 @@ the key; non-numeric or non-positive values are ignored.
 The SQP minimal popup is honeycomb + brightness bar + one-line class row:
 `{ presets = false, rgb = false, preview = false, scale = 0.85 }`.
 
+`opts.commitOnPick` (default off) turns the dialog into select-and-close:
+picking from the honeycomb, brightness bar, or class row fires the callback
+and closes immediately, and the OK/Cancel buttons are hidden (the height
+ends below the last visible section). Pair it with hidden text inputs —
+typed RGB stays staging-only without buttons to confirm it.
+
 The dialog joins `UISpecialFrames`, so ESC closes it like every other RGX
 window. Switching options tabs or pager pages dismisses it without firing
 the callback — a popup never outlives the page that opened it.
