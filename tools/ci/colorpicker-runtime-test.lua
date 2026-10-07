@@ -533,31 +533,56 @@ scenario("a short class row centres instead of hugging the left margin", functio
   f = CP:GetFrame()
 end)
 
-scenario("commitOnPick selects, fires, and closes with no buttons", function()
+scenario("buttons=ok shows one centred OK; picks stage until it commits", function()
   local calls = 0
   CP:Show({ r = 1, g = 0, b = 0 }, function() calls = calls + 1 end,
-    { presets = false, rgb = false, preview = false, commitOnPick = true })
+    { presets = false, rgb = false, preview = false, buttons = "ok" })
+  assert(f.okBtn:IsShown() and not f.cancelBtn:IsShown(), "button pair was not reduced to OK")
+  local pt = f.okBtn.points[1]
+  local okY = -(46 + f.spectrum.gridH + f.sections[1].flow + 16)
+  assert(pt and pt[1] == "TOPLEFT" and pt[2] == f and pt[4] == 110 and pt[5] == okY,
+    "single OK is not centred below the content")
+  f.spectrum.onPick(0.5, 0.8)
+  assert(calls == 0 and f:IsShown(), "pick committed without OK")
+  f.okBtn.scripts.OnClick(f.okBtn)
+  assert(calls == 1 and not f:IsShown(), "OK did not commit and close")
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end)
+  assert(f.okBtn:IsShown() and f.cancelBtn:IsShown(), "button pair did not return")
+end)
+
+scenario("buttons=none hides both and ends below the content", function()
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end,
+    { presets = false, rgb = false, preview = false, buttons = "none" })
   assert(not f.okBtn:IsShown() and not f.cancelBtn:IsShown(), "buttons stayed visible")
   local expected = 46 + f.spectrum.gridH + f.sections[1].flow + 20
   assert(f.height == expected, "buttonless height is wrong: " .. tostring(f.height))
-  f.spectrum.onPick(0.5, 0.8)
-  assert(calls == 1, "pick did not commit the callback")
-  assert(not f:IsShown(), "dialog did not close on pick")
-  CP:Show({ r = 1, g = 0, b = 0 }, function() end)
-  assert(f.okBtn:IsShown() and f.cancelBtn:IsShown(), "buttons did not return")
+end)
+
+scenario("a bogus buttons value falls back to the pair", function()
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { buttons = "sometimes" })
+  assert(f.okBtn:IsShown() and f.cancelBtn:IsShown(), "bogus buttons value broke the pair")
 end)
 
 scenario("Show accepts a brand border and restores the design border", function()
+  assert(f._borderLines and #f._borderLines == 4, "dialog has no four-line outline")
   CP:Show({ r = 1, g = 0, b = 0 }, function() end, { border = { 0.345, 0.745, 0.506 } })
-  local bc = f.borderColor
-  assert(bc and math.abs(bc[1] - 0.345) < 1e-6 and math.abs(bc[2] - 0.745) < 1e-6
-    and math.abs(bc[3] - 0.506) < 1e-6, "brand border was not applied")
+  for _, line in ipairs(f._borderLines) do
+    local v = line.vertex
+    assert(v and math.abs(v[1] - 0.345) < 1e-6 and math.abs(v[2] - 0.745) < 1e-6
+      and math.abs(v[3] - 0.506) < 1e-6, "brand border was not applied to every side")
+  end
   CP:Show({ r = 1, g = 0, b = 0 }, function() end, { border = { r = 1, g = 0, b = 0 } })
-  bc = f.borderColor
-  assert(bc and bc[1] == 1 and bc[2] == 0 and bc[3] == 0, "named brand border was not applied")
+  for _, line in ipairs(f._borderLines) do
+    assert(line.vertex[1] == 1 and line.vertex[2] == 0 and line.vertex[3] == 0,
+      "named brand border was not applied")
+  end
   CP:Show({ r = 1, g = 0, b = 0 }, function() end)
-  bc = f.borderColor
-  assert(bc and bc[1] ~= 0.345, "design border did not return")
+  local first = f._borderLines[1].vertex
+  for _, line in ipairs(f._borderLines) do
+    assert(line.vertex[1] == first[1] and line.vertex[2] == first[2] and line.vertex[3] == first[3],
+      "design border is inconsistent across sides")
+  end
+  assert(first[1] ~= 0.345, "design border did not return")
 end)
 
 print(string.format("COLORPICKER %d passed, %d failed", pass, fail))

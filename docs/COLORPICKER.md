@@ -44,16 +44,18 @@ the key; non-numeric or non-positive values are ignored.
 
 `opts.border` (`{r, g, b}` or `{r=, g=, b=}`) outlines the dialog in a
 consumer brand color — e.g. SQP green `{ 0.345, 0.745, 0.506 }`. Omitted,
-the design border token returns.
+the design border token returns. The outline is four solid quads (the 1px
+backdrop edge drops sides under fractional dialog scale); the backdrop
+edge itself stays transparent.
 
-The SQP minimal popup is honeycomb + brightness bar + one-line class row:
-`{ presets = false, rgb = false, preview = false, scale = 0.85 }`.
+The SQP minimal popup is honeycomb + brightness bar + one-line class row
+with a single OK:
+`{ presets = false, rgb = false, preview = false, scale = 0.85, buttons = "ok" }`.
 
-`opts.commitOnPick` (default off) turns the dialog into select-and-close:
-picking from the honeycomb, brightness bar, or class row fires the callback
-and closes immediately, and the OK/Cancel buttons are hidden (the height
-ends below the last visible section). Pair it with hidden text inputs —
-typed RGB stays staging-only without buttons to confirm it.
+Picks always stage; `opts.buttons` chooses the confirm chrome —
+`"okcancel"` (default), `"ok"` (one centred OK for popups where trying
+colors precedes commit), or `"none"` (height ends below the content).
+Bogus values fall back to the pair.
 
 The dialog joins `UISpecialFrames`, so ESC closes it like every other RGX
 window. Switching options tabs or pager pages dismisses it without firing

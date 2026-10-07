@@ -505,6 +505,23 @@ function ColorPicker:GetFrame()
     f:SetFrameStrata("DIALOG")
     Design:ApplyBackdrop(f, "dark", 0.98)
     f:Hide()
+    -- Explicit outline: a 1px backdrop edge under fractional dialog scale
+    -- drops sides as the frame moves, so the outline is four solid quads
+    -- and the backdrop edge stays transparent.
+    f:SetBackdropBorderColor(0, 0, 0, 0)
+    f._borderLines = {}
+    local function BorderLine(a, b, w, h)
+        local t = f:CreateTexture(nil, "BORDER")
+        t:SetColorTexture(1, 1, 1, 1)
+        t:SetPoint(a, f, a, 0, 0)
+        t:SetPoint(b, f, b, 0, 0)
+        if w then t:SetWidth(w) else t:SetHeight(h) end
+        f._borderLines[#f._borderLines + 1] = t
+    end
+    BorderLine("TOPLEFT", "TOPRIGHT", nil, 2)
+    BorderLine("BOTTOMLEFT", "BOTTOMRIGHT", nil, 2)
+    BorderLine("TOPLEFT", "BOTTOMLEFT", 2, nil)
+    BorderLine("TOPRIGHT", "BOTTOMRIGHT", 2, nil)
     -- ESC closes the dialog like every other RGX window. The frame carries
     -- a global name so it can join the standard close-on-escape set.
     if type(UISpecialFrames) == "table" then
@@ -552,14 +569,12 @@ function ColorPicker:GetFrame()
     f.spectrum.frame:SetPoint("TOPLEFT", f, "TOPLEFT", f.spectrumX, -SPECTRUM_TOP)
     f.spectrum.onPick = function(h, s)
         self:ApplyHSV(h, s, self.current.v or 1)
-        if self.commitOnPick then self:OK() end
     end
 
     f.valueBar = BuildValueBar(f, { width = VALUEBAR_W, height = f.spectrum.gridH })
     f.valueBar.frame:SetPoint("TOPLEFT", f.spectrum.frame, "TOPRIGHT", VALUEBAR_GAP, 0)
     f.valueBar.onPick = function(v)
         self:ApplyHSV(self.current.h or 0, self.current.s or 0, v)
-        if self.commitOnPick then self:OK() end
     end
 
     -- === LIVE CLASS COLORS ===
@@ -574,10 +589,7 @@ function ColorPicker:GetFrame()
         ringColor = { Design:Unpack("primary") },
     })
     f.classRow.frame:SetPoint("TOPLEFT", f.classLabel, "BOTTOMLEFT", 0, -6)
-    f.classRow.onPick = function(r, g, b)
-        self:SetRGB(r, g, b)
-        if self.commitOnPick then self:OK() end
-    end
+    f.classRow.onPick = function(r, g, b) self:SetRGB(r, g, b) end
     f.classGroup = { f.classLabel, f.classRow.frame }
     f.classContent = f.classLabel:GetHeight() + 6 + f.classRow.height
 
@@ -805,10 +817,7 @@ function ColorPicker:CreatePreview(f)
         if ColorPicker.suppress then return end
         if #box:GetText() ~= 6 then return end
         local r, g, b = ColorPicker:HexToRGB(box:GetText())
-        if r then
-            ColorPicker:SetRGB(r, g, b)
-            if ColorPicker.commitOnPick then ColorPicker:OK() end
-        end
+        if r then ColorPicker:SetRGB(r, g, b) end
     end)
 
     f.previewGroup = { f.previewRing, f.preview, f.eyedropper, f.hexLabel, f.hexInput }
@@ -988,7 +997,8 @@ end
 -- margin, so collapsed variants end exactly below OK/Cancel with no slack.
 local function ApplySections(f, opts)
     opts = opts or {}
-    local commit = opts.commitOnPick == true
+    local buttons = opts.buttons
+    if buttons ~= "ok" and buttons ~= "none" then buttons = "okcancel" end
     local prev, prevX = f.spectrum.frame, f.spectrumX
     local used = SPECTRUM_TOP + f.spectrum.gridH
     for _, section in ipairs(f.sections) do
@@ -1002,19 +1012,24 @@ local function ApplySections(f, opts)
             used = used + section.flow
         end
     end
-    if commit then
-        -- Select-and-close popups carry no buttons; the height ends below
-        -- the last visible section.
+    if buttons == "none" then
+        -- Buttonless popups end below the last visible section.
         f.okBtn:Hide()
         f.cancelBtn:Hide()
         f:SetHeight(used + BOTTOM_MARGIN)
         return
     end
     f.okBtn:Show()
-    f.cancelBtn:Show()
     f:SetHeight(used + BUTTON_GAP + BUTTON_H + BOTTOM_MARGIN)
-    -- Centre the OK/Cancel pair on the panel; Cancel rides on OK's left.
     f.okBtn:ClearAllPoints()
+    if buttons == "ok" then
+        -- A single OK sits centred; staged picks need a confirm button.
+        f.cancelBtn:Hide()
+        f.okBtn:SetPoint("TOPLEFT", f, "TOPLEFT", (PANEL_W - BUTTON_W) / 2, -(used + BUTTON_GAP))
+        return
+    end
+    -- Centre the OK/Cancel pair on the panel; Cancel rides on OK's left.
+    f.cancelBtn:Show()
     local okX = (PANEL_W - (BUTTON_W * 2 + 10)) / 2 + BUTTON_W + 10
     f.okBtn:SetPoint("TOPLEFT", f, "TOPLEFT", okX, -(used + BUTTON_GAP))
 end
@@ -1118,7 +1133,6 @@ function ColorPicker:Show(color, callback, opts)
     self.current.h, self.current.s, self.current.v = h, s, v
     
     local f = self:GetFrame()
-    self.commitOnPick = (opts and opts.commitOnPick == true) or nil
     ApplySections(f, opts)
     -- Compact consumers scale the whole dialog. The frame is a
     -- singleton shared across consumers, so the scale resets every Show.
@@ -1127,14 +1141,14 @@ function ColorPicker:Show(color, callback, opts)
     -- A consumer brand color outlines the dialog; otherwise the design
     -- border token returns. Accepts {r, g, b} or {r = , g = , b = }.
     local border = opts and opts.border
+    local D = RGX:GetDesign()
+    local br, bg, bb = D:Unpack("border")
     if type(border) == "table" then
-        local br = border.r or border[1] or 1
-        local bg = border.g or border[2] or 1
-        local bb = border.b or border[3] or 1
-        f:SetBackdropBorderColor(br, bg, bb, 1)
-    else
-        f:SetBackdropBorderColor(RGX:GetDesign():Unpack("border"))
+        br = border.r or border[1] or 1
+        bg = border.g or border[2] or 1
+        bb = border.b or border[3] or 1
     end
+    for _, line in ipairs(f._borderLines) do line:SetVertexColor(br, bg, bb, 1) end
     self:UpdateUI()
     f:Show()
 end
