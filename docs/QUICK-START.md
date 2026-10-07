@@ -416,4 +416,4 @@ end)
 -- Fire
 emitter:Fire("OnConfigChanged", "fontSize", 14)
 ```
-> **Beta candidate:** v2.7.15-beta.3; stable remains v2.7.14. Existing stable examples remain supported.
+> **Beta candidate:** v2.7.15-beta.4; stable remains v2.7.14. Existing stable examples remain supported.

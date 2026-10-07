@@ -5,7 +5,7 @@ This document answers a simple question:
 Which capabilities does RGX own, which are already implemented, and how do we
 keep the runtime and authoring experience coherent as the framework grows?
 
-**Source review: 2026-10-06.** The candidate TOC is `2.7.15-beta.3`; the roadmap records
+**Source review: 2026-10-06.** The candidate TOC is `2.7.15-beta.4`; the roadmap records
 `2.7.14` stable. Requirements below describe ownership, not an unimplemented
 shopping list. See [Ace3 Analysis](ACE3-ANALYSIS.md) for the current capability
 map and [Architecture](ARCHITECTURE.md) for load order and modularity findings.

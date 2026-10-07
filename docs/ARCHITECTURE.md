@@ -29,7 +29,7 @@ helper or a new public module for every file.
 3. Verify/integrate the local options-rendering separation. `modules/ui/options.lua`
    composes tabs and calls existing scroll/column/flow/control factories through
    a private seam; core supplies resolved declarations and retains lifecycle.
-   This untagged follow-on is separate from the committed beta.3 snapshot and
+   This follow-on is separate from the committed beta.3 snapshot and
    introduces no consumer API, module, global or package-file expansion.
 4. Complete page/card composition and modular skin resolution through their
    existing owners, with consumer/client evidence. Column distribution alone

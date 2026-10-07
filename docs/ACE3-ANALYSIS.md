@@ -383,7 +383,7 @@ If the answer is "Ace3 had one, so we should too," it probably does not.
 
 ## Source Capability Review — 2026-10-06
 
-Baseline: the TOC identifies candidate `2.7.15-beta.3`; [Roadmap](ROADMAP.md) records
+Baseline: the TOC identifies candidate `2.7.15-beta.4`; [Roadmap](ROADMAP.md) records
 `2.7.14` stable. This is a source/load-path review, not a new release or an
 all-client certification. Local changes do not inherit the TOC's publication status.
 
