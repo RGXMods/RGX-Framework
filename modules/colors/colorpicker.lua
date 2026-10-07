@@ -154,6 +154,10 @@ end
 
 local PANEL_W, PANEL_H = 300, 640
 local CONTENT_W = PANEL_W - 40 -- 20px padding each side
+local CONTENT_X = 20           -- every section top aligns to the left margin
+local SPECTRUM_TOP = 46
+local VALUEBAR_W, VALUEBAR_GAP = 18, 14
+local BUTTON_W, BUTTON_H, BUTTON_GAP, BOTTOM_MARGIN = 80, 28, 16, 20
 
 --[[============================================================================
     HONEYCOMB SPECTRUM
@@ -528,13 +532,16 @@ function ColorPicker:GetFrame()
         size = 14, rings = HEX_RINGS,
         markerColor = { Design:Unpack("primary") },
     })
-    f.spectrum.frame:SetPoint("TOPLEFT", f, "TOPLEFT", 20, -46)
+    -- Centre the spectrum + brightness bar as one group; every section top
+    -- below aligns back to the left content margin in ApplySections.
+    f.spectrumX = (PANEL_W - (f.spectrum.gridW + VALUEBAR_GAP + VALUEBAR_W)) / 2
+    f.spectrum.frame:SetPoint("TOPLEFT", f, "TOPLEFT", f.spectrumX, -SPECTRUM_TOP)
     f.spectrum.onPick = function(h, s)
         self:ApplyHSV(h, s, self.current.v or 1)
     end
 
-    f.valueBar = BuildValueBar(f, { width = 18, height = f.spectrum.gridH })
-    f.valueBar.frame:SetPoint("TOPLEFT", f.spectrum.frame, "TOPRIGHT", 14, 0)
+    f.valueBar = BuildValueBar(f, { width = VALUEBAR_W, height = f.spectrum.gridH })
+    f.valueBar.frame:SetPoint("TOPLEFT", f.spectrum.frame, "TOPRIGHT", VALUEBAR_GAP, 0)
     f.valueBar.onPick = function(v)
         self:ApplyHSV(self.current.h or 0, self.current.s or 0, v)
     end
@@ -941,41 +948,41 @@ function ColorPicker:CreateButtons(f)
     local Design = RGX:GetDesign()
 
     -- OK button
-    f.okBtn = Design:CreateButton(f, "OK", 80, 28)
-    f.okBtn:SetPoint("TOPRIGHT", f.presetsBottom, "BOTTOMRIGHT", 0, -16)
+    f.okBtn = Design:CreateButton(f, "OK", BUTTON_W, BUTTON_H)
+    f.okBtn:SetPoint("TOPRIGHT", f.presetsBottom, "BOTTOMRIGHT", 0, -BUTTON_GAP)
     f.okBtn:SetScript("OnClick", function() self:OK() end)
 
     -- Cancel button
-    f.cancelBtn = Design:CreateButton(f, "Cancel", 80, 28)
+    f.cancelBtn = Design:CreateButton(f, "Cancel", BUTTON_W, BUTTON_H)
     f.cancelBtn:SetPoint("RIGHT", f.okBtn, "LEFT", -10, 0)
     f.cancelBtn:SetScript("OnClick", function() self:Cancel() end)
 end
 
 -- Applies per-consumer section visibility from Show(color, callback, opts).
--- Visible sections chain off the previous visible section; hidden ones are
--- collapsed and their flow subtracted from the panel height. The buttons use a
--- two-point anchor (fixed right margin plus the last visible section) because
--- the preview ring is narrower than the content row, so a right-anchored pair
--- cannot ride on "the previous frame" alone.
+-- Visible section tops chain off the previous visible section but align back
+-- to the left content margin (the centred spectrum is narrower than a full
+-- row, so chaining left edges alone would stair-step right). The panel
+-- height is derived from the visible content plus the buttons and one bottom
+-- margin, so collapsed variants end exactly below OK/Cancel with no slack.
 local function ApplySections(f, opts)
     opts = opts or {}
-    local prev = f.spectrum.frame
-    local freed = 0
+    local prev, prevX = f.spectrum.frame, f.spectrumX
+    local used = SPECTRUM_TOP + f.spectrum.gridH
     for _, section in ipairs(f.sections) do
         if opts[section.key] == false then
             for _, element in ipairs(section.group) do element:Hide() end
-            freed = freed + section.flow
         else
             for _, element in ipairs(section.group) do element:Show() end
             section.top:ClearAllPoints()
-            section.top:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", 0, -section.gap)
-            prev = section.bottom
+            section.top:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", CONTENT_X - prevX, -section.gap)
+            prev, prevX = section.bottom, CONTENT_X
+            used = used + section.flow
         end
     end
-    f:SetHeight(PANEL_H - freed)
+    f:SetHeight(used + BUTTON_GAP + BUTTON_H + BOTTOM_MARGIN)
     f.okBtn:ClearAllPoints()
     f.okBtn:SetPoint("RIGHT", f, "RIGHT", -20, 0)
-    f.okBtn:SetPoint("TOP", prev, "BOTTOM", 0, -16)
+    f.okBtn:SetPoint("TOP", prev, "BOTTOM", 0, -BUTTON_GAP)
 end
 
 --[[============================================================================

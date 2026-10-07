@@ -428,9 +428,14 @@ scenario("Show opts collapse RGB and presets and shrink the panel", function()
   local okTop = f.okBtn.points[2]
   assert(okTop and okTop[1] == "TOP" and okTop[2] == f.previewRing and okTop[5] == -16,
     "OK button did not re-anchor under the preview")
-  -- RGB flow (14 + 46) and presets flow (14 + label 20 + 8 + two rows 56)
-  -- must come out of the 640px panel.
-  assert(f.height == 640 - 60 - 98, "panel height did not shrink: " .. tostring(f.height))
+  -- RGB flow (14 + 46) and presets flow no longer matter: the height is
+  -- derived from the visible content plus buttons and one bottom margin.
+  local expected = 46 + f.spectrum.gridH + f.sections[1].flow + f.sections[2].flow + 16 + 28 + 20
+  assert(f.height == expected, "panel height is not content-derived: " .. tostring(f.height))
+  -- First visible section aligns back to the 20px content margin, not to the
+  -- centred spectrum's left edge (36).
+  local cpt = f.classLabel.points[1]
+  assert(cpt and cpt[4] == 20 - 36, "class label did not align to the content margin")
 end)
 
 scenario("Show without opts restores every section and the full panel", function()
@@ -443,16 +448,27 @@ scenario("Show without opts restores every section and the full panel", function
   local okTop = f.okBtn.points[2]
   assert(okTop and okTop[1] == "TOP" and okTop[2] == f.presetsBottom and okTop[5] == -16,
     "OK button did not return under the presets")
-  assert(f.height == 640, "panel height did not restore: " .. tostring(f.height))
+  local full = 46 + f.spectrum.gridH
+    + f.sections[1].flow + f.sections[2].flow + f.sections[3].flow + f.sections[4].flow
+    + 16 + 28 + 20
+  assert(f.height == full, "full panel height is not content-derived: " .. tostring(f.height))
+end)
+
+scenario("spectrum and brightness bar are centred as one group", function()
+  local spt = f.spectrum.frame.points[1]
+  local centred = (300 - (f.spectrum.gridW + 14 + 18)) / 2
+  assert(spt and spt[4] == centred and centred == 36,
+    "spectrum is not centred: " .. tostring(spt and spt[4]))
 end)
 
 scenario("classes=false moves the preview up to the spectrum", function()
   CP:Show({ r = 1, g = 0, b = 0 }, function() end, { classes = false })
   for _, el in ipairs(f.classGroup) do assert(not el:IsShown(), "class element stayed visible") end
   local pt = f.previewRing.points[1]
-  assert(pt and pt[1] == "TOPLEFT" and pt[2] == f.spectrum.frame and pt[5] == -14,
-    "preview did not re-anchor under the spectrum")
-  assert(f.height == 640 - f.sections[1].flow, "panel height ignored the class flow")
+  assert(pt and pt[1] == "TOPLEFT" and pt[2] == f.spectrum.frame and pt[4] == 20 - 36 and pt[5] == -14,
+    "preview did not align to the content margin under the spectrum")
+  local noClass = 46 + f.spectrum.gridH + f.sections[2].flow + f.sections[3].flow + f.sections[4].flow + 16 + 28 + 20
+  assert(f.height == noClass, "panel height ignored the class flow: " .. tostring(f.height))
 end)
 
 scenario("preview=false chains RGB and buttons onto the class row", function()
