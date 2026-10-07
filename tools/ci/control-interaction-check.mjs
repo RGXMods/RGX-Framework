@@ -200,6 +200,31 @@ try {
       btn.scripts.OnLeave(btn)
       assert(btn.bg.color[1] == D:GetColor('surface')[1])
     `],
+    ["bound color control re-projects storage on Refresh and before opening", `
+      local captured = nil
+      RGXFramework:RegisterModule('colorpicker', {
+        Show = function(_, color) captured = color end,
+      })
+      local store = { color = { r = 1, g = 1, b = 1 } }
+      local control = UI:CreateColorPicker({}, { key = 'color', storage = store, default = { r = 1, g = 1, b = 1 } })
+      assert(type(control.Refresh) == 'function', 'color control exposes no Refresh')
+      assert(control.swatch and control.swatch.tex, 'color control exposes no swatch texture')
+      store.color = { r = 0, g = 0.5, b = 1 }
+      control:Refresh()
+      local c = control.swatch.tex.color
+      assert(c[1] == 0 and c[2] == 0.5 and c[3] == 1, 'Refresh did not repaint the swatch from storage')
+      control.swatch:Click()
+      assert(captured and captured.r == 0 and captured.g == 0.5 and captured.b == 1, 'opening used a stale color')
+    `],
+    ["SetTheme accepts named RGB values and WithTheme scopes them", `
+      D:SetTheme({ primary = { r = 0.1, g = 0.2, b = 0.3 }, accent = { r = 0.4, g = 0.5, b = 0.6 } })
+      assert(D:GetColor('primary')[1] == 0.1 and D:GetColor('primary')[3] == 0.3)
+      assert(D:GetColor('accent')[2] == 0.5)
+      D:WithTheme({ primary = { r = 0.7, g = 0.8, b = 0.9 } }, function()
+        assert(D:GetColor('primary')[1] == 0.7)
+      end)
+      assert(D:GetColor('primary')[1] == 0.1)
+    `],
   ];
   for (const [name, script] of scenarios) {
     lua.doStringSync(script);

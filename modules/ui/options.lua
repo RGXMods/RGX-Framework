@@ -441,6 +441,7 @@ local function CreateOptionsPanel(UI, opts)
     accent:SetPoint("BOTTOMLEFT",  8, 0)
     accent:SetPoint("BOTTOMRIGHT", -8, 0)
     accent:SetColorTexture(D:Unpack("primary"))
+    panel._accentLine = accent
 
     -- Icon
     if opts.icon then
@@ -487,6 +488,7 @@ local function CreateOptionsPanel(UI, opts)
         ver:SetJustifyH("RIGHT")
         ver:SetTextColor(D:Unpack("primary"))
         ApplyDefaultFont(ver)
+        panel._versionText = ver
     end
 
     if opts.author then
@@ -667,6 +669,18 @@ local function RunSoon(delay, fn)
   end
 end
 
+    -- Run a build/refresh callback under the panel's own theme, then restore
+    -- the shared global theme so later panels/addons are unaffected. Falls
+    -- back to a direct call when the panel carries no theme. Content callbacks
+    -- keep their own pcall isolation; this only scopes the color surface.
+    local function withPanelTheme(fn)
+        if type(panel.theme) == "table" then
+            D:WithTheme(panel.theme, fn)
+        else
+            fn()
+        end
+    end
+
     local bannerQueued = false
 
     local function BuildBanner()
@@ -676,8 +690,10 @@ end
 
         panel._bannerBuilt = true
         if panel.bannerFrame and type(opts.banner) == "function" then
-            local ok, err = pcall(opts.banner, panel.bannerFrame)
-            if not ok then RGX:Debug("[RGXOptions] Banner build error: " .. tostring(err)) end
+            withPanelTheme(function()
+                local ok, err = pcall(opts.banner, panel.bannerFrame)
+                if not ok then RGX:Debug("[RGXOptions] Banner build error: " .. tostring(err)) end
+            end)
         end
     end
 
@@ -722,25 +738,29 @@ end
                     local content = self.contents[i]
                     local tabInfo = self.tabs[i] and self.tabs[i]._tabInfo
                     if not content._built or content._dirty then
-                        if content._dirty then
-                            ClearContent(content)
-                            content._dirty = nil
-                        end
-                        if tabInfo and type(tabInfo.content) == "function" then
-                            local ok, err = pcall(tabInfo.content, CreateAddHelper(content))
-                            if ok then
-                                content._built = true
-                            else
-                                RGX:Error("[RGXOptions] " .. tostring(tabInfo.text) .. " tab build failed: " .. tostring(err))
+                        withPanelTheme(function()
+                            if content._dirty then
                                 ClearContent(content)
+                                content._dirty = nil
                             end
-                        else
-                            content._built = true
-                        end
-                        ReflowScrollContent(content)
+                            if tabInfo and type(tabInfo.content) == "function" then
+                                local ok, err = pcall(tabInfo.content, CreateAddHelper(content))
+                                if ok then
+                                    content._built = true
+                                else
+                                    RGX:Error("[RGXOptions] " .. tostring(tabInfo.text) .. " tab build failed: " .. tostring(err))
+                                    ClearContent(content)
+                                end
+                            else
+                                content._built = true
+                            end
+                            ReflowScrollContent(content)
+                        end)
                     elseif type(content.Refresh) == "function" then
-                        pcall(content.Refresh, content)
-                        ReflowScrollContent(content)
+                        withPanelTheme(function()
+                            pcall(content.Refresh, content)
+                            ReflowScrollContent(content)
+                        end)
                     end
                     if tabInfo and type(tabInfo.onSelect) == "function" then
                         pcall(tabInfo.onSelect)
@@ -775,23 +795,52 @@ end
     function panel:Refresh()
         QueueBannerBuild()
 
-        for i, content in ipairs(self.contents) do
-            if content:IsShown() then
-                if content._dirty then
-                    local tabInfo = self.tabs[i] and self.tabs[i]._tabInfo
-                    if tabInfo then
-                        ClearContent(content)
-                        content._dirty = nil
-                        if type(tabInfo.content) == "function" then
-                            local ok = pcall(tabInfo.content, CreateAddHelper(content))
-                            content._built = ok == true
-                            if not ok then ClearContent(content) end
+        withPanelTheme(function()
+            for i, content in ipairs(self.contents) do
+                if content:IsShown() then
+                    if content._dirty then
+                        local tabInfo = self.tabs[i] and self.tabs[i]._tabInfo
+                        if tabInfo then
+                            ClearContent(content)
+                            content._dirty = nil
+                            if type(tabInfo.content) == "function" then
+                                local ok = pcall(tabInfo.content, CreateAddHelper(content))
+                                content._built = ok == true
+                                if not ok then ClearContent(content) end
+                            end
                         end
+                    elseif type(content.Refresh) == "function" then
+                        pcall(content.Refresh, content)
                     end
-                elseif type(content.Refresh) == "function" then
-                    pcall(content.Refresh, content)
+                    ReflowScrollContent(content)
                 end
-                ReflowScrollContent(content)
+            end
+        end)
+    end
+
+    -- Apply a theme at runtime and repaint the panel's own chrome without
+    -- leaking it into the shared global theme: the theme is scoped (save/apply/
+    -- restore) exactly like construction, then the accent line, version label,
+    -- and tab styling are re-derived from the panel's normalized theme. Bound
+    -- color controls repaint through their own Refresh; content rebuilds pick
+    -- up the theme through withPanelTheme.
+    function panel:SetTheme(theme)
+        if not D then return end
+        local prevPrimary = D.Theme.primary
+        local prevAccent  = D.Theme.accent
+        D:SetTheme(theme)
+        self.theme = { primary = D.Theme.primary, accent = D.Theme.accent }
+        D.Theme.primary = prevPrimary
+        D.Theme.accent  = prevAccent
+
+        local pr, pg, pb = GetTabPrimary(self, D)
+        if self._accentLine then self._accentLine:SetColorTexture(pr, pg, pb) end
+        if self._versionText then self._versionText:SetTextColor(pr, pg, pb) end
+
+        local active = self._activeTab or -1
+        for i, tab in ipairs(self.tabs) do
+            if tab and type(tab.SetActive) == "function" then
+                tab:SetActive(i == active)
             end
         end
     end
@@ -1008,6 +1057,13 @@ end
             InterfaceOptions_AddCategory(panel)
         end
         panel._category = panel
+    end
+
+    -- Normalize and cache the panel's theme (accepting named or array colors)
+    -- now that all tabs and chrome exist, so runtime SetTheme and tab styling
+    -- have a canonical value before the global theme is restored below.
+    if type(panel.theme) == "table" then
+        panel:SetTheme(panel.theme)
     end
 
     panel:Hide()

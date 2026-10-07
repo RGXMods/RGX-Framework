@@ -691,7 +691,7 @@ Dragged offsets are written to both the consumer `storage[offsetKey]` and the fr
 | `UI:CreateStatusBarDropdown(parent, opts)` | Texture selector dropdown |
 | `UI:CreateTextureDropdown(parent, opts)` | Texture selector dropdown |
 | `UI:OpenFontMenu(anchor, opts)` | Pop-up font menu |
-| `UI:CreateColorPicker(parent, opts)` | Inline color swatch + picker |
+| `UI:CreateColorPicker(parent, opts)` | Inline color swatch + picker; returns a control with `:Refresh()` to re-project storage |
 | `UI:CreateSlider(parent, opts)` | Numeric slider (`suffix` appends to the displayed value, e.g. `"%"`) |
 | `UI:CreateToggle(parent, opts)` | Checkbox toggle |
 | `UI:CreateLabel(parent, opts)` | Text label (pass `width` to enable word wrap for long text; omit for single-line) |
@@ -731,6 +731,17 @@ panel:Open()
 panel:SelectTab(1)
 panel:SelectTabByName("Appearance")
 ```
+
+| Method | Description |
+|---|---|
+| `panel:SelectTab(index)` | Show a tab and build/refresh its visible content under `panel.theme` |
+| `panel:Refresh()` | Rebuild dirty tabs and refresh visible bound controls under `panel.theme` |
+| `panel:SetTheme(config)` | Apply a theme at runtime: repaints the accent line, version label, and tab styling from the panel's own colors without mutating the shared global theme |
+| `panel:InvalidateAllTabs()` | Mark every tab dirty for rebuild on next selection |
+
+Both `Refresh` and `SetTheme` scope the panel's colors to its own content; the
+shared global theme is left unchanged. `SetTheme` accepts the same named or
+array color forms as `Design:SetTheme`.
 
 ---
 
