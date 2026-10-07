@@ -44,7 +44,7 @@ must restart to load edited source.
 |---|---|
 | `rgx_validate_addon` | Validate an `RGXAddon` opts table (as JSON; Lua functions as `{"$lua":"function"}`) against `contract/schemas/rgx-addon.schema.json`; flags contract-frozen `tier4` keys that don't run yet |
 | `rgx_audit_lua` | Scan a `.lua` file or addon directory for unsafe patterns: raw `C_Timer`, manual `OnEvent` frames, `SLASH_` globals, unguarded `SetAttribute`, raw aura plumbing, and hook reassignment; RGXAuras consumers remain clean |
-| `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys, including deterministically ordered named `every` timers |
+| `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys, including deterministically ordered named `every` timers; every authored string and table key is escaped and numeric fields must be finite, so raw `CreateFrame`, `C_Timer`, `SLASH_*`, or hook text is unrepresentable in its output |
 | `rgx_get_contract` | Return the schema + shipped-surface reference for agent context |
 | `rgx_edit_definition` | Normalize/import/patch/export a version-1 label definition through shared pure logic; returns data and canonical transfer text, explicitly marked source-only |
 | `rgx_search_wow_api` | Deterministic substring search of the synced client dumps under `.reference/wow-api-dump/`, with per-result flavor/build/branch/commit/line provenance. Never live-game state; confirm runtime-driving conclusions in the wow-ui-source mirror |
@@ -98,7 +98,7 @@ MCP server. See [[Distribution]].
 
 ## The tandem loop
 
-`tools/rgx-mcp/test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK against the real [RGX-Hello](https://github.com/RGXMods/RGX-Hello) repo. It parses the actual curried `RGXAddon` table as Lua 5.1, validates that complete options object, generates the matching supported surface including named timers and option columns, and audits the actual Lua tree. It also verifies that `every` is shipped while `on` remains Tier 4, and proves with paired fixtures that RGXAuras consumer code passes while raw aura event/API references are reported, including references passed through `pcall` or stored for later use. An unparseable Lua source fails the audit closed. The validator separately reports `tier4KeysUsed`: schema validity alone does not establish runtime availability. The generator emits only its supported shipped forms.
+`tools/rgx-mcp/test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK against the real [RGX-Hello](https://github.com/RGXMods/RGX-Hello) repo. It parses the actual curried `RGXAddon` table as Lua 5.1, validates that complete options object, generates the matching supported surface including named timers and option columns, and audits the actual Lua tree. It also verifies that `every` is shipped while `on` remains Tier 4, and proves with paired fixtures that RGXAuras consumer code passes while raw aura event/API references are reported, including references passed through `pcall` or stored for later use. An unparseable Lua source fails the audit closed. The validator separately reports `tier4KeysUsed`: schema validity alone does not establish runtime availability. The generator emits only its supported shipped forms. Hostile names, db keys, and non-finite numbers are escaped or rejected, so raw `CreateFrame`, `C_Timer`, `SLASH_*`, and hook replacement cannot be smuggled through generation.
 
 ```bash
 node tools/rgx-mcp/test/test-rgx-hello.mjs "<RGX-Hello-checkout>"
