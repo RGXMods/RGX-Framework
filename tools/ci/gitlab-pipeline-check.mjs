@@ -15,6 +15,7 @@ function matches(expression, context) {
     case '$CI_PIPELINE_SOURCE == "merge_request_event"': return context.source === "merge_request_event";
     case '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH': return Boolean(context.branch) && context.branch === "main";
     case '$CI_COMMIT_TAG': return Boolean(context.tag);
+    case '$CI_COMMIT_TAG =~ /^v/': return Boolean(context.tag) && context.tag.startsWith("v");
     default: throw new Error(`Uncovered shared pipeline rule: ${expression}`);
   }
 }
@@ -36,6 +37,7 @@ for (const hasContractTools of [true, false]) {
     { source: "push", branch: "task/example", tag: "", contract: false, mirror: false },
     { source: "push", branch: "main", tag: "", contract: true, mirror: true },
     { source: "push", branch: "", tag: "v2.7.9", contract: true, mirror: true },
+    { source: "push", branch: "", tag: "nightly-1", contract: true, mirror: false },
     { source: "web", branch: "task/example", tag: "", contract: false, mirror: false },
   ]) {
     const context = { ...scenario, hasContractTools };
@@ -56,6 +58,11 @@ for (const hasContractTools of [true, false]) {
 }
 assert.deepEqual(config["contract:bundle"].needs, ["addon:validate"]);
 assert.deepEqual(config["mirror:github"].needs, ["addon:validate"]);
+const mirrorScript = config["mirror:github"].script.join("\n");
+assert(!mirrorScript.includes("--prune"), "mirror must not prune downstream refs");
+assert(!/refs\/(?:heads|tags)\/\*/.test(mirrorScript), "mirror must not sweep wildcard refspecs");
+assert(mirrorScript.includes("HEAD:refs/heads/${CI_DEFAULT_BRANCH}"), "mirror must push only the default branch");
+assert(mirrorScript.includes("refs/tags/${CI_COMMIT_TAG}:refs/tags/${CI_COMMIT_TAG}"), "mirror must push only the tagged release");
 for (const command of config["addon:validate"].script) {
   assert(!/\n\s*&&/.test(command), "YAML folding must not put && at the start of a shell line");
 }

@@ -119,6 +119,23 @@ compression settings. The manifest records every runtime source digest, source
 revision, and `sourceDirty` state. `artifacts/` and `.release/` are generated and
 ignored by Git.
 
+## GitHub Mirror Routing
+
+GitHub is a distribution mirror, never a development source (issue #63). The
+shared mirror job copies exactly one allowlisted ref per pipeline:
+
+- the protected default branch (`main`)
+- protected release tags matching `v*`
+
+Refs are pushed individually, without wildcard refspecs, without `--prune`,
+and without forcing, so development branches, draft refs, and refs that exist
+only downstream are never swept or overwritten. A moved tag or a branch that
+diverged from GitLab fails the mirror job visibly for operator review instead
+of rewriting GitHub history. Removing refs that earlier wildcard mirrors
+already pushed downstream is a separate, explicitly reviewed cleanup.
+Consuming addon repositories inherit the same routing through the shared
+include.
+
 ## Contract Bundle
 
 The versioned contract bundle pins the contract surface
