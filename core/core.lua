@@ -82,6 +82,7 @@ RGX.moduleAliases = {
   petbattles = "RGXPetBattles",
   sharedmedia = "RGXSharedMedia",
   design = "RGXDesign",
+  display = "RGXDisplay",
   combat = "RGXCombat",
   reputation = "RGXReputation",
   databroker = "RGXDataBroker",
@@ -195,6 +196,7 @@ function RGX:GetMinimap()      return self:GetModule("minimap")      end
 function RGX:GetPetBattles()   return self:GetModule("petbattles")   end
 function RGX:GetSharedMedia()  return self:GetModule("sharedmedia")  end
 function RGX:GetDesign()       return self:GetModule("design")       end
+function RGX:GetDisplay()      return self:GetModule("display")      end
 function RGX:GetCombat()       return self:GetModule("combat")       end
 function RGX:GetReputation()   return self:GetModule("reputation")   end
 function RGX:GetAuras()        return self:GetModule("auras")        end

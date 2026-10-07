@@ -36,6 +36,7 @@
 <Script file="modules/colors/colorpicker.lua" />
 <Script file="modules/textures/textures.lua" />
 <Script file="modules/design/design.lua" />
+<Script file="modules/display/display.lua" />
  <Script file="modules/ui/controls.lua" />
  <Script file="modules/ui/options.lua" />
 <Script file="modules/ui/layout.lua" />
