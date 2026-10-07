@@ -83,7 +83,7 @@ element "Quest title"
   text "Quest progress"
   font 16
   color primary
-  position 0 120
+  position top 8
 ```
 
 This is an authoring sketch for an RGX-owned text element, not an options panel
@@ -96,6 +96,52 @@ Existing controls such as `toggle`, `slider`, `color` and `font` remain the
 starting vocabulary for configuration widgets. A simpler future form may infer
 values already inferred by table controls; current string sliders still require
 their explicit range. The proposal does not make `"slider volume"` valid today.
+
+### Placement uses the shipped position vocabulary
+
+Placement composes from the position names and offsets the shipped
+[Display](API.md) module already owns, rather than adding a second geometry
+grammar:
+
+```text
+element "Quest title"
+  text "Quest progress"
+  font 16
+  color primary
+  position top 8
+```
+
+`position top 8` reads as the shipped `position = "TOP"` with `spread = 8`:
+a built-in or registered position name plus an optional offset along its
+axis. When a named position does not fit, the explicit spec stays in the
+same vocabulary:
+
+```text
+element "Quest title"
+  position center relative top offset 0 120
+```
+
+This is the inline position spec the Display module already accepts
+(`point`, `relativePoint`, `x`, `y`), so text, editor and runtime resolve to
+one meaning rather than three placement systems.
+
+Placement properties that are already shipped and must carry over unchanged:
+
+- Stable identity comes from the definition name, not the position. Moving
+  an element never creates a new element or resets another element's offset.
+- Dragged offsets persist durably (`RGXFrameworkDB.RGXDisplayPositions`,
+  mirrored into consumer storage); the durable store wins on creation.
+- Edit mode is the existing drag-mover baseline; an editor's move interaction
+  patches the same canonical draft rather than adding another interaction
+  layer.
+- Anchoring into Blizzard-owned frames stays a capability decision per frame.
+  The concise form describes RGX-owned elements; it does not promise
+  arbitrary protected-frame editing.
+- `position` expresses geometry only. Theme and palette words such as
+  `primary` keep their owning contract's meaning.
+
+No placement spelling is frozen here; the shipped Display module remains the
+single geometry owner until a reviewed contract change says otherwise.
 
 ## Visual editing is a first-class authoring view
 
