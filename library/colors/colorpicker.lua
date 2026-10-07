@@ -552,12 +552,14 @@ function ColorPicker:GetFrame()
     f.spectrum.frame:SetPoint("TOPLEFT", f, "TOPLEFT", f.spectrumX, -SPECTRUM_TOP)
     f.spectrum.onPick = function(h, s)
         self:ApplyHSV(h, s, self.current.v or 1)
+        if self.commitOnPick then self:OK() end
     end
 
     f.valueBar = BuildValueBar(f, { width = VALUEBAR_W, height = f.spectrum.gridH })
     f.valueBar.frame:SetPoint("TOPLEFT", f.spectrum.frame, "TOPRIGHT", VALUEBAR_GAP, 0)
     f.valueBar.onPick = function(v)
         self:ApplyHSV(self.current.h or 0, self.current.s or 0, v)
+        if self.commitOnPick then self:OK() end
     end
 
     -- === LIVE CLASS COLORS ===
@@ -572,7 +574,10 @@ function ColorPicker:GetFrame()
         ringColor = { Design:Unpack("primary") },
     })
     f.classRow.frame:SetPoint("TOPLEFT", f.classLabel, "BOTTOMLEFT", 0, -6)
-    f.classRow.onPick = function(r, g, b) self:SetRGB(r, g, b) end
+    f.classRow.onPick = function(r, g, b)
+        self:SetRGB(r, g, b)
+        if self.commitOnPick then self:OK() end
+    end
     f.classGroup = { f.classLabel, f.classRow.frame }
     f.classContent = f.classLabel:GetHeight() + 6 + f.classRow.height
 
@@ -800,7 +805,10 @@ function ColorPicker:CreatePreview(f)
         if ColorPicker.suppress then return end
         if #box:GetText() ~= 6 then return end
         local r, g, b = ColorPicker:HexToRGB(box:GetText())
-        if r then ColorPicker:SetRGB(r, g, b) end
+        if r then
+            ColorPicker:SetRGB(r, g, b)
+            if ColorPicker.commitOnPick then ColorPicker:OK() end
+        end
     end)
 
     f.previewGroup = { f.previewRing, f.preview, f.eyedropper, f.hexLabel, f.hexInput }
@@ -980,6 +988,7 @@ end
 -- margin, so collapsed variants end exactly below OK/Cancel with no slack.
 local function ApplySections(f, opts)
     opts = opts or {}
+    local commit = opts.commitOnPick == true
     local prev, prevX = f.spectrum.frame, f.spectrumX
     local used = SPECTRUM_TOP + f.spectrum.gridH
     for _, section in ipairs(f.sections) do
@@ -993,6 +1002,16 @@ local function ApplySections(f, opts)
             used = used + section.flow
         end
     end
+    if commit then
+        -- Select-and-close popups carry no buttons; the height ends below
+        -- the last visible section.
+        f.okBtn:Hide()
+        f.cancelBtn:Hide()
+        f:SetHeight(used + BOTTOM_MARGIN)
+        return
+    end
+    f.okBtn:Show()
+    f.cancelBtn:Show()
     f:SetHeight(used + BUTTON_GAP + BUTTON_H + BOTTOM_MARGIN)
     -- Centre the OK/Cancel pair on the panel; Cancel rides on OK's left.
     f.okBtn:ClearAllPoints()
@@ -1099,6 +1118,7 @@ function ColorPicker:Show(color, callback, opts)
     self.current.h, self.current.s, self.current.v = h, s, v
     
     local f = self:GetFrame()
+    self.commitOnPick = (opts and opts.commitOnPick == true) or nil
     ApplySections(f, opts)
     -- Compact consumers scale the whole dialog. The frame is a
     -- singleton shared across consumers, so the scale resets every Show.

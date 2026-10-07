@@ -529,6 +529,22 @@ scenario("a short class row centres instead of hugging the left margin", functio
   local lastPt = last.points[1]
   assert(lastPt[4] + last.width <= 260.5, "centred row overhangs the content width")
   RAID_CLASS_COLORS = saved
+  CP.frame = nil
+  f = CP:GetFrame()
+end)
+
+scenario("commitOnPick selects, fires, and closes with no buttons", function()
+  local calls = 0
+  CP:Show({ r = 1, g = 0, b = 0 }, function() calls = calls + 1 end,
+    { presets = false, rgb = false, preview = false, commitOnPick = true })
+  assert(not f.okBtn:IsShown() and not f.cancelBtn:IsShown(), "buttons stayed visible")
+  local expected = 46 + f.spectrum.gridH + f.sections[1].flow + 20
+  assert(f.height == expected, "buttonless height is wrong: " .. tostring(f.height))
+  f.spectrum.onPick(0.5, 0.8)
+  assert(calls == 1, "pick did not commit the callback")
+  assert(not f:IsShown(), "dialog did not close on pick")
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end)
+  assert(f.okBtn:IsShown() and f.cancelBtn:IsShown(), "buttons did not return")
 end)
 
 print(string.format("COLORPICKER %d passed, %d failed", pass, fail))
