@@ -56,12 +56,12 @@ That gives you saved settings with profiles, a tabbed options panel with control
 
 | Problem | Ace3 / Legacy | RGX |
 |---|---|---|
-| Dependency model | Embed 8+ libraries per addon | One `RequiredDeps` entry |
+| Dependency model | Select/compose libraries; often embedded | One shared `RequiredDeps` entry |
 | Version conflicts | LibStub arbitration at runtime | Single shared instance |
 | Addon setup | AceAddon + AceDB + AceConfig assembly | `RGXAddon "Name" { }` |
-| Options UI | AceConfig mega-tables → unstyled AceGUI | Small declarative tables → themed, db-bound controls |
-| Safety infrastructure | Your problem | Failure-isolated dispatch, lockdown guards, and documented restricted-value boundaries |
-| Tooling | None | Source-only schema/conformance fixture + in-game test suite; framework owns shared contract logic, future Studio consumes it |
+| Options UI | AceConfig definitions and AceGUI widgets | Supported declarative forms plus shared UI/design primitives |
+| Safety infrastructure | Library guarantees plus consumer integration | Centralized dispatch, lockdown guards and documented restricted-value adapters; client evidence still required |
+| Authoring contract | Primarily Lua runtime library interfaces | Canonical schema/shared engine, validation/generation/audit adapters and conformance fixtures |
 
 The full audited comparison lives in [`docs/ACE3-ANALYSIS.md`](https://github.com/RGXMods/RGX-Framework/blob/main/docs/ACE3-ANALYSIS.md).
 
@@ -126,4 +126,4 @@ All modules load from `RGX-Framework.xml`; the dormant tier was re-enabled in v2
 Framework releases are tagged `vX.Y.Z`, published to GitHub, and uploaded to
 CurseForge when its project ID and secret are configured. The canonical
 changelog is [[Changelog]].
-> **Beta testing:** v2.7.15-beta.2 is the opt-in test build; stable remains v2.7.14.
+> **Beta candidate:** v2.7.15-beta.4 is the current source test build; stable remains v2.7.14.

@@ -58,9 +58,11 @@ output, and lifecycle work routed through scoped framework methods. The `addon`
 object carries `RegisterEvent`, `RegisterUnitEvent`, `RegisterMessage`, `After`,
 `Every`, `Print`, `Warn`, and `Error`, so consumers do not need raw WoW plumbing.
 
-> Human `on` triggers, one-line controls, and grid card layouts remain frozen
-> future contract forms. Named `every` timers ship today; use scoped methods for
-> events and other behavior that is not yet declarative.
+> Human `on` triggers remain frozen future contract forms. One-line controls
+> ship in v2.7.15-beta.2; named `every` timers are implemented. Local
+> `options.columns` work adds column flows, not the full declarative card/page model.
+> Use scoped methods for events and other behavior that is not yet
+> declarative.
 
 **3. À la carte — individual systems when you need them:**
 
@@ -227,7 +229,7 @@ table plus guarded per-locale blocks. The frozen per-consumer
 ### Design & Philosophy
 
 - **[Foundation Decisions](docs/FOUNDATION.md)** — what RGX keeps vs drops from Ace3, and why
-- **[Ace3 Analysis](docs/ACE3-ANALYSIS.md)** — how each Ace3 piece maps to RGX, and where RGX aims to be better
+- **[Ace3 Analysis](docs/ACE3-ANALYSIS.md)** — current capability map and RGX's runtime/contract/design/tooling architecture
 - **[Roadmap](docs/ROADMAP.md)** — profile/database system, SharedMedia drop-in, pack system, localization, longer-term plans
 - **[Studio Roadmap](docs/STUDIO-ROADMAP.md)** — separate Tauri visual authoring product, contract and preview boundaries, phased delivery
 - **[Distribution](docs/DISTRIBUTION.md)** — runtime package boundary, checksums, and installation
@@ -288,11 +290,11 @@ RGX-Framework publishes only the framework addon package. See
 
 - **GitHub:** https://github.com/RGXMods/RGX-Framework
 - **Issues:** https://github.com/RGXMods/RGX-Framework/issues
-- **Discord:** https://discord.gg/N7kdKAHVVF
+- **Discord:** https://realmgx.com
 
 ---
 
 ## License
 
 [MIT](LICENSE.txt) for framework code. Bundled fonts retain their own open licenses — see [docs/FONT-SOURCES.md](docs/FONT-SOURCES.md) for attribution.
-> **Beta testing:** v2.7.15-beta.2 is the opt-in test build; v2.7.14 stable is live on all channels.
+> **Beta candidate:** v2.7.15-beta.4 contains the options-composition refactor and RGX.API single-ownership enforcement; v2.7.14 remains stable. Check releases for published builds.

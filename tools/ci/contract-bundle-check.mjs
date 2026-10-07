@@ -2,8 +2,8 @@
 // Build + verify the RGX contract bundle (issue #6).
 //
 // The bundle is a versioned zip that pins the RGXX contract surface
-// (schema, declarative docs, API catalog, conformance vectors)
-// separately from the player archive.
+// (schema, declarative docs, declarative and module API catalogs,
+// conformance vectors) separately from the player archive.
 //
 // Metadata derivation never hand-repeats source truths:
 //   - frameworkVersion, wowInterface, sourceRepository come from RGX-Framework.toc
@@ -203,6 +203,19 @@ const apiCatalogJson = Buffer.from(JSON.stringify({
   keys: collectSchemaKeys(schema),
 }, null, 2) + "\n");
 
+// The module API catalog is a checked-in artifact (tools/ci/api-catalog-check.mjs
+// owns derivation); the bundle embeds it verbatim and only shape-checks it.
+const moduleCatalogRaw = read("contract/schemas/rgx-api.catalog.json");
+let moduleCatalog = null;
+try {
+  moduleCatalog = JSON.parse(moduleCatalogRaw.toString("utf8"));
+} catch (error) {
+  failures.push(`contract/schemas/rgx-api.catalog.json is not valid JSON: ${error.message}`);
+}
+if (moduleCatalog && (!Array.isArray(moduleCatalog.entries) || moduleCatalog.entries.length === 0)) {
+  failures.push("contract/schemas/rgx-api.catalog.json must contain a non-empty entries array");
+}
+
 const conformanceJson = Buffer.from(JSON.stringify({
   schema: "rgx-addon.schema.json",
   runner: "conformance/run-vectors.mjs",
@@ -213,6 +226,7 @@ const bundleFiles = {
   "rgx-addon.schema.json": schemaRaw,
   "docs/DECLARATIVE-API.md": declarativeDoc,
   "api/catalog.json": apiCatalogJson,
+  "schemas/rgx-api.catalog.json": moduleCatalogRaw,
   "conformance/contract-vectors.json": conformanceJson,
   "conformance/run-vectors.mjs": Buffer.from(offlineRunner()),
 };
@@ -243,6 +257,7 @@ for (const { path, sha256: expected } of fileInventory) {
 if (!fileInventory.some((f) => f.path === "rgx-addon.schema.json")) failures.push("bundle must contain rgx-addon.schema.json");
 if (!fileInventory.some((f) => f.path === "docs/DECLARATIVE-API.md")) failures.push("bundle must contain docs/DECLARATIVE-API.md");
 if (!fileInventory.some((f) => f.path === "api/catalog.json")) failures.push("bundle must contain api/catalog.json");
+if (!fileInventory.some((f) => f.path === "schemas/rgx-api.catalog.json")) failures.push("bundle must contain schemas/rgx-api.catalog.json");
 if (!fileInventory.some((f) => f.path === "conformance/contract-vectors.json")) failures.push("bundle must contain conformance/contract-vectors.json");
 
 const zipBytes = zipBundle({

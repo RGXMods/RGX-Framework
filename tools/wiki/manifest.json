@@ -1,6 +1,7 @@
 {
   "//": "Source of truth for the docs -> GitHub wiki mapping. docs/ is canonical; the wiki is generated from it by build-wiki.mjs. Each entry maps a docs/ file to a wiki page name; sections drive the generated _Sidebar. HOME.md becomes the wiki Home page. To publish a new doc, add it here.",
   "home": "HOME.md",
+  "sourceOnly": ["wago_description.md"],
   "sections": [
     {
       "title": "Getting Started",

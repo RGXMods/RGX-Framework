@@ -2,7 +2,13 @@
 
 This document answers a simple question:
 
-What is actually required for `RGX-Framework` to be a real addon framework, and what is just legacy Ace3-style implementation detail?
+Which capabilities does RGX own, which are already implemented, and how do we
+keep the runtime and authoring experience coherent as the framework grows?
+
+**Source review: 2026-10-06.** The candidate TOC is `2.7.15-beta.4`; the roadmap records
+`2.7.14` stable. Requirements below describe ownership, not an unimplemented
+shopping list. See [Ace3 Analysis](ACE3-ANALYSIS.md) for the current capability
+map and [Architecture](ARCHITECTURE.md) for load order and modularity findings.
 
 ## Core Rule
 
@@ -18,7 +24,9 @@ That means we only keep a foundation piece if it is required by real addon behav
 
 ## North Star
 
-RGX-Framework is an addon-author toolkit.
+RGX-Framework is a shared runtime and addon-author toolkit. Its supported Lua
+API, declarative forms, canonical contract and optional authoring tools serve
+the same consumer experience. Developer tools are never runtime dependencies.
 
 The goal is to let someone build a polished WoW addon quickly without first rebuilding the same low-level systems:
 
@@ -106,7 +114,7 @@ RGX needs a clean persistence layer for:
 
 - global settings
 - character settings
-- optional profile-style settings if the suite really uses them
+- profile-aware settings, switching and profile import/export (implemented)
 - default application and reset behavior
 
 Why this matters:
@@ -115,7 +123,7 @@ Why this matters:
 
 Design note:
 
-- full AceDB complexity is not automatically required on day one
+- RGX profiles do not imply AceDB-compatible namespaces or scope semantics
 - simple defaults and clear storage rules matter more than feature count
 
 ### 5. Reusable option controls
@@ -194,7 +202,8 @@ Decision:
 
 ### AceSerializer
 
-Serialization is only required if RGX needs:
+RGX already implements profile serialization/import-export in the database.
+A generic serializer or transport system is a separate capability, justified by:
 
 - import/export
 - addon-to-addon structured comms
@@ -203,8 +212,8 @@ Serialization is only required if RGX needs:
 
 Decision:
 
-- not a foundation requirement for early media/UI RGX
-- becomes important when import/export or addon comm becomes real scope
+- retain profile serialization and validate its persistence/round-trip behavior
+- do not describe it as future work or infer general comm support from it
 
 ### AceComm
 
@@ -257,37 +266,62 @@ The real lesson is:
 
 RGX should keep that outcome while simplifying the implementation and API.
 
-For the fuller breakdown of why Ace3 gets adopted and how RGX should beat it:
+For the fuller breakdown of why Ace3 gets adopted and RGX's architectural distinction:
 
 - see [ACE3-ANALYSIS.md](ACE3-ANALYSIS.md)
 
 ## RGX Direction
 
-RGX should keep three categories separate:
+Keep three states explicit:
 
-### Required now
+### Implemented baseline
 
-- module system
-- shared media registries
-- event/message/callback system
-- native runtime helpers like timers, hooks, and slash registration
-- defaults and saved settings
-- reusable option controls
-- one-line apply helpers
+- registry/lifecycle, events/messages, timers, hooks, slash and combat queue
+- profile-aware database, defaults, migrations and profile serialization
+- fonts, colors, textures, sound and shared-media registries
+- controls, options panels, imperative pages/columns/cards and design primitives
+- minimap, broker, locale, auras/tooltip and capability-gated game modules
+- `RGXAddon`, canonical schema and source-only authoring/conformance tooling
 
-### Required soon
+Implementation does not prove universal consumer adoption or client safety.
+Verify load/registration, flavor capabilities and observable behavior separately.
 
-- sounds
-- more complete dropdown/tab/frame primitives
-- better settings composition
-- simple timers or deferred work helpers if real addons need them
+### Current hardening and composition
 
-### Required later
+- reliable DB ownership and persisted visual restoration in consumers
+- one declaration vocabulary across runtime, schema, engine and MCP
+- modular options rendering through existing UI/layout factories
+- complete page/card composition beyond local declarative column flows
+- theme/skin contracts that separate presentation from geometry and behavior
 
-- serialization
-- addon comm
-- import/export
-- RGX-Mod-specific higher-level systems
+### Need-driven future work
+
+- bucket events and cross-client communication when maintained consumers need them
+- reusable RGXMod trigger/condition/display primitives with current consumer value
+- full native skins after source/asset evidence and client geometry acceptance
+
+The [Roadmap](ROADMAP.md) orders these outcomes; GitLab owns acceptance state.
+
+## Modularity Standard
+
+Each module has one coherent owner and a small consumer interface. Internally
+it may compose private helpers without turning each helper into another public
+module. Library/game classification, declared dependencies and capability gates
+must agree with XML loading and initialization.
+
+- Core owns shared lifecycle, dispatch, persistence and addon registration.
+- UI owns controls, layout and rendering; Design/media own styling resources.
+- Game modules own reusable WoW-domain state behind flavor adapters.
+- Contract owns canonical authoring semantics; MCP/editor tooling adapts them.
+- Consumers own feature policy, content and presentation choices.
+
+Core owns declaration-time options validation and addon lifecycle. The current
+untagged follow-on delegates lazy control/layout rendering to a private seam in
+the existing UI options module. MCP validation delegates to the shared engine;
+the tagged beta.3 snapshot contains that correction, while rendering relocation
+remains separate local integration work.
+Neither requires another SDK/runtime or duplicate contract.
+See the ordered modularity work in [Architecture](ARCHITECTURE.md).
 
 ## Final Decision
 
@@ -304,7 +338,7 @@ But RGX still needs the actual capabilities those libraries were solving:
 - persistence
 - controls
 - media registries
-- optional comm/serialization when the framework truly needs them
+- profile serialization already in use; optional network comm when a real need exists
 
 That is the standard to hold:
 
