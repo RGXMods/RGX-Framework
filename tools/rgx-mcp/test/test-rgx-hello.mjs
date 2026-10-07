@@ -135,6 +135,24 @@ try {
     operation: "normalize", definition: { ...exampleDefinition, version: 2 },
   } });
   check("AI definition tools reject unsupported versions", rejected.isError === true);
+  console.log("== Approved module API catalog (issue #7) ==");
+  const catalogFile = JSON.parse(readFileSync(join(HERE, "../../../contract/schemas/rgx-api.catalog.json"), "utf8"));
+  const catalogResource = await client.readResource({ uri: "rgx://schemas/api-catalog" });
+  check("catalog resource matches the checked-in catalog",
+    JSON.stringify(JSON.parse(catalogResource.contents[0].text)) === JSON.stringify(catalogFile));
+  const fullCatalog = await client.callTool({ name: "rgx_get_api_catalog", arguments: {} });
+  const fullReport = JSON.parse(fullCatalog.content[0].text);
+  check("catalog tool returns every catalog entry",
+    fullReport.catalogVersion === catalogFile.catalogVersion
+      && JSON.stringify(fullReport.entries) === JSON.stringify(catalogFile.entries));
+  const aurasEntry = catalogFile.entries.find((entry) => entry.module === "auras");
+  const aurasCatalog = await client.callTool({ name: "rgx_get_api_catalog", arguments: { module: "auras" } });
+  const aurasReport = JSON.parse(aurasCatalog.content[0].text);
+  check("catalog tool filters to one module",
+    aurasReport.entries.length === 1 && JSON.stringify(aurasReport.entries[0]) === JSON.stringify(aurasEntry));
+  const unknownCatalog = await client.callTool({ name: "rgx_get_api_catalog", arguments: { module: "nope" } });
+  check("catalog tool rejects unknown modules fail-closed",
+    unknownCatalog.isError === true && unknownCatalog.content[0].text.includes("Known modules"));
   console.log("== RGX-Hello source congruence ==");
   check("parsed the real RGX-Hello declaration", actualAddonName === "RGX-Hello");
   const minimumComparison = compareVersions(minimumFrameworkVersion, frameworkVersion);

@@ -26,7 +26,7 @@ The temporary source-only MCP conformance fixture for RGX-Framework. It validate
 ## Structure
 
 ```
-src/server.js   — the whole server (McpServer over stdio): 4 tools, 2 resources
+src/server.js   — the whole server (McpServer over stdio): 7 tools, 5 resources
 package.json    — deps: @modelcontextprotocol/sdk, ajv (2020-12), luaparse, zod
 ```
 
