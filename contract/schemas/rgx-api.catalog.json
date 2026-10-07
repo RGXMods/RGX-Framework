@@ -914,6 +914,67 @@
       "docs": "docs/API.md#design-rgxdesign"
     },
     {
+      "module": "display",
+      "getter": "RGX:GetDisplay()",
+      "global": "RGXDisplay",
+      "owner": "modules/display/display.lua",
+      "category": "library",
+      "stability": "stable",
+      "flavors": null,
+      "methods": [
+        {
+          "name": "CreateElement",
+          "params": [
+            "opts"
+          ]
+        },
+        {
+          "name": "GetDefaults",
+          "params": [
+            "context"
+          ]
+        },
+        {
+          "name": "GetPosition",
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "name": "IsEditMode",
+          "params": []
+        },
+        {
+          "name": "ListPositions",
+          "params": []
+        },
+        {
+          "name": "RegisterDefaults",
+          "params": [
+            "context",
+            "values"
+          ]
+        },
+        {
+          "name": "RegisterPosition",
+          "params": [
+            "name",
+            "spec"
+          ]
+        },
+        {
+          "name": "SetEditMode",
+          "params": [
+            "on"
+          ]
+        }
+      ],
+      "introduced": null,
+      "authorable": false,
+      "preview": "unavailable",
+      "docs": "docs/API.md#display-rgxdisplay"
+    },
+    {
       "module": "dropdowns",
       "getter": "RGX:GetDropdowns()",
       "global": "RGXDropdowns",

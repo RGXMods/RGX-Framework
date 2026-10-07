@@ -147,6 +147,7 @@ WoW loads files in the order declared in `RGX-Framework.xml`. The framework uses
 23. modules/colors/colorpicker.lua  — HSV color picker widget
 24. modules/textures/textures.lua   — statusbar texture registry, LSM import
 25. modules/design/design.lua       — Design.Colors static palette, visual building blocks
+25b. modules/display/display.lua    — positioned/scalable display elements, drag edit mode
 26. modules/ui/controls.lua         — UI control factory (slider, toggle, label, dropdown, etc.)
 27. modules/ui/options.lua          — CreateOptionsPanel (tabbed settings window)
 27b. modules/ui/layout.lua, profiles.lua, guide.lua — composition, profiles and guide
@@ -233,6 +234,7 @@ RGX:GetUI()         -- "ui" → RGXUI
 RGX:GetColorPicker()-- "colorpicker" → RGXColorPicker
 RGX:GetMinimap()    -- "minimap" → RGXMinimap
 RGX:GetDesign()     -- "design" → RGXDesign
+RGX:GetDisplay()    -- "display" → RGXDisplay
 RGX:GetDataBroker() -- "databroker" → RGXDataBroker
 RGX:GetSound()      -- "sound" → RGXSound
 ```
@@ -249,13 +251,13 @@ Feature modules that can only exist on specific client families skip registratio
 
 Every module declares its architectural class at registration:
 `category = "library"` for framework capabilities consumed by any addon
-(fonts, colors, textures, dropdowns, ui, design, minimap, tooltip, databroker,
+(fonts, colors, textures, dropdowns, ui, design, display, minimap, tooltip, databroker,
 sharedmedia, sound, locale) and `category = "game"` for WoW-domain adapters
 (auras, quest, combat, levelup, housing, and the rest). `depends` lists must
 load earlier in `RGX-Framework.xml` — the checker proves it. `stability`
 (`stable | experimental | deprecated | internal`) is recorded alongside; the
 machine-readable API catalog milestone formalizes it further. The global
-namespace is frozen at 31 names: `module-graph-check.mjs` fails both when a
+namespace is frozen at 32 names: `module-graph-check.mjs` fails both when a
 new `_G.RGX*` write appears and when an allowlisted global stops being
 written.
 

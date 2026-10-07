@@ -42,6 +42,7 @@ Complete public API by module. See individual module docs for deeper detail:
 | `RGX:GetColorPicker()` | RGXColorPicker |
 | `RGX:GetMinimap()` | RGXMinimap |
 | `RGX:GetDesign()` | RGXDesign |
+| `RGX:GetDisplay()` | RGXDisplay |
 | `RGX:GetDataBroker()` | RGXDataBroker |
 | `RGX:GetSound()` | RGXSound |
 | `RGX:GetPetBattles()` | RGXPetBattles |
@@ -593,6 +594,82 @@ See [docs/DROPDOWNS.md](DROPDOWNS.md) for complete documentation.
 | `hover` | — | Hover highlights |
 
 Access via `Design.Colors.primary`, `Design.Colors.accent`, etc.
+
+---
+
+## Display (`RGXDisplay`)
+
+Bare-metal screen elements: anchored, scalable units for aura icons, alerts, and other consumer visuals. Elements are sandwich frames — the container frame owns the anchor while a child content frame carries scale and alpha.
+
+### Module Methods
+
+| Method | Description |
+|---|---|
+| `Display:RegisterPosition(name, spec)` | Add/replace a named position |
+| `Display:GetPosition(name)` | Copy of a position spec |
+| `Display:ListPositions()` | Sorted position names |
+| `Display:CreateElement(opts)` | Element or `nil, error` |
+| `Display:RegisterDefaults(context, values)` | Merge `scale`/`alpha` into a context |
+| `Display:GetDefaults(context)` | Resolved `scale`/`alpha` copy (default context `"default"`) |
+| `Display:SetEditMode(on)` | Show/hide drag movers on every element |
+| `Display:IsEditMode()` | Whether edit mode is on |
+
+### Built-In Positions
+
+| Name | Anchored |
+|---|---|
+| `CENTER` | Parent center |
+| `LEFT` / `RIGHT` | Flanking the parent's left/right edge; positive spread pushes away |
+| `TOP` / `BOTTOM` | Above/below the parent; positive spread pushes away |
+| `LEFTOUTSIDE` / `RIGHTOUTSIDE` | 160 units outside the parent edge |
+
+### Position Specs
+
+`position` accepts a built-in name, a name registered with `RegisterPosition`, or an inline spec:
+
+| Key | Description |
+|---|---|
+| `point` | Element anchor point (required) |
+| `relativePoint` | Parent anchor point (default: same as `point`) |
+| `x`, `y` | Base offset in parent units |
+| `spreadX`, `spreadY` | Direction a positive element `spread` pushes |
+
+### CreateElement Options
+
+| Key | Description |
+|---|---|
+| `name` | Unique persistence key (required); prefix with the consumer addon name |
+| `position` | Name or inline spec (default `"CENTER"`) |
+| `x`, `y` | Element offset (default `0`) |
+| `spread` | Offset along the position's spread axis (default `0`) |
+| `scale` | Explicit percent scale; omit to inherit context default |
+| `alpha` | `0`–`1`; omit to inherit context default |
+| `context` | Defaults context (default `"default"`) |
+| `parent` | Anchor target (default `UIParent`) |
+| `width`, `height` | Container size (default `64`) |
+| `storage` | Consumer storage table for offset persistence |
+| `offsetKey` | Storage key (default: `name`) |
+| `onMove` | `function(element)` called after a drag settles (errors isolated) |
+
+### Element Methods
+
+| Method | Description |
+|---|---|
+| `element:SetOffset(x, y)` | Move and persist the element offset |
+| `element:SetSpread(value)` | Offset along the position's spread axis |
+| `element:SetPositionName(name)` | Switch to a named position |
+| `element:SetScale(percent)` | Explicit percent scale; `nil` inherits context |
+| `element:SetAlpha(value)` | `0`–`1`; `nil` inherits context |
+| `element:SetContext(context)` | Switch defaults context |
+| `element:SetSize(width, height)` | Resize the container |
+| `element:SetShown(show)` | Show/hide |
+| `element:IsShown()` | Visibility |
+| `element:GetResolved()` | Resolved position/offset/scale/alpha table |
+| `element:Destroy()` | Unregister and hide (the durable offset is kept) |
+
+### Persistence
+
+Dragged offsets are written to both the consumer `storage[offsetKey]` and the framework durable `RGXFrameworkDB.RGXDisplayPositions[name]`. On creation the durable store wins and is mirrored back into consumer storage, so offsets survive consumer storage resets.
 
 ---
 
