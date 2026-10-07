@@ -238,10 +238,11 @@ local cp = UI:CreateColorPicker(parent, {
 
 ### `UI:CreateColorPickerCard(parent, opts)` → `Frame`
 
-The **embeddable** color picker — the full SV-box + hue-bar + preview + hex
-inline as a card, for placing directly in an options tab (instead of the popup
-swatch). Multi-instance with its own state; bound to `storage[key] = {r,g,b}`.
-Click or **drag** the SV box and hue bar to pick.
+The **embeddable** color picker — the full honeycomb spectrum + vertical
+brightness bar + live Class Colors row + preview + hex inline as a card, for
+placing directly in an options tab (instead of the popup swatch). Multi-instance
+with its own state; bound to `storage[key] = {r,g,b}`.
+Click or **drag** the honeycomb and brightness bar to pick.
 
 | Parameter | Type | Required | Default | Description |
 |---|---|---|---|---|

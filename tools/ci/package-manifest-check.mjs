@@ -95,6 +95,8 @@ function runtimeSourceFiles() {
     "LICENSE.txt",
     ...listFiles("core"),
     ...listFiles("modules"),
+    "media/hexmask.tga",
+    "media/hexring.tga",
     "media/logo.tga",
     "media/panel_rounded.tga",
     "media/round.tga",
@@ -242,6 +244,8 @@ function validateRuntime(entries, expectedPaths) {
       || relativePath === "RGX-Framework.xml"
       || relativePath === "LICENSE.txt"
       || /^(?:core|modules)\/.+\.lua$/.test(relativePath)
+      || relativePath === "media/hexmask.tga"
+      || relativePath === "media/hexring.tga"
       || relativePath === "media/logo.tga"
       || relativePath === "media/panel_rounded.tga"
       || relativePath === "media/round.tga"
