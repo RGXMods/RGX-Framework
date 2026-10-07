@@ -129,10 +129,16 @@ function UI:CreateColorPicker(parent, options)
     swatch.tex:SetPoint("CENTER")
     
     -- Set initial color
-    local currentColor = storage[key] or default
-    swatch.tex:SetColorTexture(currentColor.r or 1, currentColor.g or 1, currentColor.b or 1, 1)
+    local currentColor = { r = 1, g = 1, b = 1 }
+    local function refresh()
+        local stored = storage[key] or default
+        currentColor = { r = stored.r or 1, g = stored.g or 1, b = stored.b or 1 }
+        swatch.tex:SetColorTexture(currentColor.r, currentColor.g, currentColor.b, 1)
+    end
+    refresh()
     
     swatch:SetScript("OnClick", function()
+        refresh()
         -- Call preview function if provided (shows preview of what we're editing)
         if previewOnClick then
             previewOnClick()
@@ -179,6 +185,8 @@ function UI:CreateColorPicker(parent, options)
     reset:SetPoint("LEFT", swatch, "RIGHT", 8, 0)
     
     container.swatch = swatch
+    container.Refresh = refresh
+    swatch:HookScript("OnShow", refresh)
     return container
 end
 

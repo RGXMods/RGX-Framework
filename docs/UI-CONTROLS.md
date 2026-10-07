@@ -234,6 +234,10 @@ local cp = UI:CreateColorPicker(parent, {
 })
 ```
 
+The returned control exposes `:Refresh()`, which re-reads `storage[key]` and
+repaints the swatch; it runs before the picker opens and on show, so a peer
+that wrote storage directly is reflected without a stale swatch.
+
 ---
 
 ### `UI:CreateColorPickerCard(parent, opts)` → `Frame`
@@ -252,7 +256,10 @@ Click or **drag** the honeycomb and brightness bar to pick.
 | `opts.width` | number | No | 220 | Card width |
 | `opts.onChange` | function | No | — | `onChange(r, g, b)` on every change |
 
-Returns the widget frame, with `:SetColor(r,g,b)` / `:GetColor()`.
+Returns the widget frame, with `:SetColor(r,g,b)` / `:GetColor()`. Call
+`:Refresh()` to re-read `storage[key]` and repaint without writing storage or
+firing `onChange` (it also re-projects on show), so peer or theme changes are
+reflected.
 
 ```lua
 local card = UI:CreateColorPickerCard(container, {
@@ -547,6 +554,18 @@ Force-refresh the currently visible tab:
 
 ```lua
 panel:Refresh()
+```
+
+#### `panel:SetTheme(config)`
+
+Apply the panel's colors at runtime. Repaints the accent line, version label,
+and tab styling from `panel.theme`, and rebuilds/refreshes tab content under
+that theme, without mutating the shared global theme (it is scoped and
+restored, exactly like construction). Accepts the same named or array color
+forms as `Design:SetTheme`:
+
+```lua
+panel:SetTheme({ primary = { r = 0.35, g = 0.75, b = 0.51 } })
 ```
 
 ---

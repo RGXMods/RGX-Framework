@@ -381,5 +381,35 @@ scenario("embedded Enter commits 3-digit shorthand once and dedupes repeats", fu
   assert(calls == 1, "duplicate Enter re-fired onChange")
 end)
 
+scenario("embedded picker re-projects storage on Refresh without writing or firing", function()
+  local store, calls = {}, 0
+  local w = CP:CreateEmbedded(UIParent, {
+    key = "color", storage = store, default = { r = 1, g = 1, b = 1 }, width = 220,
+    onChange = function() calls = calls + 1 end,
+  })
+  w:SetColor(1, 0, 0)
+  assert(calls == 1, "SetColor did not fire onChange once")
+  assert(store.color and math.abs(store.color.r - 1) < 1e-6, "SetColor did not persist")
+  -- A peer writes storage directly; a silent re-projection must adopt that
+  -- value without writing it back or firing a callback.
+  store.color = { r = 0, g = 1, b = 0 }
+  w:Refresh()
+  local r, g, b = w:GetColor()
+  assert(math.abs(g - 1) < 1e-6 and math.abs(r) < 1e-6, "Refresh did not re-read storage")
+  assert(calls == 1, "Refresh fired onChange")
+  assert(store.color and math.abs(store.color.g - 1) < 1e-6, "Refresh rewrote storage")
+end)
+
+scenario("embedded OnShow re-projects storage written by a peer", function()
+  local store = { color = { r = 1, g = 1, b = 1 } }
+  local w = CP:CreateEmbedded(UIParent, {
+    key = "color", storage = store, default = { r = 1, g = 1, b = 1 }, width = 220,
+  })
+  store.color = { r = 0, g = 0, b = 1 }
+  w.scripts.OnShow(w)
+  local r, _, b = w:GetColor()
+  assert(math.abs(b - 1) < 1e-6 and math.abs(r) < 1e-6, "OnShow did not re-read storage")
+end)
+
 print(string.format("COLORPICKER %d passed, %d failed", pass, fail))
 if fail > 0 then error(fail .. " colorpicker scenario(s) failed") end
