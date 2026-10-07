@@ -736,7 +736,7 @@ panel:SelectTabByName("Appearance")
 |---|---|
 | `panel:SelectTab(index)` | Show a tab and build/refresh its visible content under `panel.theme` |
 | `panel:Refresh()` | Rebuild dirty tabs and refresh visible bound controls under `panel.theme` |
-| `panel:SetTheme(config)` | Apply a theme at runtime: repaints the accent line (accent color), version label and tab styling (primary color) from the panel's own colors without mutating the shared global theme |
+| `panel:SetTheme(config)` | Apply a theme at runtime: repaints the accent line (accent color only with `theme.accentHeader = true`, else primary), version label and tab styling (primary color) from the panel's own colors without mutating the shared global theme |
 | `panel:InvalidateAllTabs()` | Mark every tab dirty for rebuild on next selection |
 
 Both `Refresh` and `SetTheme` scope the panel's colors to its own content; the
