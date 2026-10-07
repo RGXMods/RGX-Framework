@@ -461,5 +461,16 @@ scenario("preview=false chains RGB and buttons onto the class row", function()
   assert(okTop and okTop[2] == f.rgbRow, "OK button did not chain onto the RGB row")
 end)
 
+scenario("Show accepts a dialog scale and resets it", function()
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { scale = 0.85 })
+  assert(f.dialogScale == 0.85, "dialog scale was not applied: " .. tostring(f.dialogScale))
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end)
+  assert(f.dialogScale == 1, "dialog scale did not reset: " .. tostring(f.dialogScale))
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { scale = 0 })
+  assert(f.dialogScale == 1, "non-positive scale was not rejected")
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { scale = "big" })
+  assert(f.dialogScale == 1, "non-numeric scale was not rejected")
+end)
+
 print(string.format("COLORPICKER %d passed, %d failed", pass, fail))
 if fail > 0 then error(fail .. " colorpicker scenario(s) failed") end
