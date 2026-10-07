@@ -65,6 +65,26 @@ try {
     local naturalFlow = UI:CreateFlowLayout(frame(200, 40)); naturalFlow:Add(natural)
     naturalFlow:Apply(); natural.width = 70; naturalFlow:Apply()
     assert(natural.width == 70, 'natural width was overwritten by cached layout')
+    local function fontString(naturalWidth, lineHeight)
+      local fs = frame(naturalWidth, lineHeight)
+      fs.characterWidth = naturalWidth
+      function fs:SetWordWrap(v) self.wrapped = v end
+      function fs:GetHeight()
+        if not self.width or self.width <= 0 then return self.height end
+        if self.width >= self.characterWidth then return self.height end
+        return self.height * math.ceil(self.characterWidth / self.width)
+      end
+      return fs
+    end
+    local textHost, text = frame(300, 60), fontString(600, 12)
+    local textFlow = UI:CreateFlowLayout(textHost); textFlow:Add(text)
+    textFlow:Apply()
+    assert(text.width == 300 and text.wrapped, 'over-wide fontstring was not clamped and wrapped')
+    assert(text:GetHeight() == 24, 'wrapped height was not measured for the row')
+    textHost.width = 800; textFlow:Apply()
+    assert(text.width == 600, 'clamped fontstring did not restore its natural width')
+    textHost.width = 200; textFlow:Apply()
+    assert(text.width == 200, 'fontstring was not re-clamped on narrow hosts')
     local two = UI:CreateCard(frame(300, 300), {columns=2})
     local short, tall = frame(10,20), frame(10,60)
     two.flows[1]:Add(short,{fill=true}); two.flows[2]:Add(tall,{fill=true}); two:AutoHeight()
