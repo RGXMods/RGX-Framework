@@ -16,6 +16,10 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
 import { createDefinitionEngine, exampleDefinition } from "../../../contract/engine/definition.mjs";
+import Ajv2020 from "ajv/dist/2020.js";
+import { createValidateAddon } from "../../../contract/engine/validate-addon.mjs";
+import { generateAddonLua } from "../../../contract/engine/generate-addon.mjs";
+import { engineCases } from "../../ci/contract-vectors.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SERVER_ENTRY = join(HERE, "..", "src", "server.js");
@@ -132,6 +136,24 @@ try {
     operation: "normalize", definition: { ...exampleDefinition, version: 2 },
   } });
   check("AI definition tools reject unsupported versions", rejected.isError === true);
+  console.log("== Approved module API catalog (issue #7) ==");
+  const catalogFile = JSON.parse(readFileSync(join(HERE, "../../../contract/schemas/rgx-api.catalog.json"), "utf8"));
+  const catalogResource = await client.readResource({ uri: "rgx://schemas/api-catalog" });
+  check("catalog resource matches the checked-in catalog",
+    JSON.stringify(JSON.parse(catalogResource.contents[0].text)) === JSON.stringify(catalogFile));
+  const fullCatalog = await client.callTool({ name: "rgx_get_api_catalog", arguments: {} });
+  const fullReport = JSON.parse(fullCatalog.content[0].text);
+  check("catalog tool returns every catalog entry",
+    fullReport.catalogVersion === catalogFile.catalogVersion
+      && JSON.stringify(fullReport.entries) === JSON.stringify(catalogFile.entries));
+  const aurasEntry = catalogFile.entries.find((entry) => entry.module === "auras");
+  const aurasCatalog = await client.callTool({ name: "rgx_get_api_catalog", arguments: { module: "auras" } });
+  const aurasReport = JSON.parse(aurasCatalog.content[0].text);
+  check("catalog tool filters to one module",
+    aurasReport.entries.length === 1 && JSON.stringify(aurasReport.entries[0]) === JSON.stringify(aurasEntry));
+  const unknownCatalog = await client.callTool({ name: "rgx_get_api_catalog", arguments: { module: "nope" } });
+  check("catalog tool rejects unknown modules fail-closed",
+    unknownCatalog.isError === true && unknownCatalog.content[0].text.includes("Known modules"));
   console.log("== RGX-Hello source congruence ==");
   check("parsed the real RGX-Hello declaration", actualAddonName === "RGX-Hello");
   const minimumComparison = compareVersions(minimumFrameworkVersion, frameworkVersion);
@@ -214,6 +236,170 @@ try {
   check("declarative every validates as shipped", everyReport.valid === true, JSON.stringify(everyReport.errors));
   check("declarative every is not reported as tier4", (everyReport.tier4KeysUsed ?? []).length === 0, JSON.stringify(everyReport));
 
+  const columnsVal = await client.callTool({
+    name: "rgx_validate_addon",
+    arguments: { opts: { options: { columns: 2, General: [{ toggle: "enabled" }] } } },
+  });
+  const columnsReport = JSON.parse(columnsVal.content[0].text);
+  check("option columns validate as shipped", columnsReport.valid === true, JSON.stringify(columnsReport.errors));
+  check("option columns are not reported as tier4", (columnsReport.tier4KeysUsed ?? []).length === 0, JSON.stringify(columnsReport));
+
+  const invalidColumnsVal = await client.callTool({
+    name: "rgx_validate_addon",
+    arguments: { opts: { options: { columns: 5 } } },
+  });
+  const invalidColumnsReport = JSON.parse(invalidColumnsVal.content[0].text);
+  check("invalid column counts are rejected", invalidColumnsReport.valid === false, JSON.stringify(invalidColumnsReport.errors));
+
+  const columnsGen = await client.callTool({
+    name: "rgx_generate_addon",
+    arguments: { name: "ColumnKeys", columns: 2, toggles: ["enabled"] },
+  });
+  const columnsLua = columnsGen.content?.[0]?.text ?? "";
+  check("generator emits the column count", columnsLua.includes("columns = 2"));
+  let columnsParses = true;
+  let columnsParseError = "";
+  try {
+    luaparse.parse(columnsLua, { luaVersion: "5.1" });
+  } catch (error) {
+    columnsParses = false;
+    columnsParseError = error.message;
+  }
+  check("generated columns parse as Lua 5.1", columnsParses, columnsParseError);
+
+  console.log("\n== Generation restrictions (issue #7) ==");
+  const bannedCallers = /^(CreateFrame|hooksecurefunc|C_Timer(\.|$)|_G(\.|$)|SLASH_)/;
+  function astNames(lua) {
+    const ast = luaparse.parse(lua, { luaVersion: "5.1" });
+    const called = [];
+    const assigned = [];
+    const resolve = (node) => {
+      if (node?.type === "Identifier") return node.name;
+      if (node?.type === "MemberExpression" && node.base?.type === "Identifier") {
+        return `${node.base.name}.${node.identifier?.name ?? ""}`;
+      }
+      return null;
+    };
+    const walk = (node) => {
+      if (!node || typeof node !== "object") return;
+      if (Array.isArray(node)) {
+        node.forEach(walk);
+        return;
+      }
+      if (node.type === "CallExpression") {
+        const name = resolve(node.base);
+        if (name) called.push(name);
+      }
+      if (node.type === "AssignmentStatement") {
+        for (const target of node.variables) {
+          const name = resolve(target);
+          if (name) assigned.push(name);
+        }
+      }
+      for (const value of Object.values(node)) walk(value);
+    };
+    walk(ast);
+    return { called, assigned };
+  }
+  const offending = (names) => [...names.called, ...names.assigned].filter((name) => bannedCallers.test(name));
+  const offendingSafely = (lua) => {
+    try {
+      return offending(astNames(lua));
+    } catch (error) {
+      return [`unparseable: ${error.message}`];
+    }
+  };
+  const baselineNames = astNames(generatedLua);
+  check(
+    "generated addon has no raw CreateFrame/C_Timer/SLASH_/hook writes",
+    offending(baselineNames).length === 0,
+    JSON.stringify(baselineNames)
+  );
+  const dependencyLines = generatedLua.split("\n").filter((line) => line.includes("RequiredDeps"));
+  check(
+    "generated addon declares only the listed RGX-Framework dependency",
+    dependencyLines.length === 1
+      && dependencyLines[0].includes("RequiredDeps: RGX-Framework")
+      && !/OptionalDeps/.test(generatedLua)
+      && !/\brequire\s*\(/.test(generatedLua)
+      && !/LoadAddOn/.test(generatedLua),
+    JSON.stringify(dependencyLines)
+  );
+
+  const hostileNameGen = await client.callTool({ name: "rgx_generate_addon", arguments: {
+    name: 'Evil\nCreateFrame("Frame")\nos.exit()',
+  } });
+  const hostileNameLua = hostileNameGen.content?.[0]?.text ?? "";
+  let hostileNameParses = true;
+  let hostileNameError = "";
+  try {
+    luaparse.parse(hostileNameLua, { luaVersion: "5.1" });
+  } catch (error) {
+    hostileNameParses = false;
+    hostileNameError = error.message;
+  }
+  check("hostile addon names cannot break out of the header comment", hostileNameParses, hostileNameError);
+  check(
+    "hostile addon names keep the TOC hint line intact",
+    hostileNameLua.split("\n")[1]?.startsWith("-- TOC needs:"),
+    JSON.stringify(hostileNameLua.split("\n").slice(0, 3))
+  );
+  check(
+    "hostile addon names introduce no raw CreateFrame call",
+    offendingSafely(hostileNameLua).length === 0,
+    hostileNameLua
+  );
+
+  const hostileKey = 'x"] = 1, f = CreateFrame("Frame") or t["';
+  const hostileDbGen = await client.callTool({ name: "rgx_generate_addon", arguments: {
+    name: "HostileDb", db: { [hostileKey]: true },
+  } });
+  const hostileDbLua = hostileDbGen.content?.[0]?.text ?? "";
+  let hostileDbParses = true;
+  let hostileDbError = "";
+  try {
+    luaparse.parse(hostileDbLua, { luaVersion: "5.1" });
+  } catch (error) {
+    hostileDbParses = false;
+    hostileDbError = error.message;
+  }
+  check("hostile db keys cannot break out of the db table", hostileDbParses, hostileDbError);
+  check(
+    "hostile db keys are emitted as escaped string keys",
+    hostileDbLua.includes('["x\\"] = 1, f = CreateFrame(\\"Frame\\") or t[\\""] = true'),
+    hostileDbLua
+  );
+  check(
+    "hostile db keys introduce no raw CreateFrame call",
+    offendingSafely(hostileDbLua).length === 0,
+    hostileDbLua
+  );
+
+  const injectedSeconds = await client.callTool({ name: "rgx_generate_addon", arguments: {
+    name: "InjectedSeconds", every: { tick: "1) end os.exit() --" },
+  } });
+  check(
+    "generator rejects non-numeric timer seconds at the tool boundary",
+    injectedSeconds.isError === true,
+    JSON.stringify(injectedSeconds).slice(0, 200)
+  );
+
+  let engineRejectedSeconds = false;
+  try {
+    generateAddonLua({ name: "DirectSeconds", every: { tick: "1) end os.exit() --" } });
+  } catch {
+    engineRejectedSeconds = true;
+  }
+  check("shared generation engine rejects non-numeric timer seconds", engineRejectedSeconds);
+
+  let engineRejectedDbValue = false;
+  try {
+    generateAddonLua({ name: "DirectDb", db: { evil: { nested: true } } });
+  } catch {
+    engineRejectedDbValue = true;
+  }
+  check("shared generation engine rejects non-scalar db values", engineRejectedDbValue);
+
   const invalidEveryVal = await client.callTool({
     name: "rgx_validate_addon",
     arguments: { opts: { every: { "   ": [0, { $lua: "function" }, "extra"] } } },
@@ -234,10 +420,22 @@ try {
   });
   const tier4StringReport = JSON.parse(tier4String.content[0].text);
   check(
-    "one-line controls are reported as tier4",
-    tier4StringReport.tier4KeysUsed?.includes("options.General[0]"),
+    "one-line controls validate as shipped",
+    tier4StringReport.valid && tier4StringReport.tier4KeysUsed.length === 0,
     JSON.stringify(tier4StringReport)
   );
+
+  const addonSchema = JSON.parse(readFileSync(join(HERE, "../../../contract/schemas/rgx-addon.schema.json"), "utf8"));
+  const validateAddon = createValidateAddon({ schema: addonSchema, Ajv: Ajv2020 });
+  for (const { name, opts, valid: expected, tier4 = [] } of engineCases) {
+    if (opts === null) continue; // MCP's transport requires a JSON object.
+    const reply = await client.callTool({ name: "rgx_validate_addon", arguments: { opts } });
+    const report = JSON.parse(reply.content[0].text);
+    const { note, ...engineReport } = report;
+    check("shared validation parity: " + name,
+      JSON.stringify(engineReport) === JSON.stringify(validateAddon(opts)) && report.valid === expected
+        && JSON.stringify(report.tier4KeysUsed) === JSON.stringify(tier4), JSON.stringify(report));
+  }
 
   console.log("\n== rgx_audit_lua (RGX-Hello's actual Lua files) ==");
   const audit = await client.callTool({ name: "rgx_audit_lua", arguments: { path: helloPath } });

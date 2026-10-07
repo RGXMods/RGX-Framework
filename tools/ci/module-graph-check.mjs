@@ -88,7 +88,7 @@ const GLOBAL_ALLOWLIST = new Set([
   "RGXFramework", "RGXFrameworkDB", "RGXFrameworkDBChar", "RGXAddon",
   // library modules
   "RGXFonts", "RGXColors", "RGXColorPicker", "RGXTextures", "RGXDropdowns",
-  "RGXUI", "RGXDesign", "RGXMinimap", "RGXTooltip", "RGXLocale",
+  "RGXUI", "RGXDesign", "RGXDisplay", "RGXMinimap", "RGXTooltip", "RGXLocale",
   "RGXDataBroker", "RGXSharedMedia", "RGXSound",
   // game adapters
   "RGXAuras", "RGXCombat", "RGXPetBattles", "RGXReputation",

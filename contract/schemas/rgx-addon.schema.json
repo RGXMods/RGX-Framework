@@ -83,12 +83,12 @@
     },
     "options": {
       "x-rgx-ships": "today",
-      "description": "Tab name -> array of controls. Requires db. Every control binds to addon.db with automatic save AND restore. Layout model (one composable vocabulary, proven in consumer addons): panel -> main page + tabs -> tabs can be multi-paged -> 1-2 column card grid -> rows/cards holding the widgets. Tier 4 adds the reserved key 'columns' (1|2|3 card grid; 1-2 is the proven range), multi-page tab support, and one-line string controls per the contract grammar.",
+      "description": "Tab name -> array of controls. Requires db. Controls bind to addon.db. Table and one-line forms are implemented. The local reserved key 'columns' (1|2|3) distributes controls into balanced sequential column flows; this is not full declarative card/page composition. Multi-page tabs and declarative cards remain target work. See DECLARATIVE-API.md for the published versus local implementation boundary.",
       "type": "object",
       "properties": {
         "columns": {
-          "x-rgx-ships": "tier4",
-          "description": "Card-grid column count for all tabs. 1-2 proven in consumer addons; 3 contract-frozen.",
+          "x-rgx-ships": "today",
+          "description": "Local implementation: column-flow count for all tabs. Accepts 1, 2 or 3; does not create declarative cards or pages. Client geometry acceptance remains required.",
           "enum": [1, 2, 3]
         }
       },
@@ -168,7 +168,7 @@
       ]
     },
     "control": {
-      "description": "One options control. Today: table forms. Tier 4 adds one-line string forms per the contract grammar.",
+      "description": "One options control. Table forms and one-line string forms per the contract grammar are implemented; one-line forms first shipped in 2.7.15-beta.2.",
       "oneOf": [
         { "$ref": "#/$defs/controlString" },
         { "$ref": "#/$defs/toggleControl" },
@@ -181,9 +181,9 @@
     },
     "controlString": {
       "x-rgx-ships": "today",
-      "description": "One-line control string, contract grammar: \"toggle <key> ['Label']\" | \"slider <key> <min>-<max> [step] ['Label']\" | \"dropdown <key> a|b|c ['Label']\" | \"color <key> ['Label']\" | \"font <key> ['Label']\" | \"button 'Text' <method>\" | \"header 'Text'\" | \"label 'Text'\". Labels inferred from keys when omitted. Compiles to the same table control forms at render time in core/core.lua.",
+      "description": "One-line control string, contract grammar: \"toggle <key> ['Label']\" | \"slider <key> <min>-<max> [step] ['Label']\" | \"dropdown <key> a|b|c ['Label']\" | \"color <key> ['Label']\" | \"font <key> ['Label']\" | \"button 'Text' <method>\" | \"header 'Text'\" | \"label 'Text'\". Labels inferred from keys when omitted. Validated before addon registration and compiled to existing factories. Slider bounds/step must be finite, min <= max and step > 0; semantic numeric checks are enforced by the shared engine/runtime.",
       "type": "string",
-      "pattern": "^(toggle|slider|dropdown|color|font|button|header|label)\\s+.+$"
+      "pattern": "^(?:(?:toggle|color|font)[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"]+(?:[ \\t\\r\\n\\f\\v]+'[^']*')?|slider[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"]+[ \\t\\r\\n\\f\\v]+[+-]?\\d*\\.?\\d+-[+-]?\\d*\\.?\\d+(?:[ \\t\\r\\n\\f\\v]+[+-]?\\d*\\.?\\d+)?(?:[ \\t\\r\\n\\f\\v]+'[^']*')?|dropdown[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"]+[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"|]+(?:\\|[^ \\t\\r\\n\\f\\v'\"|]+)*(?:[ \\t\\r\\n\\f\\v]+'[^']*')?|button[ \\t\\r\\n\\f\\v]+'[^']*'[ \\t\\r\\n\\f\\v]+[A-Za-z_][A-Za-z0-9_]*|(?:header|label)[ \\t\\r\\n\\f\\v]+'[^']*')[ \\t\\r\\n\\f\\v]*$"
     },
     "toggleControl": {
       "x-rgx-ships": "today",

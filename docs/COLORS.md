@@ -6,35 +6,86 @@ The Colors module (`RGXColors`) provides a named color palette, class/quality/po
 
 ## Named Palette
 
+`Colors:Get(name)` resolves names case-insensitively in this order: `Colors.standard` → `Colors.ui` → `Colors.quality` → class table. Unknown names return `nil` (`Colors:GetHex` falls back to `"ffffff"`, `Colors:GetRGB` to `1, 1, 1`).
+
+### Standard
+
+| Name | Hex |
+|---|---|
+| `white` | `#ffffff` |
+| `black` | `#000000` |
+| `red` | `#ff0000` |
+| `green` | `#00ff00` |
+| `blue` | `#0080ff` |
+| `yellow` | `#ffff00` |
+| `cyan` | `#00ffff` |
+| `magenta` | `#ff00ff` |
+| `orange` | `#ffa500` |
+| `purple` | `#800080` |
+| `pink` | `#ff69b4` |
+| `brown` | `#a66836` |
+| `gray` / `grey` | `#808080` |
+| `gold` | `#ffd700` |
+| `silver` | `#c0c0c0` |
+| `darkred` | `#8b0000` |
+| `darkgreen` | `#006400` |
+| `darkblue` | `#00008b` |
+| `lightblue` | `#add8e6` |
+| `navy` | `#000080` |
+| `teal` | `#008080` |
+| `lime` | `#00ff00` |
+| `olive` | `#808000` |
+| `maroon` | `#800000` |
+| `coral` | `#ff7f50` |
+| `salmon` | `#fa8072` |
+| `khaki` | `#f0e68c` |
+| `indigo` | `#4b0082` |
+| `violet` | `#ee82ee` |
+| `turquoise` | `#40e0d0` |
+| `lavender` | `#e6e6fa` |
+| `plum` | `#dda0dd` |
+
+### UI / Theme
+
 | Name | Hex | Usage |
 |---|---|---|
-| `red` | `#f44336` | Errors, health loss |
-| `blue` | `#2196f3` | Mana, info |
-| `green` | `#4caf50` | Success, gains |
-| `yellow` | `#ffeb3b` | Warnings |
-| `orange` | `#ff9800` | Warnings |
-| `purple` | `#9c27b0` | Epic items |
-| `cyan` | `#00bcd4` | Info highlights |
-| `white` | `#ffffff` | Normal text |
-| `gray` | `#9e9e9e` | Disabled/muted |
-| `black` | `#000000` | Backgrounds |
-| `primary` | `#58be81` | Brand primary |
-| `accent` | `#bc6fa8` | Brand accent |
-| `epic` | `#a335ee` | Epic quality |
-| `rare` | `#0070dd` | Rare quality |
-| `uncommon` | `#1eff00` | Uncommon quality |
-| `common` | `#ffffff` | Common quality |
-| `poor` | `#9d9d9d` | Poor quality |
-| `legendary` | `#ff8000` | Legendary quality |
-| `heirloom` | `#00ccff` | Heirloom quality |
-| `artifact` | `#e6cc80` | Artifact quality |
-| `enchant` | `#ffd100` | Enchant quality |
+| `primary` | `#00a2ff` | UI primary |
+| `secondary` | `#4d4d4d` | UI secondary |
+| `success` | `#00cc33` | Success feedback |
+| `warning` | `#ffcc00` | Warnings |
+| `error` | `#ff3333` | Errors |
+| `info` | `#00a2ff` | Info |
+| `disabled` | `#808080` | Disabled/muted |
+| `highlight` | `#ffffff` | Highlights |
+| `shadow` | `#000000` | Shadows |
+| `backdrop` | `#1a1a1a` | Backdrops |
+| `border` | `#4d4d4d` | Borders |
+
+### Quality
+
+| Name | Hex |
+|---|---|
+| `poor` | `#9d9d9d` |
+| `common` | `#ffffff` |
+| `uncommon` | `#1eff00` |
+| `rare` | `#0070dd` |
+| `epic` | `#a335ee` |
+| `legendary` | `#ff8000` |
+| `artifact` | `#e6cc80` |
+| `heirloom` | `#00ccff` |
 
 ---
 
 ## Class Colors
 
-`Colors:GetClass(className)` returns a `ColorMixin` for the given English class name:
+Class colors are captured from the client's `RAID_CLASS_COLORS` table. `Colors:GetClass(className)` is case-insensitive and returns `r, g, b` (falling back to `1, 1, 1` for unknown classes):
+
+```lua
+local r, g, b = Colors:GetClass("WARLOCK")
+myFontString:SetTextColor(r, g, b)
+```
+
+Class entries are keyed by the client's upper-case class tokens, while the generic palette lookup (`Colors:Get` / `GetHex` / `Wrap`) lower-cases its input, so class names resolve through `GetClass` rather than the generic palette.
 
 | Class | Hex |
 |---|---|
@@ -56,60 +107,58 @@ The Colors module (`RGXColors`) provides a named color palette, class/quality/po
 
 ## Quality Colors
 
-`Colors:GetQuality(qualityEnum)` returns a `ColorMixin` for item quality:
+`Colors:GetQuality(name)` takes a quality name (case-insensitive) and returns `r, g, b`:
 
-| Enum | Quality | Hex |
-|---|---|---|
-| 0 | Poor (gray) | `#9D9D9D` |
-| 1 | Common (white) | `#FFFFFF` |
-| 2 | Uncommon (green) | `#1EFF00` |
-| 3 | Rare (blue) | `#0070DD` |
-| 4 | Epic (purple) | `#A335EE` |
-| 5 | Legendary (orange) | `#FF8000` |
-| 6 | Artifact (gold) | `#E6CC80` |
-| 7 | Heirloom (cyan) | `#00CCFF` |
+| Name | Hex |
+|---|---|
+| `poor` | `#9d9d9d` |
+| `common` | `#ffffff` |
+| `uncommon` | `#1eff00` |
+| `rare` | `#0070dd` |
+| `epic` | `#a335ee` |
+| `legendary` | `#ff8000` |
+| `artifact` | `#e6cc80` |
+| `heirloom` | `#00ccff` |
+
+These names are also resolvable through `Colors:Get`, `Colors:GetHex`, and `Colors:Wrap`.
 
 ---
 
 ## Power Colors
 
-`Colors:GetPower(powerType)` returns a `ColorMixin` for the given power type string:
+`Colors:GetPower(token)` returns `r, g, b` for one of the module's short power tokens (case-insensitive; unknown tokens fall back to `1, 1, 1`). These are not the client's enum names:
 
-| Power Type | Hex |
+| Token | r, g, b |
 |---|---|
-| `MANA` | `#0000FF` |
-| `RAGE` | `#FF0000` |
-| `FOCUS` | `#FF8000` |
-| `ENERGY` | `#FFFF00` |
-| `COMBO_POINTS` | `#FF8000` |
-| `RUNES` | `#8080FF` |
-| `RUNIC_POWER` | `#0080FF` |
-| `SOUL_SHARDS` | `#9482C9` |
-| `LUNAR_POWER` | `#4C8C00` |
-| `HOLY_POWER` | `#F58CBA` |
-| `MAELSTROM` | `#0070DE` |
-| `INSANITY` | `#9482C9` |
-| `CHI` | `#00FF96` |
-| `ARCANE_CHARGES` | `#69CCF0` |
-| `FURY` | `#A330C9` |
-| `PAIN` | `#C41F3B` |
+| `mana` | 0.00, 0.60, 1.00 |
+| `rage` | 1.00, 0.00, 0.00 |
+| `focus` | 1.00, 0.50, 0.25 |
+| `energy` | 1.00, 1.00, 0.00 |
+| `combo` | 1.00, 0.00, 0.00 |
+| `runes` | 0.50, 0.50, 0.50 |
+| `runic` | 0.00, 0.82, 1.00 |
+| `chi` | 0.71, 1.00, 0.46 |
+| `insanity` | 0.40, 0.00, 0.80 |
+| `maelstrom` | 0.00, 0.50, 1.00 |
+| `fury` | 0.79, 0.26, 0.99 |
+| `pain` | 1.00, 0.30, 0.00 |
 
 ---
 
 ## API
 
-### `Colors:Get(name)` → `ColorMixin`
+### `Colors:Get(name)` → `table` or `nil`
 
-Get a named color from the palette.
+Get a color table from the palette (also accepts a `"#RRGGBB"` string or `{r, g, b}` table). Tables always carry `hex`; `a` is present only when known:
 
 ```lua
 local color = Colors:Get("primary")
-myFontString:SetTextColor(color:GetRGB())
+myFontString:SetTextColor(color.r, color.g, color.b, color.a or 1)
 ```
 
 ### `Colors:GetRGB(name)` → `r, g, b`
 
-Get just the RGB components (0-1 range):
+Get just the RGB components (0-1 range; falls back to `1, 1, 1`):
 
 ```lua
 local r, g, b = Colors:GetRGB("error")
@@ -118,47 +167,45 @@ myTexture:SetColorTexture(r, g, b, 1)
 
 ### `Colors:GetHex(name)` → `string`
 
-Get the full hex color string with alpha prefix:
+Bare hex without `#` or an alpha prefix; falls back to `"ffffff"`:
 
 ```lua
 local hex = Colors:GetHex("primary")
--- → "ff58be81"
+-- → "00a2ff"
 ```
 
-### `Colors:Create(r, g, b, a)` → `ColorMixin`
+### `Colors:Create(r, g, b, a)` → `table`
 
-Create a new ColorMixin instance:
+Create a normalized color table `{r, g, b, hex}` (plus `a` when passed). Components are clamped to 0-1:
 
 ```lua
 local myColor = Colors:Create(0.5, 0.8, 0.3, 1.0)
 ```
 
-### `Colors:Clone(color)` → `ColorMixin`
+### `Colors:Clone(color)` → `table` or `nil`
 
-Clone an existing color:
+Clone a named color or color table:
 
 ```lua
 local copy = Colors:Clone(myColor)
 ```
 
-### `Colors:GetClass(className)` → `ColorMixin`
+### `Colors:GetClass(className)` → `r, g, b`
 
 ```lua
-local classColor = Colors:GetClass("WARLOCK")
-print(classColor.colorStr) -- → "ff9482C9"
+local r, g, b = Colors:GetClass("WARLOCK")
 ```
 
-### `Colors:GetQuality(qualityEnum)` → `ColorMixin`
+### `Colors:GetQuality(name)` → `r, g, b`
 
 ```lua
-local epicColor = Colors:GetQuality(4)
-print(epicColor.colorStr) -- → "ffA335EE"
+local r, g, b = Colors:GetQuality("epic")
 ```
 
-### `Colors:GetPower(powerType)` → `ColorMixin`
+### `Colors:GetPower(token)` → `r, g, b`
 
 ```lua
-local manaColor = Colors:GetPower("MANA")
+local r, g, b = Colors:GetPower("mana")
 ```
 
 ---
@@ -175,78 +222,80 @@ myFontString:SetText(wrapped)
 -- Renders as red "Important!"
 ```
 
-Works with any named palette color: `"primary"`, `"accent"`, `"success"`, `"warning"`, `"error"`, etc.
+Works with any named palette color: `"primary"`, `"success"`, `"warning"`, `"error"`, etc. Unknown names fall back to `"ffffff"`.
 
 ---
 
 ## Color Math
 
-### `Colors:Lerp(c1, c2, t)` → `ColorMixin`
+### `Colors:Lerp(c1, c2, t)` → `table`
 
-Linear interpolation between two colors by factor `t` (0-1):
+Linear interpolation between two colors (names or tables) by factor `t` (0-1). Returns `{r, g, b}`:
 
 ```lua
-local red = Colors:Get("red")
-local blue = Colors:Get("blue")
-local purple = Colors:Lerp(red, blue, 0.5) -- midpoint
+local purple = Colors:Lerp("red", "blue", 0.5) -- midpoint
 ```
 
-### `Colors:Darken(color, amount)` → `ColorMixin`
+### `Colors:Darken(colorName, amount)` → `r, g, b`
 
-Darken a color by `amount` (0-1). 0 = no change, 1 = black:
+Darken a color by `amount` (default `0.2`). Returns multi-return components; unknown colors return `0, 0, 0`:
 
 ```lua
-local darkPrimary = Colors:Darken(Colors:Get("primary"), 0.3)
+local r, g, b = Colors:Darken("primary", 0.3)
 ```
 
-### `Colors:Lighten(color, amount)` → `ColorMixin`
+### `Colors:Lighten(colorName, amount)` → `r, g, b`
 
-Lighten a color by `amount` (0-1). 0 = no change, 1 = white:
+Lighten a color by `amount` (default `0.2`). Returns multi-return components; unknown colors return `1, 1, 1`:
 
 ```lua
-local lightPrimary = Colors:Lighten(Colors:Get("primary"), 0.3)
+local r, g, b = Colors:Lighten("primary", 0.3)
 ```
 
 ---
 
 ## Color Picker
 
-### `Colors:OpenPicker(r, g, b, callback)`
+### `Colors:OpenPicker(options)`
 
-Opens the RGX ColorPicker widget with an initial color and a change callback:
-
-```lua
-Colors:OpenPicker(0.5, 0.2, 0.8, function(newColor)
-    print("New color:", newColor:GetRGB())
-end)
-```
-
-The callback fires on every color change (live preview). `newColor` is a `ColorMixin`.
-
-### `Colors:CreateColorPicker(parent, opts)` → `table`
-
-Creates an embedded ColorPicker widget within a parent frame:
+Opens the Blizzard color picker popup for an initial color:
 
 ```lua
-local picker = Colors:CreateColorPicker(parent, {
-    label = "Pick a Color",
-    value = { r = 0.5, g = 0.2, b = 0.8 },
-    onChange = function(r, g, b, a)
-        myTexture:SetColorTexture(r, g, b, a)
+Colors:OpenPicker({
+    color = "primary",
+    hasOpacity = false,
+    onChanged = function(color, r, g, b, a, cancelled)
+        print("New color:", color.hex)
     end,
 })
 ```
 
-### `Colors:CreateColorSettingControl(parent, opts)` → `table`
+`color` accepts a palette name, `"#RRGGBB"` string, `{r, g, b}` table, or color table. `onChanged` fires live on every change and receives a color table plus component values; `cancelled` is true when the user cancels, and `onCancel` is also supported. Returns `true`, or `false` when the client picker is unavailable.
 
-Color swatch + label bound to a saved variable:
+### `Colors:CreateColorPicker(parent, opts)` → `frame`
+
+Creates an inline label + swatch picker. `opts.onChanged(frame, color, r, g, b, a, cancelled)` fires on change; `opts.onCancel` is also supported. Use `frame:SetColor(color)` / `frame:GetColor()`:
+
+```lua
+local picker = Colors:CreateColorPicker(parent, {
+    label = "Pick a Color",
+    color = { r = 0.5, g = 0.2, b = 0.8 },
+    onChanged = function(frame, color, r, g, b, a)
+        myTexture:SetColorTexture(color.r, color.g, color.b, color.a or 1)
+    end,
+})
+```
+
+### `Colors:CreateColorSettingControl(parent, opts)` → `frame`
+
+Color swatch + label with optional reset, bound to `opts.storage[opts.key]`. `opts.onChanged(frame, color, r, g, b, a, cancelled)` fires on changes and `opts.onReset(frame, color)` on reset:
 
 ```lua
 local control = Colors:CreateColorSettingControl(parent, {
     label = "Text Color",
     storage = MyAddonDB.profile,
     key = "textColor",
-    onChange = function(r, g, b, a)
+    onChanged = function(frame, color, r, g, b, a)
         -- update UI
     end,
 })

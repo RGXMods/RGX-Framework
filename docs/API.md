@@ -42,6 +42,7 @@ Complete public API by module. See individual module docs for deeper detail:
 | `RGX:GetColorPicker()` | RGXColorPicker |
 | `RGX:GetMinimap()` | RGXMinimap |
 | `RGX:GetDesign()` | RGXDesign |
+| `RGX:GetDisplay()` | RGXDisplay |
 | `RGX:GetDataBroker()` | RGXDataBroker |
 | `RGX:GetSound()` | RGXSound |
 | `RGX:GetPetBattles()` | RGXPetBattles |
@@ -438,33 +439,33 @@ See [docs/FONTS.md](FONTS.md) for complete documentation.
 
 | Method | Description |
 |---|---|
-| `Colors:Get(name)` | Returns `{r, g, b, a}` |
-| `Colors:GetRGB(name)` | Returns r, g, b (multi-return) |
-| `Colors:GetHex(name)` | Returns `"#RRGGBB"` |
-| `Colors:GetClass(className)` | Class color table |
-| `Colors:GetQuality(quality)` | Quality color table (0–5) |
-| `Colors:GetPower(powerType)` | Power type color table |
+| `Colors:Get(name)` | Color table `{r, g, b, hex}` (+ `a` when known), or `nil` |
+| `Colors:GetRGB(name)` | Returns r, g, b (multi-return; fallback 1, 1, 1) |
+| `Colors:GetHex(name)` | Bare `"RRGGBB"` (no `#`; fallback `"ffffff"`) |
+| `Colors:GetClass(className)` | Returns r, g, b (multi-return; class name) |
+| `Colors:GetQuality(name)` | Returns r, g, b (multi-return; quality name) |
+| `Colors:GetPower(token)` | Returns r, g, b (multi-return; short power token) |
 
 ### Text Wrapping
 
 | Method | Description |
 |---|---|
 | `Colors:Wrap(text, colorName)` | `|cffRRGGBBtext|r` |
-| `Colors:WrapClass(text, className)` | Wrap in class color |
+| `Colors:WrapClass(text, className)` | Wrap class name via palette lookup (class tokens are not in the generic palette; prefer `GetClass`) |
 | `Colors:WrapQuality(text, quality)` | Wrap in quality color |
 
 ### Color Math
 
 | Method | Description |
 |---|---|
-| `Colors:Create(r, g, b, a)` | New color table |
-| `Colors:Clone(color)` | Deep copy |
-| `Colors:Darken(colorName, amount)` | Darkened color |
-| `Colors:Lighten(colorName, amount)` | Lightened color |
-| `Colors:SetAlpha(colorName, alpha)` | New color with alpha set |
-| `Colors:Lerp(c1, c2, t)` | Interpolate between two colors |
-| `Colors:Gradient(pct, low, mid, high)` | 3-stop gradient; mid optional |
-| `Colors:Health(percent)` | Health gradient (green → yellow → red) |
+| `Colors:Create(r, g, b, a)` | New color table `{r, g, b, hex[, a]}` |
+| `Colors:Clone(color)` | Copy of a named/table color, or `nil` |
+| `Colors:Darken(colorName, amount)` | Darkened r, g, b (amount defaults to 0.2) |
+| `Colors:Lighten(colorName, amount)` | Lightened r, g, b (amount defaults to 0.2) |
+| `Colors:SetAlpha(colorName, alpha)` | r, g, b, alpha |
+| `Colors:Lerp(c1, c2, t)` | Interpolate two colors (returns `{r, g, b}`) |
+| `Colors:Gradient(pct, low, mid, high)` | 3-stop gradient; mid optional (returns `{r, g, b}`) |
+| `Colors:Health(percent)` | Health gradient (green → yellow → red; returns `{r, g, b}`) |
 | `Colors:RGBToHex(r, g, b)` | Returns `"RRGGBB"` |
 | `Colors:HexToRGB(hex)` | Returns r, g, b |
 
@@ -480,7 +481,7 @@ See [docs/FONTS.md](FONTS.md) for complete documentation.
 
 ```lua
 Colors:OpenPicker({
-    color = "brand",
+    color = "primary",
     hasOpacity = false,
     onChanged = function(color, r, g, b, a, cancelled) end,
 })
@@ -575,24 +576,108 @@ See [docs/DROPDOWNS.md](DROPDOWNS.md) for complete documentation.
 
 ## Design (`RGXDesign`)
 
-### Static Color Palette
+### Theme Tokens
 
-| Key | Hex | Usage |
+| Key | Default | Usage |
 |---|---|---|
-| `primary` | `#58be81` | Brand green |
-| `accent` | `#bc6fa8` | Brand purple |
-| `surface` | — | Panel backgrounds |
-| `background` | — | Main backgrounds |
-| `text` | — | Primary text |
-| `subtext` | — | Secondary text |
-| `success` | — | Positive indicators |
-| `warning` | — | Caution indicators |
-| `error` | — | Error/negative indicators |
-| `border` | — | Default borders |
-| `borderActive` | — | Focused borders |
-| `hover` | — | Hover highlights |
+| `primary` (also `main`, `mainColor`, `highlight`) | `#00e6ff` | Main theme color; overridden by the active theme or preset |
+| `accent` | `#bc6fa8` | Secondary highlight; active states |
+| `borderActive` | `primary` | Focused / selected borders |
+| `mainSurface` / `mainHover` / `mainBorder` | derived from `primary` | 10% / 20% / 35% brightness shades |
 
-Access via `Design.Colors.primary`, `Design.Colors.accent`, etc.
+Access tokens via `Design:GetColor("primary")` / `Design:GetColor("accent")` or
+`Design:Unpack(key)`. `SetTheme`, `SetHighlightColor`, and the aliases
+`SetMainColor` / `SetColors` / `UseTheme` override the tokens; the framework
+settings preset selector stores its choice in `RGXFrameworkDB.themePreset`.
+
+### Structural Palette (`Design.Colors`)
+
+| Key | Usage |
+|---|---|
+| `surface` / `panelAlt` | Panel and card backgrounds |
+| `background` | Main window backgrounds |
+| `text` / `subtext` / `label` | Text tiers |
+| `success` / `warning` / `error` | Semantic colors |
+| `border` / `hover` / `track` | Borders and widget tracks |
+
+Access via `Design.Colors.surface`, etc. `Design:GetColor` resolves theme
+tokens first and falls back to this table.
+
+---
+
+## Display (`RGXDisplay`)
+
+Bare-metal screen elements: anchored, scalable units for aura icons, alerts, and other consumer visuals. Elements are sandwich frames — the container frame owns the anchor while a child content frame carries scale and alpha.
+
+### Module Methods
+
+| Method | Description |
+|---|---|
+| `Display:RegisterPosition(name, spec)` | Add/replace a named position |
+| `Display:GetPosition(name)` | Copy of a position spec |
+| `Display:ListPositions()` | Sorted position names |
+| `Display:CreateElement(opts)` | Element or `nil, error` |
+| `Display:RegisterDefaults(context, values)` | Merge `scale`/`alpha` into a context |
+| `Display:GetDefaults(context)` | Resolved `scale`/`alpha` copy (default context `"default"`) |
+| `Display:SetEditMode(on)` | Show/hide drag movers on every element |
+| `Display:IsEditMode()` | Whether edit mode is on |
+
+### Built-In Positions
+
+| Name | Anchored |
+|---|---|
+| `CENTER` | Parent center |
+| `LEFT` / `RIGHT` | Flanking the parent's left/right edge; positive spread pushes away |
+| `TOP` / `BOTTOM` | Above/below the parent; positive spread pushes away |
+| `LEFTOUTSIDE` / `RIGHTOUTSIDE` | 160 units outside the parent edge |
+
+### Position Specs
+
+`position` accepts a built-in name, a name registered with `RegisterPosition`, or an inline spec:
+
+| Key | Description |
+|---|---|
+| `point` | Element anchor point (required) |
+| `relativePoint` | Parent anchor point (default: same as `point`) |
+| `x`, `y` | Base offset in parent units |
+| `spreadX`, `spreadY` | Direction a positive element `spread` pushes |
+
+### CreateElement Options
+
+| Key | Description |
+|---|---|
+| `name` | Unique persistence key (required); prefix with the consumer addon name |
+| `position` | Name or inline spec (default `"CENTER"`) |
+| `x`, `y` | Element offset (default `0`) |
+| `spread` | Offset along the position's spread axis (default `0`) |
+| `scale` | Explicit percent scale; omit to inherit context default |
+| `alpha` | `0`–`1`; omit to inherit context default |
+| `context` | Defaults context (default `"default"`) |
+| `parent` | Anchor target (default `UIParent`) |
+| `width`, `height` | Container size (default `64`) |
+| `storage` | Consumer storage table for offset persistence |
+| `offsetKey` | Storage key (default: `name`) |
+| `onMove` | `function(element)` called after a drag settles (errors isolated) |
+
+### Element Methods
+
+| Method | Description |
+|---|---|
+| `element:SetOffset(x, y)` | Move and persist the element offset |
+| `element:SetSpread(value)` | Offset along the position's spread axis |
+| `element:SetPositionName(name)` | Switch to a named position |
+| `element:SetScale(percent)` | Explicit percent scale; `nil` inherits context |
+| `element:SetAlpha(value)` | `0`–`1`; `nil` inherits context |
+| `element:SetContext(context)` | Switch defaults context |
+| `element:SetSize(width, height)` | Resize the container |
+| `element:SetShown(show)` | Show/hide |
+| `element:IsShown()` | Visibility |
+| `element:GetResolved()` | Resolved position/offset/scale/alpha table |
+| `element:Destroy()` | Unregister and hide (the durable offset is kept) |
+
+### Persistence
+
+Dragged offsets are written to both the consumer `storage[offsetKey]` and the framework durable `RGXFrameworkDB.RGXDisplayPositions[name]`. On creation the durable store wins and is mirrored back into consumer storage, so offsets survive consumer storage resets.
 
 ---
 
@@ -857,4 +942,4 @@ Milestone/progression modules. Each method registers a pcall-wrapped callback. U
 | Prey (`RGXPrey`) | `OnHuntStarted(fn)`, `OnAmbush(fn)`, `OnCapped(fn)`, `OnComplete(fn)` |
 
 As of **v2.1.0** every module above is loaded by the XML loader. There are no dormant modules.
-> **Beta:** v2.7.15-beta.2; stable remains v2.7.14.
+> **Beta candidate:** v2.7.15-beta.4; stable remains v2.7.14.

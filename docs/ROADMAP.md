@@ -11,6 +11,23 @@ The framework ships as a single `RequiredDeps` entry. No embedding. No LibStub. 
 
 Reusable patterns discovered in consumer addons move into RGX. Addon-specific product behavior stays in the addon.
 
+### Architecture Alignment — 2026-10-06
+
+The foundation is already broader than an Ace3 replacement: runtime systems,
+declarative authoring, canonical contract, design/media and development-time
+conformance tooling. [Ace3 Analysis](ACE3-ANALYSIS.md) maps the implemented
+baseline; [Foundation](FOUNDATION.md) defines ownership; [Architecture](ARCHITECTURE.md)
+records the concrete modularity seams. Tools consume the contract; runtime never
+depends on tools.
+
+Prioritize consumer reliability, then coherent module/contract composition,
+then feature expansion. The current untagged follow-on separates lazy options
+rendering into existing UI/layout ownership; core retains interpretation and
+lifecycle. MCP validation/preflight use the existing engine in the beta.3 snapshot;
+integrate that correction before claiming the broader #8 authoring outcome. Full native
+skins and page/card composition keep their own acceptance criteria; passing
+column-flow mocks does not complete either outcome.
+
 ---
 
 ## Consumer Integration Levels
@@ -169,7 +186,7 @@ These modules shipped; remaining hardening is tracked separately.
 The canonical shipped/future boundary is [[Declarative API]]. The declarative Lua table is the foundation; any future syntax compiles to it.
 
 13. **Harden `RGX.Addon({...})`** — v2.7.0 adds named `every` timers with strict validation, deterministic dispatch, lifecycle binding, metadata, and failure isolation; human `on` triggers and remaining forms stay additive future slices
-14. **Grid/matrix options UI** — declarative 1/2/3-column card layouts, flexible element rows, every control bound to `addon.db` with automatic save/restore (also fixes the live BLU/SQP hand-rolled-slider persistence bug class at the framework level)
+14. **Grid/matrix options UI** — local `options.columns = 1|2|3` implementation distributes controls into balanced sequential column flows. It is not published card-grid support: declarative cards, flexible rows, page composition and #11's persisted-state/client geometry criteria remain to complete. Imperative page/column/card primitives already exist; extend those rather than introducing another layout engine.
 
 ### Tier 5 — Schema + source conformance fixture
 
@@ -229,13 +246,20 @@ Add `RGX_COMBATREZ_AVAILABLE` and `RGX_COMBATREZ_USED` messages:
 
 External addon packs that extend RGX-Framework with fonts, sounds, textures. Ship as separate CurseForge addons with `OptionalDeps: RGX-Framework`. Register into shared registries, fire `RGX_MEDIA_UPDATED` for dropdown refresh. Existing LibSharedMedia packs work via `RGXSharedMedia` bridge automatically.
 
-### Theme System (RGXTheme)
+### Modular Themes and Skins (existing RGXDesign owner)
 
-Named theme presets (Dark, Light, brand-specific). Central widget registry for `ApplyTheme()`. `RGX_THEME_CHANGED` message. Merges preset -> brand overrides -> user color-picker overrides. Builds on existing RGXDesign palette and RGXColors.
+Main-color presets and scoped primary/accent themes already exist. Extend
+RGXDesign/media for predictable token/asset resolution and consumer-selected
+frame skins; RGXUI/layout retain geometry and interaction. A widget refresh
+registry or theme-change notification is future work, not a shipped `RGXTheme`
+module or `ApplyTheme()` contract. Follow #21's phase order and client evidence.
 
 ---
 
 ## Migration Status
+
+Historical v2.1.0 product snapshot below, not current migration percentages.
+Check each consumer's TOC, load list and code before scheduling or claiming adoption.
 
 ### BLU v8.0.1 — 100%
 
@@ -245,7 +269,9 @@ Remaining: `core/sounds/sharedmedia.lua` (~830 lines, after dead Kitty-API remov
 ### BattlePetUtility v2.3.20 — 65%
 
 Migrated: events, timers, hooks, slash, DB/profiles, minimap, debug.
-Not yet wired: RGXDropdowns (still uses EasyMenu/UIDropDownMenu), RGXFonts for font settings, RGXPetBattles (needs enabling first).
+At that snapshot: RGXDropdowns (EasyMenu/UIDropDownMenu), RGXFonts for font settings,
+and RGXPetBattles adoption remained. PetBattles is now loaded by the framework;
+consumer adoption still needs verification.
 
 ### ReputationLevelUp — 0%, migration target
 
@@ -264,7 +290,7 @@ Small utility addon. Needs: TOC RequiredDeps, basic event/timer/slash wiring.
 | All modules enabled | RGXCombat + 8 event callback modules (Achievement, LevelUp, Quest, Honor, Delves, Housing, TradingPost, Prey) loaded by XML — no dormant code remains |
 | Dead-code removal | Removed fictional KittyGetSoundPacks/KittyRegisterSoundPack scan/hook from RGXSharedMedia (and BLU's local copy) |
 | Timer-rule enforcement | Delves + Honor modules switched from raw `C_Timer.After` to `RGX:After` for budget/diagnostics consistency |
-| Taint audit | Verified framework + BLU + BPU clean: only `hooksecurefunc`, no protected calls, combat-lockdown handling correct |
+| Historical safety review | Recorded secure hooks and combat guards; this snapshot does not certify current taint/protected execution on any client |
 
 ## Completed Earlier (v2.0.0)
 
@@ -285,8 +311,8 @@ Small utility addon. Needs: TOC RequiredDeps, basic event/timer/slash wiring.
 ## Non-Goals
 
 - Not a replacement for WoW's native APIs — RGX wraps where wrapping adds value, passes through otherwise
-- Not AceComm / AceSerialization — addon-to-addon chat channel communication is niche, not planned
+- Not an AceComm/AceSerializer clone — profile serialization exists; network transport needs a concrete consumer requirement
 - Not a general-purpose Lua library — everything is WoW-specific
 - Consuming addons should never need to understand RGX internals to benefit from it
-- BLU_Classic will never use RGX-Framework — it is TBC Classic only and intentionally stays on Ace3
-> **Beta:** v2.7.15-beta.2 is awaiting tester feedback; stable remains v2.7.14.
+- BLU_Classic currently uses Ace3 intentionally; any migration requires actual implementation and flavor acceptance
+> **Beta candidate:** v2.7.15-beta.4 contains the current source work and needs client feedback; stable remains v2.7.14.
