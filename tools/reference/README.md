@@ -44,3 +44,32 @@ graphify path "UNIT_AURA" "C_UnitAuras.GetAuraDataByIndex" --graph .reference/wo
 Use the merged graph only for cross-flavor discovery. Every graph is an index,
 not evidence. Confirm conclusions in the underlying generated documentation or
 UI source before changing runtime compatibility behavior.
+
+## Find Runtime API Gaps
+
+```powershell
+node tools/reference/sync-wow-api-dump.mjs
+node tools/reference/find-wow-api-gaps.mjs
+node tools/reference/find-wow-api-gaps.mjs --kind=events --flavor=forever
+node tools/reference/find-wow-api-gaps.mjs --json > gaps.json
+```
+
+Scans the RGX runtime source (`core/`, `modules/`) for client API references
+and checks each against the synced API dump inventories for every flavor. Each
+finding is grouped by severity:
+
+- `[A]` absent from every dumped flavor (stale/renamed, or defensive probes)
+- `[B]` absent on forever (primary test platform) but present elsewhere
+- `[C]` absent on some flavors (flavor-gating candidates)
+
+Each reference site carries a status:
+
+- `g` gated — the owning module declares `flavors` excluding the absent flavor
+- `u` guarded — a local capability probe/guard covers the reference
+- `s` event dispatcher pcall — registration is isolated by `core/systems/events.lua`
+- `!` open — needs confirmation
+
+The site statuses are heuristics over surrounding source lines. A reference is
+not a gap until confirmed against the dump records and verified in the
+generated documentation or UI source. The tool is an analysis aid; it is not a
+CI gate.
