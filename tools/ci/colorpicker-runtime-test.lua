@@ -262,6 +262,10 @@ scenario("class row renders live client colors inside its declared width", funct
     assert(yoff <= 0.5 and yoff - s.height >= -(rowH + 0.5),
       "swatch rectangle overflows row height: " .. tostring(yoff - s.height) .. " < " .. tostring(-rowH))
   end
+  -- All 13 classes fit the 260px content width on a single line.
+  for _, s in ipairs(sw) do
+    assert(s.points[1][5] == 0, "class swatch wrapped to a second line")
+  end
 end)
 
 scenario("class row hides itself when the client palette is absent", function()
