@@ -49,6 +49,28 @@ The framework settings **Main color** preset selector stores its choice in
 Existing widgets need a reload to rebuild with the selected theme/corners.
 Explicit consumer themes and corner options continue to take precedence.
 
+### Interface Styles
+
+`Design:SetStyle(name)` selects a full visual style — corner treatment plus
+structural palette — independently of the primary/accent color presets:
+
+| Style | Corners | Look |
+|---|---|---|
+| `framework` (default) | rounded | Custom RGX dark navy used across the board |
+| `retail` | rounded | Retail-flavored blue steel |
+| `classic` | square | Classic-flavored warm stone |
+| `forever` | square | Forever-flavored deep green |
+
+```lua
+Design:SetStyle("classic") -- square corners, warm palette; primary/accent untouched
+Design:GetStyle()          -- "classic"; nil after direct SetCornerStyle/SetTheme edits
+```
+
+The choice persists in `RGXFrameworkDB.style` and re-applies on login.
+Styles take effect on UI built after the call; already-open windows re-skin
+on reload, same as the corner selector. Retail/classic/forever palettes are
+starting points for in-game tuning.
+
 `SetTheme({ main = {r, g, b} })` and `SetMainColor(color, accent)` use the
 existing primary/accent theme contract. `primary`, `highlight`, and the older
 setter names remain supported. Shared shade tokens derive from the current

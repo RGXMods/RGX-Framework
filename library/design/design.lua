@@ -6,8 +6,13 @@
 --   primary - highlight color used on labels, borders, fills, slider fills
 --   accent  - secondary highlight color
 --
--- Default look: sleek dark navy panels with rounded corners and a cyan
--- developer accent, in the spirit of modern dev-tool addon UIs.
+-- Visual styles (Design:SetStyle: "framework", "retail", "classic",
+-- "forever") own the corner treatment and structural palette; color
+-- presets (THEME_PRESETS) own primary/accent independently.
+--
+-- Default look: the framework style -- sleek dark navy panels with rounded
+-- corners and a cyan developer accent, in the spirit of modern dev-tool
+-- addon UIs.
 --
 -- Usage:
 --   local Design = RGX:GetDesign()
@@ -63,6 +68,114 @@ Design.THEME_PRESETS = {
 
 -- Current preset name (nil = custom theme set directly via SetTheme).
 Design.currentPreset = "cyan"
+
+-- Named visual styles: the framework's custom look plus one per WoW
+-- version line. A style owns the corner treatment and the structural
+-- palette; the primary/accent color presets stay independent, so any style
+-- combines with any color preset. The framework persists the operator's
+-- choice in RGXFrameworkDB.style and re-applies it on login. "framework"
+-- is the shipped default: the custom RGX look used across the board.
+-- Retail/classic/forever values are starting points for in-game tuning.
+Design.STYLES = {
+    framework = {
+        label = "Framework",
+        cornerStyle = "rounded",
+        colors = {
+            surface    = {0.086, 0.086, 0.110},
+            background = {0.055, 0.055, 0.071},
+            panelAlt   = {0.102, 0.102, 0.129},
+            text       = {0.910, 0.910, 0.933},
+            subtext    = {0.545, 0.545, 0.596},
+            label      = {0.357, 0.357, 0.400},
+            success    = {0.200, 0.800, 0.400},
+            warning    = {0.941, 0.706, 0.161},
+            error      = {0.878, 0.333, 0.333},
+            border     = {0.137, 0.137, 0.173},
+            hover      = {0.102, 0.102, 0.129},
+            track      = {0.137, 0.137, 0.173},
+        },
+    },
+    retail = {
+        label = "Retail",
+        cornerStyle = "rounded",
+        colors = {
+            surface    = {0.070, 0.080, 0.110},
+            background = {0.050, 0.058, 0.082},
+            panelAlt   = {0.090, 0.102, 0.134},
+            text       = {0.950, 0.950, 0.960},
+            subtext    = {0.600, 0.620, 0.680},
+            label      = {0.400, 0.420, 0.480},
+            success    = {0.200, 0.800, 0.400},
+            warning    = {0.941, 0.706, 0.161},
+            error      = {0.878, 0.333, 0.333},
+            border     = {0.160, 0.180, 0.240},
+            hover      = {0.100, 0.114, 0.150},
+            track      = {0.160, 0.180, 0.240},
+        },
+    },
+    classic = {
+        label = "Classic",
+        cornerStyle = "square",
+        colors = {
+            surface    = {0.100, 0.090, 0.080},
+            background = {0.070, 0.062, 0.054},
+            panelAlt   = {0.120, 0.108, 0.094},
+            text       = {0.930, 0.880, 0.780},
+            subtext    = {0.600, 0.550, 0.470},
+            label      = {0.420, 0.380, 0.320},
+            success    = {0.200, 0.800, 0.400},
+            warning    = {0.941, 0.706, 0.161},
+            error      = {0.878, 0.333, 0.333},
+            border     = {0.250, 0.210, 0.150},
+            hover      = {0.130, 0.118, 0.100},
+            track      = {0.250, 0.210, 0.150},
+        },
+    },
+    forever = {
+        label = "Forever",
+        cornerStyle = "square",
+        colors = {
+            surface    = {0.070, 0.100, 0.080},
+            background = {0.050, 0.072, 0.058},
+            panelAlt   = {0.090, 0.122, 0.100},
+            text       = {0.900, 0.940, 0.900},
+            subtext    = {0.550, 0.620, 0.560},
+            label      = {0.360, 0.420, 0.370},
+            success    = {0.200, 0.800, 0.400},
+            warning    = {0.941, 0.706, 0.161},
+            error      = {0.878, 0.333, 0.333},
+            border     = {0.160, 0.240, 0.180},
+            hover      = {0.090, 0.130, 0.100},
+            track      = {0.160, 0.240, 0.180},
+        },
+    },
+}
+
+-- Current style name (nil = customized directly via SetCornerStyle/SetTheme).
+Design.currentStyle = "framework"
+
+-- Apply a named style: corner treatment plus the full structural palette.
+-- Primary/accent color tokens are untouched. Styles take effect on UI built
+-- after the call; already-open windows re-skin on reload (same contract as
+-- the corner selector). Returns false for unknown names.
+function Design:SetStyle(name)
+    local style = self.STYLES and self.STYLES[name]
+    if not style then return false end
+    if style.cornerStyle then self.cornerStyle = style.cornerStyle end
+    if type(style.colors) == "table" then
+        for key, value in pairs(style.colors) do
+            if type(value) == "table" then
+                self.Colors[key] = { value[1], value[2], value[3] }
+            end
+        end
+    end
+    self.currentStyle = name
+    return true
+end
+
+function Design:GetStyle()
+    return self.currentStyle
+end
 
 -- Global corner preference: "rounded" (default) or "square". Stored in
 -- RGXFrameworkDB.cornerStyle and honored by CreateFrame unless the caller

@@ -225,6 +225,18 @@ try {
       end)
       assert(D:GetColor('primary')[1] == 0.1)
     `],
+    ["Design styles own corners and palette, not color tokens", `
+      local pr, pg, pb = D:Unpack('primary')
+      assert(D:SetStyle('classic') and D:GetStyle() == 'classic')
+      assert(D.cornerStyle == 'square', 'classic must be square')
+      assert(D:GetColor('border')[1] == 0.25, 'classic palette did not apply')
+      assert(D:SetStyle('retail') and D.cornerStyle == 'rounded')
+      assert(not D:SetStyle('bogus') and D:GetStyle() == 'retail', 'unknown style changed state')
+      local qr, qg, qb = D:Unpack('primary')
+      assert(qr == pr and qg == pg and qb == pb, 'style touched primary')
+      assert(D:SetStyle('framework') and D.cornerStyle == 'rounded')
+      assert(D:GetColor('border')[1] == 0.137, 'framework palette did not restore')
+    `],
   ];
   for (const [name, script] of scenarios) {
     lua.doStringSync(script);
