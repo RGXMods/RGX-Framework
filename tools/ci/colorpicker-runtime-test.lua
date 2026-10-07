@@ -118,6 +118,24 @@ scenario("clicking a honeycomb cell selects that cell's hue and saturation", fun
   assert(math.abs(CP.current.s - target.s) < 1e-9, "clicked saturation mismatch")
 end)
 
+scenario("clicks on empty grid corners select nothing", function()
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end)
+  local grid = f.spectrum.frame
+  grid.left, grid.bottom = 100, 200
+  local beforeH, beforeS = CP.current.h, CP.current.s
+  cursorX, cursorY = grid.left, grid.bottom
+  grid.scripts.OnMouseDown(grid, "LeftButton")
+  grid.scripts.OnMouseUp(grid)
+  assert(CP.current.h == beforeH and CP.current.s == beforeS,
+    "empty corner selected a phantom color")
+  -- A near-miss beside a real cell still picks it.
+  local target = f.spectrum.cells[10]
+  cursorX, cursorY = grid.left + target.x + 10, grid.bottom + target.y
+  grid.scripts.OnMouseDown(grid, "LeftButton")
+  grid.scripts.OnMouseUp(grid)
+  assert(math.abs(CP.current.h - target.h) < 1e-9, "near-miss click missed the cell")
+end)
+
 scenario("brightness bar dims to black but retains hue and saturation", function()
   CP:Show({ r = 1, g = 0, b = 0 }, function() end)
   local bar = f.valueBar.frame

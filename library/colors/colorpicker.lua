@@ -307,7 +307,14 @@ local function BuildHoneycomb(parent, opts)
                 best, bestDist = cell, d
             end
         end
-        if best and controller.onPick then controller.onPick(best.h, best.s) end
+        -- Empty grid corners are far from every cell: ignore the click
+        -- instead of selecting a color that isn't displayed. Adjacent cell
+        -- centres sit ~1.5 sizes apart, so a 1.5-size reach keeps real
+        -- clicks (and drags across cells) working with no dead zones.
+        local reach = size * 1.5
+        if best and bestDist and bestDist <= reach * reach and controller.onPick then
+            controller.onPick(best.h, best.s)
+        end
     end
 
     grid:SetScript("OnMouseDown", function(_, button)
