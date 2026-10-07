@@ -70,6 +70,7 @@ try {
     function RGXFramework:Debug() end
     function RGXFramework:Error() self.errors = self.errors + 1 end
     function RGXFramework:SafeCloseDropDownMenus() self.closedMenus = (self.closedMenus or 0) + 1 end
+    function RGXFramework:DismissColorPicker() self.dismissedPopups = (self.dismissedPopups or 0) + 1 end
     function RGXFramework:RegisterModule(name, module) modules[name] = module end
     function RGXFramework:GetModule(name) return modules[name] end
     function RGXFramework:GetDesign()
@@ -242,6 +243,8 @@ try {
     assert(pager.frames[1]:IsShown() and not pager.frames[2]:IsShown(), "wrong initial page")
     pager.nextBtn:Click()
     assert(not pager.frames[1]:IsShown() and pager.frames[2]:IsShown(), "Next did not show future presets")
+    assert(RGXFramework.dismissedPopups and RGXFramework.dismissedPopups >= 1,
+      "pager page change did not dismiss popups")
     assert(not pages.presetButtons[4]:IsEnabled() and not pages.presetButtons[6]:IsEnabled(),
       "future slots must not apply settings")
     pager.prevBtn:Click()

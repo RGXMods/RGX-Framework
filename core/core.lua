@@ -251,6 +251,15 @@ function RGX:SetTheme(config)
     end
 end
 
+-- Dismiss the shared color picker popup without firing its callback.
+-- Tab and page switches call this so a popup never outlives its opener page.
+function RGX:DismissColorPicker()
+    local ok, CP = pcall(self.GetColorPicker, self)
+    if ok and CP and type(CP.Cancel) == "function" then
+        pcall(CP.Cancel, CP)
+    end
+end
+
 function RGX:SetHighlightColor(color, accent)
     local Design = self:GetDesign()
     if Design and type(Design.SetHighlightColor) == "function" then
