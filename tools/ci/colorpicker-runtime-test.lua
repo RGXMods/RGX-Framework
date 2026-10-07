@@ -492,5 +492,20 @@ scenario("Show accepts a dialog scale and resets it", function()
   assert(f.dialogScale == 1, "non-numeric scale was not rejected")
 end)
 
+scenario("Cancel is safe before first open and ESC can close the dialog", function()
+  local saved = CP.frame
+  CP.frame = nil
+  CP:Cancel()
+  UISpecialFrames = {}
+  CP.frame = nil
+  CP:GetFrame()
+  local found = false
+  for _, name in ipairs(UISpecialFrames) do
+    if name == "RGXColorPicker" then found = true end
+  end
+  assert(found, "dialog did not join UISpecialFrames")
+  CP.frame = saved
+end)
+
 print(string.format("COLORPICKER %d passed, %d failed", pass, fail))
 if fail > 0 then error(fail .. " colorpicker scenario(s) failed") end
