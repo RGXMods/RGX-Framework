@@ -748,6 +748,8 @@ end
 
     function panel:SelectTab(index)
         QueueBannerBuild()
+        -- A color popup belongs to the page that opened it.
+        RGX:DismissColorPicker()
 
         for i = 1, #self.tabs do
             if self.tabs[i] then

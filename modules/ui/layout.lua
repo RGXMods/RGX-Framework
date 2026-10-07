@@ -381,6 +381,8 @@ function UI:CreatePager(parent, opts)
         SetPage = function(self, n)
             n = math.min(math.max(1, n or self.page), pageCount)
             local changed = n ~= self.page
+            -- A color popup belongs to the page that opened it.
+            RGX:DismissColorPicker()
             self.page = n
             for i = 1, pageCount do
                 frames[i]:SetShown(i == n)
