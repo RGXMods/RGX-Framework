@@ -98,7 +98,7 @@ Create a horizontal slider control bound to a storage table — it saves **and r
 | `opts.default` | number | No | min | Value when storage is empty; Reset target |
 | `opts.suffix` | string | No | `""` | Appended to the displayed value, e.g. `"%"` |
 | `opts.width` | number | No | 200 | Track width |
-| `opts.progress` | boolean | No | `true` | Show the brand-colored fill behind the thumb; `false` for a bare track |
+| `opts.progress` | boolean | No | `true` | Show the primary-colored fill behind the thumb; `false` for a bare track |
 | `opts.valueDisplay` | string | No | `"always"` | `"always"` keeps the value above the track, `"hover"` shows only the hover value, `"none"` hides both |
 | `opts.onChange` | function | No | — | `onChange(value)` |
 
@@ -346,7 +346,7 @@ local section = UI:CreateSection(page, { title = "General", height = 140 })
 ```
 
 `UI:CreateSection` uses the same `RGXDesign:CreateSection` frame and
-brand-bordered header that BLU uses; RGXUI handles geometry while RGXDesign owns textures
+primary-bordered header that BLU uses; RGXUI handles geometry while RGXDesign owns textures
 and themed colors. After adding controls to `section.content`, call
 `section:FitContent()` to measure visible direct children and FontStrings
 and size the card to them. Stacked cards anchored to its bottom follow the
