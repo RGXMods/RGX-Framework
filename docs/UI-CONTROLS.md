@@ -255,6 +255,7 @@ Click or **drag** the honeycomb and brightness bar to pick.
 | `opts.storage` | table | No | `{}` | Table the widget reads/writes |
 | `opts.default` | table | No | white | `{r,g,b}` when storage is empty |
 | `opts.width` | number | No | 220 | Card width |
+| `opts.border` | table | No | design token | Brand edge `{r,g,b}` or `{r=,g=,b=}` |
 | `opts.onChange` | function | No | — | `onChange(r, g, b)` on every change |
 
 Returns the widget frame, with `:SetColor(r,g,b)` / `:GetColor()`. Call

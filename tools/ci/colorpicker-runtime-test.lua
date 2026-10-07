@@ -254,6 +254,32 @@ scenario("embedded hex entry validates and does not recurse", function()
   assert(calls == 1, "embedded hex fired onChange " .. calls .. " times")
 end)
 
+scenario("embedded cards accept a brand border", function()
+  local w = CP:CreateEmbedded(UIParent, {
+    key = "brand", storage = {}, default = { r = 1, g = 1, b = 1 }, width = 220,
+    border = { 0.345, 0.745, 0.506 },
+  })
+  assert(w.borderColor and math.abs(w.borderColor[1] - 0.345) < 1e-6
+    and math.abs(w.borderColor[2] - 0.745) < 1e-6, "brand border not applied")
+end)
+
+scenario("embedded hex fits inside narrow and wide cards", function()
+  for _, cardW in ipairs({ 220, 300 }) do
+    local w = CP:CreateEmbedded(UIParent, {
+      key = "fit", storage = {}, default = { r = 1, g = 1, b = 1 }, width = cardW,
+    })
+    local hex
+    for _, frame in ipairs(CREATED) do
+      if frame.parent == w and frame.kind == "EditBox" then hex = frame end
+    end
+    assert(hex, "embedded hex box not found")
+    local spec = spectrumFrameOf(w)
+    assert(spec, "embedded honeycomb not found")
+    local specX = spec.points[1][4]
+    assert(specX + 30 + 8 + hex.width <= cardW - 8 + 0.5, "hex overhangs the card edge")
+  end
+end)
+
 scenario("class row renders live client colors inside its declared width", function()
   local sw = f.classRow.swatches
   assert(#sw == 13, "expected 13 playable class swatches, got " .. #sw)

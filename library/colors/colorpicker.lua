@@ -1222,6 +1222,13 @@ function ColorPicker:CreateEmbedded(parent, opts)
     local w = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     w:SetSize(width, 184)
     Design:ApplyBackdrop(w, "panel", 0.6)
+    -- Optional consumer brand edge, mirroring the dialog border opt. Each
+    -- embedded card is its own frame, so no restore pass is needed.
+    local border = opts.border
+    if type(border) == "table" then
+        w:SetBackdropBorderColor(border.r or border[1] or 1,
+            border.g or border[2] or 1, border.b or border[3] or 1, 1)
+    end
 
     local boxW = width - 32
 
@@ -1261,7 +1268,10 @@ function ColorPicker:CreateEmbedded(parent, opts)
     preview:SetPoint("CENTER", previewRing, "CENTER")
 
     local hex = CreateFrame("EditBox", nil, w, "BackdropTemplate")
-    hex:SetSize(boxW - 34, 22)
+    -- Cap the hex width to the space between the preview and the right
+    -- margin: wide cards would otherwise push it past the card edge.
+    local hexStart = leftPad + 30 + 8
+    hex:SetSize(math.max(1, math.min(boxW - 45, width - 8 - hexStart)), 22)
     hex:SetPoint("LEFT", preview, "RIGHT", 8, 0)
     hex:SetFontObject("GameFontNormal")
     hex:SetTextColor(1, 1, 1)

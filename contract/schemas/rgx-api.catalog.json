@@ -2342,6 +2342,12 @@
           ]
         },
         {
+          "name": "Confirm",
+          "params": [
+            "opts"
+          ]
+        },
+        {
           "name": "CreateButton",
           "params": [
             "parent",
