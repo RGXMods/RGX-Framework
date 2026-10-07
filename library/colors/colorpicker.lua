@@ -1141,6 +1141,16 @@ function ColorPicker:Show(color, callback, opts)
     
     local f = self:GetFrame()
     ApplySections(f, opts)
+    -- Re-assert every Show: anything that prunes UISpecialFrames must not
+    -- silently drop the dialog's ESC handling. Written without tContains
+    -- so headless harnesses need no extra mock.
+    if type(UISpecialFrames) == "table" then
+        local listed = false
+        for _, name in ipairs(UISpecialFrames) do
+            if name == "RGXColorPicker" then listed = true break end
+        end
+        if not listed then table.insert(UISpecialFrames, "RGXColorPicker") end
+    end
     -- Compact consumers scale the whole dialog. The frame is a
     -- singleton shared across consumers, so the scale resets every Show.
     local scale = (opts and type(opts.scale) == "number" and opts.scale > 0) and opts.scale or 1
