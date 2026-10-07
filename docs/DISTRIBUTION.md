@@ -121,10 +121,11 @@ ignored by Git.
 
 ## Contract Bundle
 
-The versioned contract bundle pins the declarative contract surface
-(schema, declarative API docs, derived API catalog, conformance vectors)
-separately from the player archive so MCP, Studio, and other authoring
-tools can pin an exact revision without copying RGX semantics.
+The versioned contract bundle pins the contract surface
+(schema, declarative API docs, derived declarative API catalog, module API
+catalog, conformance vectors) separately from the player archive so MCP,
+Studio, and other authoring tools can pin an exact revision without
+copying RGX semantics.
 
 ```bash
 cd tools/ci
