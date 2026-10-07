@@ -396,11 +396,11 @@ all-client certification. Local changes do not inherit the TOC's publication sta
 | DB/profiles (AceDB) | defaults, profiles, switching, migrations and global data | `core/systems/database.lua`; not an interchangeable AceDB scope/namespace model |
 | Serialization (AceSerializer use case) | profile serialization/import-export | `SerializeProfile`/`DeserializeProfile` in the DB; not generic network transport |
 | Commands (AceConsole) | centralized slash registration and declarative `slash` | `core/systems/runtime.lua`, addon factory |
-| Options/widgets (AceConfig/AceGUI) | DB-bound declarative controls and imperative UI/layout | `modules/ui/`; supported forms in [Declarative API](DECLARATIVE-API.md) |
-| Localization (AceLocale) | locale registry and framework translations | `modules/locale/locale.lua`, `overrides.lua`; consumer translations remain consumer content |
-| Shared media (LibSharedMedia, adjacent to Ace3) | native registries and media bridge | `modules/fonts/`, `modules/textures/`, `modules/sound/`, `modules/sharedmedia/`; adoption varies by consumer |
-| Minimap/broker (LibDBIcon/LDB, adjacent to Ace3) | minimap persistence and broker module | `modules/minimap/`, `modules/databroker/`; not an Ace3 library comparison |
-| Auras/tooltip | restricted-data aura adapter and tooltip composition | `modules/auras/`, `modules/tooltip/`; capabilities and client evidence vary by flavor |
+| Options/widgets (AceConfig/AceGUI) | DB-bound declarative controls and imperative UI/layout | `library/ui/`; supported forms in [Declarative API](DECLARATIVE-API.md) |
+| Localization (AceLocale) | locale registry and framework translations | `library/locale/locale.lua`, `overrides.lua`; consumer translations remain consumer content |
+| Shared media (LibSharedMedia, adjacent to Ace3) | native registries and media bridge | `library/fonts/`, `library/textures/`, `library/sound/`, `library/sharedmedia/`; adoption varies by consumer |
+| Minimap/broker (LibDBIcon/LDB, adjacent to Ace3) | minimap persistence and broker module | `library/minimap/`, `library/databroker/`; not an Ace3 library comparison |
+| Auras/tooltip | restricted-data aura adapter and tooltip composition | `modules/auras/`, `library/tooltip/`; capabilities and client evidence vary by flavor |
 | Buckets/cross-client comm | no equivalent implemented baseline | need-driven roadmap work; in-process framework messages are not addon network traffic |
 
 Module files are loaded through `RGX-Framework.xml`; registration and

@@ -397,7 +397,7 @@ Montserrat-Regular, Montserrat-Bold, Merriweather-Regular, Merriweather-Bold, Pl
 ## File Layout
 
 ```
-modules/fonts/
+library/fonts/
 ├── definitions.lua   — 40 font definitions + unavailableFonts blocklist
 ├── init.lua          — Fonts:Init() + RegisterModule("fonts")
 ├── registry.lua      — Register, RegisterAddonFont, RegisterFontPack

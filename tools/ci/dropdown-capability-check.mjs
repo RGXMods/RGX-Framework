@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {Lua} from 'wasmoon-lua5.1';
 const root=join(dirname(fileURLToPath(import.meta.url)),'../..');
 const lua=await Lua.create();
-lua.ctx.source=readFileSync(join(root,'modules/dropdowns/dropdowns.lua'),'utf8');
+lua.ctx.source=readFileSync(join(root,'library/dropdowns/dropdowns.lua'),'utf8');
 try {
  lua.doStringSync(`
   RGXFramework={RegisterModule=function(self,_,module)self.dropdown=module end,Debug=function()end}

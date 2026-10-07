@@ -1,7 +1,7 @@
 // Execute the real panel visibility methods with explicit hosting seams.
 import {readFileSync} from 'node:fs';
 import {Lua} from 'wasmoon-lua5.1';
-const source=readFileSync(new URL('../../modules/ui/options.lua',import.meta.url),'utf8');
+const source=readFileSync(new URL('../../library/ui/options.lua',import.meta.url),'utf8');
 const start=source.indexOf('    -- Visibility must include the host:');
 const end=source.indexOf('    -- ── Open',start);
 if(start<0 || end<0)throw new Error('Options visibility methods not found');
