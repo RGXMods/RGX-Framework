@@ -1124,6 +1124,17 @@ function ColorPicker:Show(color, callback, opts)
     -- singleton shared across consumers, so the scale resets every Show.
     local scale = (opts and type(opts.scale) == "number" and opts.scale > 0) and opts.scale or 1
     f:SetScale(scale)
+    -- A consumer brand color outlines the dialog; otherwise the design
+    -- border token returns. Accepts {r, g, b} or {r = , g = , b = }.
+    local border = opts and opts.border
+    if type(border) == "table" then
+        local br = border.r or border[1] or 1
+        local bg = border.g or border[2] or 1
+        local bb = border.b or border[3] or 1
+        f:SetBackdropBorderColor(br, bg, bb, 1)
+    else
+        f:SetBackdropBorderColor(RGX:GetDesign():Unpack("border"))
+    end
     self:UpdateUI()
     f:Show()
 end

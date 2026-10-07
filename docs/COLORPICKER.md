@@ -42,6 +42,10 @@ compact consumers — e.g. `{ rgb = false, presets = false, scale = 0.85 }`.
 The frame is a singleton, so the scale resets to `1` on every `Show` without
 the key; non-numeric or non-positive values are ignored.
 
+`opts.border` (`{r, g, b}` or `{r=, g=, b=}`) outlines the dialog in a
+consumer brand color — e.g. SQP green `{ 0.345, 0.745, 0.506 }`. Omitted,
+the design border token returns.
+
 The SQP minimal popup is honeycomb + brightness bar + one-line class row:
 `{ presets = false, rgb = false, preview = false, scale = 0.85 }`.
 
