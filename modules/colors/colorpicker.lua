@@ -496,6 +496,11 @@ function ColorPicker:GetFrame()
     f:SetFrameStrata("DIALOG")
     Design:ApplyBackdrop(f, "dark", 0.98)
     f:Hide()
+    -- ESC closes the dialog like every other RGX window. The frame carries
+    -- a global name so it can join the standard close-on-escape set.
+    if type(UISpecialFrames) == "table" then
+        table.insert(UISpecialFrames, "RGXColorPicker")
+    end
 
     -- Title
     f.title = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -1101,7 +1106,7 @@ function ColorPicker:OK()
 end
 
 function ColorPicker:Cancel()
-    self.frame:Hide()
+    if self.frame then self.frame:Hide() end
 end
 
 function ColorPicker:AddToHistory(r, g, b)

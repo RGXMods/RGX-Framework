@@ -45,6 +45,10 @@ the key; non-numeric or non-positive values are ignored.
 The SQP minimal popup is honeycomb + brightness bar + one-line class row:
 `{ presets = false, rgb = false, preview = false, scale = 0.85 }`.
 
+The dialog joins `UISpecialFrames`, so ESC closes it like every other RGX
+window. Switching options tabs or pager pages dismisses it without firing
+the callback — a popup never outlives the page that opened it.
+
 ### Via the declarative DSL
 
 ```lua
