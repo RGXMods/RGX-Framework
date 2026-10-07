@@ -315,7 +315,8 @@
           "name": "Show",
           "params": [
             "color",
-            "callback"
+            "callback",
+            "opts"
           ]
         },
         {

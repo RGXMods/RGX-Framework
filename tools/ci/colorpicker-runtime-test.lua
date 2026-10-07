@@ -411,5 +411,55 @@ scenario("embedded OnShow re-projects storage written by a peer", function()
   assert(math.abs(b - 1) < 1e-6 and math.abs(r) < 1e-6, "OnShow did not re-read storage")
 end)
 
+scenario("Show opts collapse RGB and presets and shrink the panel", function()
+  CP:Show({ r = 0, g = 0, b = 1 }, function() end, { rgb = false, presets = false })
+  assert(not f.rgbRow:IsShown(), "rgb row stayed visible")
+  for _, el in ipairs(f.rgbGroup) do assert(not el:IsShown(), "rgb element stayed visible") end
+  for _, el in ipairs(f.presetsGroup) do assert(not el:IsShown(), "preset element stayed visible") end
+  -- Visible sections chain onto the previous visible one: the preview onto the
+  -- class row, the buttons onto the preview ring.
+  local pt = f.previewRing.points[1]
+  assert(pt and pt[1] == "TOPLEFT" and pt[2] == f.classRow.frame and pt[4] == 0 and pt[5] == -14,
+    "preview did not re-anchor under the class row")
+  local okTop = f.okBtn.points[2]
+  assert(okTop and okTop[1] == "TOP" and okTop[2] == f.previewRing and okTop[5] == -16,
+    "OK button did not re-anchor under the preview")
+  -- RGB flow (14 + 46) and presets flow (14 + label 20 + 8 + two rows 56)
+  -- must come out of the 640px panel.
+  assert(f.height == 640 - 60 - 98, "panel height did not shrink: " .. tostring(f.height))
+end)
+
+scenario("Show without opts restores every section and the full panel", function()
+  CP:Show({ r = 1, g = 1, b = 1 }, function() end)
+  for _, el in ipairs(f.rgbGroup) do assert(el:IsShown(), "rgb element did not return") end
+  for _, el in ipairs(f.presetsGroup) do assert(el:IsShown(), "preset element did not return") end
+  local pt = f.presetsLabel.points[1]
+  assert(pt and pt[1] == "TOPLEFT" and pt[2] == f.rgbRow and pt[4] == 0 and pt[5] == -14,
+    "presets did not re-anchor under RGB")
+  local okTop = f.okBtn.points[2]
+  assert(okTop and okTop[1] == "TOP" and okTop[2] == f.presetsBottom and okTop[5] == -16,
+    "OK button did not return under the presets")
+  assert(f.height == 640, "panel height did not restore: " .. tostring(f.height))
+end)
+
+scenario("classes=false moves the preview up to the spectrum", function()
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { classes = false })
+  for _, el in ipairs(f.classGroup) do assert(not el:IsShown(), "class element stayed visible") end
+  local pt = f.previewRing.points[1]
+  assert(pt and pt[1] == "TOPLEFT" and pt[2] == f.spectrum.frame and pt[5] == -14,
+    "preview did not re-anchor under the spectrum")
+  assert(f.height == 640 - f.sections[1].flow, "panel height ignored the class flow")
+end)
+
+scenario("preview=false chains RGB and buttons onto the class row", function()
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { preview = false, presets = false })
+  for _, el in ipairs(f.previewGroup) do assert(not el:IsShown(), "preview element stayed visible") end
+  local pt = f.rgbRow.points[1]
+  assert(pt and pt[1] == "TOPLEFT" and pt[2] == f.classRow.frame and pt[5] == -14,
+    "RGB row did not re-anchor under the class row")
+  local okTop = f.okBtn.points[2]
+  assert(okTop and okTop[2] == f.rgbRow, "OK button did not chain onto the RGB row")
+end)
+
 print(string.format("COLORPICKER %d passed, %d failed", pass, fail))
 if fail > 0 then error(fail .. " colorpicker scenario(s) failed") end
