@@ -18,7 +18,7 @@ A custom RGX HSV color picker (`modules/colors/colorpicker.lua`). The panel is a
 
 ## API
 
-### `CP:Show(color, callback)`
+### `CP:Show(color, callback, opts)`
 
 ```lua
 local CP = RGX:GetColorPicker()
@@ -28,6 +28,14 @@ end)
 ```
 
 `color` is a `{r, g, b}` table (0–1 floats). `callback(r, g, b, a)` fires on **OK** only; Cancel and × close without calling it.
+
+`opts` is optional and hides named sections for this consumer:
+
+```lua
+CP:Show(color, callback, { rgb = false, presets = false })
+```
+
+Keys default to shown; passing `false` hides the matching section, collapses the panel to fit, and re-anchors the remaining sections and the OK/Cancel buttons. The next `Show` without `opts` restores every section. Sections: `classes` (Class Colors label + row), `preview` (circular preview, HEX field, eyedropper), `rgb` (R/G/B inputs), `presets` (Quality/Basic swatches).
 
 ### Via the declarative DSL
 
@@ -58,7 +66,7 @@ widget.
 
 ## History
 
-- **Unreleased** — honeycomb spectrum, vertical brightness bar, and live Class Colors row replace the circular SV/hue-bar layout; embedded/`UI:CreateColorPicker` widgets re-project storage on `:Refresh()` and show, and options panels expose `panel:SetTheme(...)` for runtime theme updates without leaking into the shared default
+- **Unreleased** — honeycomb spectrum, vertical brightness bar, and live Class Colors row replace the circular SV/hue-bar layout; embedded/`UI:CreateColorPicker` widgets re-project storage on `:Refresh()` and show, and options panels expose `panel:SetTheme(...)` for runtime theme updates without leaking into the shared default; `Show(...)` accepts `opts` to hide the class, preview, RGB, or preset sections per consumer, collapsing and re-anchoring the panel to fit
 - **v2.4.0** — circular redesign (RGXDesign tokens, ring-and-fill handles, circular swatches/preview, focus states)
 - **v2.3.0** — first release that actually rendered: fixed six missing `BackdropTemplate` mixins that silently aborted construction, and completed two stub features (the hue-bar rainbow and the saturation gradient)
 - **v2.0.0** — module introduced

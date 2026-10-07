@@ -506,7 +506,7 @@ Custom HSV color picker widget. Features:
 - RGB and HEX input fields
 - Quality and Basic preset palettes
 
-Open it with `RGX:GetColorPicker():Show(color, callback)` or a `UI:CreateColorPicker()` swatch. `Colors:OpenPicker()` and `Colors:CreateColorPicker()` use Blizzard's picker instead.
+Open it with `RGX:GetColorPicker():Show(color, callback, opts)` or a `UI:CreateColorPicker()` swatch. `opts` may set `classes`, `preview`, `rgb`, or `presets` to `false` to hide that section for this consumer; hidden sections collapse and the panel shrinks to fit, and a later `Show` without `opts` restores every section. `Colors:OpenPicker()` and `Colors:CreateColorPicker()` use Blizzard's picker instead.
 
 ---
 

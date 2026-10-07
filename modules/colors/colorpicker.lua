@@ -552,6 +552,8 @@ function ColorPicker:GetFrame()
     })
     f.classRow.frame:SetPoint("TOPLEFT", f.classLabel, "BOTTOMLEFT", 0, -6)
     f.classRow.onPick = function(r, g, b) self:SetRGB(r, g, b) end
+    f.classGroup = { f.classLabel, f.classRow.frame }
+    f.classContent = f.classLabel:GetHeight() + 6 + f.classRow.height
 
     -- === PREVIEW & HEX ===
     self:CreatePreview(f)
@@ -564,6 +566,17 @@ function ColorPicker:GetFrame()
 
     -- === BUTTONS ===
     self:CreateButtons(f)
+
+    -- Section table for Show(...) opts. Each entry knows the frames that make
+    -- up a section, its anchor gap, and its full vertical flow (gap + content),
+    -- so Show can collapse hidden sections and shrink the panel by exactly the
+    -- space they consumed.
+    f.sections = {
+        { key = "classes", group = f.classGroup, top = f.classLabel, bottom = f.classRow.frame, gap = 12, flow = 12 + f.classContent },
+        { key = "preview", group = f.previewGroup, top = f.previewRing, bottom = f.previewRing, gap = 14, flow = 14 + f.previewContent },
+        { key = "rgb", group = f.rgbGroup, top = f.rgbRow, bottom = f.rgbRow, gap = 14, flow = 14 + f.rgbContent },
+        { key = "presets", group = f.presetsGroup, top = f.presetsLabel, bottom = f.presetsBottom, gap = 14, flow = 14 + f.presetsContent },
+    }
 
     -- Make draggable
     f:EnableMouse(true)
@@ -729,18 +742,18 @@ function ColorPicker:CreatePreview(f)
     end)
 
     -- HEX input, to the right of the preview circle
-    local hexLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hexLabel:SetPoint("BOTTOMLEFT", f.previewRing, "TOPRIGHT", 14, -6)
-    hexLabel:SetText("HEX")
+    f.hexLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    f.hexLabel:SetPoint("BOTTOMLEFT", f.previewRing, "TOPRIGHT", 14, -6)
+    f.hexLabel:SetText("HEX")
     local sr, sg, sb = Design:Unpack("subtext")
-    hexLabel:SetTextColor(sr, sg, sb)
+    f.hexLabel:SetTextColor(sr, sg, sb)
 
     f.hexInput = CreateFrame("EditBox", nil, f, "BackdropTemplate")
     -- Width spans from the hex label (right of the 60px preview ring) to the
     -- content's right margin; use the ring size (previewSize + 4), not the raw
     -- previewSize, so it doesn't overhang the panel edge.
     f.hexInput:SetSize(CONTENT_W - (previewSize + 4) - 14, 26)
-    f.hexInput:SetPoint("TOPLEFT", hexLabel, "BOTTOMLEFT", 0, -6)
+    f.hexInput:SetPoint("TOPLEFT", f.hexLabel, "BOTTOMLEFT", 0, -6)
     f.hexInput:SetFontObject("GameFontNormal")
     f.hexInput:SetTextColor(1, 1, 1)
     f.hexInput:SetAutoFocus(false)
@@ -768,6 +781,9 @@ function ColorPicker:CreatePreview(f)
         local r, g, b = ColorPicker:HexToRGB(box:GetText())
         if r then ColorPicker:SetRGB(r, g, b) end
     end)
+
+    f.previewGroup = { f.previewRing, f.preview, f.eyedropper, f.hexLabel, f.hexInput }
+    f.previewContent = previewSize + 4
 end
 
 function ColorPicker:CreateRGBInputs(f)
@@ -782,6 +798,8 @@ function ColorPicker:CreateRGBInputs(f)
     f.rgbRow = CreateFrame("Frame", nil, f)
     f.rgbRow:SetPoint("TOPLEFT", f.previewRing, "BOTTOMLEFT", 0, -14)
     f.rgbRow:SetSize(CONTENT_W, 46)
+    f.rgbGroup = { f.rgbRow }
+    f.rgbContent = f.rgbRow:GetHeight()
 
     for i, label in ipairs(labels) do
         local lbl = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -789,6 +807,7 @@ function ColorPicker:CreateRGBInputs(f)
         lbl:SetText(label)
         local sr, sg, sb = Design:Unpack("subtext")
         lbl:SetTextColor(sr, sg, sb)
+        table.insert(f.rgbGroup, lbl)
 
         local input = CreateFrame("EditBox", nil, f, "BackdropTemplate")
         input:SetSize(colW, 26)
@@ -815,6 +834,7 @@ function ColorPicker:CreateRGBInputs(f)
         end)
 
         input:SetText("255")
+        table.insert(f.rgbGroup, input)
 
         local idx = i
         input:SetScript("OnTextChanged", function(box)
@@ -855,6 +875,7 @@ function ColorPicker:CreatePresets(f)
     lbl:SetText("Presets")
     local sr, sg, sb = Design:Unpack("subtext")
     lbl:SetTextColor(sr, sg, sb)
+    f.presetsLabel = lbl
 
     -- Create circular color swatch buttons. Palettes with zero colors
     -- (e.g. "Recent" before anything has been picked) are skipped so they
@@ -867,12 +888,20 @@ function ColorPicker:CreatePresets(f)
 
     local lastRowBottom = rowCursor
     local firstPalette = true
+    f.presetsGroup = { lbl, rowCursor }
+    local gridHeight = 0
     for _, palette in ipairs(self.presets) do
         if #palette.colors > 0 then
             local paletteFrame = CreateFrame("Frame", nil, f)
             paletteFrame:SetPoint("TOPLEFT", lastRowBottom, firstPalette and "TOPLEFT" or "BOTTOMLEFT", 0, firstPalette and 0 or -PALETTE_GAP)
             local rows = math.ceil(#palette.colors / SWATCHES_PER_ROW)
             paletteFrame:SetSize(CONTENT_W, rows * SWATCH_PITCH)
+            table.insert(f.presetsGroup, paletteFrame)
+            if firstPalette then
+                gridHeight = rows * SWATCH_PITCH
+            else
+                gridHeight = gridHeight + PALETTE_GAP + rows * SWATCH_PITCH
+            end
 
             for colorIdx, color in ipairs(palette.colors) do
                 local col = (colorIdx - 1) % SWATCHES_PER_ROW
@@ -896,6 +925,7 @@ function ColorPicker:CreatePresets(f)
                 end)
 
                 table.insert(f.swatches, btn)
+                table.insert(f.presetsGroup, btn)
             end
 
             lastRowBottom = paletteFrame
@@ -904,6 +934,7 @@ function ColorPicker:CreatePresets(f)
     end
 
     f.presetsBottom = lastRowBottom
+    f.presetsContent = lbl:GetHeight() + 8 + (gridHeight > 0 and gridHeight or rowCursor:GetHeight())
 end
 
 function ColorPicker:CreateButtons(f)
@@ -918,6 +949,33 @@ function ColorPicker:CreateButtons(f)
     f.cancelBtn = Design:CreateButton(f, "Cancel", 80, 28)
     f.cancelBtn:SetPoint("RIGHT", f.okBtn, "LEFT", -10, 0)
     f.cancelBtn:SetScript("OnClick", function() self:Cancel() end)
+end
+
+-- Applies per-consumer section visibility from Show(color, callback, opts).
+-- Visible sections chain off the previous visible section; hidden ones are
+-- collapsed and their flow subtracted from the panel height. The buttons use a
+-- two-point anchor (fixed right margin plus the last visible section) because
+-- the preview ring is narrower than the content row, so a right-anchored pair
+-- cannot ride on "the previous frame" alone.
+local function ApplySections(f, opts)
+    opts = opts or {}
+    local prev = f.spectrum.frame
+    local freed = 0
+    for _, section in ipairs(f.sections) do
+        if opts[section.key] == false then
+            for _, element in ipairs(section.group) do element:Hide() end
+            freed = freed + section.flow
+        else
+            for _, element in ipairs(section.group) do element:Show() end
+            section.top:ClearAllPoints()
+            section.top:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", 0, -section.gap)
+            prev = section.bottom
+        end
+    end
+    f:SetHeight(PANEL_H - freed)
+    f.okBtn:ClearAllPoints()
+    f.okBtn:SetPoint("RIGHT", f, "RIGHT", -20, 0)
+    f.okBtn:SetPoint("TOP", prev, "BOTTOM", 0, -16)
 end
 
 --[[============================================================================
@@ -1005,7 +1063,7 @@ end
     PUBLIC API
 ============================================================================]]
 
-function ColorPicker:Show(color, callback)
+function ColorPicker:Show(color, callback, opts)
     self.callback = callback
     self.current = {
         r = color.r or 1,
@@ -1019,6 +1077,7 @@ function ColorPicker:Show(color, callback)
     self.current.h, self.current.s, self.current.v = h, s, v
     
     local f = self:GetFrame()
+    ApplySections(f, opts)
     self:UpdateUI()
     f:Show()
 end
