@@ -439,33 +439,33 @@ See [docs/FONTS.md](FONTS.md) for complete documentation.
 
 | Method | Description |
 |---|---|
-| `Colors:Get(name)` | Returns `{r, g, b, a}` |
-| `Colors:GetRGB(name)` | Returns r, g, b (multi-return) |
-| `Colors:GetHex(name)` | Returns `"#RRGGBB"` |
-| `Colors:GetClass(className)` | Class color table |
-| `Colors:GetQuality(quality)` | Quality color table (0–5) |
-| `Colors:GetPower(powerType)` | Power type color table |
+| `Colors:Get(name)` | Color table `{r, g, b, hex}` (+ `a` when known), or `nil` |
+| `Colors:GetRGB(name)` | Returns r, g, b (multi-return; fallback 1, 1, 1) |
+| `Colors:GetHex(name)` | Bare `"RRGGBB"` (no `#`; fallback `"ffffff"`) |
+| `Colors:GetClass(className)` | Returns r, g, b (multi-return; class name) |
+| `Colors:GetQuality(name)` | Returns r, g, b (multi-return; quality name) |
+| `Colors:GetPower(token)` | Returns r, g, b (multi-return; short power token) |
 
 ### Text Wrapping
 
 | Method | Description |
 |---|---|
 | `Colors:Wrap(text, colorName)` | `|cffRRGGBBtext|r` |
-| `Colors:WrapClass(text, className)` | Wrap in class color |
+| `Colors:WrapClass(text, className)` | Wrap class name via palette lookup (class tokens are not in the generic palette; prefer `GetClass`) |
 | `Colors:WrapQuality(text, quality)` | Wrap in quality color |
 
 ### Color Math
 
 | Method | Description |
 |---|---|
-| `Colors:Create(r, g, b, a)` | New color table |
-| `Colors:Clone(color)` | Deep copy |
-| `Colors:Darken(colorName, amount)` | Darkened color |
-| `Colors:Lighten(colorName, amount)` | Lightened color |
-| `Colors:SetAlpha(colorName, alpha)` | New color with alpha set |
-| `Colors:Lerp(c1, c2, t)` | Interpolate between two colors |
-| `Colors:Gradient(pct, low, mid, high)` | 3-stop gradient; mid optional |
-| `Colors:Health(percent)` | Health gradient (green → yellow → red) |
+| `Colors:Create(r, g, b, a)` | New color table `{r, g, b, hex[, a]}` |
+| `Colors:Clone(color)` | Copy of a named/table color, or `nil` |
+| `Colors:Darken(colorName, amount)` | Darkened r, g, b (amount defaults to 0.2) |
+| `Colors:Lighten(colorName, amount)` | Lightened r, g, b (amount defaults to 0.2) |
+| `Colors:SetAlpha(colorName, alpha)` | r, g, b, alpha |
+| `Colors:Lerp(c1, c2, t)` | Interpolate two colors (returns `{r, g, b}`) |
+| `Colors:Gradient(pct, low, mid, high)` | 3-stop gradient; mid optional (returns `{r, g, b}`) |
+| `Colors:Health(percent)` | Health gradient (green → yellow → red; returns `{r, g, b}`) |
 | `Colors:RGBToHex(r, g, b)` | Returns `"RRGGBB"` |
 | `Colors:HexToRGB(hex)` | Returns r, g, b |
 
