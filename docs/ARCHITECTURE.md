@@ -12,8 +12,8 @@ helper or a new public module for every file.
 |---|---|---|
 | Core systems | events, runtime/timers, DB and compatibility have dedicated implementations | Keep one owner per mechanic; addon-scoped methods delegate to these systems |
 | Fonts | registry/query/apply/styles/selectors are separate files sharing one module | Useful internal decomposition; retain one public Fonts interface |
-| UI | controls/options/layout/profiles are separate files sharing one UI module | Controls own interaction, layout owns geometry, options owns panel orchestration; split further only along real responsibilities |
-| Addon factory | `core/core.lua` contains timer declaration compilation, scoped methods, lifecycle wiring, inline grammar and control/layout rendering | Core should coordinate lifecycle; UI should interpret/render supported options through existing factories. Extract existing behavior without changing `RGXAddon` semantics or adding a second builder |
+| UI | controls/options/layout/profiles are separate files sharing one UI module; the local follow-on moves declarative tab rendering into options | Controls own interaction, layout owns geometry, options owns panel/tab composition; keep one set of factories |
+| Addon factory | `core/core.lua` retains declaration compilation, scoped methods, lifecycle/storage wiring and panel configuration | The local follow-on delegates rendering to UI's private compositor; the grammar stays in core and consumers still use `RGXAddon` |
 | Design/media | theme colors and frame primitives in Design; registries in media modules | Extend existing presentation contracts for skins; keep geometry/state in UI, not per-skin consumer forks |
 | Game modules | registered with `category = "game"`, capability/flavor gates and lifecycle initialization | Keep domain state separate; verify callback contracts and missing capabilities before new DSL routes |
 | Contract/MCP | local validation/preflight now delegate to the shared engine; availability comes from schema annotations | Shared vectors verify MCP/direct reports; remaining normalization/generation/editor scope stays in #8 |
@@ -26,9 +26,11 @@ helper or a new public module for every file.
    is not integrated behavior.
 2. Integrate the local shared-validation correction in `contract/engine/` and MCP;
    retain runtime Lua validation and conformance against the same supported forms.
-3. Separate addon lifecycle/registration from options compilation and rendering.
-   Use existing UI/layout primitives and private internal seams; preserve lazy
-   construction, DB ownership, callback arguments, ordering and scoped themes.
+3. Verify/integrate the local options-rendering separation. `modules/ui/options.lua`
+   composes tabs and calls existing scroll/column/flow/control factories through
+   a private seam; core supplies resolved declarations and retains lifecycle.
+   This untagged follow-on is separate from the committed beta.3 snapshot and
+   introduces no consumer API, module, global or package-file expansion.
 4. Complete page/card composition and modular skin resolution through their
    existing owners, with consumer/client evidence. Column distribution alone
    is not a card model; palette selection alone is not a native frame skin.

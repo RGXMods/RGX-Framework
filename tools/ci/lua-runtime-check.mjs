@@ -28,6 +28,10 @@ try {
   const refreshEnd = panelSource.indexOf("    local function ExtractCategoryID", refreshStart);
   if (refreshStart < 0 || refreshEnd < 0) throw new Error("Real panel refresh methods not found");
   lua.ctx.__rgxPanelRefreshSource = panelSource.slice(refreshStart, refreshEnd);
+  const compositorStart = panelSource.indexOf("local function BuildAddonOptionTabs(");
+  const compositorEnd = panelSource.indexOf("-- ── CreateOptionsPanel", compositorStart);
+  if (compositorStart < 0 || compositorEnd < 0) throw new Error("Real declarative options compositor not found");
+  lua.ctx.__rgxOptionCompositorSource = panelSource.slice(compositorStart, compositorEnd);
 
   lua.doStringSync(`
     local RGX = {}
@@ -60,6 +64,8 @@ try {
     loadSource(__rgxCoreSource, "core/core.lua")("RGX-Framework", RGX)
     loadSource(__rgxEventsSource, "core/systems/events.lua")("RGX-Framework", RGX)
     loadSource(__rgxRuntimeSource, "core/systems/runtime.lua")("RGX-Framework", RGX)
+    __rgxBuildAddonOptionTabs = loadSource("return function(RGX)\\n" .. __rgxOptionCompositorSource
+        .. "\\nreturn BuildAddonOptionTabs end", "modules/ui/options.lua")()(RGX)
     loadSource(__rgxTestSource, "tools/ci/declarative-every-runtime-test.lua")()
     loadSource(__rgxColumnsTestSource, "tools/ci/declarative-columns-runtime-test.lua")()
   `);

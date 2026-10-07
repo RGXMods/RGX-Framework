@@ -35,7 +35,7 @@ local capturedPanels = {}
 local function widget(host, kind, opts)
     return { host = host, kind = kind, opts = opts }
 end
-local stubUI = {}
+local stubUI = { _BuildAddonOptionTabs = __rgxBuildAddonOptionTabs }
 function stubUI:CreateScrollPage(frame)
     local canvas = { width = 300, height = 0, scripts = {} }
     function canvas:GetWidth() return self.width end
