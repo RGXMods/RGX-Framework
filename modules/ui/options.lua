@@ -280,6 +280,88 @@ local function ClearContent(frame)
     frame.Refresh = nil
 end
 
+-- ── Declarative options compositor (private addon-factory seam) ───────────────
+-- Core validates declarations and owns lifecycle/storage. UI owns widget
+-- construction and layout; resolveControl preserves the existing string grammar
+-- and live table-list behavior without creating a second interpreter here.
+local function BuildAddonOptionTabs(UI, addon, options, columns, resolveControl)
+    local Drops = RGX:GetDropdowns()
+    local tabs = {}
+    for tabName, controls in pairs(options) do
+        tabs[#tabs + 1] = {
+            text = tabName,
+            content = function(frame)
+                local canvas = UI:CreateScrollPage(frame)
+                local hosts, flows
+                if columns > 1 and UI.CreateColumns then
+                    hosts = { UI:CreateColumns(canvas, columns) }
+                    flows = {}
+                    for _, host in ipairs(hosts) do
+                        flows[#flows + 1] = UI:CreateFlowLayout(host)
+                    end
+                else
+                    hosts = { canvas }
+                    flows = { UI:CreateFlowLayout(canvas) }
+                end
+                local perColumn, remainder = math.floor(#controls / #flows), #controls % #flows
+                local boundaries, start = {}, 1
+                for i = 1, #flows do
+                    local size = perColumn + (i <= remainder and 1 or 0)
+                    boundaries[i] = { start = start, stop = start + size - 1 }
+                    start = start + size
+                end
+                local index = 0
+                for _, rawControl in ipairs(controls) do
+                    index = index + 1
+                    local slot = #flows
+                    for i = 1, #flows do
+                        if index <= boundaries[i].stop then slot = i break end
+                    end
+                    local host, flow = hosts[slot], flows[slot]
+                    local ctrl = resolveControl(rawControl)
+                    if ctrl and type(ctrl) == "table" then
+                        local w
+                        if type(ctrl.toggle) == "string" then
+                            w = UI:CreateToggle(host, { key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default })
+                        elseif type(ctrl.slider) == "string" then
+                            w = UI:CreateSlider(host, { key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper), storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100, step = ctrl.step or 1, suffix = ctrl.suffix, progress = ctrl.progress, valueDisplay = ctrl.valueDisplay })
+                        elseif type(ctrl.color) == "string" then
+                            w = UI:CreateColorPicker(host, { key = ctrl.color, label = ctrl.label or ctrl.color:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default or addon.db[ctrl.color], onChange = function(r, g, b) addon.db[ctrl.color] = { r = r, g = g, b = b } end })
+                        elseif type(ctrl.font) == "string" then
+                            local Fonts = RGX:GetFonts()
+                            if Fonts and Fonts.AttachFontSelector then
+                                w = Fonts:AttachFontSelector(host, addon.db, ctrl.font, { label = ctrl.label or "Font" })
+                                if w and w.HookScript then
+                                    w:HookScript("OnShow", function() w:RefreshFromDB() end)
+                                end
+                            end
+                        elseif type(ctrl.dropdown) == "string" and Drops then
+                            local items = {}
+                            for _, v in ipairs(ctrl.items or {}) do items[#items + 1] = { text = tostring(v), value = v } end
+                            w = Drops:CreateNestedDropdown(host, { label = ctrl.label or ctrl.dropdown:gsub("^%l", string.upper), items = items, width = ctrl.width or 260, value = addon.db[ctrl.dropdown], onChange = function(v) addon.db[ctrl.dropdown] = v end })
+                        elseif type(ctrl.button) == "string" and type(ctrl.action) == "function" then
+                            w = UI:CreateButton(host, { text = ctrl.button, width = ctrl.width, height = ctrl.height, onClick = ctrl.action })
+                        elseif type(ctrl.section) == "string" then
+                            w = UI:CreateLabel(host, { text = ctrl.section, size = "normal", color = "accent" })
+                        end
+                        if w then flow:Add(w) end
+                    end
+                end
+                local function reflow()
+                    if canvas:GetWidth() <= 0 then return end
+                    local used = 0
+                    for _, flow in ipairs(flows) do used = math.max(used, flow:Apply()) end
+                    canvas:SetHeight(math.max(1, used))
+                end
+                reflow()
+                canvas:HookScript("OnShow", reflow)
+                canvas:HookScript("OnSizeChanged", reflow)
+            end,
+        }
+    end
+    return tabs
+end
+
 -- ── CreateOptionsPanel ────────────────────────────────────────────────────────
 
 local _panelCounter = 0
@@ -950,6 +1032,7 @@ local function Inject()
     UI.CreateOptionsPanel = function(self, opts)
         return CreateOptionsPanel(self, opts)
     end
+    UI._BuildAddonOptionTabs = BuildAddonOptionTabs
     return true
 end
 

@@ -315,9 +315,11 @@ must agree with XML loading and initialization.
 - Contract owns canonical authoring semantics; MCP/editor tooling adapts them.
 - Consumers own feature policy, content and presentation choices.
 
-Current `core/core.lua` mixes addon construction with inline options parsing and
-rendering. MCP validation now delegates to the shared engine in this branch;
-that correction needs integration while the options seam remains to improve.
+Core owns declaration-time options validation and addon lifecycle. The current
+untagged follow-on delegates lazy control/layout rendering to a private seam in
+the existing UI options module. MCP validation delegates to the shared engine;
+the tagged beta.3 snapshot contains that correction, while rendering relocation
+remains separate local integration work.
 Neither requires another SDK/runtime or duplicate contract.
 See the ordered modularity work in [Architecture](ARCHITECTURE.md).
 

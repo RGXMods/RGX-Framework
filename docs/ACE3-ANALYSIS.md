@@ -429,9 +429,10 @@ Switching a skin must not fork consumer layout, DB ownership or callback behavio
 ### Modularity Is An Implementation Requirement
 
 The registry and system/module directories provide useful separation. They do
-not make every implementation modular: the addon factory still combines
-lifecycle, declaration interpretation and options rendering. Local MCP validation
-now delegates to the shared engine; see [Architecture](ARCHITECTURE.md) for the
+not make every implementation modular. The tagged beta.3 addon factory still
+combines lifecycle, declaration interpretation and options rendering; the
+untagged follow-on moves rendering into the existing UI options owner through
+a private seam. MCP validation delegates to the shared engine; see [Architecture](ARCHITECTURE.md) for the
 verified ownership seams and ordered changes. Extend existing modules before
 creating new ones; modularity means coherent ownership and intentional
 dependencies, not more files or more public APIs.

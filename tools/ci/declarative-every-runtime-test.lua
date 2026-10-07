@@ -123,6 +123,7 @@ function RGX:GetMinimap()
 end
 function RGX:GetUI()
     return {
+        _BuildAddonOptionTabs = __rgxBuildAddonOptionTabs,
         CreateOptionsPanel = function(_, opts)
             check(opts.addonName == "EveryOrder", "options should be built before timer binding")
             return { ready = true }
@@ -281,6 +282,7 @@ local function widget()
         HookScript = function(self, event, callback) self[event] = callback end }
 end
 local ui = {
+    _BuildAddonOptionTabs = __rgxBuildAddonOptionTabs,
     CreateScrollPage = function() return widget() end,
     CreateFlowLayout = function() return { Add = function() end, Apply = function() return 80 end } end,
     CreateSlider = function(_, _, opts) widgets[opts.key] = opts return widget() end,

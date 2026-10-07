@@ -21,9 +21,9 @@ records the concrete modularity seams. Tools consume the contract; runtime never
 depends on tools.
 
 Prioritize consumer reliability, then coherent module/contract composition,
-then feature expansion. Before extending the addon factory again, separate its
-options interpretation/rendering responsibilities through existing UI/layout
-ownership. MCP validation/preflight now use the existing engine locally;
+then feature expansion. The current untagged follow-on separates lazy options
+rendering into existing UI/layout ownership; core retains interpretation and
+lifecycle. MCP validation/preflight use the existing engine in the beta.3 snapshot;
 integrate that correction before claiming the broader #8 authoring outcome. Full native
 skins and page/card composition keep their own acceptance criteria; passing
 column-flow mocks does not complete either outcome.
