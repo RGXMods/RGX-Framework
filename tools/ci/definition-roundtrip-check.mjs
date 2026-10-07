@@ -19,7 +19,7 @@ const lua = await Lua.create();
 let checks = 0;
 const quote = JSON.stringify;
 try {
-  lua.ctx.__uiSource = readFileSync(join(ROOT, "modules/ui/controls.lua"), "utf8");
+  lua.ctx.__uiSource = readFileSync(join(ROOT, "library/ui/controls.lua"), "utf8");
   lua.doStringSync(`
     UI = {}
     RGX = { API = {

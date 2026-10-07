@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { Lua } from 'wasmoon-lua5.1';
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
 const lua = await Lua.create();
-lua.ctx.source = readFileSync(join(root, 'modules/display/display.lua'), 'utf8');
+lua.ctx.source = readFileSync(join(root, 'library/display/display.lua'), 'utf8');
 try {
   lua.doStringSync(`
     local effectiveScale = 1

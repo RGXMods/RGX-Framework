@@ -26,7 +26,7 @@ helper or a new public module for every file.
    is not integrated behavior.
 2. Integrate the local shared-validation correction in `contract/engine/` and MCP;
    retain runtime Lua validation and conformance against the same supported forms.
-3. Verify/integrate the local options-rendering separation. `modules/ui/options.lua`
+3. Verify/integrate the local options-rendering separation. `library/ui/options.lua`
    composes tabs and calls existing scroll/column/flow/control factories through
    a private seam; core supplies resolved declarations and retains lifecycle.
    This follow-on is separate from the committed beta.3 snapshot and
@@ -127,38 +127,38 @@ WoW loads files in the order declared in `RGX-Framework.xml`. The framework uses
 5. core/systems/runtime.lua — After, Every, CancelTimer, Hook, RegisterSlashCommand, combat queue, Safe* helpers
 6. core/systems/utils.lua   — Trim, Split, TableKeys/Values/Contains/Map/Filter/Find, MergeTable, Round, Format, Clamp, StartsWith, EndsWith
 
-6b. modules/locale/locale.lua, overrides.lua — locale registry and framework translations
-7. modules/dropdowns/dropdowns.lua  — CreateNestedDropdown, CopyItem, NormalizeItems, ForceWidth, AddInlineButton
-8. modules/fonts/definitions.lua    — 36 font definitions, unavailableFonts blocklist
-9. modules/fonts/init.lua           — Fonts:Init(), RegisterModule("fonts")
-10. modules/fonts/registry.lua      — Register, RegisterAddonFont, RegisterFontPack
-11. modules/fonts/query.lua         — GetPath, Get, Exists, IsAvailable, List, ListAvailable, FindByPath
-12. modules/fonts/defaults.lua      — SetDefault, GetDefault, SetDefaultSize, SetDefaultFlags, SetAutoScale
-13. modules/fonts/apply.lua         — Apply, Quick, ApplyChildren, CreateString, FromTemplate
-14. modules/fonts/normalize.lua     — SplitFlags, NormalizeFlags, DescribeFlags, GetFlagPresets, NormalizeFontPath
-15. modules/fonts/styles.lua        — NormalizeStyle, NormalizeColorValue, CreateStyle, ApplyStyle/ApplyTextStyle
-16. modules/fonts/grouping.lua      — BuildGroupedFontItems, _groupedFontsCache
-17. modules/fonts/dropdowns.lua     — CreateFontDropdown, buildItems
-18. modules/fonts/controls.lua      — CreateFontSettingControl
-19. modules/fonts/menuitems.lua     — CreateFontMenuItems, CreateFlagMenuItems, CreateSizeMenuItems, CreateStyleMenuItems
-20. modules/fonts/selectors.lua     — CreateStyleSelector, CreateSimpleFontSelector, AttachStyleSelector, AttachFontSelector
-21. modules/fonts/preview.lua       — FontPreview:Create, _ApplyPreviewSelection
-22. modules/colors/colors.lua       — full color API (lookup, math, wrapping, apply, picker)
-23. modules/colors/colorpicker.lua  — HSV color picker widget
-24. modules/textures/textures.lua   — statusbar texture registry, LSM import
-25. modules/design/design.lua       — Design.Colors static palette, visual building blocks
-25b. modules/display/display.lua    — positioned/scalable display elements, drag edit mode
-26. modules/ui/controls.lua         — UI control factory (slider, toggle, label, dropdown, etc.)
-27. modules/ui/options.lua          — CreateOptionsPanel (tabbed settings window)
-27b. modules/ui/layout.lua, profiles.lua, guide.lua — composition, profiles and guide
-28. modules/minimap/minimap.lua     — circular-drag minimap button
-29. modules/sharedmedia/sharedmedia.lua — multi-type media registry, DBM/known-addon/generic scanners
+6b. library/locale/locale.lua, overrides.lua — locale registry and framework translations
+7. library/dropdowns/dropdowns.lua  — CreateNestedDropdown, CopyItem, NormalizeItems, ForceWidth, AddInlineButton
+8. library/fonts/definitions.lua    — 36 font definitions, unavailableFonts blocklist
+9. library/fonts/init.lua           — Fonts:Init(), RegisterModule("fonts")
+10. library/fonts/registry.lua      — Register, RegisterAddonFont, RegisterFontPack
+11. library/fonts/query.lua         — GetPath, Get, Exists, IsAvailable, List, ListAvailable, FindByPath
+12. library/fonts/defaults.lua      — SetDefault, GetDefault, SetDefaultSize, SetDefaultFlags, SetAutoScale
+13. library/fonts/apply.lua         — Apply, Quick, ApplyChildren, CreateString, FromTemplate
+14. library/fonts/normalize.lua     — SplitFlags, NormalizeFlags, DescribeFlags, GetFlagPresets, NormalizeFontPath
+15. library/fonts/styles.lua        — NormalizeStyle, NormalizeColorValue, CreateStyle, ApplyStyle/ApplyTextStyle
+16. library/fonts/grouping.lua      — BuildGroupedFontItems, _groupedFontsCache
+17. library/fonts/dropdowns.lua     — CreateFontDropdown, buildItems
+18. library/fonts/controls.lua      — CreateFontSettingControl
+19. library/fonts/menuitems.lua     — CreateFontMenuItems, CreateFlagMenuItems, CreateSizeMenuItems, CreateStyleMenuItems
+20. library/fonts/selectors.lua     — CreateStyleSelector, CreateSimpleFontSelector, AttachStyleSelector, AttachFontSelector
+21. library/fonts/preview.lua       — FontPreview:Create, _ApplyPreviewSelection
+22. library/colors/colors.lua       — full color API (lookup, math, wrapping, apply, picker)
+23. library/colors/colorpicker.lua  — HSV color picker widget
+24. library/textures/textures.lua   — statusbar texture registry, LSM import
+25. library/design/design.lua       — Design.Colors static palette, visual building blocks
+25b. library/display/display.lua    — positioned/scalable display elements, drag edit mode
+26. library/ui/controls.lua         — UI control factory (slider, toggle, label, dropdown, etc.)
+27. library/ui/options.lua          — CreateOptionsPanel (tabbed settings window)
+27b. library/ui/layout.lua, profiles.lua, guide.lua — composition, profiles and guide
+28. library/minimap/minimap.lua     — circular-drag minimap button
+29. library/sharedmedia/sharedmedia.lua — multi-type media registry, DBM/known-addon/generic scanners
 30. modules/combat/combat.lua       — combat enter/leave/kill/crit/low-health/encounter callbacks
 31. modules/petbattles/petbattles.lua — pet battle level/capture/state callbacks
 32. modules/reputation/reputation.lua — reputation and renown tracking callbacks
-32b. modules/auras/auras.lua, modules/tooltip/tooltip.lua — aura boundary and tooltip composition
-33. modules/databroker/databroker.lua — NewDataObject, LDB bridge
-34. modules/sound/sound.lua         — Sound:Register, variant playback, SavedVar integration
+32b. modules/auras/auras.lua, library/tooltip/tooltip.lua — aura boundary and tooltip composition
+33. library/databroker/databroker.lua — NewDataObject, LDB bridge
+34. library/sound/sound.lua         — Sound:Register, variant playback, SavedVar integration
 35. modules/achievement/achievement.lua — achievement unlock callbacks
 36. modules/levelup/levelup.lua     — level-up callbacks
 37. modules/quest/quest.lua         — quest lifecycle and progress callbacks

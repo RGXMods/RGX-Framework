@@ -214,17 +214,17 @@ user-facing output across all twelve WoW client locales: **enUS** (base),
 **deDE**, **esES**, **esMX**, **frFR**, **itIT**, **koKR**, **ptBR**,
 **ptPT**, **ruRU**, **zhCN**, **zhTW**. The framework's own slash-command
 output, login line, control fallback labels, and reputation rank names are
-read from a single locale registry (`modules/locale/locale.lua` +
-`modules/locale/overrides.lua`). The English base loads unconditionally and
+read from a single locale registry (`library/locale/locale.lua` +
+`library/locale/overrides.lua`). The English base loads unconditionally and
 every non-English block is guarded on `GetLocale()`, so untranslated keys
 fall through to English with no nil leaks.
 
 Consumer addons inherit the same convention via the
 `RGXLocale:NewLocale(addonName, locale, isDefault)` registry documented in
-`docs/ROADMAP.md` and `modules/locale/locale.lua`: register one `enUS` base
+`docs/ROADMAP.md` and `library/locale/locale.lua`: register one `enUS` base
 table plus guarded per-locale blocks. The frozen per-consumer
 `Handle:SetLocale` / `Handle:GetLocale` wire-scope contract in
-`modules/sound/sound.lua` is unchanged.
+`library/sound/sound.lua` is unchanged.
 
 ### Design & Philosophy
 

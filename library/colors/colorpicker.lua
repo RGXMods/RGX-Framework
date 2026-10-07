@@ -126,15 +126,15 @@ end
 --[[============================================================================
     UI CREATION - Modern circular controls on RGXDesign's flat dark panel.
 
-    RGXDesign (modules/design/design.lua) loads AFTER this file in
+    RGXDesign (library/design/design.lua) loads AFTER this file in
     RGX-Framework.xml, so RGX:GetDesign() is only safe to call lazily, inside
     functions that run at Show()-time -- never at file-parse time. Every
     builder below fetches it locally, matching the pattern already used in
-    modules/ui/controls.lua and modules/ui/options.lua.
+    library/ui/controls.lua and library/ui/options.lua.
 
     Circular elements (drag handles, swatches, preview) use the same
     SetTexture(WHITE8x8) + SetMask(TempPortraitAlphaMaskSmall) technique
-    already proven in modules/minimap/minimap.lua.
+    already proven in library/minimap/minimap.lua.
 ============================================================================]]
 
 local CIRCLE_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMaskSmall"

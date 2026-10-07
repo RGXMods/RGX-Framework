@@ -12,7 +12,7 @@ Common issues and their fixes.
 
 **Cause:** The font is in the `unavailableFonts` blocklist in `definitions.lua`. These 10 fonts have corrupted asset files (HTML placeholders instead of actual font data).
 
-**Fix:** Replace the font file in `media/fonts/` with a valid TTF/OTF file, then remove the font name from the `unavailableFonts` table in `modules/fonts/definitions.lua`.
+**Fix:** Replace the font file in `media/fonts/` with a valid TTF/OTF file, then remove the font name from the `unavailableFonts` table in `library/fonts/definitions.lua`.
 
 ### Font applies but renders as rectangles
 

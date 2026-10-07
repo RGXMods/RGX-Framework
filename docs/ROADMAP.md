@@ -208,7 +208,7 @@ Phases unlock as the framework subsystems above are built. The framework work an
 | 3 | Display types + conditions | RGXDisplays (new), RGXConditions (new) | Not built |
 | 4 | Options editor + actions | RGXUI, RGXDropdowns | Done (framework side) |
 | 5 | Import/export + profiles | Serialization, Profiles, Bucket events | Profiles + Serialization done; Bucket events not built |
-| 6 | Groups, animations, pooling | Frame pooling, Animation helpers, Locale | Locale shipped (`modules/locale/`); frame pooling and animation helpers not built |
+| 6 | Groups, animations, pooling | Frame pooling, Animation helpers, Locale | Locale shipped (`library/locale/`); frame pooling and animation helpers not built |
 
 ### rgx-mod specific framework work (ordered by phase)
 
@@ -218,7 +218,7 @@ Phases unlock as the framework subsystems above are built. The framework work an
 - **RGXConditions** (Phase 3) — boolean condition evaluator combining multiple trigger states
 - **Frame pooling** (Phase 6) — `CreatePool(frameType, parent, resetFunc)` for display regions
 - **Animation helpers** (Phase 6) — lerp/tween utilities for entry/exit/loop transitions
-- **RGXLocale** (Phase 6) — `NewLocale(addonName, locale, isDefault)` for community translations, shipped in `modules/locale/locale.lua` with the framework's own translations in `modules/locale/overrides.lua`
+- **RGXLocale** (Phase 6) — `NewLocale(addonName, locale, isDefault)` for community translations, shipped in `library/locale/locale.lua` with the framework's own translations in `library/locale/overrides.lua`
 
 ---
 
