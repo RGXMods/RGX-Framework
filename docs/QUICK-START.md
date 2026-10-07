@@ -87,20 +87,23 @@ local Colors = RGX:GetColors()
 
 -- Get a named color
 local red = Colors:Get("red")
-myTexture:SetColorTexture(red:GetRGB())
+myTexture:SetColorTexture(red.r, red.g, red.b, 1)
 
 -- Class-colored text
-local classColor = Colors:GetClass("WARLOCK")
-myFontString:SetText("|c" .. classColor.colorStr .. "Warlock|r")
+local r, g, b = Colors:GetClass("WARLOCK")
+myFontString:SetText("|cff" .. Colors:RGBToHex(r, g, b) .. "Warlock|r")
 
 -- Wrap text with hex color
 local wrapped = Colors:Wrap("Important!", "warning")
 myFontString:SetText(wrapped)
 
 -- Open the color picker
-Colors:OpenPicker(r, g, b, function(newColor)
-    print("Picked:", newColor:GetRGB())
-end)
+Colors:OpenPicker({
+    color = "primary",
+    onChanged = function(color)
+        print("Picked:", color.hex)
+    end,
+})
 ```
 
 ---
