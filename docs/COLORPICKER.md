@@ -45,6 +45,11 @@ Binds a swatch control to `addon.db.accentColor` (`{r,g,b}`); clicking the swatc
 
 `UI:CreateColorPicker(parent, { key, label, storage, default, onChange })` — inline swatch + reset button, opens this picker on click. See [[UI Controls]].
 
+The embeddable card (`UI:CreateColorPickerCard`) accepts named or array colors
+in storage via `SetColor`, and `:Refresh()` re-projects `storage[key]` silently
+(no write, no `onChange`) so a peer or theme change updates an already-open
+widget.
+
 ---
 
 ## Testing
@@ -53,7 +58,7 @@ Binds a swatch control to `addon.db.accentColor` (`{r,g,b}`); clicking the swatc
 
 ## History
 
-- **Unreleased** — honeycomb spectrum, vertical brightness bar, and live Class Colors row replace the circular SV/hue-bar layout
+- **Unreleased** — honeycomb spectrum, vertical brightness bar, and live Class Colors row replace the circular SV/hue-bar layout; embedded/`UI:CreateColorPicker` widgets re-project storage on `:Refresh()` and show, and options panels expose `panel:SetTheme(...)` for runtime theme updates without leaking into the shared default
 - **v2.4.0** — circular redesign (RGXDesign tokens, ring-and-fill handles, circular swatches/preview, focus states)
 - **v2.3.0** — first release that actually rendered: fixed six missing `BackdropTemplate` mixins that silently aborted construction, and completed two stub features (the hue-bar rainbow and the saturation gradient)
 - **v2.0.0** — module introduced

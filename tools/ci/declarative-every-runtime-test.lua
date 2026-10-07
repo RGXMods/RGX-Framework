@@ -270,7 +270,7 @@ for index, control in ipairs({ "toggle enabled extra", "button nonsense", "slide
     check(not RGX:GetAddon(name) and loadHandlerCount() == handlers, "malformed control must not leak registration")
     check(not SlashCmdList[name:upper()], "malformed control must not leak slash registration")
 end
-local installPanelRefresh = assert(loadstring("return function(panel, QueueBannerBuild, ClearContent, CreateAddHelper, ReflowScrollContent)\n"
+local installPanelRefresh = assert(loadstring("return function(panel, QueueBannerBuild, ClearContent, CreateAddHelper, ReflowScrollContent, withPanelTheme)\n"
     .. __rgxPanelRefreshSource .. "\nend"))()
 local widgets, fontBindings, fontRefreshes, panelRefreshes = {}, 0, 0, 0
 local profileChanged, panelOpts
@@ -300,7 +300,8 @@ local ui = {
         local panel = { contents = { content, hidden }, tabs = { { _tabInfo = opts.tabs[1] } } }
         installPanelRefresh(panel, function() end,
             function() panelRefreshes = panelRefreshes + 1 end,
-            function(frame) return frame end, function() end)
+            function(frame) return frame end, function() end,
+            function(fn) fn() end)
         return panel
     end,
 }
