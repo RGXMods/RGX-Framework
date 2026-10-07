@@ -418,11 +418,20 @@ local function BuildClassRow(parent, opts)
 
     local colors = RAID_CLASS_COLORS
     if colors then
-        local perRow = math.max(1, math.floor(maxWidth / pitch))
-        local linePitch = SQRT3 * size + 4
+        -- Collect the available swatches first so a short row (Classic
+        -- flavors simply have fewer classes) centres instead of hugging
+        -- the left margin.
+        local order = {}
         for i = 1, #CLASS_ORDER do
             local r, g, b = ClassRGB(colors[CLASS_ORDER[i]])
-            if r then
+            if r then order[#order + 1] = { r = r, g = g, b = b } end
+        end
+        if #order > 0 then
+            local perRow = math.max(1, math.floor(maxWidth / pitch))
+            local xoff = math.max(0, (maxWidth - math.min(#order, perRow) * pitch) / 2)
+            local linePitch = SQRT3 * size + 4
+            for _, entry in ipairs(order) do
+                local r, g, b = entry.r, entry.g, entry.b
                 local index = #controller.swatches
                 local col = index % perRow
                 local line = math.floor(index / perRow)
@@ -431,7 +440,7 @@ local function BuildClassRow(parent, opts)
                 -- Anchor by line pitch only. The swatch keeps its SQRT3*size
                 -- visible height, and the 4px of pitch padding lands below it,
                 -- so the final line never overhangs controller.height.
-                sw:SetPoint("TOPLEFT", row, "TOPLEFT", col * pitch, -(line * linePitch))
+                sw:SetPoint("TOPLEFT", row, "TOPLEFT", xoff + col * pitch, -(line * linePitch))
 
                 -- Square padded fill/ring assets centred on the button keep the
                 -- flat-top hexagon shape without a mask, matching the honeycomb.
@@ -459,10 +468,10 @@ local function BuildClassRow(parent, opts)
                 sw.r, sw.g, sw.b = r, g, b
                 controller.swatches[#controller.swatches + 1] = sw
             end
+            local lines = math.ceil(#controller.swatches / perRow)
+            controller.height = lines * linePitch
+            row:SetHeight(controller.height)
         end
-        local lines = math.ceil(#controller.swatches / perRow)
-        controller.height = lines * linePitch
-        row:SetHeight(controller.height)
     end
 
     function controller:SetSelected(r, g, b)
@@ -985,9 +994,10 @@ local function ApplySections(f, opts)
         end
     end
     f:SetHeight(used + BUTTON_GAP + BUTTON_H + BOTTOM_MARGIN)
+    -- Centre the OK/Cancel pair on the panel; Cancel rides on OK's left.
     f.okBtn:ClearAllPoints()
-    f.okBtn:SetPoint("RIGHT", f, "RIGHT", -20, 0)
-    f.okBtn:SetPoint("TOP", prev, "BOTTOM", 0, -BUTTON_GAP)
+    local okX = (PANEL_W - (BUTTON_W * 2 + 10)) / 2 + BUTTON_W + 10
+    f.okBtn:SetPoint("TOPLEFT", f, "TOPLEFT", okX, -(used + BUTTON_GAP))
 end
 
 --[[============================================================================

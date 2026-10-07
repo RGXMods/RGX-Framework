@@ -420,14 +420,15 @@ scenario("Show opts collapse RGB and presets and shrink the panel", function()
   assert(not f.rgbRow:IsShown(), "rgb row stayed visible")
   for _, el in ipairs(f.rgbGroup) do assert(not el:IsShown(), "rgb element stayed visible") end
   for _, el in ipairs(f.presetsGroup) do assert(not el:IsShown(), "preset element stayed visible") end
-  -- Visible sections chain onto the previous visible one: the preview onto the
-  -- class row, the buttons onto the preview ring.
+  -- Visible sections chain onto the previous visible one; the centred
+  -- OK/Cancel pair sits at a panel-absolute position below the content.
   local pt = f.previewRing.points[1]
   assert(pt and pt[1] == "TOPLEFT" and pt[2] == f.classRow.frame and pt[4] == 0 and pt[5] == -14,
     "preview did not re-anchor under the class row")
-  local okTop = f.okBtn.points[2]
-  assert(okTop and okTop[1] == "TOP" and okTop[2] == f.previewRing and okTop[5] == -16,
-    "OK button did not re-anchor under the preview")
+  local okPt = f.okBtn.points[1]
+  local okY = -(46 + f.spectrum.gridH + f.sections[1].flow + f.sections[2].flow + 16)
+  assert(okPt and okPt[1] == "TOPLEFT" and okPt[2] == f and okPt[4] == 155 and okPt[5] == okY,
+    "OK button is not centred below the content")
   -- RGB flow (14 + 46) and presets flow no longer matter: the height is
   -- derived from the visible content plus buttons and one bottom margin.
   local expected = 46 + f.spectrum.gridH + f.sections[1].flow + f.sections[2].flow + 16 + 28 + 20
@@ -445,9 +446,11 @@ scenario("Show without opts restores every section and the full panel", function
   local pt = f.presetsLabel.points[1]
   assert(pt and pt[1] == "TOPLEFT" and pt[2] == f.rgbRow and pt[4] == 0 and pt[5] == -14,
     "presets did not re-anchor under RGB")
-  local okTop = f.okBtn.points[2]
-  assert(okTop and okTop[1] == "TOP" and okTop[2] == f.presetsBottom and okTop[5] == -16,
-    "OK button did not return under the presets")
+  local okPt = f.okBtn.points[1]
+  local okY = -(46 + f.spectrum.gridH
+    + f.sections[1].flow + f.sections[2].flow + f.sections[3].flow + f.sections[4].flow + 16)
+  assert(okPt and okPt[1] == "TOPLEFT" and okPt[2] == f and okPt[4] == 155 and okPt[5] == okY,
+    "OK button is not centred below the full content")
   local full = 46 + f.spectrum.gridH
     + f.sections[1].flow + f.sections[2].flow + f.sections[3].flow + f.sections[4].flow
     + 16 + 28 + 20
@@ -477,8 +480,10 @@ scenario("preview=false chains RGB and buttons onto the class row", function()
   local pt = f.rgbRow.points[1]
   assert(pt and pt[1] == "TOPLEFT" and pt[2] == f.classRow.frame and pt[5] == -14,
     "RGB row did not re-anchor under the class row")
-  local okTop = f.okBtn.points[2]
-  assert(okTop and okTop[2] == f.rgbRow, "OK button did not chain onto the RGB row")
+  local okPt = f.okBtn.points[1]
+  local okY = -(46 + f.spectrum.gridH + f.sections[1].flow + f.sections[3].flow + 16)
+  assert(okPt and okPt[4] == 155 and okPt[5] == okY,
+    "OK button is not centred below the chained content")
 end)
 
 scenario("Show accepts a dialog scale and resets it", function()
@@ -505,6 +510,25 @@ scenario("Cancel is safe before first open and ESC can close the dialog", functi
   end
   assert(found, "dialog did not join UISpecialFrames")
   CP.frame = saved
+end)
+
+scenario("a short class row centres instead of hugging the left margin", function()
+  local saved = RAID_CLASS_COLORS
+  RAID_CLASS_COLORS = {}
+  for _, name in ipairs({ "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST",
+      "DEATHKNIGHT", "SHAMAN", "MAGE", "WARLOCK", "MONK" }) do
+    RAID_CLASS_COLORS[name] = saved[name]
+  end
+  CP.frame = nil
+  local slim = CP:GetFrame()
+  assert(#slim.classRow.swatches == 10, "expected 10 class swatches, got " .. #slim.classRow.swatches)
+  local first = slim.classRow.swatches[1].points[1]
+  assert(first and first[4] == (260 - 10 * 20) / 2,
+    "short class row is not centred: " .. tostring(first and first[4]))
+  local last = slim.classRow.swatches[10]
+  local lastPt = last.points[1]
+  assert(lastPt[4] + last.width <= 260.5, "centred row overhangs the content width")
+  RAID_CLASS_COLORS = saved
 end)
 
 print(string.format("COLORPICKER %d passed, %d failed", pass, fail))
