@@ -197,8 +197,9 @@ Create a styled label using the theme's named sizes and colors.
 | `opts.text` | string | Yes | — | Label text |
 | `opts.size` | string | No | `"normal"` | `"small"` \| `"normal"` \| `"large"` |
 | `opts.color` | string | No | `"normal"` | `"normal"` \| `"muted"` \| `"accent"` \| `"red"` \| `"green"` \| `"yellow"` (theme tokens) |
-| `opts.width` | number | No | — | **Enables word wrap** at this width — required for long text, which otherwise renders past the parent frame's edge on a single line |
-| `opts.justify` | string | No | `"LEFT"` | Horizontal justify (only with `width`) |
+| `opts.width` | number | No | — | **Enables word wrap** at this fixed width — required for long text, which otherwise renders past the parent frame's edge on a single line |
+| `opts.wrap` | boolean | No | `false` | **Enables word wrap** without a fixed width — flow layouts clamp the label to the row and supply the width |
+| `opts.justify` | string | No | `"LEFT"` | Horizontal justify (only with `width` or `wrap`) |
 
 ```lua
 local hint = UI:CreateLabel(parent, {
@@ -558,8 +559,10 @@ panel:Refresh()
 
 #### `panel:SetTheme(config)`
 
-Apply the panel's colors at runtime. Repaints the accent line, version label,
-and tab styling from `panel.theme`, and rebuilds/refreshes tab content under
+Apply the panel's colors at runtime. Repaints the accent line (accent color
+only when the panel theme opts in with `accentHeader = true`, else primary),
+version label and tab styling (primary color) from `panel.theme`, and
+rebuilds/refreshes tab content under
 that theme, without mutating the shared global theme (it is scoped and
 restored, exactly like construction). Accepts the same named or array color
 forms as `Design:SetTheme`:

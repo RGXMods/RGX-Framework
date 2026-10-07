@@ -99,6 +99,27 @@ local function GetTabPrimary(panelRef, D)
     return D:Unpack('primary')
 end
 
+local function GetTabAccent(panelRef, D)
+    local theme = panelRef.theme
+    if type(theme) == "table" then
+        local c = theme.accent or theme.secondary or theme.secondaryHighlight
+        if type(c) == "table" and type(c[1]) == "number" then
+            return c[1], c[2] or 1, c[3] or 1
+        end
+    end
+    return D:Unpack('accent')
+end
+
+-- The header line stays primary unless the panel theme opts in with
+-- accentHeader: existing consumers keep the chrome they already had.
+local function GetHeaderLineColor(panelRef, D)
+    local theme = panelRef.theme
+    if type(theme) == "table" and theme.accentHeader then
+        return GetTabAccent(panelRef, D)
+    end
+    return GetTabPrimary(panelRef, D)
+end
+
 local function CreateTabButton(parent, text, tabIndex, row, col, panelRef, icon, addonKey)
     local D = GetDesign()
     local sr, sg, sb = D:Unpack("surface")
@@ -440,7 +461,7 @@ local function CreateOptionsPanel(UI, opts)
     accent:SetHeight(2)
     accent:SetPoint("BOTTOMLEFT",  8, 0)
     accent:SetPoint("BOTTOMRIGHT", -8, 0)
-    accent:SetColorTexture(D:Unpack("primary"))
+    accent:SetColorTexture(GetHeaderLineColor(panel, D))
     panel._accentLine = accent
 
     -- Icon
@@ -727,6 +748,8 @@ end
 
     function panel:SelectTab(index)
         QueueBannerBuild()
+        -- A color popup belongs to the page that opened it.
+        RGX:DismissColorPicker()
 
         for i = 1, #self.tabs do
             if self.tabs[i] then
@@ -820,22 +843,26 @@ end
 
     -- Apply a theme at runtime and repaint the panel's own chrome without
     -- leaking it into the shared global theme: the theme is scoped (save/apply/
-    -- restore) exactly like construction, then the accent line, version label,
-    -- and tab styling are re-derived from the panel's normalized theme. Bound
-    -- color controls repaint through their own Refresh; content rebuilds pick
-    -- up the theme through withPanelTheme.
+    -- restore) exactly like construction, then the accent line (accent color
+    -- only when the theme opts in with accentHeader, else primary), version
+    -- label and tab styling (primary color) are re-derived from the panel's
+    -- normalized theme. Bound color controls repaint through their own
+    -- Refresh; content rebuilds pick up the theme through withPanelTheme.
     function panel:SetTheme(theme)
         if not D then return end
         local prevPrimary = D.Theme.primary
         local prevAccent  = D.Theme.accent
         D:SetTheme(theme)
         self.theme = { primary = D.Theme.primary, accent = D.Theme.accent }
+        if type(theme) == "table" and theme.accentHeader then
+            self.theme.accentHeader = true
+        end
         D.Theme.primary = prevPrimary
         D.Theme.accent  = prevAccent
 
         local pr, pg, pb = GetTabPrimary(self, D)
-        if self._accentLine then self._accentLine:SetColorTexture(pr, pg, pb) end
         if self._versionText then self._versionText:SetTextColor(pr, pg, pb) end
+        if self._accentLine then self._accentLine:SetColorTexture(GetHeaderLineColor(self, D)) end
 
         local active = self._activeTab or -1
         for i, tab in ipairs(self.tabs) do
