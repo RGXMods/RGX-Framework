@@ -1184,9 +1184,19 @@ function ColorPicker:CreateEmbedded(parent, opts)
     end
     function w:GetColor() return st.r, st.g, st.b end
 
+    -- Re-read the bound storage and repaint without writing it back or firing
+    -- onChange, so a peer that changed storage (or a theme/selection refresh)
+    -- is reflected. Called on show and available to callers.
+    function w:Refresh()
+        local source = (key and storage[key]) or default
+        st.r, st.g, st.b = source.r or 1, source.g or 1, source.b or 1
+        st.h, st.s, st.v = CP:RGBToHSV(st.r, st.g, st.b)
+        refresh()
+    end
+
     -- Position everything once geometry is valid (frames are usually hidden at
     -- build time); OnShow re-runs so the cursors land correctly on first open.
-    w:SetScript("OnShow", function() refresh() end)
+    w:SetScript("OnShow", function() w:Refresh() end)
     refresh()
 
     return w

@@ -206,11 +206,19 @@ local THEME_KEYS = {
 
 local MAIN_SHADES = { mainSurface = 0.10, mainHover = 0.20, mainBorder = 0.35 }
 
-local function IsColor(value)
-    return type(value) == "table"
-        and type(value[1]) == "number"
-        and type(value[2]) == "number"
-        and type(value[3]) == "number"
+-- Accept both array colours {r, g, b} (or {r, g, b, a}) and named colours
+-- {r = ..., g = ..., b = ...}. Returns the stored array form, or nil when the
+-- value is not a colour. Array inputs pass through by identity so callers that
+-- keep referencing their own table are unaffected.
+local function NormalizeColor(value)
+    if type(value) ~= "table" then return nil end
+    if type(value[1]) == "number" and type(value[2]) == "number" and type(value[3]) == "number" then
+        return value
+    end
+    if type(value.r) == "number" and type(value.g) == "number" and type(value.b) == "number" then
+        return { value.r, value.g, value.b }
+    end
+    return nil
 end
 
 function Design:SetTheme(config)
@@ -227,8 +235,10 @@ function Design:SetTheme(config)
         or config.secondary
         or config.secondaryHighlight
 
-    if IsColor(primary) then self.Theme.primary = primary end
-    if IsColor(accent) then self.Theme.accent = accent end
+    local normalizedPrimary = NormalizeColor(primary)
+    local normalizedAccent = NormalizeColor(accent)
+    if normalizedPrimary then self.Theme.primary = normalizedPrimary end
+    if normalizedAccent then self.Theme.accent = normalizedAccent end
 end
 
 function Design:SetHighlightColor(color, accent)
