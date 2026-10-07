@@ -42,6 +42,9 @@ compact consumers — e.g. `{ rgb = false, presets = false, scale = 0.85 }`.
 The frame is a singleton, so the scale resets to `1` on every `Show` without
 the key; non-numeric or non-positive values are ignored.
 
+The SQP minimal popup is honeycomb + brightness bar + one-line class row:
+`{ presets = false, rgb = false, preview = false, scale = 0.85 }`.
+
 ### Via the declarative DSL
 
 ```lua

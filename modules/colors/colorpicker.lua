@@ -547,7 +547,7 @@ function ColorPicker:GetFrame()
     f.classLabel:SetTextColor(clsR, clsG, clsB)
 
     f.classRow = BuildClassRow(f, {
-        size = 9, pitch = 24, width = CONTENT_W,
+        size = 9, pitch = 20, width = CONTENT_W,
         ringColor = { Design:Unpack("primary") },
     })
     f.classRow.frame:SetPoint("TOPLEFT", f.classLabel, "BOTTOMLEFT", 0, -6)
