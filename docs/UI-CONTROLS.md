@@ -559,7 +559,8 @@ panel:Refresh()
 
 #### `panel:SetTheme(config)`
 
-Apply the panel's colors at runtime. Repaints the accent line (accent color),
+Apply the panel's colors at runtime. Repaints the accent line (accent color
+only when the panel theme opts in with `accentHeader = true`, else primary),
 version label and tab styling (primary color) from `panel.theme`, and
 rebuilds/refreshes tab content under
 that theme, without mutating the shared global theme (it is scoped and
