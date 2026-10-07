@@ -119,6 +119,7 @@ try {
       function w:SetAlpha(a) self.alpha = a end
       function w:SetEffectiveScale(s) self.scale = s end
       function w:GetEffectiveScale() return self.scale or 1 end
+      function w:SetScale(s) self.dialogScale = s end
       function w:GetLeft() return self.left or 0 end
       function w:GetBottom() return self.bottom or 0 end
       function w:GetParent() return self.parent end
