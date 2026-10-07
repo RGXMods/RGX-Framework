@@ -14,7 +14,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ## Quick Start
 
 **Latest stable release:** [`v2.7.14`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.14)
-The source beta candidate is `v2.7.15-beta.3`; follow the release page for published tester builds.
+The source beta candidate is `v2.7.15-beta.4`; follow the release page for published tester builds.
 
 **1. Declare the dependency:**
 

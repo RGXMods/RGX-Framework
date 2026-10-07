@@ -162,4 +162,4 @@ the Markdown pages listed in `tools/wiki/manifest.json`.
 Service-page Markdown is explicitly listed as `sourceOnly` in that manifest
 so it remains maintained source without generating a duplicate Wiki page.
 > **Beta channel:** v2.7.14-beta.1 is opt-in; stable remains v2.7.14.
-> Beta candidate: v2.7.15-beta.3 artifacts contain 109 runtime files, same as stable v2.7.14.
+> Beta candidate: v2.7.15-beta.4 artifacts contain 109 runtime files, same as stable v2.7.14.
