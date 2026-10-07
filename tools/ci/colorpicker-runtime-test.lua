@@ -547,5 +547,18 @@ scenario("commitOnPick selects, fires, and closes with no buttons", function()
   assert(f.okBtn:IsShown() and f.cancelBtn:IsShown(), "buttons did not return")
 end)
 
+scenario("Show accepts a brand border and restores the design border", function()
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { border = { 0.345, 0.745, 0.506 } })
+  local bc = f.borderColor
+  assert(bc and math.abs(bc[1] - 0.345) < 1e-6 and math.abs(bc[2] - 0.745) < 1e-6
+    and math.abs(bc[3] - 0.506) < 1e-6, "brand border was not applied")
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { border = { r = 1, g = 0, b = 0 } })
+  bc = f.borderColor
+  assert(bc and bc[1] == 1 and bc[2] == 0 and bc[3] == 0, "named brand border was not applied")
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end)
+  bc = f.borderColor
+  assert(bc and bc[1] ~= 0.345, "design border did not return")
+end)
+
 print(string.format("COLORPICKER %d passed, %d failed", pass, fail))
 if fail > 0 then error(fail .. " colorpicker scenario(s) failed") end
