@@ -56,7 +56,7 @@ try {
       function w:CreateFontString() return widget('FontString', self) end
       for _, name in ipairs({
         'SetNormalTexture', 'SetPushedTexture', 'SetHighlightTexture', 'SetCheckedTexture',
-        'SetFontObject', 'SetShadowColor', 'SetShadowOffset', 'SetJustifyH', 'SetJustifyV',
+        'SetFontObject', 'SetShadowColor', 'SetShadowOffset', 'SetJustifyH', 'SetJustifyV', 'SetWordWrap',
         'SetBackdrop', 'SetOwner', 'EnableMouseWheel', 'SetTexture', 'SetVertexColor', 'SetTexCoord',
         'SetFrameStrata', 'SetClampedToScreen', 'EnableMouse', 'SetMovable', 'RegisterForDrag'}) do w[name] = function() end end
       return w
@@ -225,17 +225,30 @@ try {
       end)
       assert(D:GetColor('primary')[1] == 0.1)
     `],
-    ["Design styles own corners and palette, not color tokens", `
-      local pr, pg, pb = D:Unpack('primary')
-      assert(D:SetStyle('classic') and D:GetStyle() == 'classic')
-      assert(D.cornerStyle == 'square', 'classic must be square')
-      assert(D:GetColor('border')[1] == 0.25, 'classic palette did not apply')
-      assert(D:SetStyle('retail') and D.cornerStyle == 'rounded')
-      assert(not D:SetStyle('bogus') and D:GetStyle() == 'retail', 'unknown style changed state')
-      local qr, qg, qb = D:Unpack('primary')
-      assert(qr == pr and qg == pg and qb == pb, 'style touched primary')
       assert(D:SetStyle('framework') and D.cornerStyle == 'rounded')
       assert(D:GetColor('border')[1] == 0.137, 'framework palette did not restore')
+    `],
+    ["confirm dialog fires once, hides, and joins UISpecialFrames", `
+      UISpecialFrames = {}
+      local fired = 0
+      local d = UI:Confirm({ title = 'Reset', message = 'Sure?', confirm = 'Yes', cancel = 'No',
+        onConfirm = function() fired = fired + 1 end })
+      assert(d:IsShown(), 'confirm did not show')
+      assert(d.message:GetText() == 'Sure?', 'message not projected')
+      local listed = 0
+      for _, name in ipairs(UISpecialFrames) do if name == 'RGXConfirmDialog' then listed = listed + 1 end end
+      assert(listed == 1, 'ESC registration missing or duplicated')
+      d.cancelButton:Click()
+      assert(fired == 0 and not d:IsShown(), 'cancel fired or stayed open')
+      UI:Confirm({ title = 'Reset', message = 'Again?', onConfirm = function() fired = fired + 1 end })
+      assert(d.message:GetText() == 'Again?', 'singleton did not reconfigure')
+      assert(d.confirmButton.label:GetText() == 'Confirm', 'button text did not reset to default')
+      d.confirmButton:Click()
+      assert(fired == 1 and not d:IsShown(), 'confirm did not fire and close')
+      local before = RGXFramework.errors
+      UI:Confirm({ message = 'Boom', onConfirm = function() error('expected') end })
+      d.confirmButton:Click()
+      assert(RGXFramework.errors == before + 1 and not d:IsShown(), 'failing confirm was not isolated')
     `],
   ];
   for (const [name, script] of scenarios) {

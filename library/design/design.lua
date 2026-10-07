@@ -448,7 +448,7 @@ function Design:CreateFrame(parent, opts)
         opts.square = self.cornerStyle == "square"
     end
     if opts.square then
-        local frame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+        local frame = CreateFrame("Frame", opts.name, parent, "BackdropTemplate")
         if opts.width  then frame:SetWidth(opts.width)   end
         if opts.height then frame:SetHeight(opts.height) end
         self:ApplyBackdrop(frame, opts.variant or "dark", opts.bgAlpha)
@@ -458,7 +458,7 @@ function Design:CreateFrame(parent, opts)
         return frame
     end
 
-    local frame = CreateFrame("Frame", nil, parent)
+    local frame = CreateFrame("Frame", opts.name, parent)
     if opts.width  then frame:SetWidth(opts.width)   end
     if opts.height then frame:SetHeight(opts.height) end
     self:ApplyPanel(frame, opts)
