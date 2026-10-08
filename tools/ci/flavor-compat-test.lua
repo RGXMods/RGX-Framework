@@ -6,8 +6,7 @@ local function check(condition, message)
     if not condition then error("CHECK FAILED: " .. message, 2) end
 end
 
-local expectedRuntimeFlavor = expectedFlavor == "forever" and "retail" or expectedFlavor
-check(RGX.wowVersion == expectedRuntimeFlavor, "detected flavor " .. tostring(RGX.wowVersion))
+check(RGX.wowVersion == expectedFlavor, "detected flavor " .. tostring(RGX.wowVersion))
 if expectedFlavor == "forever" then
     check(RGX.isForever, "Forever interface capability")
 end

@@ -36,11 +36,28 @@ All flavor TOCs ship together and declare the same framework version:
 | Client | TOC | Interface |
 |---|---|---:|
 | Retail | `RGX-Framework.toc` | `120100` |
+| WoW Forever (beta) | `RGX-Framework.toc` | `16001` |
 | Classic Era | `RGX-Framework_Vanilla.toc` | `11509` |
 | TBC Classic | `RGX-Framework_TBC.toc` | `20506` |
 | Wrath/Titan | `RGX-Framework_Wrath.toc` | `38002` |
 | Cataclysm | `RGX-Framework_Cata.toc` | `40402` |
 | Mists Classic | `RGX-Framework_Mists.toc` | `50504` |
+
+The base TOC declares `120100, 16001, 11509` together (single-TOC style),
+so Forever loads without a `_Mainline.toc` that would double-load there.
+
+### Forever client identity
+
+Forever reports `WOW_PROJECT_CAMELOT` (`WOW_PROJECT_ID` 18) at Interface
+`16001` and is classed as mainline: `RGX.wowVersion` is `"forever"` while
+capability detection stays mainline-shaped. Identity consequences the
+framework owns centrally:
+
+- `UnitName("player")` returns `firstName, surname` — the full name is
+  unique across rulesets, so database character keys use it instead of
+  `"Name - Realm"`. Existing Forever char-scoped data re-keys on update.
+- `GetRealmName()` is advisory (e.g. `"Classic Beta PvP"`) and must not
+  key durable data — never use it for identity on Forever.
 
 ## Player Allowlist
 

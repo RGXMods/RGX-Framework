@@ -110,6 +110,25 @@ do
     _G[tName] = nil
 end
 
+-- Forever has no stable realms and UnitName returns first + surname: the
+-- character key is the full name, never "Name - Realm".
+do
+    local tName = "RGX_TestDB_ForeverChar"
+    _G[tName] = nil
+    local savedUnitName, savedRealm = UnitName, GetRealmName
+    RGX.isForever = true
+    UnitName = function() return "Donnie", "Dice" end
+    GetRealmName = function() return "Classic Beta PvP" end
+    local fdb = RGX:NewDatabase(tName, { enabled = true }, {})
+    check(fdb:GetCharKey() == "Donnie Dice", "forever: char key must be the full name")
+    fdb.char.zone = "Elwynn"
+    check(_G[tName].char["Donnie Dice"].zone == "Elwynn",
+        "forever: char storage must land under the full-name key")
+    UnitName, GetRealmName = savedUnitName, savedRealm
+    RGX.isForever = nil
+    _G[tName] = nil
+end
+
 if #failures > 0 then
     __rgxDbTestResult = "FAILED (" .. #failures .. "): " .. table.concat(failures, " | ")
 else
