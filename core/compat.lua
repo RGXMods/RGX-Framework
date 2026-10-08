@@ -14,9 +14,13 @@ if type(GetBuildInfo) == "function" then
 end
 RGX.interfaceVersion = interfaceVersion
 
--- Version detection
+-- Version detection. Forever reports WOW_PROJECT_CAMELOT (18); the constant
+-- may be renamed upstream, so the nil guard keeps old clients misdetect-free.
 local function GetWoWVersion()
     local projectID = WOW_PROJECT_ID
+    if WOW_PROJECT_CAMELOT ~= nil and projectID == WOW_PROJECT_CAMELOT then
+        return "forever"
+    end
     if projectID == WOW_PROJECT_CLASSIC then return "classic_era" end
     if projectID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC then return "tbc" end
     if projectID == WOW_PROJECT_WRATH_CLASSIC then return "wrath" end
