@@ -42,8 +42,20 @@ compact consumers — e.g. `{ rgb = false, presets = false, scale = 0.85 }`.
 The frame is a singleton, so the scale resets to `1` on every `Show` without
 the key; non-numeric or non-positive values are ignored.
 
-The SQP minimal popup is honeycomb + brightness bar + one-line class row:
-`{ presets = false, rgb = false, preview = false, scale = 0.85 }`.
+`opts.border` (`{r, g, b}` or `{r=, g=, b=}`) outlines the dialog in a
+consumer brand color — e.g. SQP green `{ 0.345, 0.745, 0.506 }`. Omitted,
+the design border token returns. The outline is four solid quads (the 1px
+backdrop edge drops sides under fractional dialog scale); the backdrop
+edge itself stays transparent.
+
+The SQP minimal popup is honeycomb + brightness bar + one-line class row
+with a single OK:
+`{ presets = false, rgb = false, preview = false, scale = 0.85, buttons = "ok" }`.
+
+Picks always stage; `opts.buttons` chooses the confirm chrome —
+`"okcancel"` (default), `"ok"` (one centred OK for popups where trying
+colors precedes commit), or `"none"` (height ends below the content).
+Bogus values fall back to the pair.
 
 The dialog joins `UISpecialFrames`, so ESC closes it like every other RGX
 window. Switching options tabs or pager pages dismisses it without firing

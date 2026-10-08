@@ -307,7 +307,14 @@ local function BuildHoneycomb(parent, opts)
                 best, bestDist = cell, d
             end
         end
-        if best and controller.onPick then controller.onPick(best.h, best.s) end
+        -- Empty grid corners are far from every cell: ignore the click
+        -- instead of selecting a color that isn't displayed. Adjacent cell
+        -- centres sit ~1.5 sizes apart, so a 1.5-size reach keeps real
+        -- clicks (and drags across cells) working with no dead zones.
+        local reach = size * 1.5
+        if best and bestDist and bestDist <= reach * reach and controller.onPick then
+            controller.onPick(best.h, best.s)
+        end
     end
 
     grid:SetScript("OnMouseDown", function(_, button)
@@ -505,6 +512,23 @@ function ColorPicker:GetFrame()
     f:SetFrameStrata("DIALOG")
     Design:ApplyBackdrop(f, "dark", 0.98)
     f:Hide()
+    -- Explicit outline: a 1px backdrop edge under fractional dialog scale
+    -- drops sides as the frame moves, so the outline is four solid quads
+    -- and the backdrop edge stays transparent.
+    f:SetBackdropBorderColor(0, 0, 0, 0)
+    f._borderLines = {}
+    local function BorderLine(a, b, w, h)
+        local t = f:CreateTexture(nil, "BORDER")
+        t:SetColorTexture(1, 1, 1, 1)
+        t:SetPoint(a, f, a, 0, 0)
+        t:SetPoint(b, f, b, 0, 0)
+        if w then t:SetWidth(w) else t:SetHeight(h) end
+        f._borderLines[#f._borderLines + 1] = t
+    end
+    BorderLine("TOPLEFT", "TOPRIGHT", nil, 2)
+    BorderLine("BOTTOMLEFT", "BOTTOMRIGHT", nil, 2)
+    BorderLine("TOPLEFT", "BOTTOMLEFT", 2, nil)
+    BorderLine("TOPRIGHT", "BOTTOMRIGHT", 2, nil)
     -- ESC closes the dialog like every other RGX window. The frame carries
     -- a global name so it can join the standard close-on-escape set.
     if type(UISpecialFrames) == "table" then
@@ -980,6 +1004,8 @@ end
 -- margin, so collapsed variants end exactly below OK/Cancel with no slack.
 local function ApplySections(f, opts)
     opts = opts or {}
+    local buttons = opts.buttons
+    if buttons ~= "ok" and buttons ~= "none" then buttons = "okcancel" end
     local prev, prevX = f.spectrum.frame, f.spectrumX
     local used = SPECTRUM_TOP + f.spectrum.gridH
     for _, section in ipairs(f.sections) do
@@ -993,9 +1019,24 @@ local function ApplySections(f, opts)
             used = used + section.flow
         end
     end
+    if buttons == "none" then
+        -- Buttonless popups end below the last visible section.
+        f.okBtn:Hide()
+        f.cancelBtn:Hide()
+        f:SetHeight(used + BOTTOM_MARGIN)
+        return
+    end
+    f.okBtn:Show()
     f:SetHeight(used + BUTTON_GAP + BUTTON_H + BOTTOM_MARGIN)
-    -- Centre the OK/Cancel pair on the panel; Cancel rides on OK's left.
     f.okBtn:ClearAllPoints()
+    if buttons == "ok" then
+        -- A single OK sits centred; staged picks need a confirm button.
+        f.cancelBtn:Hide()
+        f.okBtn:SetPoint("TOPLEFT", f, "TOPLEFT", (PANEL_W - BUTTON_W) / 2, -(used + BUTTON_GAP))
+        return
+    end
+    -- Centre the OK/Cancel pair on the panel; Cancel rides on OK's left.
+    f.cancelBtn:Show()
     local okX = (PANEL_W - (BUTTON_W * 2 + 10)) / 2 + BUTTON_W + 10
     f.okBtn:SetPoint("TOPLEFT", f, "TOPLEFT", okX, -(used + BUTTON_GAP))
 end
@@ -1100,10 +1141,31 @@ function ColorPicker:Show(color, callback, opts)
     
     local f = self:GetFrame()
     ApplySections(f, opts)
+    -- Re-assert every Show: anything that prunes UISpecialFrames must not
+    -- silently drop the dialog's ESC handling. Written without tContains
+    -- so headless harnesses need no extra mock.
+    if type(UISpecialFrames) == "table" then
+        local listed = false
+        for _, name in ipairs(UISpecialFrames) do
+            if name == "RGXColorPicker" then listed = true break end
+        end
+        if not listed then table.insert(UISpecialFrames, "RGXColorPicker") end
+    end
     -- Compact consumers scale the whole dialog. The frame is a
     -- singleton shared across consumers, so the scale resets every Show.
     local scale = (opts and type(opts.scale) == "number" and opts.scale > 0) and opts.scale or 1
     f:SetScale(scale)
+    -- A consumer brand color outlines the dialog; otherwise the design
+    -- border token returns. Accepts {r, g, b} or {r = , g = , b = }.
+    local border = opts and opts.border
+    local D = RGX:GetDesign()
+    local br, bg, bb = D:Unpack("border")
+    if type(border) == "table" then
+        br = border.r or border[1] or 1
+        bg = border.g or border[2] or 1
+        bb = border.b or border[3] or 1
+    end
+    for _, line in ipairs(f._borderLines) do line:SetVertexColor(br, bg, bb, 1) end
     self:UpdateUI()
     f:Show()
 end
@@ -1160,6 +1222,13 @@ function ColorPicker:CreateEmbedded(parent, opts)
     local w = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     w:SetSize(width, 184)
     Design:ApplyBackdrop(w, "panel", 0.6)
+    -- Optional consumer brand edge, mirroring the dialog border opt. Each
+    -- embedded card is its own frame, so no restore pass is needed.
+    local border = opts.border
+    if type(border) == "table" then
+        w:SetBackdropBorderColor(border.r or border[1] or 1,
+            border.g or border[2] or 1, border.b or border[3] or 1, 1)
+    end
 
     local boxW = width - 32
 
@@ -1199,7 +1268,10 @@ function ColorPicker:CreateEmbedded(parent, opts)
     preview:SetPoint("CENTER", previewRing, "CENTER")
 
     local hex = CreateFrame("EditBox", nil, w, "BackdropTemplate")
-    hex:SetSize(boxW - 34, 22)
+    -- Cap the hex width to the space between the preview and the right
+    -- margin: wide cards would otherwise push it past the card edge.
+    local hexStart = leftPad + 30 + 8
+    hex:SetSize(math.max(1, math.min(boxW - 45, width - 8 - hexStart)), 22)
     hex:SetPoint("LEFT", preview, "RIGHT", 8, 0)
     hex:SetFontObject("GameFontNormal")
     hex:SetTextColor(1, 1, 1)
