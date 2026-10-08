@@ -118,6 +118,24 @@ scenario("clicking a honeycomb cell selects that cell's hue and saturation", fun
   assert(math.abs(CP.current.s - target.s) < 1e-9, "clicked saturation mismatch")
 end)
 
+scenario("clicks on empty grid corners select nothing", function()
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end)
+  local grid = f.spectrum.frame
+  grid.left, grid.bottom = 100, 200
+  local beforeH, beforeS = CP.current.h, CP.current.s
+  cursorX, cursorY = grid.left, grid.bottom
+  grid.scripts.OnMouseDown(grid, "LeftButton")
+  grid.scripts.OnMouseUp(grid)
+  assert(CP.current.h == beforeH and CP.current.s == beforeS,
+    "empty corner selected a phantom color")
+  -- A near-miss beside a real cell still picks it.
+  local target = f.spectrum.cells[10]
+  cursorX, cursorY = grid.left + target.x + 10, grid.bottom + target.y
+  grid.scripts.OnMouseDown(grid, "LeftButton")
+  grid.scripts.OnMouseUp(grid)
+  assert(math.abs(CP.current.h - target.h) < 1e-9, "near-miss click missed the cell")
+end)
+
 scenario("brightness bar dims to black but retains hue and saturation", function()
   CP:Show({ r = 1, g = 0, b = 0 }, function() end)
   local bar = f.valueBar.frame
@@ -234,6 +252,32 @@ scenario("embedded hex entry validates and does not recurse", function()
   local r, g, b = w:GetColor()
   assert(math.abs(r - 1) < 1e-6 and math.abs(g) < 1e-6 and math.abs(b) < 1e-6, "embedded hex failed")
   assert(calls == 1, "embedded hex fired onChange " .. calls .. " times")
+end)
+
+scenario("embedded cards accept a brand border", function()
+  local w = CP:CreateEmbedded(UIParent, {
+    key = "brand", storage = {}, default = { r = 1, g = 1, b = 1 }, width = 220,
+    border = { 0.345, 0.745, 0.506 },
+  })
+  assert(w.borderColor and math.abs(w.borderColor[1] - 0.345) < 1e-6
+    and math.abs(w.borderColor[2] - 0.745) < 1e-6, "brand border not applied")
+end)
+
+scenario("embedded hex fits inside narrow and wide cards", function()
+  for _, cardW in ipairs({ 220, 300 }) do
+    local w = CP:CreateEmbedded(UIParent, {
+      key = "fit", storage = {}, default = { r = 1, g = 1, b = 1 }, width = cardW,
+    })
+    local hex
+    for _, frame in ipairs(CREATED) do
+      if frame.parent == w and frame.kind == "EditBox" then hex = frame end
+    end
+    assert(hex, "embedded hex box not found")
+    local spec = spectrumFrameOf(w)
+    assert(spec, "embedded honeycomb not found")
+    local specX = spec.points[1][4]
+    assert(specX + 30 + 8 + hex.width <= cardW - 8 + 0.5, "hex overhangs the card edge")
+  end
 end)
 
 scenario("class row renders live client colors inside its declared width", function()
@@ -529,6 +573,60 @@ scenario("a short class row centres instead of hugging the left margin", functio
   local lastPt = last.points[1]
   assert(lastPt[4] + last.width <= 260.5, "centred row overhangs the content width")
   RAID_CLASS_COLORS = saved
+  CP.frame = nil
+  f = CP:GetFrame()
+end)
+
+scenario("buttons=ok shows one centred OK; picks stage until it commits", function()
+  local calls = 0
+  CP:Show({ r = 1, g = 0, b = 0 }, function() calls = calls + 1 end,
+    { presets = false, rgb = false, preview = false, buttons = "ok" })
+  assert(f.okBtn:IsShown() and not f.cancelBtn:IsShown(), "button pair was not reduced to OK")
+  local pt = f.okBtn.points[1]
+  local okY = -(46 + f.spectrum.gridH + f.sections[1].flow + 16)
+  assert(pt and pt[1] == "TOPLEFT" and pt[2] == f and pt[4] == 110 and pt[5] == okY,
+    "single OK is not centred below the content")
+  f.spectrum.onPick(0.5, 0.8)
+  assert(calls == 0 and f:IsShown(), "pick committed without OK")
+  f.okBtn.scripts.OnClick(f.okBtn)
+  assert(calls == 1 and not f:IsShown(), "OK did not commit and close")
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end)
+  assert(f.okBtn:IsShown() and f.cancelBtn:IsShown(), "button pair did not return")
+end)
+
+scenario("buttons=none hides both and ends below the content", function()
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end,
+    { presets = false, rgb = false, preview = false, buttons = "none" })
+  assert(not f.okBtn:IsShown() and not f.cancelBtn:IsShown(), "buttons stayed visible")
+  local expected = 46 + f.spectrum.gridH + f.sections[1].flow + 20
+  assert(f.height == expected, "buttonless height is wrong: " .. tostring(f.height))
+end)
+
+scenario("a bogus buttons value falls back to the pair", function()
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { buttons = "sometimes" })
+  assert(f.okBtn:IsShown() and f.cancelBtn:IsShown(), "bogus buttons value broke the pair")
+end)
+
+scenario("Show accepts a brand border and restores the design border", function()
+  assert(f._borderLines and #f._borderLines == 4, "dialog has no four-line outline")
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { border = { 0.345, 0.745, 0.506 } })
+  for _, line in ipairs(f._borderLines) do
+    local v = line.vertex
+    assert(v and math.abs(v[1] - 0.345) < 1e-6 and math.abs(v[2] - 0.745) < 1e-6
+      and math.abs(v[3] - 0.506) < 1e-6, "brand border was not applied to every side")
+  end
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end, { border = { r = 1, g = 0, b = 0 } })
+  for _, line in ipairs(f._borderLines) do
+    assert(line.vertex[1] == 1 and line.vertex[2] == 0 and line.vertex[3] == 0,
+      "named brand border was not applied")
+  end
+  CP:Show({ r = 1, g = 0, b = 0 }, function() end)
+  local first = f._borderLines[1].vertex
+  for _, line in ipairs(f._borderLines) do
+    assert(line.vertex[1] == first[1] and line.vertex[2] == first[2] and line.vertex[3] == first[3],
+      "design border is inconsistent across sides")
+  end
+  assert(first[1] ~= 0.345, "design border did not return")
 end)
 
 print(string.format("COLORPICKER %d passed, %d failed", pass, fail))

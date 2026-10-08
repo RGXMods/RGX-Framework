@@ -141,6 +141,7 @@ try {
         "SetMinResize", "SetMaxResize", "RegisterForDrag", "StartMoving", "StopMovingOrSizing",
         "SetTexCoord", "SetFont", "SetTextInsets",
       }) do w[name] = function() end end
+      function w:SetBackdropBorderColor(r, g, b, a) self.borderColor = { r, g, b, a } end
       return w
     end
     function CreateFrame(kind, _, parent)

@@ -255,6 +255,7 @@ Click or **drag** the honeycomb and brightness bar to pick.
 | `opts.storage` | table | No | `{}` | Table the widget reads/writes |
 | `opts.default` | table | No | white | `{r,g,b}` when storage is empty |
 | `opts.width` | number | No | 220 | Card width |
+| `opts.border` | table | No | design token | Brand edge `{r,g,b}` or `{r=,g=,b=}` |
 | `opts.onChange` | function | No | — | `onChange(r, g, b)` on every change |
 
 Returns the widget frame, with `:SetColor(r,g,b)` / `:GetColor()`. Call
@@ -445,6 +446,28 @@ populate the returned frame and show it from a config button:
 local dialog = UI:CreateConfigDialog(myPanel, { title = "Advanced", onReset = ResetAdvanced })
 UI:CreateConfigButton(myToggle, { dialog = dialog, tooltip = "Advanced settings" })
 ```
+
+### `UI:Confirm(opts)` → `dialog`
+
+The themed StaticPopup replacement: one shared confirm dialog with a
+message plus Confirm/Cancel, ESC-closable, reconfigured on every call so no
+consumer needs a `StaticPopupDialogs` table:
+
+```lua
+UI:Confirm({
+    title = "Reset All Settings", confirm = "Yes", cancel = "No",
+    message = "Are you sure you want to reset all settings to defaults?",
+    onConfirm = function() SQP:ResetSettings() end,
+})
+```
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `opts.title` | string | No | "Confirm" | Header title |
+| `opts.message` | string | No | "" | Wrapped message text |
+| `opts.confirm` / `opts.cancel` | string | No | "Confirm" / "Cancel" | Button labels |
+| `opts.onConfirm` | function | No | — | Fires once on confirm (failure-isolated); dialog hides first |
+| `opts.width` / `opts.height` | number | No | 340 / 160 | Dialog size |
 
 For a single informational page without tab chrome, pass `content = function(frame)
 ... end` instead of `tabs`. Existing `tabs = { ... }` panels retain their tab

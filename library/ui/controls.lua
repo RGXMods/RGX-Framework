@@ -1001,11 +1001,12 @@ function UI:CreateConfigDialog(parent, opts)
     local dialog
     if D and type(D.CreateFrame) == "function" then
         dialog = D:CreateFrame(parent or UIParent, {
+            name = opts.name,
             width = opts.width or 420, height = opts.height or 260,
             square = opts.square, bgAlpha = 0.95,
         })
     else
-        dialog = CreateFrame("Frame", nil, parent or UIParent, "BackdropTemplate")
+        dialog = CreateFrame("Frame", opts.name, parent or UIParent, "BackdropTemplate")
         dialog:SetSize(opts.width or 420, opts.height or 260)
     end
     dialog:SetFrameStrata(opts.strata or "FULLSCREEN_DIALOG")
@@ -1077,6 +1078,74 @@ function UI:CreateConfigDialog(parent, opts)
     if opts.hidden ~= false then
         dialog:Hide()
     end
+    return dialog
+end
+
+-- Themed StaticPopup replacement: one shared confirm dialog with a message
+-- plus Confirm/Cancel, ESC-closable, reconfigured on every call so a popup
+-- never needs a consumer-side StaticPopupDialogs table.
+-- UI:Confirm({ title = "Reset", message = "Are you sure?",
+--     confirm = "Yes", cancel = "No", onConfirm = fn,
+--     width = 340, height = 160 })
+function UI:Confirm(opts)
+    opts = opts or {}
+    local width, height = opts.width or 340, opts.height or 160
+    local dialog = self._confirmDialog
+    if not dialog then
+        dialog = self:CreateConfigDialog(UIParent, {
+            name = "RGXConfirmDialog",
+            title = opts.title or "Confirm",
+            width = width, height = height,
+        })
+        dialog:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        if type(UISpecialFrames) == "table" then
+            local listed = false
+            for _, name in ipairs(UISpecialFrames) do
+                if name == "RGXConfirmDialog" then listed = true break end
+            end
+            if not listed then table.insert(UISpecialFrames, "RGXConfirmDialog") end
+        end
+        dialog.message = self:CreateLabel(dialog, {
+            text = "", width = math.max(1, (opts.width or 340) - 32),
+        })
+        dialog.message:SetPoint("TOPLEFT", dialog, "TOPLEFT", 16, -44)
+        dialog.confirmButton = self:CreateButton(dialog, {
+            text = opts.confirm or "Confirm", width = 84, height = 22,
+            onClick = function()
+                dialog:Hide()
+                local cb = dialog._onConfirm
+                if type(cb) == "function" then
+                    local ok, err = pcall(cb)
+                    if not ok and RGX and type(RGX.Error) == "function" then
+                        RGX:Error("[RGXUI] confirm callback failed: " .. tostring(err))
+                    end
+                end
+            end,
+        })
+        dialog.cancelButton = self:CreateButton(dialog, {
+            text = opts.cancel or "Cancel", width = 84, height = 22,
+            onClick = function() dialog:Hide() end,
+        })
+        self._confirmDialog = dialog
+    end
+    dialog:SetSize(width, height)
+    if dialog.titleText then dialog.titleText:SetText(opts.title or "Confirm") end
+    dialog.message:SetWidth(math.max(1, width - 32))
+    dialog.message:SetText(opts.message or "")
+    if dialog.confirmButton.label then
+        dialog.confirmButton.label:SetText(opts.confirm or "Confirm")
+    end
+    if dialog.cancelButton.label then
+        dialog.cancelButton.label:SetText(opts.cancel or "Cancel")
+    end
+    local pairWidth = 84 + 8 + 84
+    dialog.confirmButton:ClearAllPoints()
+    dialog.confirmButton:SetPoint("BOTTOMLEFT", dialog, "BOTTOMLEFT",
+        math.max(0, (width - pairWidth) / 2), 14)
+    dialog.cancelButton:ClearAllPoints()
+    dialog.cancelButton:SetPoint("LEFT", dialog.confirmButton, "RIGHT", 8, 0)
+    dialog._onConfirm = opts.onConfirm
+    dialog:Show()
     return dialog
 end
 
