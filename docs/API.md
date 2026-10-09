@@ -603,6 +603,28 @@ settings preset selector stores its choice in `RGXFrameworkDB.themePreset`.
 Access via `Design.Colors.surface`, etc. `Design:GetColor` resolves theme
 tokens first and falls back to this table.
 
+### Interface Styles (`Design.SetStyle`)
+
+Interface styles select a full visual style — corner treatment plus the
+structural palette — independently of the primary/accent color presets. See
+`docs/THEMING.md#interface-styles` for the style table and resolution order.
+
+| Method | Description |
+|---|---|
+| `Design:SetStyle(name)` | Apply a named style from `Design.STYLES` (`framework`, `retail`, `classic`, `forever`). Returns `false` for unknown names without touching current state; `primary`/`accent` tokens are never modified. Styles take effect on UI built after the call; open windows re-skin on reload. |
+| `Design:GetStyle()` | Current style name, or `nil` after a direct `SetCornerStyle`/`SetTheme` edit. |
+
+```lua
+Design:SetStyle("classic")  -- square corners, warm palette; primary/accent untouched
+Design:GetStyle()            -- "classic"
+```
+
+The active style persists in `RGXFrameworkDB.style`, restored on login before
+modules build. Any style combines with any color preset: styles own corners +
+structural tokens (`surface`/`border`/`text`), themes own brand colors
+(`primary`/`accent`). Retail/classic/forever palettes are starting points for
+in-game tuning; `framework` is the shipped default.
+
 ---
 
 ## Display (`RGXDisplay`)
