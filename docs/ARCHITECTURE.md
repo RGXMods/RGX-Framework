@@ -17,7 +17,7 @@ helper or a new public module for every file.
 | Design/media | theme colors and frame primitives in Design; registries in media modules | Extend existing presentation contracts for skins; keep geometry/state in UI, not per-skin consumer forks |
 | Game modules | registered with `category = "game"`, capability/flavor gates and lifecycle initialization | Keep domain state separate; verify callback contracts and missing capabilities before new DSL routes |
 | Contract/MCP | local validation/preflight now delegate to the shared engine; availability comes from schema annotations | Shared vectors verify MCP/direct reports; remaining normalization/generation/editor scope stays in #8 |
-| Runtime tests | most checks are developer-only, but `core/systems/database_test.lua` is XML-loaded | This is an explicit shipped diagnostic exception, not evidence that test relocation is complete |
+| Runtime tests | `tools/ci/*-check.mjs` plus `tests/database_test.lua`; the runtime DB diagnostic harness relocated out of the runtime package (#79), now covered headless via `tools/ci/database-runtime-test.mjs` | Diagnostic harness no longer XML-loaded; in-game `/rgx dbtest` reports the relocation |
 
 ### Ordered Structural Work
 
@@ -122,7 +122,7 @@ WoW loads files in the order declared in `RGX-Framework.xml`. The framework uses
 1. core/core.lua            — global object, module registry, Mixin, CopyTable, Clamp, Lerp, TableCount, Print/Warn/Error/Debug
 2. core/systems/config.lua  — framework defaults (debugMode, default font, size, flags)
 3. core/systems/database.lua— RGX:DB(name, defaults), RGX:InitDatabase()
-3b. core/systems/database_test.lua — RGX:RunDBTests() harness; intentionally shipped, runs only via /rgx dbtest
+3b. `tests/database_test.lua` (relocated, #79) — the DB diagnostic harness now lives out of the runtime package and is exercised headless via `tools/ci/database-runtime-test.mjs`
 4. core/systems/events.lua  — RegisterEvent, RegisterMessage, CreateEmitter, ADDON_ACTION_BLOCKED monitor
 5. core/systems/runtime.lua — After, Every, CancelTimer, Hook, RegisterSlashCommand, combat queue, Safe* helpers
 6. core/systems/utils.lua   — Trim, Split, TableKeys/Values/Contains/Map/Filter/Find, MergeTable, Round, Format, Clamp, StartsWith, EndsWith
