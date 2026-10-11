@@ -1,5 +1,5 @@
 // Runtime boundary check: the shipped Lua runtime must be self-contained.
-// core/ and modules/ may never reference developer tooling (tools/, contract/,
+// core/ and game/ may never reference developer tooling (tools/, contract/,
 // .reference/, rgx-mcp, node_modules) and may never use Lua's external-code
 // loaders (require/dofile/loadfile) — WoW addons load exclusively through
 // the TOC/XML manifest. Comments are stripped before scanning so prose rules
@@ -10,7 +10,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const RUNTIME_ROOTS = [join(ROOT, "core"), join(ROOT, "modules"), join(ROOT, "library")];
+const RUNTIME_ROOTS = [join(ROOT, "core"), join(ROOT, "game"), join(ROOT, "libraries")];
 
 // [^[\]]* nested-bracket-free body: strip --[[ ... ]] block comments first,
 // then -- line comments, then scan for forbidden references.
