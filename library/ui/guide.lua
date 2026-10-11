@@ -146,7 +146,7 @@ local function BuildGuide(content)
     debugCard:SetPoint("TOPRIGHT", modulesCard, "BOTTOMRIGHT", 0, -8)
     AddLine(UI, debugCard, "/rgx modules - inspect available modules")
     AddLine(UI, debugCard, "/rgx debug - toggle framework diagnostics")
-    AddLine(UI, debugCard, "/rgx dbtest - check profile persistence")
+    AddLine(UI, debugCard, "Database tests run via CI, not in-game")
     AddLine(UI, debugCard, "/rgxvisual - RGX-Hello's visual suite (if installed)")
     debugCard:AutoHeight()
 end
