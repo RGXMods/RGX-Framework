@@ -933,6 +933,8 @@ SM:Register(mediaType, name, path, opts)        -- register one entry
 SM:RegisterPack(mediaType, packName, entries)   -- register a batch under a pack
 SM:RegisterSoundPack(packName, entries)         -- convenience for "sound"
 SM:RegisterStatusBarPack(packName, entries)     -- convenience for "statusbar"
+SM:RegisterFont(name, path, opts)                -- convenience for "font"
+SM:RegisterFontPack(packName, entries)          -- convenience for "font" batches
 SM:Fetch(mediaType, id) / SM:Find(mediaType, name) / SM:GetPath(mediaType, id)
 SM:List(mediaType, filter) / SM:ListPacks(mediaType)
 SM:Scan(includeGeneric)                         -- re-run scanners (DBM registrars, known-addon compat, generic addon-global scan)
