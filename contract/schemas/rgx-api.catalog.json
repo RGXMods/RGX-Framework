@@ -2059,6 +2059,14 @@
           ]
         },
         {
+          "name": "RegisterStatusBar",
+          "params": [
+            "name",
+            "path",
+            "opts"
+          ]
+        },
+        {
           "name": "RegisterStatusBarPack",
           "params": [
             "packName",
