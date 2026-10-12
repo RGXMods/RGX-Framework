@@ -12,7 +12,20 @@ addon:validate:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - when: on_success
   before_script:
-    - apk add --no-cache lua5.1 libxml2-utils
+    # The Unraid docker runner fetches the Alpine package index from
+    # dl-cdn.alpinelinux.org, which intermittently fails with DNS
+    # "transient error" (observed 2026-10-11 on BattlePetUtility main
+    # pipeline 4139, job addon:validate: index fetch failed, then both
+    # packages reported "no such package"). This is a runner/network
+    # issue, not a source defect. Add one bounded retry with backoff so a
+    # single transient failure does not block every consumer addon; the
+    # validated package set is unchanged.
+    - |
+      if ! apk add --no-cache lua5.1 libxml2-utils; then
+        echo "apk add failed (transient DNS/network against dl-cdn.alpinelinux.org); retrying once after backoff" >&2
+        sleep 10
+        apk add --no-cache lua5.1 libxml2-utils
+      fi
   script:
     - test -s README.md
     - find . -maxdepth 1 -type f -name '*.toc' -print -quit | grep -q .
