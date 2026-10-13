@@ -13,6 +13,7 @@
 --   SM:RegisterPack(mediaType, packName, entries)
 --   SM:RegisterSoundPack(packName, entries)          -- convenience
 --   SM:RegisterStatusBarPack(packName, entries)      -- convenience
+--   SM:RegisterStatusBar(name, path, opts)           -- convenience
 --   SM:RegisterFontPack(packName, entries)           -- convenience
 --   SM:RegisterFont(name, path, opts)                -- convenience
 --   SM:Fetch(mediaType, id)                          -- direct key lookup
@@ -301,6 +302,12 @@ end
 -- Convenience: register a statusbar texture pack
 function SM:RegisterStatusBarPack(packName, entries)
     return self:RegisterPack("statusbar", packName, entries)
+end
+
+-- Convenience: register a single statusbar texture.
+-- Returns true if newly added, false on duplicate path.
+function SM:RegisterStatusBar(name, path, opts)
+    return self:Register("statusbar", name, path, opts)
 end
 
 -- Convenience: register a font pack
