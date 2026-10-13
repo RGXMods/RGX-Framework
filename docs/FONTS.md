@@ -61,6 +61,27 @@ Fonts:RegisterFontPack("MyFontPack", {
 })
 ```
 
+### SharedMedia font registry
+
+Font paths can also be registered in the framework-wide SharedMedia registry
+(`RGXSharedMedia`), which makes them available to generic media consumers and
+pickers alongside sounds and statusbar textures:
+
+```lua
+local SM = RGX:GetSharedMedia()
+SM:RegisterFont("CoolFont", "Interface\\AddOns\\MyFontPack\\fonts\\CoolFont.ttf")
+SM:RegisterFontPack("MyFontPack", {
+    { name = "PixelPro", path = "Interface\\AddOns\\MyFontPack\\fonts\\PixelPro.ttf" },
+})
+local all = SM:List("font")   -- sorted font entries; SM:Find("font", "CoolFont")
+```
+
+See [SharedMedia](API.md#sharedmedia-rgxsharedmedia) for the full media
+registry API. RGXFonts remains the owner of font metadata, defaults, blocked
+fonts, and application to FontStrings; the SharedMedia font type is a shared
+path registry, not a replacement for it.
+
+
 ### Query
 
 ```lua
