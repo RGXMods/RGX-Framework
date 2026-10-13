@@ -1,7 +1,7 @@
 # RGX-Framework
 
-Non-beta source candidate v2.7.15 targets Retail `120105` (12.1.5).
-The published release remains v2.7.14; client testing and publication are pending.
+The non-beta source candidate targets Retail `120105` (12.1.5).
+Read its Version field in `RGX-Framework.toc`; client testing and publication are pending.
 
 
 **A modern WoW addon framework — one dependency, everything included.**
@@ -129,4 +129,4 @@ All modules load from `RGX-Framework.xml`; the dormant tier was re-enabled in v2
 Framework releases are tagged `vX.Y.Z`, published to GitHub, and uploaded to
 CurseForge when its project ID and secret are configured. The canonical
 changelog is [[Changelog]].
-> **Beta candidate:** v2.7.15-beta.4 is the current source test build; stable remains v2.7.14.
+> **Source candidate:** read the Version field in `RGX-Framework.toc` for the current source test build; published stable remains v2.7.14.

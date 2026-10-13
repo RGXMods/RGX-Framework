@@ -297,4 +297,4 @@ RGX-Framework publishes only the framework addon package. See
 ## License
 
 [MIT](LICENSE.txt) for framework code. Bundled fonts retain their own open licenses — see [docs/FONT-SOURCES.md](docs/FONT-SOURCES.md) for attribution.
-> **Beta candidate:** v2.7.15-beta.4 contains the options-composition refactor and RGX.API single-ownership enforcement; v2.7.14 remains stable. Check releases for published builds.
+> **Source candidate:** read the Version field in `RGX-Framework.toc`; v2.7.14 remains the published stable release. The source includes the options-composition refactor and RGX.API single-ownership enforcement. Testing is pending; check releases for published builds.
