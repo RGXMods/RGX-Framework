@@ -1,5 +1,9 @@
 # Changes
 
+## Non-beta Candidate: [v2.7.15](changelogs/2.7.15.md)
+
+Retail 12.1.5 / Interface `120105`; client testing and publication pending.
+
 ## Current Release
 
 ### [v2.7.14](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.14.md) - 2026-10-06

@@ -1,5 +1,8 @@
 # RGX-Framework
 
+Non-beta source candidate v2.7.15 targets Retail `120105` (12.1.5).
+The published release remains v2.7.14; client testing and publication are pending.
+
 
 **A modern WoW addon framework — one dependency, everything included.**
 
@@ -17,7 +20,7 @@ runtime-only addon package.
 
 ```lua
 -- MyAddon.toc
-## Interface: 120100
+## Interface: 120105
 ## Title: MyAddon
 ## RequiredDeps: RGX-Framework
 ## SavedVariables: MyAddonDB

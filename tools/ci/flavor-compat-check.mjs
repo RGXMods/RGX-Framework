@@ -9,7 +9,7 @@ const ROOT = join(HERE, "..", "..");
 const sources = {
   core: readFileSync(join(ROOT, "core", "core.lua"), "utf8"),
   compat: readFileSync(join(ROOT, "core", "compat.lua"), "utf8"),
-  auras: readFileSync(join(ROOT, "modules", "auras", "auras.lua"), "utf8"),
+  auras: readFileSync(join(ROOT, "game", "auras", "auras.lua"), "utf8"),
   test: readFileSync(join(HERE, "flavor-compat-test.lua"), "utf8"),
 };
 

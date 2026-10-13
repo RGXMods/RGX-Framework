@@ -35,7 +35,7 @@ All flavor TOCs ship together and declare the same framework version:
 
 | Client | TOC | Interface |
 |---|---|---:|
-| Retail | `RGX-Framework.toc` | `120100` |
+| Retail | `RGX-Framework.toc` | `120105` |
 | WoW Forever (beta) | `RGX-Framework.toc` | `16001` |
 | Classic Era | `RGX-Framework_Vanilla.toc` | `11509` |
 | TBC Classic | `RGX-Framework_TBC.toc` | `20506` |
@@ -43,7 +43,7 @@ All flavor TOCs ship together and declare the same framework version:
 | Cataclysm | `RGX-Framework_Cata.toc` | `40402` |
 | Mists Classic | `RGX-Framework_Mists.toc` | `50504` |
 
-The base TOC declares `120100, 16001, 11509` together (single-TOC style),
+The candidate base TOC declares `120105, 16001, 11509` together (single-TOC style),
 so Forever loads without a `_Mainline.toc` that would double-load there.
 
 ### Forever client identity
