@@ -11,7 +11,7 @@ const publishedVersion = releaseSnapshot.publishedVersion ?? releaseSnapshot.ver
 const publishedRuntimeFiles = releaseSnapshot.publishedRuntimeFiles ?? releaseSnapshot.runtimeFiles;
 
 const flavorTocs = [
-  ["retail", "Retail", "Retail", "RGX-Framework.toc", "120100"],
+  ["retail", "Retail", "Retail", "RGX-Framework.toc", "120105"],
   ["classic-era", "Classic Era", "Classic Era", "RGX-Framework_Vanilla.toc", "11509"],
   ["tbc", "TBC Classic", "TBC", "RGX-Framework_TBC.toc", "20506"],
   ["wrath", "Wrath/Titan", "Wrath/Titan", "RGX-Framework_Wrath.toc", "38002"],
@@ -87,8 +87,11 @@ const candidateSurfaces = [
 if (publishedVersion !== version) {
   for (const path of candidateSurfaces) {
     const source = path in surfaceText ? surfaceText[path] : read(path);
-    if (!source.includes(`v${version}`) || !source.includes(`v${publishedVersion}`) || !sourceChannelWords.test(source)) {
-      failures.push(`${path}: candidate documentation must identify both v${version} and published v${publishedVersion}`);
+    if (!source.includes("RGX-Framework.toc") || !source.includes(`v${publishedVersion}`) || !sourceChannelWords.test(source)) {
+      failures.push(`${path}: candidate documentation must identify the authoritative TOC and published v${publishedVersion}`);
+    }
+    if (!/-(?:beta|alpha)(?:[.-]|$)/.test(version) && /\*\*Beta candidate:\*\*|source beta candidate/i.test(source)) {
+      failures.push(`${path}: non-beta TOC cannot be described as a current beta candidate`);
     }
   }
 } else {

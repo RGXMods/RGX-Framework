@@ -977,4 +977,4 @@ Milestone/progression modules. Each method registers a pcall-wrapped callback. U
 | Prey (`RGXPrey`) | `OnHuntStarted(fn)`, `OnAmbush(fn)`, `OnCapped(fn)`, `OnComplete(fn)` |
 
 As of **v2.1.0** every module above is loaded by the XML loader. There are no dormant modules.
-> **Beta candidate:** v2.7.15-beta.4; stable remains v2.7.14.
+> **Source candidate:** read the Version field in `RGX-Framework.toc`; published stable remains v2.7.14.

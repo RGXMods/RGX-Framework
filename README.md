@@ -277,7 +277,7 @@ RGX-Framework publishes only the framework addon package. See
 
 - **Latest published release:** [`v2.7.14`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.14)
 
-- **Clients:** Retail `120100`, WoW Forever (beta) `16001`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
+- **Clients (source candidate):** Retail `120105`, WoW Forever (beta) `16001`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
 - **Distribution:** one runtime-only addon package; see [Distribution](docs/DISTRIBUTION.md)
 - `C_AddOns.GetAddOnMetadata` and `GetAddOnMetadata` both handled
 - `ColorPickerFrame` old API and `ColorPickerInteraction` new API both handled
@@ -297,4 +297,4 @@ RGX-Framework publishes only the framework addon package. See
 ## License
 
 [MIT](LICENSE.txt) for framework code. Bundled fonts retain their own open licenses — see [docs/FONT-SOURCES.md](docs/FONT-SOURCES.md) for attribution.
-> **Beta candidate:** v2.7.15-beta.4 contains the options-composition refactor and RGX.API single-ownership enforcement; v2.7.14 remains stable. Check releases for published builds.
+> **Source candidate:** read the Version field in `RGX-Framework.toc`; v2.7.14 remains the published stable release. The source includes the options-composition refactor and RGX.API single-ownership enforcement. Testing is pending; check releases for published builds.

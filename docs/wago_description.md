@@ -14,7 +14,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ## Quick Start
 
 **Latest stable release:** [`v2.7.14`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.14)
-The source beta candidate is `v2.7.15-beta.4`; follow the release page for published tester builds.
+Read the Version field in `RGX-Framework.toc` for the source candidate; follow the release page for published builds. Source metadata does not establish in-game acceptance.
 
 **1. Declare the dependency:**
 
@@ -277,7 +277,7 @@ RGX-Framework publishes only the framework addon package. See
 
 - **Latest stable release:** [`v2.7.14`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.14)
 
-- **Clients:** Retail `120100`, WoW Forever beta `16001`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
+- **Clients (source candidate):** Retail `120105`, WoW Forever beta `16001`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
 - **Distribution:** one runtime-only addon package; see [Distribution](https://github.com/RGXMods/RGX-Framework/blob/main/docs/DISTRIBUTION.md)
 - `C_AddOns.GetAddOnMetadata` and `GetAddOnMetadata` both handled
 - `ColorPickerFrame` old API and `ColorPickerInteraction` new API both handled
