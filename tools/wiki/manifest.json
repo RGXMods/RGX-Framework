@@ -51,6 +51,7 @@
         { "doc": "STUDIO-ROADMAP.md",  "wiki": "Studio-Roadmap" },
         { "doc": "MIGRATION.md",       "wiki": "Migration" },
         { "doc": "ACE3-ANALYSIS.md",   "wiki": "Ace3-Analysis" },
+        { "doc": "AUTHORING-SIMPLICITY-PROPOSAL.md", "wiki": "Authoring-Simplicity-Proposal" },
         { "doc": "FONT-SOURCES.md",    "wiki": "Font-Sources" },
         { "doc": "TROUBLESHOOTING.md", "wiki": "Troubleshooting" },
         { "doc": "CHANGES.md",         "wiki": "Changelog" }
