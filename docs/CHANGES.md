@@ -20,8 +20,6 @@ Stable release of the beta-validated UI/minimap batch:
   when adopting profiles.
 - Framework no longer prints its own startup banner to chat.
 
-## Recent Releases
-
 ### [v2.7.13](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.13.md) - 2026-10-05
 
 First stable release of the shared UI batch (tested as v2.7.13-beta.1/beta.2):
