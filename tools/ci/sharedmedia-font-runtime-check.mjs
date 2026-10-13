@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // RGXSharedMedia font-runtime harness: loads the real
-// library/sharedmedia/sharedmedia.lua into a Lua 5.1 VM (wasmoon) and exercises
+// libraries/sharedmedia/sharedmedia.lua into a Lua 5.1 VM (wasmoon) and exercises
 // the "font" media type against the public registry. Mirrors the
 // database-runtime-check harness shape: a minimal RGX stand-in provides only
 // the seams sharedmedia.lua touches (RGX:RegisterModule, RGX:Debug,
@@ -13,7 +13,7 @@ import { Lua } from "wasmoon-lua5.1";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..");
 const files = {
-  sharedmedia: join(ROOT, "library", "sharedmedia", "sharedmedia.lua"),
+  sharedmedia: join(ROOT, "libraries", "sharedmedia", "sharedmedia.lua"),
   test: join(HERE, "sharedmedia-font-runtime-test.lua"),
 };
 
@@ -43,7 +43,7 @@ try {
         assert(chunk, err)
         return chunk
     end
-    loadSource(smSource, "library/sharedmedia/sharedmedia.lua")("RGX-Framework", RGX)
+    loadSource(smSource, "libraries/sharedmedia/sharedmedia.lua")("RGX-Framework", RGX)
     loadSource(testSource, "tools/ci/sharedmedia-font-runtime-test.lua")("RGX-Framework", RGX)
   `);
 

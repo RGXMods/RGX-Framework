@@ -11,7 +11,7 @@ const publishedVersion = releaseSnapshot.publishedVersion ?? releaseSnapshot.ver
 const publishedRuntimeFiles = releaseSnapshot.publishedRuntimeFiles ?? releaseSnapshot.runtimeFiles;
 
 const flavorTocs = [
-  ["retail", "Retail", "Retail", "RGX-Framework.toc", "120100"],
+  ["retail", "Retail", "Retail", "RGX-Framework.toc", "120105"],
   ["classic-era", "Classic Era", "Classic Era", "RGX-Framework_Vanilla.toc", "11509"],
   ["tbc", "TBC Classic", "TBC", "RGX-Framework_TBC.toc", "20506"],
   ["wrath", "Wrath/Titan", "Wrath/Titan", "RGX-Framework_Wrath.toc", "38002"],

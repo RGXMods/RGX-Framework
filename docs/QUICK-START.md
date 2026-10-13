@@ -303,7 +303,7 @@ local myObj = DataBroker:NewDataObject("MyAddon", {
 ### MyAddon.toc
 
 ```toc
-## Interface: 120100
+## Interface: 120105
 ## Title: MyAddon
 ## Author: Me
 ## Version: 1.0.0
