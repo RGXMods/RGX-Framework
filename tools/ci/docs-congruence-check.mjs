@@ -87,8 +87,11 @@ const candidateSurfaces = [
 if (publishedVersion !== version) {
   for (const path of candidateSurfaces) {
     const source = path in surfaceText ? surfaceText[path] : read(path);
-    if (!source.includes(`v${version}`) || !source.includes(`v${publishedVersion}`) || !sourceChannelWords.test(source)) {
-      failures.push(`${path}: candidate documentation must identify both v${version} and published v${publishedVersion}`);
+    if (!source.includes("RGX-Framework.toc") || !source.includes(`v${publishedVersion}`) || !sourceChannelWords.test(source)) {
+      failures.push(`${path}: candidate documentation must identify the authoritative TOC and published v${publishedVersion}`);
+    }
+    if (!/-(?:beta|alpha)(?:[.-]|$)/.test(version) && /\*\*Beta candidate:\*\*|source beta candidate/i.test(source)) {
+      failures.push(`${path}: non-beta TOC cannot be described as a current beta candidate`);
     }
   }
 } else {
