@@ -153,4 +153,3 @@ RGX:Font(myText, selectedFont)
 3. Module globals like `_G.RGXFonts` are created by RGX-Framework, so à la carte helpers are one line each
 
 No bridge layer, no per-addon plumbing, and no need to rebuild dropdowns by hand.
-> **Source candidate:** read the Version field in `RGX-Framework.toc`; published stable remains v2.7.14. Candidate features do not change the existing stable bare forms.

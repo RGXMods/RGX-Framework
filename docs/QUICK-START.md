@@ -419,4 +419,3 @@ end)
 -- Fire
 emitter:Fire("OnConfigChanged", "fontSize", 14)
 ```
-> **Source candidate:** read the Version field in `RGX-Framework.toc`; published stable remains v2.7.14. Existing stable examples remain supported.
