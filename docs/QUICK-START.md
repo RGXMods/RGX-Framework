@@ -303,7 +303,7 @@ local myObj = DataBroker:NewDataObject("MyAddon", {
 ### MyAddon.toc
 
 ```toc
-## Interface: 120100
+## Interface: 120105
 ## Title: MyAddon
 ## Author: Me
 ## Version: 1.0.0
@@ -419,4 +419,4 @@ end)
 -- Fire
 emitter:Fire("OnConfigChanged", "fontSize", 14)
 ```
-> **Beta candidate:** v2.7.15-beta.4; stable remains v2.7.14. Existing stable examples remain supported.
+> **Source candidate:** read the Version field in `RGX-Framework.toc`; published stable remains v2.7.14. Existing stable examples remain supported.

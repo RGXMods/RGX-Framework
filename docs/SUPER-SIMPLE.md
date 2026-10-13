@@ -90,7 +90,7 @@ Anything beyond one line (style objects, standalone selectors, previews) lives i
 
 ```lua
 -- .toc file
-## Interface: 120100
+## Interface: 120105
 ## Title: MyAddon
 ## RequiredDeps: RGX-Framework
 ## SavedVariables: MyAddonDB
@@ -153,4 +153,4 @@ RGX:Font(myText, selectedFont)
 3. Module globals like `_G.RGXFonts` are created by RGX-Framework, so à la carte helpers are one line each
 
 No bridge layer, no per-addon plumbing, and no need to rebuild dropdowns by hand.
-> **Beta candidate:** v2.7.15-beta.4; stable remains v2.7.14. Beta features do not change the existing stable bare forms.
+> **Source candidate:** read the Version field in `RGX-Framework.toc`; published stable remains v2.7.14. Candidate features do not change the existing stable bare forms.
