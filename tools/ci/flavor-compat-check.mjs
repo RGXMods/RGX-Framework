@@ -102,7 +102,7 @@ for (const [flavor, projectConstant, available, unavailable] of flavors) {
       local RGX = {}
       loadSource(__coreSource, "core/core.lua")("RGX-Framework", RGX)
       loadSource(__compatSource, "core/compat.lua")("RGX-Framework", RGX)
-      loadSource(__aurasSource, "modules/auras/auras.lua")("RGX-Framework", RGX)
+      loadSource(__aurasSource, "game/auras/auras.lua")("RGX-Framework", RGX)
       RGX:RegisterModule("housing", {})
       _G.RGX = RGX
       loadSource(__testSource, "tools/ci/flavor-compat-test.lua")()
