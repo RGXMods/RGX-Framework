@@ -232,4 +232,3 @@ handler ids) and routed through framework-managed, failure-isolated paths:
 - Inference: `slash` defaults to the lowercase addon name
 
 Everything above is additive; nothing on this page changes meaning.
-> **Source candidate:** read the Version field in `RGX-Framework.toc`; published stable remains v2.7.14. Slider customization is included since v2.7.13.

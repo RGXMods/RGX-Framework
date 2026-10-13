@@ -7,21 +7,21 @@ World of Warcraft addon archive.
 
 ## Current Release
 
-[`v2.7.14`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.14)
+[`v2.7.16`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.16)
 publishes exactly two GitHub assets:
 
 | Asset | Purpose |
 |---|---|
-| `RGX-Framework-v2.7.14.zip` | The only product archive; install this addon |
+| `RGX-Framework-v2.7.16.zip` | The only product archive; install this addon |
 | `release.json` | In-house packager metadata for automation |
 
-The `v2.7.14` ZIP is expected to contain one `RGX-Framework/` root and exactly 109
+The `v2.7.16` ZIP is expected to contain one `RGX-Framework/` root and exactly 111
 runtime files. Verify the asset and digest after publishing with
 GitHub CLI:
 
 ```bash
-gh release view v2.7.14 --repo RGXMods/RGX-Framework --json assets \
-  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.14.zip") | .digest'
+gh release view v2.7.16 --repo RGXMods/RGX-Framework --json assets \
+  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.16.zip") | .digest'
 ```
 
 CurseForge is the currently configured addon service. Wago is configured with
@@ -43,7 +43,7 @@ All flavor TOCs ship together and declare the same framework version:
 | Cataclysm | `RGX-Framework_Cata.toc` | `40402` |
 | Mists Classic | `RGX-Framework_Mists.toc` | `50504` |
 
-The candidate base TOC declares `120105, 16001, 11509` together (single-TOC style),
+The base TOC declares `120105, 16001, 11509` together (single-TOC style),
 so Forever loads without a `_Mainline.toc` that would double-load there.
 
 ### Forever client identity
@@ -198,4 +198,3 @@ the Markdown pages listed in `tools/wiki/manifest.json`.
 Service-page Markdown is explicitly listed as `sourceOnly` in that manifest
 so it remains maintained source without generating a duplicate Wiki page.
 > **Beta channel:** v2.7.14-beta.1 is opt-in; stable remains v2.7.14.
-> **Source candidate:** read the Version field in `RGX-Framework.toc`. Its checked runtime manifest contains 111 files; published stable v2.7.14 contained 109. Source artifacts are not publication evidence.

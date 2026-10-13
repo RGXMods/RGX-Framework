@@ -1,11 +1,13 @@
 # Changes
 
-## Non-beta Candidate: [v2.7.15](changelogs/2.7.15.md)
-
-Read the Version field in `RGX-Framework.toc` for the source candidate.
-Retail 12.1.5 / Interface `120105`; client testing and publication pending.
-
 ## Current Release
+
+### [v2.7.16](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.16.md) - 2026-10-13
+
+Patch release with Retail 12.1.5 compatibility (Interface `120105`) and the
+wiki-manifest publishing fix; runtime is unchanged from the v2.7.15 cycle.
+
+## Recent Releases
 
 ### [v2.7.14](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.14.md) - 2026-10-06
 
@@ -188,7 +190,7 @@ header and in `README.md`. Consumer addons inherit the
 
 Full per-version notes remain in [`docs/changelogs/`](https://github.com/RGXMods/RGX-Framework/tree/main/docs/changelogs), including releases from v1.x through v2.5.0. The 2.7.13 beta channel (beta.1, beta.2) was promoted to stable as v2.7.13; its notes remain in [`docs/changelogs/`](https://github.com/RGXMods/RGX-Framework/tree/main/docs/changelogs).
 
-## Historical Beta Candidate - v2.7.15-beta.4
+## Historical Beta - v2.7.15-beta.4
 
-The prior opt-in beta preceded the non-beta source candidate; published stable remains v2.7.14. See
+The prior opt-in beta preceded the v2.7.15 release line. See
 [beta notes](changelogs/2.7.15-beta.4.md) for additions and tester checks.
