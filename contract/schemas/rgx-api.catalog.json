@@ -2044,6 +2044,21 @@
           ]
         },
         {
+          "name": "RegisterFont",
+          "params": [
+            "name",
+            "path",
+            "opts"
+          ]
+        },
+        {
+          "name": "RegisterFontPack",
+          "params": [
+            "packName",
+            "entries"
+          ]
+        },
+        {
           "name": "RegisterPack",
           "params": [
             "mediaType",
