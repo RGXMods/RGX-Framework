@@ -14,6 +14,8 @@ const files = {
   runtime: join(ROOT, "core", "systems", "runtime.lua"),
   test: join(HERE, "declarative-every-runtime-test.lua"),
   columnsTest: join(HERE, "declarative-columns-runtime-test.lua"),
+  minimap: join(ROOT, "libraries", "minimap", "minimap.lua"),
+  minimapTest: join(HERE, "secure-minimap-runtime-test.lua"),
 };
 
 const lua = await Lua.create();
@@ -23,6 +25,8 @@ try {
   lua.ctx.__rgxRuntimeSource = readFileSync(files.runtime, "utf8");
   lua.ctx.__rgxTestSource = readFileSync(files.test, "utf8");
   lua.ctx.__rgxColumnsTestSource = readFileSync(files.columnsTest, "utf8");
+  lua.ctx.__rgxMinimapSource = readFileSync(files.minimap, "utf8");
+  lua.ctx.__rgxMinimapTestSource = readFileSync(files.minimapTest, "utf8");
   const panelSource = readFileSync(join(ROOT, "libraries/ui/options.lua"), "utf8");
   const refreshStart = panelSource.indexOf("    function panel:InvalidateAllTabs()");
   const refreshEnd = panelSource.indexOf("    local function ExtractCategoryID", refreshStart);
@@ -68,6 +72,7 @@ try {
         .. "\\nreturn BuildAddonOptionTabs end", "libraries/ui/options.lua")()(RGX)
     loadSource(__rgxTestSource, "tools/ci/declarative-every-runtime-test.lua")()
     loadSource(__rgxColumnsTestSource, "tools/ci/declarative-columns-runtime-test.lua")()
+    loadSource(__rgxMinimapTestSource, "tools/ci/secure-minimap-runtime-test.lua")()
   `);
 
   console.log(lua.ctx.__rgxRuntimeTestResult);
