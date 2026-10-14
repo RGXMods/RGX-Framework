@@ -2,12 +2,18 @@
 
 ## Current Release
 
-### [v2.7.16](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.16.md) - 2026-10-13
+### [v2.7.17](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.17.md) - 2026-10-13
 
-Patch release with Retail 12.1.5 compatibility (Interface `120105`) and the
-wiki-manifest publishing fix; runtime is unchanged from the v2.7.15 cycle.
+Player-accepted opt-in secure minimap item actions support preparation on one
+click and item use on the next hardware click, without replacing secure OnClick.
+Ordinary minimap consumers are unchanged; secure mutations are combat-guarded.
 
 ## Recent Releases
+
+### [v2.7.16](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.16.md) - 2026-10-13
+
+Retail 12.1.5 compatibility (Interface `120105`) and wiki-manifest publishing
+fix; runtime unchanged from the v2.7.15 cycle.
 
 ### [v2.7.14](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.14.md) - 2026-10-06
 

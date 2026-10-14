@@ -802,7 +802,26 @@ local btn = MM:Create({
 | `btn:PlaceAtAngle()` | Reposition from stored angle |
 | `btn:GetAngle()` | Current angle in degrees |
 | `btn:SetAngle(deg)` | Store angle |
+| `btn:SetItemAction(itemID/nil)` | On opt-in secure buttons, arm/disarm a left-click item action; returns false in combat, ordinary mode, or for invalid IDs |
 | `btn.frame` | Raw WoW Button frame |
+
+### Secure item actions (since v2.7.17)
+
+`MM:Create({ secure = true, ... })` opts into `SecureActionButtonTemplate`.
+Creation returns nil in combat. The template's `OnClick` is preserved; consumer
+callbacks run once on release through `PostClick`, after the secure action.
+`useOnKeyDown = false` keeps actions on release regardless of action-bar settings.
+Calling `btn:SetItemAction(itemID)` from the first click callback prepares the
+**next** hardware left-click. Right-click does not use the item. Passing nil
+disarms it. Ordinary buttons retain their existing behavior.
+
+Secure visibility, positioning, dragging and action reconfiguration are denied
+during combat; they are not queued. A previously armed secure item action remains
+available to Blizzard's hardware-click handler in combat, subject to the game's
+item restrictions. Consumers must refresh their intended state after combat.
+Do not replace the inherited `OnClick`, call `Click()` programmatically, or claim
+that mocked execution proves protected-action/taint safety. Retail player
+acceptance is required; opt-in behavior on other flavors is not yet validated.
 
 ### Registry
 
