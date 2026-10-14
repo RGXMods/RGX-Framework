@@ -1,5 +1,19 @@
 # Changes
 
+## Source Beta
+
+`RGX-Framework.toc` declares candidate `v2.7.18-beta.1`; the latest stable
+published release remains `v2.7.17`.
+
+- Prevent adopting a database handle/live profile view as its own SavedVariables
+  owner, avoiding a recursive C stack overflow while preserving saved values.
+- Recovered metatable-poisoned profile stores remain writable, rather than
+  silently dropping later settings changes.
+- Lua 5.1 regressions cover both failures. Retail in-game nameplate, profile
+  switching and reload validation remain required before stable promotion.
+
+See [beta notes](changelogs/2.7.18-beta.1.md).
+
 ## Current Release
 
 ### [v2.7.17](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.17.md) - 2026-10-13
