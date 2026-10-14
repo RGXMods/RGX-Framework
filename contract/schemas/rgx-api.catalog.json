@@ -2589,6 +2589,134 @@
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/API.md#ui-controls-rgxui"
+    },
+    {
+      "module": "worldmap",
+      "getter": "RGX:GetWorldMap()",
+      "global": "RGXWorldMap",
+      "owner": "game/worldmap/worldmap.lua",
+      "category": "game",
+      "stability": "stable",
+      "flavors": null,
+      "methods": [
+        {
+          "name": "AddMinimapIcon",
+          "params": [
+            "pinFrame",
+            "icon",
+            "mapID",
+            "x",
+            "y",
+            "name"
+          ]
+        },
+        {
+          "name": "AddWorldMapIcon",
+          "params": [
+            "pinFrame",
+            "icon",
+            "mapID",
+            "x",
+            "y",
+            "name"
+          ]
+        },
+        {
+          "name": "GetCoordsAdapter",
+          "params": []
+        },
+        {
+          "name": "GetPlayerWorldPosition",
+          "params": []
+        },
+        {
+          "name": "GetPlayerZone",
+          "params": []
+        },
+        {
+          "name": "GetWorldCoordinatesFromZone",
+          "params": [
+            "zoneX",
+            "zoneY",
+            "mapID",
+            "floor"
+          ]
+        },
+        {
+          "name": "GetWorldDistance",
+          "params": [
+            "instance",
+            "x1",
+            "y1",
+            "x2",
+            "y2"
+          ]
+        },
+        {
+          "name": "GetWorldVector",
+          "params": [
+            "instance",
+            "x1",
+            "y1",
+            "x2",
+            "y2"
+          ]
+        },
+        {
+          "name": "GetZoneCoordinatesFromWorld",
+          "params": [
+            "worldX",
+            "worldY",
+            "mapID"
+          ]
+        },
+        {
+          "name": "GetZoneSize",
+          "params": [
+            "mapID"
+          ]
+        },
+        {
+          "name": "RemoveAllMinimapIcons",
+          "params": []
+        },
+        {
+          "name": "RemoveAllWorldMapIcons",
+          "params": []
+        },
+        {
+          "name": "RemoveMinimapIcon",
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "name": "RemoveWorldMapIcon",
+          "params": [
+            "name"
+          ]
+        },
+        {
+          "name": "UpdateMinimapIcon",
+          "params": [
+            "name",
+            "x",
+            "y"
+          ]
+        },
+        {
+          "name": "UpdateWorldMapIcon",
+          "params": [
+            "name",
+            "x",
+            "y"
+          ]
+        }
+      ],
+      "introduced": "2.2.0",
+      "authorable": false,
+      "preview": "unavailable",
+      "docs": "docs/WORLDMAP.md#rgxworldmap"
     }
   ]
 }
