@@ -305,6 +305,26 @@ await scenario("config gear opens its dialog and config dialog owns its chrome",
   gear3.scripts.OnClick(gear3)
   assert(clicks == 1 and dialog.shown == true, "custom gear click must not touch the dialog")
 `);
+await scenario("SavedVariables alias cannot adopt its own live view and recurse", `
+  local db = RGX:NewDatabase("AliasDB", { enabled = true, offset = 12 }, { profileIsGlobal = true, legacyFlat = true })
+  local view, owner = db.global, AliasDB
+  view.enabled = false
+  view.offset = 0
+  -- Old consumers assigned their public settings view back to the TOC global.
+  -- ADDON_LOADED/PLAYER_LOGIN then adopt it as storage, closing a proxy cycle.
+  AliasDB = view
+  local ok, err = pcall(function() db:Adopt() end)
+  assert(ok, "adopting the live settings alias must not overflow: " .. tostring(err))
+  local readOK, enabled = pcall(function() return view.enabled end)
+  assert(readOK, "nameplate-style settings read must not overflow: " .. tostring(enabled))
+  assert(enabled == false and view.offset == 0, "saved false/zero must survive alias recovery")
+  assert(AliasDB == owner and db._raw == owner, "TOC global must retain the original plain owner")
+  assert(db:CreateProfile("Other") and db:LoadProfile("Default"))
+  assert(view.enabled == false and view.offset == 0)
+  AliasDB = db
+  assert(pcall(function() db:Adopt() end), "database handle cannot become its own storage either")
+  assert(AliasDB == owner and db._raw == owner)
+`);
 await scenario("metatable-poisoned profile store self-heals instead of looping", `
   local db = RGX:NewDatabase("PoisonDB", { enabled = true, scale = 1.5 }, { profileIsGlobal = true })
   local view = db.global
@@ -329,6 +349,10 @@ await scenario("metatable-poisoned profile store self-heals instead of looping",
   assert(value2 == true, "healed store read must resolve the default")
   assert(getmetatable(PoisonDB.profiles) == nil, "store must be rebuilt plain")
   assert(view.scale == 1.5, "healed database keeps serving defaults")
+  view.enabled = false
+  view.scale = 0
+  assert(view.enabled == false and view.scale == 0, "healed store must keep accepting saved writes")
+  assert(PoisonDB.profiles.Default.enabled == false and PoisonDB.profiles.Default.scale == 0)
 `);
 let serialized;
 try {

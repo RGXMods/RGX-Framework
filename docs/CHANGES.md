@@ -2,13 +2,23 @@
 
 ## Current Release
 
+### [v2.7.18](changelogs/2.7.18.md) - 2026-10-14
+
+- Prevent adopting a database handle/live profile view as its own SavedVariables
+  owner, avoiding a recursive C stack overflow while preserving saved values.
+- Recovered metatable-poisoned profile stores remain writable, rather than
+  silently dropping later settings changes.
+- Lua 5.1 regressions cover both failures. Operator reports no issues after
+  testing and explicitly approves stable publication; no detailed test matrix
+  or independent in-game capture is claimed.
+
+## Recent Releases
+
 ### [v2.7.17](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.17.md) - 2026-10-13
 
 Player-accepted opt-in secure minimap item actions support preparation on one
 click and item use on the next hardware click, without replacing secure OnClick.
 Ordinary minimap consumers are unchanged; secure mutations are combat-guarded.
-
-## Recent Releases
 
 ### [v2.7.16](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.16.md) - 2026-10-13
 

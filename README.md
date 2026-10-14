@@ -1,5 +1,8 @@
 # RGX-Framework
 
+The `v2.7.18` database hotfix prevents recursive settings adoption and restores
+writable profile-store recovery. See the [release notes](docs/changelogs/2.7.18.md).
+
 
 **One dependency. Everything your addon suite needs.**
 
@@ -12,7 +15,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.7.17`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.17)
+**Latest published release:** [`v2.7.18`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.18)
 
 
 **1. Declare the dependency:**
