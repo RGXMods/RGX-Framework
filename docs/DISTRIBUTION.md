@@ -1,5 +1,9 @@
 # Distribution
 
+Source beta candidate: `RGX-Framework.toc` declares `v2.7.18-beta.1`;
+the latest stable published release remains `v2.7.17`. The database hotfix is
+published on the beta channel pending Retail in-game persistence/nameplate checks.
+
 
 RGX-Framework publishes one product: the WoW addon framework. Node tooling,
 schemas, documentation, references, and future Studio code never belong in the

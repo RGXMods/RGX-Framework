@@ -1,5 +1,10 @@
 # RGX-Framework
 
+Source beta candidate: `RGX-Framework.toc` declares `v2.7.18-beta.1`;
+the latest stable published release remains `v2.7.17`. See the
+[beta notes](docs/changelogs/2.7.18-beta.1.md) for database recovery fixes and
+the outstanding in-game validation checklist.
+
 
 **One dependency. Everything your addon suite needs.**
 
