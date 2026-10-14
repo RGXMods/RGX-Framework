@@ -60,6 +60,7 @@
   <Script file="game/prey/prey.lua" />
   <Script file="game/collectibles/collectibles.lua" />
   <Script file="game/loot/loot.lua" />
+  <Script file="game/worldmap/worldmap.lua" />
 
   <!-- Commands -->
 <Script file="core/commands.lua" />
