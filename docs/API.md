@@ -805,9 +805,7 @@ local btn = MM:Create({
 | `btn:SetItemAction(itemID/nil)` | On opt-in secure buttons, arm/disarm a left-click item action; returns false in combat, ordinary mode, or for invalid IDs |
 | `btn.frame` | Raw WoW Button frame |
 
-### Secure item actions (branch implementation)
-
-This branch adds the following API; published v2.7.16 does not contain it yet.
+### Secure item actions (since v2.7.17)
 
 `MM:Create({ secure = true, ... })` opts into `SecureActionButtonTemplate`.
 Creation returns nil in combat. The template's `OnClick` is preserved; consumer
