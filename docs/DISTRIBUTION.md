@@ -1,5 +1,8 @@
 # Distribution
 
+The `v2.7.18` database hotfix follows the operator's no-issues test report and
+explicit stable publication approval on 2026-10-14.
+
 
 RGX-Framework publishes one product: the WoW addon framework. Node tooling,
 schemas, documentation, references, and future Studio code never belong in the
@@ -7,21 +10,21 @@ World of Warcraft addon archive.
 
 ## Current Release
 
-[`v2.7.17`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.17)
+[`v2.7.18`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.18)
 publishes exactly two GitHub assets:
 
 | Asset | Purpose |
 |---|---|
-| `RGX-Framework-v2.7.17.zip` | The only product archive; install this addon |
+| `RGX-Framework-v2.7.18.zip` | The only product archive; install this addon |
 | `release.json` | In-house packager metadata for automation |
 
-The `v2.7.17` ZIP is expected to contain one `RGX-Framework/` root and exactly 111
+The `v2.7.18` ZIP is expected to contain one `RGX-Framework/` root and exactly 111
 runtime files. Verify the asset and digest after publishing with
 GitHub CLI:
 
 ```bash
-gh release view v2.7.17 --repo RGXMods/RGX-Framework --json assets \
-  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.17.zip") | .digest'
+gh release view v2.7.18 --repo RGXMods/RGX-Framework --json assets \
+  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.18.zip") | .digest'
 ```
 
 CurseForge is the currently configured addon service. Wago is configured with

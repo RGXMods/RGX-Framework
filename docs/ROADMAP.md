@@ -1,5 +1,7 @@
 # RGX-Framework Roadmap
 
+Current release: `v2.7.18`.
+
 
 ## Direction
 
