@@ -61,6 +61,7 @@ Complete public API by module. See individual module docs for deeper detail:
 | `RGX:GetHousing()` | RGXHousing |
 | `RGX:GetTradingPost()` | RGXTradingPost |
 | `RGX:GetPrey()` | RGXPrey |
+| `RGX:GetWorldMap()` | RGXWorldMap |
 
 ### Output
 
@@ -1028,5 +1029,29 @@ Milestone/progression modules. Each method registers a pcall-wrapped callback. U
 | Housing (`RGXHousing`) | `OnFavorGained(fn)`, `OnLevelUp(fn)`, `OnRewards(fn)`, `OnDecorCollected(fn)` |
 | TradingPost (`RGXTradingPost`) | `OnPurchase(fn)`, `OnCurrencyGained(fn)`, `GetCurrencyAmount()` |
 | Prey (`RGXPrey`) | `OnHuntStarted(fn)`, `OnAmbush(fn)`, `OnCapped(fn)`, `OnComplete(fn)` |
+
+## WorldMap (`RGXWorldMap`)
+
+World-map pin and waypoint primitives. Replaces HereBeDragons-Pins semantics for RGX consumers. Pin methods manage frames on the world map and minimap. Coordinate helpers route through the `RGXWorldMap.Coords` adapter, which wraps C_Map on Retail and falls back to HereBeDragons-2.0 when available on Classic-era clients.
+
+| Method | Description |
+|---|---|
+| `RGXWorldMap:AddWorldMapIcon(pinFrame, icon, mapID, x, y, name)` | Place a pin on the world map |
+| `RGXWorldMap:RemoveWorldMapIcon(name)` | Remove a world-map pin by name |
+| `RGXWorldMap:UpdateWorldMapIcon(name, x, y)` | Update a world-map pin position |
+| `RGXWorldMap:RemoveAllWorldMapIcons()` | Remove all world-map pins |
+| `RGXWorldMap:AddMinimapIcon(pinFrame, icon, mapID, x, y, name)` | Place a pin on the minimap |
+| `RGXWorldMap:RemoveMinimapIcon(name)` | Remove a minimap pin by name |
+| `RGXWorldMap:UpdateMinimapIcon(name, x, y)` | Update a minimap pin position |
+| `RGXWorldMap:RemoveAllMinimapIcons()` | Remove all minimap pins |
+| `RGXWorldMap:GetPlayerWorldPosition()` | Returns `x, y, instance` of the player |
+| `RGXWorldMap:GetPlayerZone()` | Returns the player's `uiMapID` |
+| `RGXWorldMap:GetZoneSize(mapID)` | Returns `width, height` in yards |
+| `RGXWorldMap:GetWorldCoordinatesFromZone(zoneX, zoneY, mapID)` | Zone 0-100 coords → world coords |
+| `RGXWorldMap:GetZoneCoordinatesFromWorld(worldX, worldY, mapID)` | World coords → zone 0-100 coords |
+| `RGXWorldMap:GetWorldVector(instance, x1, y1, x2, y2)` | Returns `angle, distance` between two world points |
+| `RGXWorldMap:GetWorldDistance(instance, x1, y1, x2, y2)` | Returns distance between two world points |
+
+The worldmap module registers with `category = "game"`. C_Map is universal across all supported flavors so no compat gate is required; Classic-era clients fall back to HereBeDragons-2.0 when available. The `RGXWorldMap` global is a compatibility alias.
 
 As of **v2.1.0** every module above is loaded by the XML loader. There are no dormant modules.
