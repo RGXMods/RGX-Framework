@@ -1,7 +1,6 @@
 # RGX-Framework API Reference
 
-Source beta candidate: `RGX-Framework.toc` declares `v2.7.18-beta.1`;
-the latest stable published release remains `v2.7.17`.
+Current release: `v2.7.18`. Existing public API semantics are preserved.
 
 
 Complete public API by module. See individual module docs for deeper detail:

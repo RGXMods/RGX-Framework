@@ -1,7 +1,6 @@
 # Auras - `RGXAuras`
 
-Source beta candidate: `RGX-Framework.toc` declares `v2.7.18-beta.1`;
-the latest stable published release remains `v2.7.17`. Aura semantics are unchanged.
+Current release: `v2.7.18`. Aura semantics are unchanged.
 
 
 `RGXAuras` is the framework's accessible-only aura boundary. It checks

@@ -1,9 +1,7 @@
 # RGX-Framework
 
-Source beta candidate: `RGX-Framework.toc` declares `v2.7.18-beta.1`;
-the latest stable published release remains `v2.7.17`. See the
-[beta notes](docs/changelogs/2.7.18-beta.1.md) for database recovery fixes and
-the outstanding in-game validation checklist.
+The `v2.7.18` database hotfix prevents recursive settings adoption and restores
+writable profile-store recovery. See the [release notes](docs/changelogs/2.7.18.md).
 
 
 **One dependency. Everything your addon suite needs.**
@@ -17,7 +15,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.7.17`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.17)
+**Latest published release:** [`v2.7.18`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.18)
 
 
 **1. Declare the dependency:**
