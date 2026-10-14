@@ -590,6 +590,38 @@ Access tokens via `Design:GetColor("primary")` / `Design:GetColor("accent")` or
 `SetMainColor` / `SetColors` / `UseTheme` override the tokens; the framework
 settings preset selector stores its choice in `RGXFrameworkDB.themePreset`.
 
+#### `GetColor` resolution order
+
+`Design:GetColor(key)` resolves in this exact order (see
+`docs/THEMING.md#getcolor-resolution-order` and
+`libraries/design/design.lua`):
+
+1. main-shade derivatives — `mainSurface`/`mainHover`/`mainBorder` are
+   computed live from `Theme.primary` (`× 0.10 / 0.20 / 0.35`) and win over
+   everything else;
+2. theme tokens — the exact stage-2 keys from `THEME_KEYS`: `primary`,
+   `main`, `mainColor`, `highlight` (→ `Theme.primary`), `accent`
+   (→ `Theme.accent`), and `borderActive` (→ `Theme.primary`). The wider
+   alias set (`highlightColor`, `themeColor`, `secondary`,
+   `secondaryHighlight`) is accepted only on the *write* side by
+   `SetTheme`; it is not readable through `GetColor`;
+3. structural palette — the key is looked up in `Design.Colors`, populated
+   by the active interface style via `Design:SetStyle`;
+4. terminal fallback — any other key returns `{1, 1, 1}` (white).
+
+#### Partial-theme semantics
+
+`SetTheme(config)` is a partial override: it replaces only the tokens that
+are present *and* normalizable in `config` (`{r, g, b}` arrays or
+`{r = …, g = …, b = …}` tables). Absent or malformed tokens keep their
+current value — passing only `primary` leaves `accent` at its previous
+(global) value, which is the "gold accent fallback" observed when a consumer
+re-themes only the main color. To render a coherent pair, supply both tokens,
+use `Design:WithTheme({ primary = …, accent = … }, fn)` for scoped
+construction, or recolor a specific panel via `SetPanelColor`. Named presets
+(`SetThemePreset`) always set both tokens; every `THEME_PRESETS` entry is a
+complete `{primary, accent}` pair.
+
 ### Structural Palette (`Design.Colors`)
 
 | Key | Usage |
@@ -601,7 +633,9 @@ settings preset selector stores its choice in `RGXFrameworkDB.themePreset`.
 | `border` / `hover` / `track` | Borders and widget tracks |
 
 Access via `Design.Colors.surface`, etc. `Design:GetColor` resolves theme
-tokens first and falls back to this table.
+tokens (and live main-shade derivatives) first and falls back to this table;
+unknown keys return `{1, 1, 1}`. Full resolution order and defaults:
+`docs/THEMING.md#theme-key-contract`.
 
 ### Interface Styles (`Design.SetStyle`)
 
