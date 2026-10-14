@@ -97,6 +97,7 @@ RGX.moduleAliases = {
   housing = "RGXHousing",
   tradingpost = "RGXTradingPost",
   prey = "RGXPrey",
+  worldmap = "RGXWorldMap",
 }
 
 local function ResolveModuleAlias(self, normalizedName)
@@ -213,6 +214,7 @@ function RGX:GetDelves()       return self:GetModule("delves")       end
 function RGX:GetHousing()      return self:GetModule("housing")      end
 function RGX:GetTradingPost()  return self:GetModule("tradingpost")  end
 function RGX:GetPrey()         return self:GetModule("prey")         end
+function RGX:GetWorldMap()     return self:GetModule("worldmap")   end
 
 -- Addon registry -- every RGX.Addon is recorded here so other files (or the
 -- same addon's advanced-pattern files) can reach its object and panel by name.
