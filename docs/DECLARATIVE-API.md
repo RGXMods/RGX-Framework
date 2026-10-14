@@ -1,7 +1,6 @@
 # Declarative API
 
-Source beta candidate: `RGX-Framework.toc` declares `v2.7.18-beta.1`;
-the latest stable published release remains `v2.7.17`. No declarative keys changed.
+Current release: `v2.7.18`. No declarative keys changed.
 
 
 The authoring surface and human-readable **Simplicity Contract** for RGX addons.

@@ -1,7 +1,6 @@
 # Quick Start
 
-Source beta candidate: `RGX-Framework.toc` declares `v2.7.18-beta.1`;
-the latest stable published release remains `v2.7.17`.
+Current release: `v2.7.18`.
 
 
 > **The fast path is the [[Declarative API]].** For most addons, `RGXAddon "MyAddon" { ... }` provides saved settings, named repeating timers, an options panel, a slash command, and a minimap button in one call. Events still use scoped methods on the returned addon until declarative `on` ships. The rest of this page is the **à la carte** path: reaching individual modules directly through `_G.RGXFramework`, for addons that need to go beyond the declarative surface (see [RGX-Hello's](https://github.com/RGXMods/RGX-Hello) `data/visualtest.lua` for a full worked example of this style).

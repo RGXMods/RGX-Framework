@@ -1,7 +1,6 @@
 # RGX Studio Roadmap
 
-Source beta candidate: `RGX-Framework.toc` declares `v2.7.18-beta.1`;
-the latest stable published release remains `v2.7.17`. This does not unblock Studio.
+Current release: `v2.7.18`. This does not unblock Studio.
 
 
 ## Milestone Status
