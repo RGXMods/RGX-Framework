@@ -7,21 +7,21 @@ World of Warcraft addon archive.
 
 ## Current Release
 
-[`v2.7.16`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.16)
+[`v2.7.17`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.17)
 publishes exactly two GitHub assets:
 
 | Asset | Purpose |
 |---|---|
-| `RGX-Framework-v2.7.16.zip` | The only product archive; install this addon |
+| `RGX-Framework-v2.7.17.zip` | The only product archive; install this addon |
 | `release.json` | In-house packager metadata for automation |
 
-The `v2.7.16` ZIP is expected to contain one `RGX-Framework/` root and exactly 111
+The `v2.7.17` ZIP is expected to contain one `RGX-Framework/` root and exactly 111
 runtime files. Verify the asset and digest after publishing with
 GitHub CLI:
 
 ```bash
-gh release view v2.7.16 --repo RGXMods/RGX-Framework --json assets \
-  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.16.zip") | .digest'
+gh release view v2.7.17 --repo RGXMods/RGX-Framework --json assets \
+  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.17.zip") | .digest'
 ```
 
 CurseForge is the currently configured addon service. Wago is configured with
