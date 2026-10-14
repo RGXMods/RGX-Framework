@@ -1,5 +1,7 @@
 # Declarative API
 
+Current release: `v2.7.18`. No declarative keys changed.
+
 
 The authoring surface and human-readable **Simplicity Contract** for RGX addons.
 Evolution is additive-only: what you write today keeps working forever. The

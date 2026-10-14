@@ -1,5 +1,7 @@
 # Auras - `RGXAuras`
 
+Current release: `v2.7.18`. Aura semantics are unchanged.
+
 
 `RGXAuras` is the framework's accessible-only aura boundary. It checks
 Blizzard's aura-specific and generic access predicates before querying,
