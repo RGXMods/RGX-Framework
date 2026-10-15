@@ -144,8 +144,9 @@ try {
       function w:SetBackdropBorderColor(r, g, b, a) self.borderColor = { r, g, b, a } end
       return w
     end
-    function CreateFrame(kind, _, parent)
+    function CreateFrame(kind, name, parent)
       local w = widget(kind, parent)
+      if name and not _G[name] then _G[name] = w end
       CREATED[#CREATED + 1] = w
       return w
     end
@@ -183,7 +184,10 @@ try {
 
     local modules = {}
     RGXFramework = {}
-    function RGXFramework:RegisterModule(name, module) modules[name] = module end
+    function RGXFramework:RegisterModule(name, module)
+      modules[name] = module
+      if name == "colorpicker" then _G.RGXColorPicker = module end
+    end
     function RGXFramework:GetModule(name) return modules[name] end
     function RGXFramework:GetDesign() return modules.design end
     function RGXFramework:Error() end

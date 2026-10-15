@@ -547,10 +547,11 @@ scenario("Cancel is safe before first open and ESC can close the dialog", functi
   CP:Cancel()
   UISpecialFrames = {}
   CP.frame = nil
+  _G.RGXColorPickerDialog = nil
   CP:GetFrame()
   local found = false
   for _, name in ipairs(UISpecialFrames) do
-    if name == "RGXColorPicker" then found = true end
+    if name == "RGXColorPickerDialog" then found = true end
   end
   assert(found, "dialog did not join UISpecialFrames")
   CP.frame = saved
@@ -564,6 +565,7 @@ scenario("a short class row centres instead of hugging the left margin", functio
     RAID_CLASS_COLORS[name] = saved[name]
   end
   CP.frame = nil
+  _G.RGXColorPickerDialog = nil
   local slim = CP:GetFrame()
   assert(#slim.classRow.swatches == 10, "expected 10 class swatches, got " .. #slim.classRow.swatches)
   local first = slim.classRow.swatches[1].points[1]
@@ -574,6 +576,7 @@ scenario("a short class row centres instead of hugging the left margin", functio
   assert(lastPt[4] + last.width <= 260.5, "centred row overhangs the content width")
   RAID_CLASS_COLORS = saved
   CP.frame = nil
+  _G.RGXColorPickerDialog = nil
   f = CP:GetFrame()
 end)
 
@@ -627,6 +630,22 @@ scenario("Show accepts a brand border and restores the design border", function(
       "design border is inconsistent across sides")
   end
   assert(first[1] ~= 0.345, "design border did not return")
+end)
+
+scenario("Escape resolves the popup frame without replacing its module alias", function()
+  local calls = 0
+  UISpecialFrames = {}
+  CP:Show({ r = 1, g = 0, b = 0 }, function() calls = calls + 1 end)
+  CP:Init()
+  assert(_G.RGXColorPicker == CP, "named dialog overwrote the module alias")
+  local resolved
+  for _, name in ipairs(UISpecialFrames) do
+    if _G[name] == CP.frame then resolved = _G[name] end
+  end
+  assert(resolved, "ESC target resolves to the module table instead of the popup frame")
+  assert(resolved:IsShown(), "popup is not shown before Escape")
+  resolved:Hide()
+  assert(not CP.frame:IsShown() and calls == 0, "Escape did not dismiss without committing")
 end)
 
 print(string.format("COLORPICKER %d passed, %d failed", pass, fail))
