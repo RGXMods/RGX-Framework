@@ -210,6 +210,7 @@ Full documentation lives in the [`docs/`](docs/) directory:
 - **[Fonts System](docs/FONTS.md)** — registry, blocklist, style objects, dropdown schemas, UI controls, flag helpers, dual-schema design
 - **[Dropdowns System](docs/DROPDOWNS.md)** — nested menus, auto-width, inline buttons, item normalization, MenuUtil vs legacy compat
 - **[Theming & Design](docs/THEMING.md)** — color palette, font styling conventions, texture system, consistent UI patterns
+- **[Timer Bars](docs/TIMERS.md)** — LibCandyBar-3.0 replacement: frame-based countdown/progress bars, completion/cancel callbacks, pooled-consumer compatibility fields
 
 ### Localization
 

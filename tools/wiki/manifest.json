@@ -23,6 +23,7 @@
         { "doc": "TEXTURES.md",    "wiki": "Textures" },
         { "doc": "SOUND.md",       "wiki": "Sound" },
         { "doc": "MINIMAP.md",     "wiki": "Minimap" },
+        { "doc": "TIMERS.md",      "wiki": "Timers" },
         { "doc": "WORLDMAP.md",    "wiki": "WorldMap" },
         { "doc": "AURAS.md",       "wiki": "Auras" },
         { "doc": "TOOLTIP.md",     "wiki": "Tooltip" },
