@@ -1,6 +1,6 @@
 # SUPER SIMPLE RGX Integration
 
-Current release: `v2.7.19`.
+Current release: `v2.7.20`.
 
 
 This page documents the released `v2.7.0` API.

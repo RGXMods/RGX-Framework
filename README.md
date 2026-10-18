@@ -1,8 +1,8 @@
 # RGX-Framework
 
-The `v2.7.19` release stops the login-time SharedMedia scan from re-scanning the
-framework's own registry and adds world-map pin/waypoint primitives and a picker
-Escape fix. See the [release notes](docs/changelogs/2.7.19.md).
+The `v2.7.20` release restores minimap button visibility persistence for
+consumer addons that create a minimap button without declaring their own
+database. See the [release notes](docs/changelogs/2.7.20.md).
 
 
 **One dependency. Everything your addon suite needs.**
@@ -16,7 +16,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.7.19`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.19)
+**Latest published release:** [`v2.7.20`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.20)
 
 
 **1. Declare the dependency:**
