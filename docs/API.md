@@ -1067,7 +1067,7 @@ Milestone/progression modules. Each method registers a pcall-wrapped callback. U
 
 ## WorldMap (`RGXWorldMap`)
 
-World-map pin and waypoint primitives. Replaces HereBeDragons-Pins semantics for RGX consumers. Pin methods manage frames on the world map and minimap. Coordinate helpers route through the `RGXWorldMap.Coords` adapter, which wraps C_Map on Retail and falls back to HereBeDragons-2.0 when available on Classic-era clients.
+World-map pin and waypoint primitives. Pin methods manage frames on the world map and minimap. Coordinate helpers route through the `RGXWorldMap:GetCoordsAdapter()` seam, which wraps the native C_Map API only (no external coordinate library is referenced or embedded) and is capability-gated per flavor.
 
 | Method | Description |
 |---|---|
@@ -1079,14 +1079,14 @@ World-map pin and waypoint primitives. Replaces HereBeDragons-Pins semantics for
 | `RGXWorldMap:RemoveMinimapIcon(name)` | Remove a minimap pin by name |
 | `RGXWorldMap:UpdateMinimapIcon(name, x, y)` | Update a minimap pin position |
 | `RGXWorldMap:RemoveAllMinimapIcons()` | Remove all minimap pins |
-| `RGXWorldMap:GetPlayerWorldPosition()` | Returns `x, y, instance` of the player |
+| `RGXWorldMap:GetPlayerWorldPosition()` | Returns `worldX, worldY` (continent yards), `continentID` of the player |
 | `RGXWorldMap:GetPlayerZone()` | Returns the player's `uiMapID` |
-| `RGXWorldMap:GetZoneSize(mapID)` | Returns `width, height` in yards |
-| `RGXWorldMap:GetWorldCoordinatesFromZone(zoneX, zoneY, mapID)` | Zone 0-100 coords → world coords |
-| `RGXWorldMap:GetZoneCoordinatesFromWorld(worldX, worldY, mapID)` | World coords → zone 0-100 coords |
+| `RGXWorldMap:GetZoneSize(mapID)` | Returns `width, height` in yards (retail/forever; nils where `C_Map.GetMapWorldSize` is absent) |
+| `RGXWorldMap:GetWorldCoordinatesFromZone(zoneX, zoneY, mapID, floor)` | Zone 0-100 coords → `worldX, worldY, continentID` (`floor` unused) |
+| `RGXWorldMap:GetZoneCoordinatesFromWorld(worldX, worldY, continentID)` | World coords → zone 0-100 coords + `uiMapID` |
 | `RGXWorldMap:GetWorldVector(instance, x1, y1, x2, y2)` | Returns `angle, distance` between two world points |
 | `RGXWorldMap:GetWorldDistance(instance, x1, y1, x2, y2)` | Returns distance between two world points |
 
-The worldmap module registers with `category = "game"`. C_Map is universal across all supported flavors so no compat gate is required; Classic-era clients fall back to HereBeDragons-2.0 when available. The `RGXWorldMap` global is a compatibility alias.
+The worldmap module registers with `category = "game"`. Every coordinate call is capability-gated: a flavor that lacks an API (for example `C_Map.GetMapWorldSize` on classic-era/tbc/mists) returns documented nils, never errors. The `RGXWorldMap` global is a compatibility alias.
 
 As of **v2.1.0** every module above is loaded by the XML loader. There are no dormant modules.
