@@ -186,6 +186,41 @@ try {
       row.labelButton:Click(); reset()
       assert(not storage.flag and not row.check:GetChecked() and calls == 4)
     `],
+    ["toggle hover callbacks compose with the control and stay isolated", `
+      local storage, events, seen = {flag = true}, {}, {}
+      local toggle = UI:CreateToggle({}, {key = 'flag', storage = storage, default = false,
+        onEnter = function(self) events[#events + 1] = 'enter'; seen.enter = self end,
+        onLeave = function(self) events[#events + 1] = 'leave'; seen.leave = self end})
+      assert(toggle.check.scripts.OnEnter and toggle.check.scripts.OnLeave, 'toggle hover hooks missing')
+      toggle.check.scripts.OnEnter(toggle.check)
+      toggle.check.scripts.OnLeave(toggle.check)
+      assert(events[1] == 'enter' and events[2] == 'leave', 'toggle hover callbacks must fire in enter/leave order')
+      assert(seen.enter == toggle.check and seen.leave == toggle.check, 'toggle hover self must be the check')
+      assert(storage.flag == true and toggle.check:GetChecked(), 'hover must not change persisted state')
+      local reported = RGXFramework.errors
+      local leaves, later = 0, 0
+      local failing = UI:CreateToggle({}, {key = 'x', storage = {}, default = true,
+        onEnter = function() error('hover boom') end, onLeave = function() leaves = leaves + 1 end})
+      failing.check.scripts.OnEnter(failing.check)
+      assert(RGXFramework.errors == reported + 1, 'failing hover callback must be reported')
+      failing.check:HookScript('OnEnter', function() later = later + 1 end)
+      failing.check.scripts.OnEnter(failing.check)
+      failing.check.scripts.OnLeave(failing.check)
+      assert(later == 1 and leaves == 1, 'later hooks and OnLeave must still run after a failure')
+    `],
+    ["checkbox hover callbacks fire without breaking label forwarding", `
+      local events, seen = {}, {}
+      local row = UI:CreateCheckbox({}, 'Enable option', {
+        onEnter = function(self) events[#events + 1] = 'in'; seen.enter = self end,
+        onLeave = function() events[#events + 1] = 'out' end})
+      assert(row.checkbox.scripts.OnEnter and row.checkbox.scripts.OnLeave, 'checkbox hover hooks missing')
+      row.checkbox.scripts.OnEnter(row.checkbox)
+      row.checkbox.scripts.OnLeave(row.checkbox)
+      assert(events[1] == 'in' and events[2] == 'out', 'checkbox hover must fire in enter/leave order')
+      assert(seen.enter == row.checkbox, 'checkbox hover self must be the checkbox')
+      row.labelButton:Click()
+      assert(row.checkbox:GetChecked(), 'hover hooks must not break label forwarding')
+    `],
     ["bound text input commits, projects placeholder, and resets", `
       local storage, committed = {}, {}
       local reset
