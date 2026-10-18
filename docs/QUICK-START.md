@@ -1,6 +1,6 @@
 # Quick Start
 
-Current release: `v2.7.19`.
+Current release: `v2.7.20`.
 
 
 > **The fast path is the [[Declarative API]].** For most addons, `RGXAddon "MyAddon" { ... }` provides saved settings, named repeating timers, an options panel, a slash command, and a minimap button in one call. Events still use scoped methods on the returned addon until declarative `on` ships. The rest of this page is the **à la carte** path: reaching individual modules directly through `_G.RGXFramework`, for addons that need to go beyond the declarative surface (see [RGX-Hello's](https://github.com/RGXMods/RGX-Hello) `data/visualtest.lua` for a full worked example of this style).
