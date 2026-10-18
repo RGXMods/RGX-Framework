@@ -358,7 +358,12 @@ local function BuildAddonOptionTabs(UI, addon, options, columns, resolveControl)
                     if ctrl and type(ctrl) == "table" then
                         local w
                         if type(ctrl.toggle) == "string" then
-                            w = UI:CreateToggle(host, { key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default })
+                            -- Canonical on/off element: the declarative toggle renders the
+                            -- consumer-proven switch. CreateToggle stays as a legacy helper.
+                            w = UI:CreateSwitch(host, { key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default })
+                            if w and w.HookScript and w.Refresh then
+                                w:HookScript("OnShow", function() w:Refresh() end)
+                            end
                         elseif type(ctrl.slider) == "string" then
                             w = UI:CreateSlider(host, { key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper), storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100, step = ctrl.step or 1, suffix = ctrl.suffix, progress = ctrl.progress, valueDisplay = ctrl.valueDisplay })
                         elseif type(ctrl.textbox) == "string" then

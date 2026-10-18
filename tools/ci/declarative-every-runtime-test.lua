@@ -272,7 +272,7 @@ for index, control in ipairs({ "toggle enabled extra", "button nonsense", "slide
 end
 local installPanelRefresh = assert(loadstring("return function(panel, QueueBannerBuild, ClearContent, CreateAddHelper, ReflowScrollContent, withPanelTheme)\n"
     .. __rgxPanelRefreshSource .. "\nend"))()
-local widgets, fontBindings, fontRefreshes, panelRefreshes = {}, 0, 0, 0
+local widgets, switches, fontBindings, fontRefreshes, panelRefreshes = {}, {}, 0, 0, 0
 local profileChanged, panelOpts
 local storage = { titleFont = "Friz Quadrata" }
 function storage:OnProfileChanged(callback) profileChanged = callback end
@@ -286,7 +286,14 @@ local ui = {
     CreateScrollPage = function() return widget() end,
     CreateFlowLayout = function() return { Add = function() end, Apply = function() return 80 end } end,
     CreateSlider = function(_, _, opts) widgets[opts.key] = opts return widget() end,
-    CreateToggle = function() return widget() end,
+    CreateSwitch = function(_, _, opts)
+        local w = widget()
+        w.opts = opts
+        function w:Refresh() self.value = opts.storage and opts.storage[opts.key] end
+        w:Refresh()
+        switches[opts.key] = w
+        return w
+    end,
     CreateLabel = function() return widget() end,
     CreateColorPicker = function() return widget() end,
     CreateButton = function(_, _, opts)
@@ -337,6 +344,13 @@ check(widgets.negative.min == -10 and widgets.negative.max == -5, "negative rang
 check(widgets.replaced.min == -20 and widgets.replaced.max == -10 and not widgets.original, "table list replacement during onInit must remain visible")
 check(widgets.late.min == 1 and widgets.late.max == 2, "table list append during onInit must remain visible")
 check(widgets.decimal.min == -1.5 and widgets.decimal.max == 0.5 and widgets.decimal.step == 0.25, "signed decimal bounds and step must survive rendering")
+check(switches.enabled and switches.enabled.opts.storage == storage, "declarative toggle must bind CreateSwitch to the addon storage")
+check(switches.enabled.opts.default == nil, "omitted toggle default must stay nil for the switch's own true default")
+check(type(switches.enabled.OnShow) == "function", "switch row must re-project storage when the panel reopens")
+storage.enabled = true
+switches.enabled.OnShow()
+check(switches.enabled.value == true, "panel reopen must restore the persisted switch state")
+storage.enabled = nil
 widgets.Reset.click(widgets.Reset)
 check(inlineAddon.resetCount == 1, "string method must receive its owning addon, including methods added during onInit")
 widgets.Table.click(widgets.Table)
