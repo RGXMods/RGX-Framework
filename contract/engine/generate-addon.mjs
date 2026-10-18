@@ -39,6 +39,12 @@ function luaNumber(value, what) {
   return number;
 }
 
+function alphaNumber(value, what) {
+  const number = luaNumber(value, what);
+  if (number < 0 || number > 100) throw new Error(`${what} must be between 0 and 100`);
+  return number;
+}
+
 // A hyphen (or other non-identifier character) in the addon name is valid
 // in the name itself but would produce an odd SavedVariables global if
 // concatenated as-is (e.g. "RGX-Hello" -> "RGX-HelloDB"). Strip anything
@@ -100,6 +106,22 @@ function generateAddonLua(spec) {
     if (s.suffix) parts.push(`suffix = ${luaQuote(s.suffix)}`);
     if (s.valueDisplay) parts.push(`valueDisplay = ${luaQuote(s.valueDisplay)}`);
     if (s.progress !== undefined) parts.push(`progress = ${Boolean(s.progress)}`);
+    controls.push(`            { ${parts.join(", ")} },`);
+  }
+  for (const p of spec.panelAlphas ?? []) {
+    const parts = [`panel_alpha = ${luaQuote(p.key)}`];
+    if (p.label) parts.push(`label = ${luaQuote(p.label)}`);
+    if (p.default !== undefined) {
+      parts.push(`default = ${alphaNumber(p.default, `panel_alpha '${p.key}' default`)}`);
+    }
+    if (p.presets?.length) {
+      const entries = p.presets.map((preset) => {
+        if (!preset?.label) throw new Error(`panel_alpha '${p.key}' preset label is required`);
+        const value = alphaNumber(preset.value, `panel_alpha '${p.key}' preset`);
+        return `{ label = ${luaQuote(preset.label)}, value = ${value} }`;
+      });
+      parts.push(`presets = { ${entries.join(", ")} }`);
+    }
     controls.push(`            { ${parts.join(", ")} },`);
   }
   if (controls.length || spec.columns !== undefined) {

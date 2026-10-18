@@ -260,6 +260,26 @@ try {
       control:SetValue('new')
       assert(store.keyword == 'new' and control.input:GetText() == 'new' and fired == 1, 'SetValue must commit like a user edit')
     `],
+    ["panel alpha persists, snaps to presets, and resets", `
+      local storage = {}
+      local reset
+      local factory = UI.CreateResetButton
+      UI.CreateResetButton = function(_, parent, action) reset = action; return CreateFrame('Button', nil, parent) end
+      local control = UI:CreatePanelAlpha({}, {
+        key = 'panelAlpha', storage = storage, default = 80,
+        presets = { { label = 'Low', value = 25 }, { label = 'High', value = 100 } },
+      })
+      UI.CreateResetButton = factory
+      assert(control.button and control.valueLabel and control.presetRow, 'panel alpha parts missing')
+      assert(#control.presetButtons == 2, 'preset buttons missing')
+      assert(storage.panelAlpha == 80 and control.valueLabel:GetText() == '80%', 'default must bind and project')
+      control.presetButtons[1]:Click()
+      assert(storage.panelAlpha == 25 and control.valueLabel:GetText() == '25%', 'preset must snap the slider')
+      control:SetValue(42)
+      assert(storage.panelAlpha == 42 and control.valueLabel:GetText() == '42%', 'SetValue must persist')
+      reset()
+      assert(storage.panelAlpha == 80 and control.valueLabel:GetText() == '80%', 'reset must restore the default')
+    `],
     ["disabled checkbox rejects label activation", `
       local row = UI:CreateCheckbox({}, 'Disabled')
       row.checkbox:SetChecked(false)

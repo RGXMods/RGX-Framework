@@ -429,6 +429,78 @@ function UI:CreateSlider(parent, options)
 end
 
 --[[============================================================================
+PANEL TRANSPARENCY CONTROL
+
+0-100 slider bound to a storage key, with optional named snap presets. Reuses
+the shipped slider mechanics (drag, scroll, reset, OnShow re-position) so the
+consumer applies one plain number (usually SetAlpha(value / 100)).
+
+Usage:
+	UI:CreatePanelAlpha(parent, {
+		key = "panelAlpha",
+		label = "Panel Opacity",
+		default = 100,
+		storage = myDB,
+		presets = {
+			{ label = "Low", value = 25 },
+			{ label = "Med", value = 50 },
+			{ label = "High", value = 100 },
+		},
+		onChange = function(value) end,
+	})
+============================================================================]]
+
+function UI:CreatePanelAlpha(parent, options)
+	options = options or {}
+	local container = self:CreateSlider(parent, {
+		key          = options.key,
+		label        = options.label,
+		min          = 0,
+		max          = 100,
+		step         = options.step or 1,
+		default      = options.default or 100,
+		storage      = options.storage,
+		suffix       = "%",
+		width        = options.width,
+		progress     = options.progress,
+		valueDisplay = options.valueDisplay,
+		onChange     = options.onChange,
+	})
+
+	container.presetButtons = {}
+	local presets = options.presets
+	if type(presets) == "table" and #presets > 0 then
+		local presetWidth = options.presetWidth or 44
+		local row = CreateFrame("Frame", nil, container)
+		row:SetPoint("TOPLEFT", container, "BOTTOMLEFT", 0, -2)
+		row:SetHeight(18)
+		local x = 0
+		for i = 1, #presets do
+			local preset = presets[i]
+			local value = type(preset) == "table" and tonumber(preset.value) or nil
+			assert(preset and preset.label ~= nil and value,
+				"RGX UI: panel alpha presets must be { label, value } entries")
+			assert(value >= 0 and value <= 100,
+				"RGX UI: panel alpha preset values must be between 0 and 100")
+			local button = self:CreateButton(row, {
+				text    = tostring(preset.label),
+				width   = presetWidth,
+				height  = 18,
+				onClick = function() container:SetValue(value) end,
+			})
+			button:SetPoint("LEFT", row, "LEFT", x, 0)
+			x = x + presetWidth + 4
+			container.presetButtons[#container.presetButtons + 1] = button
+		end
+		row:SetWidth(math.max(1, x - 4))
+		container.presetRow = row
+		container:SetHeight((container:GetHeight() or 38) + 20)
+	end
+
+	return container
+end
+
+--[[============================================================================
 VOLUME SLIDER CONTROL
 
 3-position discrete slider (Low / Medium / High) using RGX theme colors.

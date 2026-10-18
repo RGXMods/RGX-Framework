@@ -133,6 +133,50 @@ local slider = UI:CreateSlider(parent, {
 
 ---
 
+### `UI:CreatePanelAlpha(parent, opts)` → `Frame`
+
+Create a 0-100 transparency control bound to a storage table. It is the
+shipped slider with a percent value display, plus optional named preset
+buttons that snap the track to known values. The control stores a plain
+number; apply it where you own the frame (for example
+`MyFrame:SetAlpha(value / 100)`).
+
+**Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `parent` | Frame | Yes | — | Parent frame |
+| `opts.key` | string | Yes | — | Storage key holding the 0-100 value |
+| `opts.storage` | table | No | `{}` | Table holding `storage[key]` (usually your db) |
+| `opts.label` | string | No | key | Label text |
+| `opts.default` | number | No | 100 | Value when storage is empty; Reset target |
+| `opts.width` | number | No | 200 | Track width |
+| `opts.step` | number | No | 1 | Step increment |
+| `opts.presets` | table | No | — | Ordered `{ label = "Low", value = 25 }` snap buttons; each value must be 0-100 |
+| `opts.presetWidth` | number | No | 44 | Preset button width |
+| `opts.valueDisplay` | string | No | `"always"` | Same modes as `UI:CreateSlider` |
+| `opts.progress` | boolean | No | `true` | Show the primary-colored fill behind the thumb |
+| `opts.onChange` | function | No | — | `onChange(value)` on drag, scroll, preset, or Reset |
+
+Returns the slider container plus `.presetRow` and `.presetButtons` (an
+ordered array). `SetValue(value)` commits like a user edit. The value is
+storage-bound and the thumb re-positions whenever the control is shown.
+
+```lua
+local alpha = UI:CreatePanelAlpha(parent, {
+    key = "panelAlpha", storage = MyAddonDB,
+    label = "Panel Opacity", default = 100,
+    presets = {
+        { label = "Low", value = 25 },
+        { label = "Med", value = 50 },
+        { label = "High", value = 100 },
+    },
+    onChange = function(value) MyPanel:SetAlpha(value / 100) end,
+})
+```
+
+---
+
 ### `UI:CreateToggle(parent, opts)` → `Frame`
 
 Create a checkbox toggle bound to a storage table. Both the checkbox and its

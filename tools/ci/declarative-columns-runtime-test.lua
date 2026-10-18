@@ -66,6 +66,7 @@ function stubUI:CreateSwitch(host, opts)
     return w
 end
 function stubUI:CreateTextInput(host, opts) return widget(host, "textbox", opts) end
+function stubUI:CreatePanelAlpha(host, opts) return widget(host, "panel_alpha", opts) end
 function stubUI:CreateSlider(host, opts) return widget(host, "slider", opts) end
 function stubUI:CreateColorPicker(host, opts) return widget(host, "color", opts) end
 function stubUI:CreateButton(host, opts) return widget(host, "button", opts) end
@@ -143,6 +144,15 @@ check(textbox.opts.label == "Keyword" and textbox.opts.default == "seed" and tex
 check(type(textbox.opts.storage) == "table", "textbox row must bind the addon db")
 local flowsTextboxDefault = buildFlows("TextboxDefaultLabel", { General = { { textbox = "keyword" } } }, "General")
 check(flowsTextboxDefault[1].added[1].opts.label == "Keyword", "textbox label should default to the capitalized key")
+
+-- Panel transparency rows bind the reusable 0-100 slider factory.
+local flowsAlpha = buildFlows("PanelAlphaRow", { General = { { panel_alpha = "overlay", default = 90, presets = { { label = "Low", value = 25 } } } } }, "General")
+check(flowsAlpha[1].added[1].kind == "panel_alpha" and flowsAlpha[1].added[1].opts.key == "overlay", "panel_alpha row must bind CreatePanelAlpha")
+check(flowsAlpha[1].added[1].opts.label == "Overlay", "panel_alpha label should default to the capitalized key")
+check(flowsAlpha[1].added[1].opts.default == 90 and #flowsAlpha[1].added[1].opts.presets == 1, "panel_alpha default and presets must pass through")
+local flowsAlphaString = buildFlows("PanelAlphaRowString", { General = { "panel_alpha overlay 'Panel Opacity'" } }, "General")
+check(flowsAlphaString[1].added[1].kind == "panel_alpha" and flowsAlphaString[1].added[1].opts.key == "overlay", "one-line panel_alpha grammar must bind CreatePanelAlpha")
+check(flowsAlphaString[1].added[1].opts.default == 100, "one-line panel_alpha must default to 100")
 
 -- Table-form and one-line toggle rows bind the canonical switch widget.
 local flowsSwitch = buildFlows("SwitchRow", { General = { { toggle = "enabled", label = "Enable" } } }, "General")
