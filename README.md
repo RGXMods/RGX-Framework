@@ -1,8 +1,9 @@
 # RGX-Framework
 
-The `v2.7.20` release restores minimap button visibility persistence for
-consumer addons that create a minimap button without declaring their own
-database. See the [release notes](docs/changelogs/2.7.20.md).
+The `v2.8.0` release adds `RGXTimers`, a frame-based countdown/progress bar
+module that replaces LibCandyBar-3.0 for consumer addons: pooled bars keep
+native frame methods, completion/cancel callbacks, and `exp`-based sorting.
+See the [release notes](docs/changelogs/2.8.0.md).
 
 
 **One dependency. Everything your addon suite needs.**
@@ -16,7 +17,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.7.20`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.20)
+**Latest published release:** [`v2.8.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.8.0)
 
 
 **1. Declare the dependency:**

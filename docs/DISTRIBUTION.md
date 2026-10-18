@@ -1,8 +1,7 @@
 # Distribution
 
-The `v2.7.20` release restores minimap button visibility persistence for
-consumer addons that create a minimap button without declaring their own
-database; storage falls back to the framework SavedVariables.
+The `v2.8.0` release adds `RGXTimers`, a frame-based countdown/progress bar
+module that replaces LibCandyBar-3.0 for consumer addons.
 
 
 RGX-Framework publishes one product: the WoW addon framework. Node tooling,
@@ -11,21 +10,21 @@ World of Warcraft addon archive.
 
 ## Current Release
 
-[`v2.7.20`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.20)
+[`v2.8.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.8.0)
 publishes exactly two GitHub assets:
 
 | Asset | Purpose |
 |---|---|
-| `RGX-Framework-v2.7.20.zip` | The only product archive; install this addon |
+| `RGX-Framework-v2.8.0.zip` | The only product archive; install this addon |
 | `release.json` | In-house packager metadata for automation |
 
-The `v2.7.20` ZIP is expected to contain one `RGX-Framework/` root and exactly 112
+The `v2.8.0` ZIP is expected to contain one `RGX-Framework/` root and exactly 113
 runtime files. Verify the asset and digest after publishing with
 GitHub CLI:
 
 ```bash
-gh release view v2.7.20 --repo RGXMods/RGX-Framework --json assets \
-  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.20.zip") | .digest'
+gh release view v2.8.0 --repo RGXMods/RGX-Framework --json assets \
+  --jq '.assets[] | select(.name == "RGX-Framework-v2.8.0.zip") | .digest'
 ```
 
 CurseForge is the currently configured addon service. Wago is configured with
