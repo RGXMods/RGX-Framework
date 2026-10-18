@@ -26,10 +26,14 @@ export const conformanceCases = [
   { name: "zero columns", opts: { options: { columns: 0 } }, valid: false },
   { name: "four columns", opts: { options: { columns: 4 } }, valid: false },
   { name: "non-numeric columns", opts: { options: { columns: "two" } }, valid: false },
-  ...["slider offset -10--5", "slider offset -1.5-0.5 .25 'Offset'", "textbox keyword", "textbox keyword 'Keyword'", "dropdown mode low|high", "font titleFont", "button 'Reset' ResetSettings", "header 'Settings'", "label 'Notes'", "toggle enabled\t"].map(control => ({
+  { name: "panel alpha control", opts: { options: { General: [{ panel_alpha: "overlay", label: "Panel Opacity", default: 80, presets: [{ label: "Low", value: 25 }, { label: "High", value: 100 }] }] } }, valid: true },
+  { name: "panel alpha default above range", opts: { options: { General: [{ panel_alpha: "overlay", default: 150 }] } }, valid: false },
+  { name: "panel alpha preset below range", opts: { options: { General: [{ panel_alpha: "overlay", presets: [{ label: "Low", value: -5 }] }] } }, valid: false },
+  { name: "unknown panel alpha key", opts: { options: { General: [{ panel_alpha: "overlay", width: 300 }] } }, valid: false },
+  ...["slider offset -10--5", "slider offset -1.5-0.5 .25 'Offset'", "textbox keyword", "textbox keyword 'Keyword'", "panel_alpha overlay", "panel_alpha overlay 'Panel Opacity'", "dropdown mode low|high", "font titleFont", "button 'Reset' ResetSettings", "header 'Settings'", "label 'Notes'", "toggle enabled\t"].map(control => ({
     name: `supported control: ${control}`, opts: { options: { General: [control] } }, valid: true,
   })),
-  ...["toggle enabled extra", "button nonsense", "slider volume nonsense", "textbox", "textbox keyword extra", "dropdown mode low||high", "header 'Title' extra"].map(control => ({
+  ...["toggle enabled extra", "button nonsense", "slider volume nonsense", "textbox", "textbox keyword extra", "panel_alpha", "panel_alpha overlay extra", "dropdown mode low||high", "header 'Title' extra"].map(control => ({
     name: `malformed control: ${control}`, opts: { options: { General: [control] } }, valid: false,
   })),
 ];

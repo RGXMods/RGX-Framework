@@ -249,6 +249,20 @@ server.tool(
       }))
       .optional()
       .describe("Text-input rows bound to string db keys"),
+    panelAlphas: z
+      .array(z.object({
+        key: z.string(),
+        label: z.string().optional(),
+        default: z.number().min(0).max(100).optional(),
+        presets: z
+          .array(z.object({
+            label: z.string(),
+            value: z.number().min(0).max(100),
+          }))
+          .optional(),
+      }))
+      .optional()
+      .describe("Panel-transparency rows (0-100) bound to numeric db keys with optional snap presets"),
   },
   async (spec) => {
     const validate = getValidator();
