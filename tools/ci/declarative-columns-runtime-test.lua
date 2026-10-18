@@ -58,7 +58,13 @@ function stubUI:CreateOptionsPanel(opts)
     capturedPanels[#capturedPanels + 1] = opts
     return { ready = true }
 end
-function stubUI:CreateToggle(host, opts) return widget(host, "toggle", opts) end
+function stubUI:CreateSwitch(host, opts)
+    local w = widget(host, "switch", opts)
+    w.scripts = {}
+    function w:HookScript(name, fn) self.scripts[name] = fn end
+    function w:Refresh() self.refreshCount = (self.refreshCount or 0) + 1 end
+    return w
+end
 function stubUI:CreateTextInput(host, opts) return widget(host, "textbox", opts) end
 function stubUI:CreateSlider(host, opts) return widget(host, "slider", opts) end
 function stubUI:CreateColorPicker(host, opts) return widget(host, "color", opts) end
@@ -137,6 +143,20 @@ check(textbox.opts.label == "Keyword" and textbox.opts.default == "seed" and tex
 check(type(textbox.opts.storage) == "table", "textbox row must bind the addon db")
 local flowsTextboxDefault = buildFlows("TextboxDefaultLabel", { General = { { textbox = "keyword" } } }, "General")
 check(flowsTextboxDefault[1].added[1].opts.label == "Keyword", "textbox label should default to the capitalized key")
+
+-- Table-form and one-line toggle rows bind the canonical switch widget.
+local flowsSwitch = buildFlows("SwitchRow", { General = { { toggle = "enabled", label = "Enable" } } }, "General")
+check(#flowsSwitch == 1 and #flowsSwitch[1].added == 1, "toggle row should produce one control")
+local sw = flowsSwitch[1].added[1]
+check(sw.kind == "switch" and sw.opts.key == "enabled" and sw.opts.label == "Enable", "toggle row must bind CreateSwitch with key and label")
+check(type(sw.opts.storage) == "table", "switch row must bind the addon db")
+check(sw.opts.default == nil, "omitted toggle default must stay nil for the switch's own true default")
+check(type(sw.scripts.OnShow) == "function", "switch row must re-project storage when the panel reopens")
+sw.scripts.OnShow()
+check(sw.refreshCount == 1, "panel reopen must call the switch Refresh")
+local flowsSwitchString = buildFlows("SwitchRowString", { General = { "toggle notify 'Notify'" } }, "General")
+check(flowsSwitchString[1].added[1].kind == "switch" and flowsSwitchString[1].added[1].opts.key == "notify", "one-line toggle grammar must also bind CreateSwitch")
+check(flowsSwitchString[1].added[1].opts.label == "Notify", "one-line toggle label must survive the switch binding")
 
 -- The reserved key is never treated as a tab.
 local _, tabsNoColumns = buildTab("ColumnsNoTab", { columns = 2, General = toggles(1) })
