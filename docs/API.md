@@ -112,7 +112,7 @@ gated.
 | `RGX:Minimap(config)` | Shortcut for `RGX:GetMinimap():Create(config)` |
 | `RGX:CreateMinimapButton(config)` | Convenience minimap pattern with auto-wiring |
 | `RGX:Options(config)` | Shortcut for `RGX:GetUI():CreateOptionsPanel(config)` |
-| `RGX:Toggle(parent, opts)` | Shortcut for `UI:CreateToggle` |
+| `RGX:Toggle(parent, opts)` | Shortcut for `UI:CreateToggle` (legacy checkbox helper; declarative options render `UI:CreateSwitch`) |
 | `RGX:Slider(parent, opts)` | Shortcut for `UI:CreateSlider` |
 | `RGX:ColorPicker(parent, opts)` | Shortcut for `UI:CreateColorPicker` |
 | `RGX:Section(parent, opts)` | Shortcut for `UI:CreateSection` |
@@ -754,9 +754,10 @@ Dragged offsets are written to both the consumer `storage[offsetKey]` and the fr
 | `UI:CreateColorPicker(parent, opts)` | Inline color swatch + picker; returns a control with `:Refresh()` to re-project storage |
 | `UI:CreateSlider(parent, opts)` | Numeric slider (`suffix` appends to the displayed value, e.g. `"%"`) |
 | `UI:CreateTextInput(parent, opts)` | Single-line text input bound to storage (`placeholder`, `Enter`/`Escape` commit, Reset to default) |
-| `UI:CreateToggle(parent, opts)` | Checkbox toggle |
+| `UI:CreateSwitch(parent, opts)` | Canonical db-bound on/off switch; declarative `toggle` controls render this widget |
+| `UI:CreateToggle(parent, opts)` | Legacy imperative checkbox toggle (use `UI:CreateSwitch` for new on/off rows) |
 | `UI:CreateLabel(parent, opts)` | Text label (pass `width` to enable word wrap for long text; omit for single-line) |
-| `UI:CreateCheckBox(parent, opts)` | Checkbox with label |
+| `UI:CreateCheckbox(parent, text, opts)` | Legacy imperative checkbox row with label forwarding |
 | `UI:CreateDropdown(parent, opts)` | Generic dropdown |
 | `UI:CreateResetButton(parent, callback)` | Reset button |
 | `UI:CreateSection(parent, opts)` | Section divider with optional title |

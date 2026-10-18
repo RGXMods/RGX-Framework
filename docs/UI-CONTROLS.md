@@ -37,9 +37,11 @@ the shared widget adapter applies bounds and a grip is created only when
 supported. Dialog surfaces use Design, including its corner preference;
 `square` explicitly overrides it. Consumers own any requested size persistence.
 
-`UI:CreateSwitch(parent, opts)` returns a db-bound on/off button. Its entire
-element, including the label and surrounding hit area, toggles on click; the
-smaller inset square is visual only. `UI:CreateCheckbox(parent, text)` returns
+`UI:CreateSwitch(parent, opts)` returns the canonical db-bound on/off element:
+declarative `toggle` controls (table form and one-line grammar) render it with
+no per-addon styling. Its entire element, including the label and surrounding
+hit area, toggles on click; the smaller inset square is visual only.
+`UI:CreateCheckbox(parent, text, opts)` returns
 an unbound 18px checkbox row with `.checkbox` and `.label`, for consumers that
 manage their own state callbacks. Clicking the text calls the checkbox's current
 native click path once, including its checked-state change and `OnClick`
@@ -135,6 +137,9 @@ local slider = UI:CreateSlider(parent, {
 
 Create a checkbox toggle bound to a storage table. Both the checkbox and its
 text activate the same persisted change callback; Reset restores the default.
+Legacy imperative helper: declarative `toggle` controls render
+`UI:CreateSwitch`; `CreateToggle` remains supported for existing
+checkbox-style rows.
 
 **Parameters:**
 
