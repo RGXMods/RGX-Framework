@@ -2425,7 +2425,8 @@
           "name": "CreateCheckbox",
           "params": [
             "parent",
-            "text"
+            "text",
+            "opts"
           ]
         },
         {

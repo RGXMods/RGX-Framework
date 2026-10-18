@@ -46,6 +46,20 @@ native click path once, including its checked-state change and `OnClick`
 handler. Disabled checkboxes reject text clicks. The text hit target follows
 the label's bounds and does not cover adjacent inline controls.
 
+`CreateCheckbox` and `CreateToggle` accept additive `onEnter`/`onLeave`
+callbacks (the checkbox takes them as a third argument). They install with
+`HookScript`, run after the control's own styling, and are failure-isolated:
+one consumer error is reported through `RGX:Error` without disabling later
+hooks or the control.
+
+Highlight ownership: framework row highlights are square color fills
+(`CreateButton` selected/hover state, tab buttons, the switch track); no row
+renderer paints a rounded selected background. Rounded surfaces come only from
+Design nine-slice panels (`Design:CreateFrame` → `CreateSection` →
+`UI:CreateSection`/`UI:CreateCard`), so a rounded highlight seen behind a row
+belongs to the section/card surface, not the row control. Row radius, border,
+height, and text geometry are unchanged.
+
 ### `UI:CreateButton(parent, opts)` → `Button`
 
 The table form accepts `text`, `width`, `height`, `tooltip`, `tooltipBody`,
@@ -132,6 +146,8 @@ text activate the same persisted change callback; Reset restores the default.
 | `opts.label` | string | No | key | Label text beside the checkbox |
 | `opts.default` | bool | No | — | Value when storage is empty; Reset target |
 | `opts.onChange` | function | No | — | `onChange(checked)` |
+| `opts.onEnter` | function | No | — | `onEnter(check)` after native styling; pcall-isolated |
+| `opts.onLeave` | function | No | — | `onLeave(check)` after native styling; pcall-isolated |
 
 ```lua
 local toggle = UI:CreateToggle(parent, {

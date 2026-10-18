@@ -610,7 +610,25 @@ local function AttachCheckboxLabel(frame, checkbox, label)
     frame.labelButton = target
 end
 
-function UI:CreateCheckbox(parent, text)
+-- Hover callbacks compose with the skin instead of replacing scripts, and a
+-- consumer error can never break unrelated rows or later hooks.
+local function AttachHoverCallbacks(frame, opts, kind)
+    if type(opts) ~= "table" then return end
+    for _, entry in ipairs({ { "OnEnter", "onEnter" }, { "OnLeave", "onLeave" } }) do
+        local callback = opts[entry[2]]
+        if type(callback) == "function" then
+            local script = entry[1]
+            frame:HookScript(script, function(self, ...)
+                local ok, err = pcall(callback, self, ...)
+                if not ok and RGX and type(RGX.Error) == "function" then
+                    RGX:Error("[RGXUI] " .. kind .. " " .. script .. " failed: " .. tostring(err))
+                end
+            end)
+        end
+    end
+end
+
+function UI:CreateCheckbox(parent, text, opts)
     local frame = CreateFrame("Frame", nil, parent)
     frame:SetSize(300, 20)
     local checkbox = CreateFrame("CheckButton", nil, frame)
@@ -625,6 +643,7 @@ function UI:CreateCheckbox(parent, text)
     frame.checkbox = checkbox
     frame.label = label
     AttachCheckboxLabel(frame, checkbox, label)
+    AttachHoverCallbacks(checkbox, opts, "checkbox")
     return frame
 end
 
@@ -660,6 +679,7 @@ function UI:CreateToggle(parent, options)
         storage[key] = enabled
         onChange(enabled)
     end)
+    AttachHoverCallbacks(check, options, "toggle")
     
     -- Reset
     local reset = self:CreateResetButton(container, function()
