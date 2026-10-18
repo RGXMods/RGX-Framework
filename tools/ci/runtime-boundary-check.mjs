@@ -70,6 +70,9 @@ for (const root of RUNTIME_ROOTS) {
       { pattern: /BetterLevelUp/, label: "BetterLevelUp" },
       { pattern: /RGXQoL/, label: "RGXQoL" },
       { pattern: /RGXProfessions/, label: "RGXProfessions" },
+      { pattern: /BattlePetUtility/, label: "BattlePetUtility" },
+      { pattern: /\bBPU\b/, label: "BPU" },
+      { pattern: /\bFFLU\b/, label: "FFLU" },
     ]) {
       const match = raw.match(brand.pattern);
       if (match) {

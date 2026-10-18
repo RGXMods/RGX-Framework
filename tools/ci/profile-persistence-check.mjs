@@ -105,7 +105,7 @@ await scenario("collector backdrops and layout remain separate from minimap text
   assert(loadstring(__minimap))('RGX-Framework',RGX)
   local button=module:Create({name='CollectorTestButton',icon='test',storage={}})
   assert(button.frame.backgroundTexture.kind=='Texture' and button.frame.backdrop==nil)
-  -- ElvUI's backdrop slot must remain free for the Frame used by WindTools.
+  -- A collector's backdrop slot must stay free for the Frame it parents onto the button.
   button.frame.backdrop=CreateFrame('Frame',nil,button.frame)
   button.frame.backdrop:SetFrameLevel(3)
   local bar=widget('Frame');button.frame:SetParent(bar)

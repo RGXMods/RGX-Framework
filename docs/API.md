@@ -908,7 +908,7 @@ Sound:Register(name, opts)
 -- opts: { path, channel, variants, defaultSound, muteable }
 ```
 
-Level-up sound system with variant playback, default-sound muting, and SavedVar integration. Used by BattlePetUtility and the LevelUp sound-pack addons.
+Level-up sound system with variant playback, default-sound muting, and SavedVar integration. Used by the level-up sound-pack products and other production consumers.
 
 ---
 
@@ -1000,7 +1000,7 @@ consumers should use RGXAuras instead.
 
 ## Tooltip (`RGXTooltip`)
 
-Tooltip composition and native-tooltip augmentation. Generalizes the `SetOwner → ClearLines → AddLine/AddDoubleLine × N → Show` boilerplate found across every consumer that hand-builds hover tooltips (BattlePetUtility alone has 71 such call sites), and safely wraps Blizzard's `TooltipDataProcessor` — whose dispatch is **not** pcall-wrapped by Blizzard, so one addon's uncaught error can otherwise break tooltip rendering for every addon.
+Tooltip composition and native-tooltip augmentation. Generalizes the `SetOwner → ClearLines → AddLine/AddDoubleLine × N → Show` boilerplate found across every consumer that hand-builds hover tooltips (one surveyed consumer has 71 such call sites), and safely wraps Blizzard's `TooltipDataProcessor` — whose dispatch is **not** pcall-wrapped by Blizzard, so one addon's uncaught error can otherwise break tooltip rendering for every addon.
 
 | Method | Description |
 |---|---|
@@ -1015,7 +1015,7 @@ Valid `HookNative` type names: `item`, `spell`, `unit`, `aura`, `pet`, `mount`, 
 
 ## SharedMedia (`RGXSharedMedia`)
 
-Multi-type media registry (`sound`, `statusbar`, `font`) with an external-addon scanner. No LibStub / LibSharedMedia dependency. Replaces per-addon local scanning (e.g. BLU's local sharedmedia).
+Multi-type media registry (`sound`, `statusbar`, `font`) with an external-addon scanner. No LibStub / LibSharedMedia dependency. Replaces per-addon local scanning (e.g. a consumer's local sharedmedia).
 
 ```lua
 SM:Register(mediaType, name, path, opts)        -- register one entry
@@ -1050,7 +1050,7 @@ end)
 
 ## Event Callback Modules
 
-Milestone/progression modules. Each method registers a pcall-wrapped callback. Used by BLU v8 feature modules and the LevelUp sound-pack addons.
+Milestone/progression modules. Each method registers a pcall-wrapped callback. Used by the level-up sound-pack products and other production consumers.
 
 | Module (`Global`) | Callbacks |
 |---|---|

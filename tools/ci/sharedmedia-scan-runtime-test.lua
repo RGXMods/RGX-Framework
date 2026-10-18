@@ -17,7 +17,7 @@
 --      (`RGXSharedMedia` is excluded, so registered sounds are not
 --      re-bridged from the module's own registry table).
 --   4. RGX_SHAREDMEDIA_UPDATED still fires exactly once per Scan.
---   5. A BLU-style import via SM:List("sound") sees no duplicate paths.
+--   5. A consumer-style import via SM:List("sound") sees no duplicate paths.
 --
 -- Fixtures (see sharedmedia-scan-runtime-check.mjs):
 --   MyMediaAddon global table with 2 audio paths (one also registered
