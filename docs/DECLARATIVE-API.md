@@ -107,6 +107,7 @@ UI work must still use RGX's safe helpers.
 { toggle = "dbKey", label = "Label", default = true }
 { slider = "dbKey", label = "Label", min = 0, max = 100, step = 1, suffix = "%" }
 { slider = "dbKey", valueDisplay = "hover", progress = false }
+{ textbox = "dbKey", label = "Label", default = "", placeholder = "Hint" }
 { color = "dbKey", label = "Label", default = { r = 1, g = 1, b = 1 } }
 { dropdown = "dbKey", label = "Label", items = { "a", "b" }, width = 260 }
 { button = "Button Text", action = function() ... end, width = 120, height = 22 }
@@ -122,6 +123,7 @@ options = {
         "header 'Settings'",
         "toggle enabled 'Enable Addon'",
         "slider volume 0-100 'Volume'",
+        "textbox keyword 'Keyword'",
         "dropdown quality low|high 'Quality'",
         "color alertColor 'Alert Color'",
         "font titleFont 'Title Font'",
@@ -136,6 +138,8 @@ quotes; labels use single quotes. ASCII whitespace separates tokens and may
 trail the declaration. Sliders require a signed-decimal `min-max` range
 (for example `-10--5`), optional positive step, and optional label. Bounds and
 step must be finite; reversed bounds and non-positive steps are rejected.
+Textboxes bind a string db key with an optional label; an empty commit falls
+back to the table form's `default`.
 Dropdown items use `|` separators without empty entries. Headers/labels require
 quoted text, and button methods must be Lua identifiers.
 

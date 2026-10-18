@@ -2570,6 +2570,13 @@
           ]
         },
         {
+          "name": "CreateTextInput",
+          "params": [
+            "parent",
+            "options"
+          ]
+        },
+        {
           "name": "CreateToggle",
           "params": [
             "parent",
