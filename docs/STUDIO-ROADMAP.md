@@ -1,6 +1,6 @@
 # RGX Studio Roadmap
 
-Current release: `v2.7.18`. This does not unblock Studio.
+Current release: `v2.7.19`. This does not unblock Studio.
 
 
 ## Milestone Status
