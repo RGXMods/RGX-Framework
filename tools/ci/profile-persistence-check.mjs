@@ -115,6 +115,47 @@ await scenario("collector backdrops and layout remain separate from minimap text
   button.frame:SetParent(Minimap);button:PlaceAtAngle()
   assert(button.frame.point[1]=='CENTER' and button.frame.point[2]==Minimap)
 `);
+await scenario("minimap storage falls back to RGX.db when addon omits its own database", `
+  local function widget(kind,parent)
+    local w={kind=kind,parent=parent,scripts={},shown=true}
+    for _,method in ipairs({'SetSize','SetFrameStrata','SetMovable','EnableMouse','RegisterForClicks','RegisterForDrag','SetHighlightTexture','SetTexture','SetMask','SetVertexColor','SetTexCoord'})do w[method]=function()end end
+    function w:GetWidth()return 140 end;function w:GetHeight()return 140 end
+    function w:GetFrameLevel()return 1 end;function w:GetParent()return self.parent end
+    function w:SetParent(p)self.parent=p end;function w:SetPoint(...)self.point={...}end
+    function w:ClearAllPoints()self.point=nil end;function w:SetScript(key,fn)self.scripts[key]=fn end
+    function w:Show()self.shown=true end;function w:Hide()self.shown=false end
+    function w:IsShown()return self.shown end
+    function w:CreateTexture()return widget('Texture',self)end
+    if kind~='Texture'then function w:SetFrameLevel(level)self.level=level end end
+    return w
+  end
+  CreateFrame=function(kind,_,parent)return widget(kind,parent)end
+  Minimap=widget('Frame');local module
+  RGX.RegisterModule=function(_,name,value)if name=='minimap'then module=value end end
+  -- Simulate the framework's own SavedVariables (set in initialization.lua
+  -- ADDON_LOADED handler). RGX.Addon falls back to this when an addon omits
+  -- opts.db, so the button's angle and visibility persist without a
+  -- consumer-owned database.
+  RGX.db = {}; _G.RGXFrameworkDB = RGX.db
+  assert(loadstring(__minimap))('RGX-Framework',RGX)
+  local RGXdb = RGX.db
+  -- storage = RGX.db mirrors the fix: mmOpts.storage = addon.db or RGX.db
+  local button=module:Create({name='ConsumerNoDBButton',icon='test',storage=RGX.db})
+  assert(button._storage == RGX.db, 'storage must be RGX.db when addon omits opts.db')
+  -- Angle persists to both RGX.db and the durable framework store
+  button:SetAngle(310)
+  assert(RGX.db.minimapAngle == 310, 'angle must persist to RGX.db')
+  assert(_G.RGXFrameworkDB.RGXMinimapPositions.ConsumerNoDBButton == 310, 'angle must persist to durable framework store')
+  -- Visibility persists to RGX.db via enabledKey
+  button:SetVisible(false)
+  assert(RGX.db.minimapEnabled == false, 'visibility must persist to RGX.db when addon omits opts.db')
+  button:SetVisible(true)
+  assert(RGX.db.minimapEnabled == true, 'visibility toggle must update RGX.db')
+  -- A fresh button read from the same RGX.db restores both
+  local restored=module:Create({name='ConsumerNoDBButton',icon='test',storage=RGX.db})
+  assert(restored:GetAngle() == 310, 'angle must restore from RGX.db on re-create')
+  assert(restored:GetEnabled() == true, 'enabled state must restore from RGX.db')
+`);
 await scenario("late defaults apply to existing, new and reset profiles", `
   local db = RGX:NewDatabase("LateDB", {})
   assert(type(db.RegisterDefaults) == "function", "no late-default registration API")

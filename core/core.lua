@@ -698,7 +698,7 @@ function RGX.Addon(name, opts)
                 mmOpts.icon = mmOpts.icon
                     or (type(opts.minimap) == "string" and opts.minimap)
                     or "Interface\\Icons\\inv_misc_questionmark"
-                mmOpts.storage = mmOpts.storage or addon.db
+                mmOpts.storage = mmOpts.storage or addon.db or RGX.db
                 if not mmOpts.onLeftClick then
                     mmOpts.onLeftClick = function()
                         if addon.panel then addon.panel:Open() end
