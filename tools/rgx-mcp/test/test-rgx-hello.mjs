@@ -102,6 +102,10 @@ const RGX_HELLO_GENERATE_SPEC = {
   toggles: ["enabled"],
   sliders: [{ key: "volume", label: "Volume", min: 0, max: 100, suffix: "%" }],
   textboxes: [{ key: "keyword", label: "Keyword", placeholder: "Type a keyword" }],
+  panelAlphas: [{
+    key: "overlayOpacity", label: "Panel Opacity", default: 80,
+    presets: [{ label: "Low", value: 25 }, { label: "High", value: 100 }],
+  }],
 };
 
 let failures = 0;
@@ -184,6 +188,10 @@ try {
   );
   check("generator emits the slider's % suffix", generatedLua.includes('suffix = "%"'));
   check("generator emits textbox rows with placeholder hints", generatedLua.includes('{ textbox = "keyword", label = "Keyword", placeholder = "Type a keyword" }'));
+  check(
+    "generator emits panel alpha rows with defaults and presets",
+    generatedLua.includes('{ panel_alpha = "overlayOpacity", label = "Panel Opacity", default = 80, presets = { { label = "Low", value = 25 }, { label = "High", value = 100 } } }')
+  );
   check("generator emits a named repeating timer", generatedLua.includes("every   = {") && generatedLua.includes("heartbeat = { 1, function(self, timer)"));
   let generatedParses = true;
   let generatedParseError = "";
@@ -242,6 +250,18 @@ try {
     opts: { options: { General: [{ textbox: "keyword", width: 300 }] } },
   } });
   check("unknown textbox keys are rejected", JSON.parse(invalidTextbox.content[0].text).valid === false);
+  const alphaValidation = await client.callTool({ name: "rgx_validate_addon", arguments: {
+    opts: { options: { General: [{ panel_alpha: "overlayOpacity", label: "Panel Opacity", default: 80, presets: [{ label: "Low", value: 25 }] }] } },
+  } });
+  check("panel alpha controls validate against the shared contract", JSON.parse(alphaValidation.content[0].text).valid === true);
+  const alphaString = await client.callTool({ name: "rgx_validate_addon", arguments: {
+    opts: { options: { General: ["panel_alpha overlayOpacity 'Panel Opacity'"] } },
+  } });
+  check("one-line panel alpha controls validate as shipped", JSON.parse(alphaString.content[0].text).valid === true);
+  const invalidAlpha = await client.callTool({ name: "rgx_validate_addon", arguments: {
+    opts: { options: { General: [{ panel_alpha: "overlayOpacity", width: 300 }] } },
+  } });
+  check("unknown panel alpha keys are rejected", JSON.parse(invalidAlpha.content[0].text).valid === false);
 
   const everyVal = await client.callTool({
     name: "rgx_validate_addon",

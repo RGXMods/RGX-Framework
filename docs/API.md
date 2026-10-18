@@ -753,6 +753,7 @@ Dragged offsets are written to both the consumer `storage[offsetKey]` and the fr
 | `UI:OpenFontMenu(anchor, opts)` | Pop-up font menu |
 | `UI:CreateColorPicker(parent, opts)` | Inline color swatch + picker; returns a control with `:Refresh()` to re-project storage |
 | `UI:CreateSlider(parent, opts)` | Numeric slider (`suffix` appends to the displayed value, e.g. `"%"`) |
+| `UI:CreatePanelAlpha(parent, opts)` | 0-100 panel-transparency slider with optional `{ label, value }` snap presets |
 | `UI:CreateTextInput(parent, opts)` | Single-line text input bound to storage (`placeholder`, `Enter`/`Escape` commit, Reset to default) |
 | `UI:CreateSwitch(parent, opts)` | Canonical db-bound on/off switch; declarative `toggle` controls render this widget |
 | `UI:CreateToggle(parent, opts)` | Legacy imperative checkbox toggle (use `UI:CreateSwitch` for new on/off rows) |

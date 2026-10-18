@@ -425,7 +425,7 @@ local function ParseInlineControl(raw, owner)
     local function invalid()
         error("RGXAddon: invalid control string: " .. tostring(raw), 3)
     end
-    local kind, rest = raw:match("^(%l+)%s+(.+)$")
+    local kind, rest = raw:match("^(%l[%l_]*)%s+(.+)$")
     if not kind then return invalid() end
     if kind == "header" or kind == "label" then
         local text = rest:match("^'([^']*)'%s*$")
@@ -442,7 +442,7 @@ local function ParseInlineControl(raw, owner)
     end
     local core, label = rest:match("^(.-)%s+'([^']*)'%s*$")
     core = core or rest
-    if kind == "toggle" or kind == "color" or kind == "font" or kind == "textbox" then
+    if kind == "toggle" or kind == "color" or kind == "font" or kind == "textbox" or kind == "panel_alpha" then
         local key = core:match("^([^%s'\"]+)$")
         if not key then return invalid() end
         return { [kind] = key, label = label }

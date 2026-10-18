@@ -107,6 +107,7 @@ UI work must still use RGX's safe helpers.
 { toggle = "dbKey", label = "Label", default = true }
 { slider = "dbKey", label = "Label", min = 0, max = 100, step = 1, suffix = "%" }
 { slider = "dbKey", valueDisplay = "hover", progress = false }
+{ panel_alpha = "dbKey", label = "Label", default = 100, presets = { { label = "Low", value = 25 } } }
 { textbox = "dbKey", label = "Label", default = "", placeholder = "Hint" }
 { color = "dbKey", label = "Label", default = { r = 1, g = 1, b = 1 } }
 { dropdown = "dbKey", label = "Label", items = { "a", "b" }, width = 260 }
@@ -128,6 +129,7 @@ options = {
         "toggle enabled 'Enable Addon'",
         "slider volume 0-100 'Volume'",
         "textbox keyword 'Keyword'",
+        "panel_alpha overlay 'Panel Opacity'",
         "dropdown quality low|high 'Quality'",
         "color alertColor 'Alert Color'",
         "font titleFont 'Title Font'",
@@ -144,6 +146,9 @@ trail the declaration. Sliders require a signed-decimal `min-max` range
 step must be finite; reversed bounds and non-positive steps are rejected.
 Textboxes bind a string db key with an optional label; an empty commit falls
 back to the table form's `default`.
+Panel-transparency rows bind a 0-100 numeric key to the shipped
+`UI:CreatePanelAlpha` slider; optional `presets` are `{ label, value }`
+entries whose values must also be 0-100.
 Dropdown items use `|` separators without empty entries. Headers/labels require
 quoted text, and button methods must be Lua identifiers.
 

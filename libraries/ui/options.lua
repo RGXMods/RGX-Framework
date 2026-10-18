@@ -262,6 +262,21 @@ local function CreateAddHelper(frame)
         return w
     end
 
+    function frame:PanelAlpha(label, storage, key, default, opts)
+        opts = opts or {}
+        local w = UI:CreatePanelAlpha(canvas, {
+            label    = label,
+            storage  = storage,
+            key      = key,
+            default  = default or 100,
+            width    = opts.width,
+            presets  = opts.presets,
+            onChange = opts.onChange,
+        })
+        Add(w)
+        return w
+    end
+
     function frame:Slider(label, storage, key, min, max, default, suffix)
         local w = UI:CreateSlider(canvas, {
             label   = label,
@@ -366,6 +381,8 @@ local function BuildAddonOptionTabs(UI, addon, options, columns, resolveControl)
                             end
                         elseif type(ctrl.slider) == "string" then
                             w = UI:CreateSlider(host, { key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper), storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100, step = ctrl.step or 1, suffix = ctrl.suffix, progress = ctrl.progress, valueDisplay = ctrl.valueDisplay })
+                        elseif type(ctrl.panel_alpha) == "string" then
+                            w = UI:CreatePanelAlpha(host, { key = ctrl.panel_alpha, label = ctrl.label or ctrl.panel_alpha:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default or 100, presets = ctrl.presets })
                         elseif type(ctrl.textbox) == "string" then
                             w = UI:CreateTextInput(host, { key = ctrl.textbox, label = ctrl.label or ctrl.textbox:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default or "", placeholder = ctrl.placeholder })
                         elseif type(ctrl.color) == "string" then
