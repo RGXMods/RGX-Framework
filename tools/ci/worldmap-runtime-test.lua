@@ -10,9 +10,10 @@
 --   3. RemoveAllWorldMapIcons clears the whole registry
 --   4. AddMinimapIcon / RemoveMinimapIcon / RemoveAllMinimapIcons behave the
 --      same for the minimap registry
---   5. GetPlayerZone and GetPlayerWorldPosition delegate through the
---      coordinate adapter (stubbed C_Map seam)
---   6. GetZoneSize falls back to HereBeDragons-2.0 when C_Map is absent
+--   5. coordinate helpers resolve through the native C_Map adapter
+--      (world position, zone size, zone<->world conversions)
+--   6. absent client capabilities yield nils, never errors
+--   7. no phantom API name or external-library seam is referenced
 
 local pass, fail = 0, 0
 
@@ -30,7 +31,8 @@ end
 local WM = _G.RGXWorldMap
 assert(WM, "RGXWorldMap did not register as a global")
 
--- The check harness pre-stubs CreateFrame and C_Map; see worldmap-runtime-check.mjs.
+-- The check harness pre-stubs CreateFrame, CreateVector2D and C_Map with
+-- real API names only; see worldmap-runtime-check.mjs.
 
 scenario("module registers as game-category with compat alias", function()
   assert(WM.name == "worldmap", "module name should be worldmap")
@@ -99,23 +101,64 @@ scenario("GetPlayerZone delegates through the coordinate adapter", function()
   assert(zone == 37, "C_Map.GetBestMapForUnit should drive GetPlayerZone, got " .. tostring(zone))
 end)
 
-scenario("GetPlayerWorldPosition delegates through the coordinate adapter", function()
-  local x, y, instance = WM:GetPlayerWorldPosition()
-  assert(x == 0.5 and y == 0.5, "expected stubbed world coordinates")
-  assert(instance == 123, "expected stubbed instance id, got " .. tostring(instance))
+scenario("GetPlayerWorldPosition resolves native C_Map world coordinates", function()
+  -- Player map position (0.5, 0.5) scales to world (500, 400) on continent
+  -- 543 through the harness's GetWorldPosFromMapPos stub (dyadic values so
+  -- the assert is exact, not a float-tolerance guess).
+  local wx, wy, continentID = WM:GetPlayerWorldPosition()
+  assert(wx == 500 and wy == 400,
+    "expected stubbed world coordinates 500,400, got " .. tostring(wx) .. "," .. tostring(wy))
+  assert(continentID == 543, "expected stubbed continent id 543, got " .. tostring(continentID))
 end)
 
-scenario("GetZoneSize falls back to HereBeDragons-2.0 zone data", function()
-  -- C_Map.GetZoneSize is absent in the harness; HBD stub returns 5000, 4000.
+scenario("zone and world coordinates round-trip through C_Map", function()
+  local wx, wy, continentID = WM:GetWorldCoordinatesFromZone(50, 25, 37)
+  assert(wx == 500 and wy == 200 and continentID == 543,
+    "zone->world conversion failed: " .. tostring(wx) .. "," .. tostring(wy) .. "," .. tostring(continentID))
+  local zx, zy, uiMapID = WM:GetZoneCoordinatesFromWorld(wx, wy, continentID)
+  assert(zx == 50 and zy == 25 and uiMapID == 37,
+    "world->zone conversion failed: " .. tostring(zx) .. "," .. tostring(zy) .. "," .. tostring(uiMapID))
+end)
+
+scenario("GetZoneSize returns native C_Map dimensions", function()
+  -- C_Map.GetMapWorldSize ships on Retail/Forever; the stub returns yards.
   local w, h = WM:GetZoneSize(37)
   assert(w == 5000 and h == 4000,
-    "HBD fallback should supply zone size, got " .. tostring(w) .. "," .. tostring(h))
+    "C_Map.GetMapWorldSize should drive GetZoneSize, got " .. tostring(w) .. "," .. tostring(h))
 end)
 
 scenario("GetWorldVector returns angle and distance", function()
   local angle, dist = WM:GetWorldVector(0, 0, 0, 3, 4)
   assert(dist == 5, "3-4-5 triangle should give distance 5, got " .. tostring(dist))
   assert(type(angle) == "number", "angle should be numeric")
+end)
+
+scenario("absent client capabilities yield nils, never errors", function()
+  -- Simulate a Classic-era client: C_Map without GetMapWorldSize and
+  -- without GetPlayerMapPosition. The adapter must degrade to nils
+  -- rather than error or invent data.
+  local savedSize = C_Map.GetMapWorldSize
+  local savedPos = C_Map.GetPlayerMapPosition
+  C_Map.GetMapWorldSize = nil
+  WM._coordsAdapter = nil
+  local w, h = WM:GetZoneSize(37)
+  assert(w == nil and h == nil, "missing GetMapWorldSize must return nils")
+  C_Map.GetPlayerMapPosition = nil
+  WM._coordsAdapter = nil
+  local wx, wy, continentID = WM:GetPlayerWorldPosition()
+  assert(wx == nil and wy == nil and continentID == nil,
+    "missing GetPlayerMapPosition must return nils, got "
+      .. tostring(wx) .. "," .. tostring(wy) .. "," .. tostring(continentID))
+  C_Map.GetPlayerMapPosition = savedPos
+  C_Map.GetMapWorldSize = savedSize
+  WM._coordsAdapter = nil
+end)
+
+scenario("no phantom API or external-library seam exists", function()
+  assert(C_Map.GetPlayerInfoInWorldMap == nil,
+    "phantom C_Map.GetPlayerInfoInWorldMap must never be called")
+  assert(_G.LibStub == nil, "the module must not resolve external libraries")
+  assert(WM._hbd == nil, "the module must not keep an external-library handle")
 end)
 
 local function render()
