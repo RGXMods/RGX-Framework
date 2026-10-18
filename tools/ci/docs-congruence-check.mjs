@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -204,9 +204,16 @@ for (const [metadataKey, service] of [["X-Wago-ID", "Wago"]]) {
   if (!configured && !documentedSkipped) failures.push(`docs/DISTRIBUTION.md: ${service} is unconfigured but not documented as skipped`);
 }
 
-const wikiManifest = read("tools/wiki/manifest.json");
-for (const doc of ["DISTRIBUTION.md", "STUDIO-ROADMAP.md"]) {
-  if (!wikiManifest.includes(`\"doc\": \"${doc}\"`)) failures.push(`tools/wiki/manifest.json: missing ${doc}`);
+const wikiManifest = JSON.parse(read("tools/wiki/manifest.json"));
+const wikiMappedDocs = new Set([
+  ...(wikiManifest.home ? [wikiManifest.home] : []),
+  ...wikiManifest.sections.flatMap((section) => section.pages.map((page) => page.doc)),
+  ...(wikiManifest.sourceOnly ?? []),
+]);
+for (const entry of readdirSync(join(ROOT, "docs"), { withFileTypes: true })) {
+  if (entry.isFile() && entry.name.endsWith(".md") && !wikiMappedDocs.has(entry.name)) {
+    failures.push(`tools/wiki/manifest.json: missing ${entry.name}`);
+  }
 }
 
 const mcpPackage = JSON.parse(read("tools/rgx-mcp/package.json"));
