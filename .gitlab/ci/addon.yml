@@ -59,6 +59,9 @@ addon:validate:
         if test -f module-gating-check.mjs; then
           node module-gating-check.mjs
         fi
+        if test -f timers-runtime-check.mjs; then
+          node timers-runtime-check.mjs
+        fi
         if test -f module-graph-check.mjs && test -f runtime-boundary-check.mjs; then
           npm run arch-check
         fi

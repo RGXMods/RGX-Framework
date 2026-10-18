@@ -89,7 +89,7 @@ const GLOBAL_ALLOWLIST = new Set([
   // library modules
   "RGXFonts", "RGXColors", "RGXColorPicker", "RGXTextures", "RGXDropdowns",
   "RGXUI", "RGXDesign", "RGXDisplay", "RGXMinimap", "RGXTooltip", "RGXLocale",
-  "RGXDataBroker", "RGXSharedMedia", "RGXSound",
+  "RGXDataBroker", "RGXSharedMedia", "RGXSound", "RGXTimers",
   // game adapters
   "RGXAuras", "RGXCombat", "RGXPetBattles", "RGXReputation",
   "RGXAchievement", "RGXLevelUp", "RGXQuest", "RGXHonor", "RGXDelves",

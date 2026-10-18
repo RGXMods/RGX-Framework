@@ -43,6 +43,7 @@ Complete public API by module. See individual module docs for deeper detail:
 | `RGX:GetUI()` | RGXUI |
 | `RGX:GetColorPicker()` | RGXColorPicker |
 | `RGX:GetMinimap()` | RGXMinimap |
+| `RGX:GetTimers()` | RGXTimers |
 | `RGX:GetDesign()` | RGXDesign |
 | `RGX:GetDisplay()` | RGXDisplay |
 | `RGX:GetDataBroker()` | RGXDataBroker |
@@ -865,6 +866,35 @@ acceptance is required; opt-in behavior on other flavors is not yet validated.
 | Method | Description |
 |---|---|
 | `MM:Get(name)` | Retrieve button wrapper by frame name |
+
+---
+
+## Timer Bars (`RGXTimers`)
+
+See [docs/TIMERS.md](TIMERS.md) for the full guide and lifecycle semantics.
+
+| Method | Description |
+|---|---|
+| `Timers:New(texture, width, height)` | Create a frame-based bar (hidden); defaults 200x16, Blizzard bar texture |
+| `Timers:CancelAll()` | Stop every running bar; returns how many were stopped |
+| `bar:SetDuration(seconds)` / `GetDuration()` | Total time; countdown drains from it, progress fills to it |
+| `bar:SetLabel(text)` / `GetLabel()` | Label text |
+| `bar:SetIcon(texture)` | Icon texture; nil hides the icon |
+| `bar:SetColor(r, g, b, a)` | Status bar color (0-1 range) |
+| `bar:SetTexture(texture)` | Status bar texture; nil restores the default |
+| `bar:SetHeight(height)` | Frame height; keeps the icon square |
+| `bar:SetCountdown(bool)` / `SetFill(bool)` | Display mode: drain to zero vs fill to duration |
+| `bar:SetTimeVisible(bool)` / `SetLabelVisible(bool)` | Toggle the time text / label |
+| `bar:SetOnComplete(callback)` | Fires once when the bar reaches its end |
+| `bar:SetOnCancel(callback)` | Fires once when Stop interrupts a running bar |
+| `bar:Start()` | Start timing and show; returns false without a duration |
+| `bar:Stop()` | Stop (cancel callback) and hide; idle bars only hide |
+| `bar:SetValue(value)` / `GetValue()` | Manual update, clamped to [0, duration] |
+| `bar:IsRunning()` | Timer state |
+
+Bars are real frames: `SetPoint`, `SetScript`, `Show`, `Hide`, `IsShown`,
+`SetScale`, ... resolve natively. `bar.exp` / `bar.start` expose the absolute
+expiry stamp used by pooled consumers.
 
 ---
 

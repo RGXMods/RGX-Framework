@@ -97,6 +97,7 @@ RGX.moduleAliases = {
   housing = "RGXHousing",
   tradingpost = "RGXTradingPost",
   prey = "RGXPrey",
+  timers = "RGXTimers",
   worldmap = "RGXWorldMap",
 }
 
@@ -194,6 +195,7 @@ function RGX:GetDropdowns()   return self:GetModule("dropdowns")   end
 function RGX:GetUI()          return self:GetModule("ui")          end
 function RGX:GetColorPicker() return self:GetModule("colorpicker") end
 function RGX:GetMinimap()      return self:GetModule("minimap")      end
+function RGX:GetTimers()       return self:GetModule("timers")       end
 function RGX:GetPetBattles()   return self:GetModule("petbattles")   end
 function RGX:GetSharedMedia()  return self:GetModule("sharedmedia")  end
 function RGX:GetDesign()       return self:GetModule("design")       end
