@@ -1,6 +1,6 @@
 # RGX-Framework API Reference
 
-Current release: `v2.7.20`. Existing public API semantics are preserved.
+Current release: `v2.8.0`. Existing public API semantics are preserved.
 
 
 Complete public API by module. See individual module docs for deeper detail:
