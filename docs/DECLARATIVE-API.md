@@ -215,7 +215,7 @@ remain unchanged.
 
 ### Layout model
 
-One composable vocabulary, top to bottom (proven in BLU): **panel → main page
+One composable vocabulary, top to bottom (proven in production consumers): **panel → main page
 + tabs → tabs can be multi-paged → 1–2 column card grid → rows/cards holding
 the widgets**. The local columns slice is panel → tabs → controls in 1–3
 column flows (`options.columns`, default 1). It creates no declarative cards

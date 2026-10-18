@@ -27,7 +27,7 @@
 | Design | `RGX:Font` one-call styling, `RGXDesign` primitives, theme tokens |
 | System | declarative `every` self-cancellation, `RGX:After`, `RGX:Every`, `RGX:CancelTimer` |
 
-Sound is intentionally untested here — the sound module is a per-addon registry that [BLU](https://github.com/RGXMods/BLU) exercises in production, which is a more honest test than a synthetic registration.
+Sound is intentionally untested here - the sound module is a per-addon registry that production consumers exercise, which is a more honest test than a synthetic registration.
 
 ## The standing pattern
 

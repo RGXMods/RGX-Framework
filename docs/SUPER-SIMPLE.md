@@ -119,10 +119,10 @@ RGXAddon "MyAddon" {
 }
 ```
 
-## BPU Example
+## Consumer Example
 
 ```lua
--- Add RGX fonts to BPU's list
+-- Add RGX fonts to a consumer's list
 for _, info in ipairs(_G.RGXFonts:ListAvailable()) do
     addon:RegisterMedia("font", info.name, info.path)
 end
