@@ -9,7 +9,7 @@ export function parseControlString(source) {
   if (match) return { section: match[2] };
   match = /^button[ \t\r\n\f\v]+'([^']*)'[ \t\r\n\f\v]+([A-Za-z_][A-Za-z0-9_]*)$/.exec(source);
   if (match) return { button: match[1], method: match[2] };
-  match = /^(toggle|color|font)[ \t\r\n\f\v]+([^ \t\r\n\f\v'"]+)(?:[ \t\r\n\f\v]+'([^']*)')?$/.exec(source);
+  match = /^(toggle|color|font|textbox)[ \t\r\n\f\v]+([^ \t\r\n\f\v'"]+)(?:[ \t\r\n\f\v]+'([^']*)')?$/.exec(source);
   if (match) return { [match[1]]: match[2], ...(match[3] !== undefined ? { label: match[3] } : {}) };
   match = /^slider[ \t\r\n\f\v]+([^ \t\r\n\f\v'"]+)[ \t\r\n\f\v]+([+-]?\d*\.?\d+)-([+-]?\d*\.?\d+)(?:[ \t\r\n\f\v]+([+-]?\d*\.?\d+))?(?:[ \t\r\n\f\v]+'([^']*)')?$/.exec(source);
   if (match) {

@@ -143,6 +143,41 @@ local toggle = UI:CreateToggle(parent, {
 
 ---
 
+### `UI:CreateTextInput(parent, opts)` → `Frame`
+
+Create a single-line text input bound to a storage table — it saves and
+restores its value. `Enter` and `Escape` both commit and blur; Reset writes
+the default back. When `opts.placeholder` is set and the stored value is
+empty, the placeholder renders in the muted color and is never persisted. An
+empty commit (or Reset) resolves to `opts.default`.
+
+**Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `parent` | Frame | Yes | — | Parent frame |
+| `opts.key` | string | Yes | — | Storage key the input reads/writes |
+| `opts.storage` | table | No | `{}` | Table holding `storage[key]` |
+| `opts.label` | string | No | key | Label text beside the input |
+| `opts.default` | string | No | `""` | Value when storage is empty; empty-commit and Reset target |
+| `opts.width` | number | No | 200 | Input box width |
+| `opts.placeholder` | string | No | — | Muted hint shown while the stored value is empty |
+| `opts.onChange` | function | No | — | `onChange(text)` on commit or Reset |
+
+The returned frame exposes `.input` (the `EditBox`), `.label`, `.resetButton`,
+`:GetValue()`, `:SetValue(value)` (commits like a user edit and fires
+`onChange`), and `:Refresh()` (re-projects storage without firing).
+
+```lua
+local input = UI:CreateTextInput(parent, {
+    key = "keyword", storage = MyAddonDB,
+    label = "Keyword", default = "", placeholder = "Type a keyword",
+    onChange = function(text) RefreshList(text) end,
+})
+```
+
+---
+
 ### `UI:CreateProfilesPanel(parent, opts)` → `Frame` (card)
 
 A complete profile manager bound to an existing framework database owner:

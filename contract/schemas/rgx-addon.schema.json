@@ -173,6 +173,7 @@
         { "$ref": "#/$defs/controlString" },
         { "$ref": "#/$defs/toggleControl" },
         { "$ref": "#/$defs/sliderControl" },
+        { "$ref": "#/$defs/textboxControl" },
         { "$ref": "#/$defs/colorControl" },
         { "$ref": "#/$defs/dropdownControl" },
         { "$ref": "#/$defs/buttonControl" },
@@ -181,9 +182,9 @@
     },
     "controlString": {
       "x-rgx-ships": "today",
-      "description": "One-line control string, contract grammar: \"toggle <key> ['Label']\" | \"slider <key> <min>-<max> [step] ['Label']\" | \"dropdown <key> a|b|c ['Label']\" | \"color <key> ['Label']\" | \"font <key> ['Label']\" | \"button 'Text' <method>\" | \"header 'Text'\" | \"label 'Text'\". Labels inferred from keys when omitted. Validated before addon registration and compiled to existing factories. Slider bounds/step must be finite, min <= max and step > 0; semantic numeric checks are enforced by the shared engine/runtime.",
+      "description": "One-line control string, contract grammar: \"toggle <key> ['Label']\" | \"slider <key> <min>-<max> [step] ['Label']\" | \"textbox <key> ['Label']\" | \"dropdown <key> a|b|c ['Label']\" | \"color <key> ['Label']\" | \"font <key> ['Label']\" | \"button 'Text' <method>\" | \"header 'Text'\" | \"label 'Text'\". Labels inferred from keys when omitted. Validated before addon registration and compiled to existing factories. Slider bounds/step must be finite, min <= max and step > 0; semantic numeric checks are enforced by the shared engine/runtime.",
       "type": "string",
-      "pattern": "^(?:(?:toggle|color|font)[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"]+(?:[ \\t\\r\\n\\f\\v]+'[^']*')?|slider[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"]+[ \\t\\r\\n\\f\\v]+[+-]?\\d*\\.?\\d+-[+-]?\\d*\\.?\\d+(?:[ \\t\\r\\n\\f\\v]+[+-]?\\d*\\.?\\d+)?(?:[ \\t\\r\\n\\f\\v]+'[^']*')?|dropdown[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"]+[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"|]+(?:\\|[^ \\t\\r\\n\\f\\v'\"|]+)*(?:[ \\t\\r\\n\\f\\v]+'[^']*')?|button[ \\t\\r\\n\\f\\v]+'[^']*'[ \\t\\r\\n\\f\\v]+[A-Za-z_][A-Za-z0-9_]*|(?:header|label)[ \\t\\r\\n\\f\\v]+'[^']*')[ \\t\\r\\n\\f\\v]*$"
+      "pattern": "^(?:(?:toggle|color|font|textbox)[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"]+(?:[ \\t\\r\\n\\f\\v]+'[^']*')?|slider[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"]+[ \\t\\r\\n\\f\\v]+[+-]?\\d*\\.?\\d+-[+-]?\\d*\\.?\\d+(?:[ \\t\\r\\n\\f\\v]+[+-]?\\d*\\.?\\d+)?(?:[ \\t\\r\\n\\f\\v]+'[^']*')?|dropdown[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"]+[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"|]+(?:\\|[^ \\t\\r\\n\\f\\v'\"|]+)*(?:[ \\t\\r\\n\\f\\v]+'[^']*')?|button[ \\t\\r\\n\\f\\v]+'[^']*'[ \\t\\r\\n\\f\\v]+[A-Za-z_][A-Za-z0-9_]*|(?:header|label)[ \\t\\r\\n\\f\\v]+'[^']*')[ \\t\\r\\n\\f\\v]*$"
     },
     "toggleControl": {
       "x-rgx-ships": "today",
@@ -209,6 +210,18 @@
         "suffix": { "type": "string", "description": "appended to the displayed value, e.g. \"%\"" },
         "progress": { "type": "boolean", "default": true },
         "valueDisplay": { "enum": ["always", "hover", "none"], "default": "always", "description": "Persistent value label, hover-only value, or no visible value" }
+      },
+      "additionalProperties": false
+    },
+    "textboxControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["textbox"],
+      "properties": {
+        "textbox": { "type": "string", "description": "db key holding a string" },
+        "label": { "type": "string" },
+        "default": { "type": "string", "default": "" },
+        "placeholder": { "type": "string", "description": "Muted hint shown while the stored value is empty" }
       },
       "additionalProperties": false
     },

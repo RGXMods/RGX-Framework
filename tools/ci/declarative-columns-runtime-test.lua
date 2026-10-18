@@ -59,6 +59,7 @@ function stubUI:CreateOptionsPanel(opts)
     return { ready = true }
 end
 function stubUI:CreateToggle(host, opts) return widget(host, "toggle", opts) end
+function stubUI:CreateTextInput(host, opts) return widget(host, "textbox", opts) end
 function stubUI:CreateSlider(host, opts) return widget(host, "slider", opts) end
 function stubUI:CreateColorPicker(host, opts) return widget(host, "color", opts) end
 function stubUI:CreateButton(host, opts) return widget(host, "button", opts) end
@@ -126,6 +127,16 @@ check(#flowsExplicit == 1 and #flowsExplicit[1].added == 3, "columns = 1 should 
 local flows3 = buildFlows("ColumnsThree", { columns = 3, General = toggles(4) }, "General")
 check(#flows3 == 3, "columns = 3 should create three flows")
 check(#flows3[1].added == 2 and #flows3[2].added == 1 and #flows3[3].added == 1, "four controls should fill 2 + 1 + 1")
+
+-- Table-form textbox rows dispatch through the factory with the db binding.
+local flowsTextbox = buildFlows("TextboxRow", { General = { { textbox = "keyword", label = "Keyword", default = "seed", placeholder = "Hint" } } }, "General")
+check(#flowsTextbox == 1 and #flowsTextbox[1].added == 1, "textbox row should produce one control")
+local textbox = flowsTextbox[1].added[1]
+check(textbox.kind == "textbox" and textbox.opts.key == "keyword", "textbox row must forward the db key")
+check(textbox.opts.label == "Keyword" and textbox.opts.default == "seed" and textbox.opts.placeholder == "Hint", "textbox row must forward label, default, and placeholder")
+check(type(textbox.opts.storage) == "table", "textbox row must bind the addon db")
+local flowsTextboxDefault = buildFlows("TextboxDefaultLabel", { General = { { textbox = "keyword" } } }, "General")
+check(flowsTextboxDefault[1].added[1].opts.label == "Keyword", "textbox label should default to the capitalized key")
 
 -- The reserved key is never treated as a tab.
 local _, tabsNoColumns = buildTab("ColumnsNoTab", { columns = 2, General = toggles(1) })

@@ -83,6 +83,13 @@ function generateAddonLua(spec) {
   for (const t of spec.toggles ?? []) {
     controls.push(`            { toggle = ${luaQuote(t)} },`);
   }
+  for (const t of spec.textboxes ?? []) {
+    const parts = [`textbox = ${luaQuote(t.key)}`];
+    if (t.label) parts.push(`label = ${luaQuote(t.label)}`);
+    if (t.placeholder) parts.push(`placeholder = ${luaQuote(t.placeholder)}`);
+    if (t.default !== undefined) parts.push(`default = ${luaQuote(String(t.default))}`);
+    controls.push(`            { ${parts.join(", ")} },`);
+  }
   for (const s of spec.sliders ?? []) {
     const parts = [`slider = ${luaQuote(s.key)}`];
     if (s.label) parts.push(`label = ${luaQuote(s.label)}`);
