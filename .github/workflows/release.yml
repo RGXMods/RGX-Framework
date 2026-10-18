@@ -322,7 +322,7 @@ jobs:
             --arg description "$description" \
             --argjson color "$color" \
             --arg footer "$footer" \
-            --arg icon_url "https://raw.githubusercontent.com/RGXMods/SimpleQuestPlates/main/media/kiwi.gif" \
+            --arg icon_url "https://raw.githubusercontent.com/RGXMods/RGX-Framework/main/media/kiwi.gif" \
             --arg timestamp "${RELEASE_TIMESTAMP}" \
             --arg summary "$summary" \
             --arg downloads "$downloads" \
