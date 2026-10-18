@@ -2294,7 +2294,7 @@
           ]
         }
       ],
-      "introduced": null,
+      "introduced": "2.8.0",
       "authorable": false,
       "preview": "unavailable",
       "docs": "docs/TIMERS.md#rgxtimers"

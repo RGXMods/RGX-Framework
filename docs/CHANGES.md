@@ -2,6 +2,20 @@
 
 ## Current Release
 
+### [v2.8.0](changelogs/2.8.0.md) - 2026-10-17
+
+- New `RGXTimers` library module (`RGX:GetTimers()`, global `RGXTimers`) adds
+  frame-based countdown/progress bars that replace LibCandyBar-3.0 for consumer
+  addons: native frame methods on every bar, completion and cancel callbacks,
+  and `exp`/`start` stamps for pooled sorting.
+- `docs/TIMERS.md` documents the module with a LibCandyBar mapping table; the
+  API catalog gains the `timers` entry and an 11-scenario Lua 5.1 harness runs
+  in `lua-runtime-check`.
+- Current public APIs and client Interfaces are unchanged. No SavedVariables
+  deletion is required.
+
+## Recent Releases
+
 ### [v2.7.20](changelogs/2.7.20.md) - 2026-10-17
 
 - Minimap buttons created through `RGX.Addon` now persist their visibility when

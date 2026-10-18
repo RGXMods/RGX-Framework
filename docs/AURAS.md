@@ -1,6 +1,6 @@
 # Auras - `RGXAuras`
 
-Current release: `v2.7.20`. Aura semantics are unchanged.
+Current release: `v2.8.0`. Aura semantics are unchanged.
 
 
 `RGXAuras` is the framework's accessible-only aura boundary. It checks
