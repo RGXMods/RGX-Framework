@@ -1,7 +1,8 @@
 # RGX-Framework
 
-The `v2.7.18` database hotfix prevents recursive settings adoption and restores
-writable profile-store recovery. See the [release notes](docs/changelogs/2.7.18.md).
+The `v2.7.19` release stops the login-time SharedMedia scan from re-scanning the
+framework's own registry and adds world-map pin/waypoint primitives and a picker
+Escape fix. See the [release notes](docs/changelogs/2.7.19.md).
 
 
 **One dependency. Everything your addon suite needs.**
@@ -15,7 +16,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.7.18`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.18)
+**Latest published release:** [`v2.7.19`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.19)
 
 
 **1. Declare the dependency:**

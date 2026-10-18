@@ -2,6 +2,21 @@
 
 ## Current Release
 
+### [v2.7.19](changelogs/2.7.19.md) - 2026-10-17
+
+- The login scan no longer treats the framework's own `RGXSharedMedia`
+  registry as a generic addon global or re-bridges sound paths a live entry
+  still claims, removing the redundant work flagged by the
+  `[RGX:timer-slow] SharedMedia:QueueScan` budget warning.
+- World-map pin and waypoint primitives (`RGXWorldMap`) ship with pin lifecycle
+  on the world map and minimap plus a zone-data adapter over `C_Map` with a
+  HereBeDragons-2.0 fallback for Classic-era clients.
+- Picker Escape no longer collides with a module alias shortcut.
+- Lua 5.1 regressions cover the fixes; current public APIs and client
+  Interfaces are unchanged. No SavedVariables deletion is required.
+
+## Recent Releases
+
 ### [v2.7.18](changelogs/2.7.18.md) - 2026-10-14
 
 - Prevent adopting a database handle/live profile view as its own SavedVariables
@@ -11,8 +26,6 @@
 - Lua 5.1 regressions cover both failures. Operator reports no issues after
   testing and explicitly approves stable publication; no detailed test matrix
   or independent in-game capture is claimed.
-
-## Recent Releases
 
 ### [v2.7.17](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.17.md) - 2026-10-13
 

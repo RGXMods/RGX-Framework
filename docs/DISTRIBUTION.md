@@ -1,7 +1,8 @@
 # Distribution
 
-The `v2.7.18` database hotfix follows the operator's no-issues test report and
-explicit stable publication approval on 2026-10-14.
+The `v2.7.19` release stops the login-time SharedMedia scan from re-scanning the
+framework's own registry, ships the world-map pin/waypoint primitives, and fixes
+picker Escape target collisions.
 
 
 RGX-Framework publishes one product: the WoW addon framework. Node tooling,
@@ -10,21 +11,21 @@ World of Warcraft addon archive.
 
 ## Current Release
 
-[`v2.7.18`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.18)
+[`v2.7.19`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.19)
 publishes exactly two GitHub assets:
 
 | Asset | Purpose |
 |---|---|
-| `RGX-Framework-v2.7.18.zip` | The only product archive; install this addon |
+| `RGX-Framework-v2.7.19.zip` | The only product archive; install this addon |
 | `release.json` | In-house packager metadata for automation |
 
-The `v2.7.18` ZIP is expected to contain one `RGX-Framework/` root and exactly 111
+The `v2.7.19` ZIP is expected to contain one `RGX-Framework/` root and exactly 112
 runtime files. Verify the asset and digest after publishing with
 GitHub CLI:
 
 ```bash
-gh release view v2.7.18 --repo RGXMods/RGX-Framework --json assets \
-  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.18.zip") | .digest'
+gh release view v2.7.19 --repo RGXMods/RGX-Framework --json assets \
+  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.19.zip") | .digest'
 ```
 
 CurseForge is the currently configured addon service. Wago is configured with
@@ -76,9 +77,9 @@ RGX-Framework_Mists.toc
 RGX-Framework.xml
 LICENSE.txt
 core/**/*.lua
-library/**/*.lua
-modules/**/*.lua
-media/logo.tga
+game/**/*.lua
+libraries/**/*.lua
+media/*.tga
 media/fonts/*.ttf
 media/fonts/*.otf
 media/fonts/README.md
@@ -200,4 +201,3 @@ and verified against this file; the GitHub Wiki is generated automatically from
 the Markdown pages listed in `tools/wiki/manifest.json`.
 Service-page Markdown is explicitly listed as `sourceOnly` in that manifest
 so it remains maintained source without generating a duplicate Wiki page.
-> **Beta channel:** v2.7.14-beta.1 is opt-in; stable remains v2.7.14.
