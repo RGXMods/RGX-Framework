@@ -247,6 +247,21 @@ local function CreateAddHelper(frame)
         return w
     end
 
+    function frame:Textbox(label, storage, key, default, opts)
+        opts = opts or {}
+        local w = UI:CreateTextInput(canvas, {
+            label       = label,
+            storage     = storage,
+            key         = key,
+            default     = default or "",
+            width       = opts.width,
+            placeholder = opts.placeholder,
+            onChange    = opts.onChange,
+        })
+        Add(w)
+        return w
+    end
+
     function frame:Slider(label, storage, key, min, max, default, suffix)
         local w = UI:CreateSlider(canvas, {
             label   = label,
@@ -346,6 +361,8 @@ local function BuildAddonOptionTabs(UI, addon, options, columns, resolveControl)
                             w = UI:CreateToggle(host, { key = ctrl.toggle, label = ctrl.label or ctrl.toggle:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default })
                         elseif type(ctrl.slider) == "string" then
                             w = UI:CreateSlider(host, { key = ctrl.slider, label = ctrl.label or ctrl.slider:gsub("^%l", string.upper), storage = addon.db, min = ctrl.min or 0, max = ctrl.max or 100, step = ctrl.step or 1, suffix = ctrl.suffix, progress = ctrl.progress, valueDisplay = ctrl.valueDisplay })
+                        elseif type(ctrl.textbox) == "string" then
+                            w = UI:CreateTextInput(host, { key = ctrl.textbox, label = ctrl.label or ctrl.textbox:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default or "", placeholder = ctrl.placeholder })
                         elseif type(ctrl.color) == "string" then
                             w = UI:CreateColorPicker(host, { key = ctrl.color, label = ctrl.label or ctrl.color:gsub("^%l", string.upper), storage = addon.db, default = ctrl.default or addon.db[ctrl.color], onChange = function(r, g, b) addon.db[ctrl.color] = { r = r, g = g, b = b } end })
                         elseif type(ctrl.font) == "string" then

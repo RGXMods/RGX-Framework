@@ -240,6 +240,15 @@ server.tool(
         progress: z.boolean().optional(),
       }))
       .optional(),
+    textboxes: z
+      .array(z.object({
+        key: z.string(),
+        label: z.string().optional(),
+        placeholder: z.string().optional(),
+        default: z.string().optional(),
+      }))
+      .optional()
+      .describe("Text-input rows bound to string db keys"),
   },
   async (spec) => {
     const validate = getValidator();

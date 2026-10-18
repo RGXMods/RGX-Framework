@@ -26,10 +26,10 @@ export const conformanceCases = [
   { name: "zero columns", opts: { options: { columns: 0 } }, valid: false },
   { name: "four columns", opts: { options: { columns: 4 } }, valid: false },
   { name: "non-numeric columns", opts: { options: { columns: "two" } }, valid: false },
-  ...["slider offset -10--5", "slider offset -1.5-0.5 .25 'Offset'", "dropdown mode low|high", "font titleFont", "button 'Reset' ResetSettings", "header 'Settings'", "label 'Notes'", "toggle enabled\t"].map(control => ({
+  ...["slider offset -10--5", "slider offset -1.5-0.5 .25 'Offset'", "textbox keyword", "textbox keyword 'Keyword'", "dropdown mode low|high", "font titleFont", "button 'Reset' ResetSettings", "header 'Settings'", "label 'Notes'", "toggle enabled\t"].map(control => ({
     name: `supported control: ${control}`, opts: { options: { General: [control] } }, valid: true,
   })),
-  ...["toggle enabled extra", "button nonsense", "slider volume nonsense", "dropdown mode low||high", "header 'Title' extra"].map(control => ({
+  ...["toggle enabled extra", "button nonsense", "slider volume nonsense", "textbox", "textbox keyword extra", "dropdown mode low||high", "header 'Title' extra"].map(control => ({
     name: `malformed control: ${control}`, opts: { options: { General: [control] } }, valid: false,
   })),
 ];
