@@ -1,8 +1,8 @@
 # Distribution
 
-The `v2.7.19` release stops the login-time SharedMedia scan from re-scanning the
-framework's own registry, ships the world-map pin/waypoint primitives, and fixes
-picker Escape target collisions.
+The `v2.7.20` release restores minimap button visibility persistence for
+consumer addons that create a minimap button without declaring their own
+database; storage falls back to the framework SavedVariables.
 
 
 RGX-Framework publishes one product: the WoW addon framework. Node tooling,
@@ -11,21 +11,21 @@ World of Warcraft addon archive.
 
 ## Current Release
 
-[`v2.7.19`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.19)
+[`v2.7.20`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.20)
 publishes exactly two GitHub assets:
 
 | Asset | Purpose |
 |---|---|
-| `RGX-Framework-v2.7.19.zip` | The only product archive; install this addon |
+| `RGX-Framework-v2.7.20.zip` | The only product archive; install this addon |
 | `release.json` | In-house packager metadata for automation |
 
-The `v2.7.19` ZIP is expected to contain one `RGX-Framework/` root and exactly 112
+The `v2.7.20` ZIP is expected to contain one `RGX-Framework/` root and exactly 112
 runtime files. Verify the asset and digest after publishing with
 GitHub CLI:
 
 ```bash
-gh release view v2.7.19 --repo RGXMods/RGX-Framework --json assets \
-  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.19.zip") | .digest'
+gh release view v2.7.20 --repo RGXMods/RGX-Framework --json assets \
+  --jq '.assets[] | select(.name == "RGX-Framework-v2.7.20.zip") | .digest'
 ```
 
 CurseForge is the currently configured addon service. Wago is configured with

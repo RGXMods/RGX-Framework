@@ -2,6 +2,17 @@
 
 ## Current Release
 
+### [v2.7.20](changelogs/2.7.20.md) - 2026-10-17
+
+- Minimap buttons created through `RGX.Addon` now persist their visibility when
+  the consumer addon does not declare its own database; storage falls back to
+  the framework SavedVariables while consumer-owned databases keep their
+  existing behavior.
+- Lua 5.1 regression coverage documents the fallback; current public APIs and
+  client Interfaces are unchanged. No SavedVariables deletion is required.
+
+## Recent Releases
+
 ### [v2.7.19](changelogs/2.7.19.md) - 2026-10-17
 
 - The login scan no longer treats the framework's own `RGXSharedMedia`
@@ -14,8 +25,6 @@
 - Picker Escape no longer collides with a module alias shortcut.
 - Lua 5.1 regressions cover the fixes; current public APIs and client
   Interfaces are unchanged. No SavedVariables deletion is required.
-
-## Recent Releases
 
 ### [v2.7.18](changelogs/2.7.18.md) - 2026-10-14
 
