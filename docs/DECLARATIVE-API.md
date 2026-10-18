@@ -113,6 +113,10 @@ UI work must still use RGX's safe helpers.
 { button = "Button Text", action = function() ... end, width = 120, height = 22 }
 ```
 
+Toggle controls render the canonical `UI:CreateSwitch` on/off element (the
+same widget consumer settings pages use), so no per-addon switch styling or
+plumbing is required.
+
 ### One-line control strings (shipped)
 
 Strings compile to the same table forms:
