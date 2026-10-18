@@ -442,7 +442,7 @@ local function ParseInlineControl(raw, owner)
     end
     local core, label = rest:match("^(.-)%s+'([^']*)'%s*$")
     core = core or rest
-    if kind == "toggle" or kind == "color" or kind == "font" then
+    if kind == "toggle" or kind == "color" or kind == "font" or kind == "textbox" then
         local key = core:match("^([^%s'\"]+)$")
         if not key then return invalid() end
         return { [kind] = key, label = label }

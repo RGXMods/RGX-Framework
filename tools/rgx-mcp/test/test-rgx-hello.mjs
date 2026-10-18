@@ -101,6 +101,7 @@ const RGX_HELLO_GENERATE_SPEC = {
   db: { enabled: true, volume: 50 },
   toggles: ["enabled"],
   sliders: [{ key: "volume", label: "Volume", min: 0, max: 100, suffix: "%" }],
+  textboxes: [{ key: "keyword", label: "Keyword", placeholder: "Type a keyword" }],
 };
 
 let failures = 0;
@@ -182,6 +183,7 @@ try {
     generatedLua.includes("RGXHelloDB") && !generatedLua.includes("RGX-HelloDB")
   );
   check("generator emits the slider's % suffix", generatedLua.includes('suffix = "%"'));
+  check("generator emits textbox rows with placeholder hints", generatedLua.includes('{ textbox = "keyword", label = "Keyword", placeholder = "Type a keyword" }'));
   check("generator emits a named repeating timer", generatedLua.includes("every   = {") && generatedLua.includes("heartbeat = { 1, function(self, timer)"));
   let generatedParses = true;
   let generatedParseError = "";
@@ -227,6 +229,19 @@ try {
     opts: { options: { General: [{ slider: "amount", valueDisplay: "sometimes" }] } },
   } });
   check("invalid slider value-display modes are rejected", JSON.parse(invalidSlider.content[0].text).valid === false);
+  const textboxValidation = await client.callTool({ name: "rgx_validate_addon", arguments: {
+    opts: { options: { General: [{ textbox: "keyword", label: "Keyword", default: "", placeholder: "Type a keyword" }] } },
+  } });
+  check("textbox controls validate against the shared contract", JSON.parse(textboxValidation.content[0].text).valid === true);
+  const textboxString = await client.callTool({ name: "rgx_validate_addon", arguments: {
+    opts: { options: { General: ["textbox keyword 'Keyword'"] } },
+  } });
+  const textboxStringReport = JSON.parse(textboxString.content[0].text);
+  check("one-line textbox controls validate as shipped", textboxStringReport.valid === true && textboxStringReport.tier4KeysUsed.length === 0);
+  const invalidTextbox = await client.callTool({ name: "rgx_validate_addon", arguments: {
+    opts: { options: { General: [{ textbox: "keyword", width: 300 }] } },
+  } });
+  check("unknown textbox keys are rejected", JSON.parse(invalidTextbox.content[0].text).valid === false);
 
   const everyVal = await client.callTool({
     name: "rgx_validate_addon",

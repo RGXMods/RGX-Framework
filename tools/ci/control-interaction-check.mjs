@@ -36,6 +36,17 @@ try {
       function w:SetBackdropBorderColor(...) self.borderColor = {...} end
       function w:SetText(text) self.text = text end
       function w:GetText() return self.text end
+      function w:SetFocus()
+        self.focused = true
+        if self.scripts.OnEditFocusGained then self.scripts.OnEditFocusGained(self) end
+      end
+      function w:ClearFocus()
+        if self.focused then
+          self.focused = false
+          if self.scripts.OnEditFocusLost then self.scripts.OnEditFocusLost(self) end
+        end
+      end
+      function w:HasFocus() return self.focused == true end
       function w:SetSize(width, height) self.width=width self.height=height end
       function w:SetWidth(width) self.width=width end
       function w:SetHeight(height) self.height=height end
@@ -174,6 +185,45 @@ try {
       assert(not storage.flag and not row.check:GetChecked() and calls == 2)
       row.labelButton:Click(); reset()
       assert(not storage.flag and not row.check:GetChecked() and calls == 4)
+    `],
+    ["bound text input commits, projects placeholder, and resets", `
+      local storage, committed = {}, {}
+      local reset
+      local factory = UI.CreateResetButton
+      UI.CreateResetButton = function(_, parent, action) reset = action; return CreateFrame('Button', nil, parent) end
+      local control = UI:CreateTextInput({}, {key = 'keyword', storage = storage, default = '',
+        placeholder = 'Type here', onChange = function(text) committed[#committed + 1] = text end})
+      UI.CreateResetButton = factory
+      assert(control.input and control.label and control.resetButton, 'parts missing')
+      assert(control:GetValue() == '', 'text input did not bind storage')
+      assert(control.input:GetText() == 'Type here', 'placeholder not projected while empty')
+      assert(control.input.textColor[1] == D:GetColor('subtext')[1], 'placeholder must render muted')
+      control.input.scripts.OnEditFocusGained(control.input)
+      assert(control.input:GetText() == '', 'placeholder must clear on focus')
+      control.input:SetText('Warcraft')
+      control.input.scripts.OnEnterPressed(control.input)
+      assert(storage.keyword == 'Warcraft' and committed[1] == 'Warcraft', 'Enter must commit')
+      assert(control.input.textColor[1] ~= D:GetColor('subtext')[1], 'committed text must not stay muted')
+      control.input:SetText('')
+      control.input.scripts.OnEscapePressed(control.input)
+      assert(storage.keyword == '' and committed[2] == '', 'empty commit must fall back to default')
+      assert(control.input:GetText() == 'Type here', 'placeholder must return after empty commit')
+      control.input:SetText('Uncommitted')
+      control.input.scripts.OnEditFocusLost(control.input)
+      assert(storage.keyword == '' and control.input:GetText() == 'Type here', 'blur must discard uncommitted text')
+      reset()
+      assert(storage.keyword == '' and committed[3] == '', 'reset must commit the default')
+    `],
+    ["text input SetValue and Refresh stay storage-bound", `
+      local store, fired = { keyword = 'old' }, 0
+      local control = UI:CreateTextInput({}, {key = 'keyword', storage = store, default = 'fallback',
+        onChange = function() fired = fired + 1 end})
+      assert(control:GetValue() == 'old', 'stored value must win over the default')
+      store.keyword = nil
+      control:Refresh()
+      assert(control.input:GetText() == 'fallback' and fired == 0, 'Refresh must re-project without firing')
+      control:SetValue('new')
+      assert(store.keyword == 'new' and control.input:GetText() == 'new' and fired == 1, 'SetValue must commit like a user edit')
     `],
     ["disabled checkbox rejects label activation", `
       local row = UI:CreateCheckbox({}, 'Disabled')

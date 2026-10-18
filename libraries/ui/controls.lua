@@ -674,6 +674,124 @@ function UI:CreateToggle(parent, options)
 end
 
 --[[============================================================================
+    TEXT INPUT
+============================================================================]]
+
+function UI:CreateTextInput(parent, options)
+    options = options or {}
+    local key = options.key or "text"
+    local label = options.label or key
+    local default = options.default or ""
+    if type(default) ~= "string" then default = tostring(default) end
+    local storage = options.storage or {}
+    local onChange = options.onChange or function() end
+    local inputWidth = options.width or 200
+    local placeholder = options.placeholder
+
+    local container = CreateFrame("Frame", nil, parent)
+    container:SetSize(320, 24)
+
+    -- Label
+    local labelText = self:CreateLabel(container, {
+        text = label,
+        size = "normal"
+    })
+    labelText:SetPoint("LEFT", 0, 0)
+
+    -- Input
+    local input = CreateFrame("EditBox", nil, container, "InputBoxTemplate")
+    input:SetSize(inputWidth, 22)
+    input:SetPoint("LEFT", labelText, "RIGHT", 8, 0)
+    if type(input.SetAutoFocus) == "function" then input:SetAutoFocus(false) end
+    ApplyDefaultFont(input)
+
+    local D = RGX:GetDesign()
+    local nr, ng, nb, mr, mg, mb = 1, 1, 1, 0.6, 0.6, 0.6
+    if D and type(D.Unpack) == "function" then
+        nr, ng, nb = D:Unpack("text")
+        mr, mg, mb = D:Unpack("subtext")
+    end
+
+    local function storedValue()
+        local value = storage[key]
+        if value == nil then value = default end
+        return value
+    end
+
+    -- Placeholder text is display-only: it renders in the muted color while
+    -- the stored value is empty and is never written back to storage. An
+    -- empty commit resolves to the default (the Reset target).
+    local showingPlaceholder = false
+    local function project()
+        local value = storedValue()
+        showingPlaceholder = placeholder ~= nil and value == ""
+        if showingPlaceholder then
+            input:SetText(placeholder)
+            input:SetTextColor(mr, mg, mb)
+        else
+            input:SetText(tostring(value))
+            input:SetTextColor(nr, ng, nb)
+        end
+    end
+
+    local function commit(text)
+        text = text or ""
+        if text == "" then text = default end
+        storage[key] = text
+        project()
+        onChange(text)
+    end
+
+    local function commitAndBlur(widget)
+        local text = widget:GetText()
+        if showingPlaceholder then text = "" end
+        commit(text)
+        widget:ClearFocus()
+    end
+
+    input:SetScript("OnEditFocusGained", function()
+        if showingPlaceholder then
+            showingPlaceholder = false
+            input:SetText("")
+            input:SetTextColor(nr, ng, nb)
+        end
+    end)
+    input:SetScript("OnEditFocusLost", function()
+        project()
+    end)
+    input:SetScript("OnEnterPressed", commitAndBlur)
+    input:SetScript("OnEscapePressed", commitAndBlur)
+
+    -- Reset
+    local reset = self:CreateResetButton(container, function()
+        commit(default)
+    end)
+    reset:SetPoint("LEFT", input, "RIGHT", 10, 0)
+
+    project()
+
+    container.SetValue = function(first, maybe)
+        -- Support both control:SetValue(v) and control.SetValue(v)
+        local value
+        if maybe ~= nil and first == container then
+            value = maybe
+        elseif maybe == nil then
+            value = first
+        else
+            value = maybe
+        end
+        commit(tostring(value or ""))
+    end
+    container.GetValue = function() return storedValue() end
+    container.Refresh = function() project() end
+
+    container.label = labelText
+    container.input = input
+    container.resetButton = reset
+    return container
+end
+
+--[[============================================================================
     LABEL
 ============================================================================]]
 
