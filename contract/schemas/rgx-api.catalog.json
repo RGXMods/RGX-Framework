@@ -2515,6 +2515,13 @@
           ]
         },
         {
+          "name": "CreatePanelAlpha",
+          "params": [
+            "parent",
+            "options"
+          ]
+        },
+        {
           "name": "CreatePreviewFrame",
           "params": [
             "parent",
