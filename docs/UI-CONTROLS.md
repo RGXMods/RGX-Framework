@@ -456,7 +456,7 @@ local section = UI:CreateSection(page, { title = "General", height = 140 })
 ```
 
 `UI:CreateSection` uses the same `RGXDesign:CreateSection` frame and
-primary-bordered header that BLU uses; RGXUI handles geometry while RGXDesign owns textures
+primary-bordered header that production consumers use; RGXUI handles geometry while RGXDesign owns textures
 and themed colors. After adding controls to `section.content`, call
 `section:FitContent()` to measure visible direct children and FontStrings
 and size the card to them. Stacked cards anchored to its bottom follow the

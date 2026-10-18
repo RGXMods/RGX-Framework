@@ -35,7 +35,7 @@ const DETECTORS = [
     id: "setattribute_combat_risk",
     pattern: /:SetAttribute\s*\(/,
     advice:
-      "SetAttribute on secure frames taints during combat lockdown, and pcall does NOT prevent taint. Guard with InCombatLockdown() and defer to PLAYER_REGEN_ENABLED (see BPU's SafeSetButtonAttribute pattern).",
+      "SetAttribute on secure frames taints during combat lockdown, and pcall does NOT prevent taint. Guard with InCombatLockdown() and defer to PLAYER_REGEN_ENABLED (queue the write and apply it once regen-enabled fires).",
   },
   {
     id: "raw_hook_reassignment",

@@ -1,6 +1,6 @@
 # Tooltip — `RGXTooltip`
 
-Tooltip composition and native-tooltip augmentation. Replaces the `SetOwner → ClearLines → AddLine × N → Show` boilerplate (71 call sites in BattlePetUtility alone) with one call, and wraps Blizzard's `TooltipDataProcessor` so one addon's erroring hook can no longer break tooltip rendering for every other addon — Blizzard does **not** pcall-wrap that dispatch; RGX does.
+Tooltip composition and native-tooltip augmentation. Replaces the `SetOwner → ClearLines → AddLine × N → Show` boilerplate (71 call sites in one surveyed consumer) with one call, and wraps Blizzard's `TooltipDataProcessor` so one addon's erroring hook can no longer break tooltip rendering for every other addon — Blizzard does **not** pcall-wrap that dispatch; RGX does.
 
 ```lua
 local Tip = RGX:GetTooltip()
