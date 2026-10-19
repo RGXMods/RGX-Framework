@@ -1,0 +1,854 @@
+# UI Controls & Options Panel
+
+The UI module (`RGXUI`) provides widget factories for common interface controls and a full options panel builder with tab system and scroll container.
+
+---
+
+## Widget Factories
+
+### Shared frame and alignment model
+
+A frame is a styled layout host: a page, tab content, card, or popout uses the
+same Design surfaces and UI geometry. Layout owns placement; Design owns
+theme colors/textures/corners. Pages can combine one/two columns, lists,
+rows and pagination without introducing a second layout/scroll owner.
+
+- Standard row gap: **8px**. Control-row left/right inset: **8px**.
+- `AnchorRowReset(row, reset, control, inset?)` centers Reset on the actual
+  track/trigger/swatch and keeps the shared right inset, independent of labels.
+- Flow rows vertically center elements and allocate flexible widths after
+  reserving fixed/right-aligned controls; natural dimensions are remeasured.
+- `CreateCard(parent, { columns = 1|2, columnGap = 8 })` exposes `.columns`
+  and `.flows`; `.flow` aliases the first flow. `AutoHeight()` uses the tallest
+  column. Once enabled, width/show changes reflow it automatically; an explicit
+  fixed-height card remains fixed until the caller asks for AutoHeight.
+
+```lua
+local card = UI:CreateCard(column, { title = "Display", columns = 2 })
+card.flows[1]:Add(firstControl, { fill = true })
+card.flows[2]:AddRow({ { child = secondControl, fill = true },
+    { child = actionButton, align = "right" } })
+card:AutoHeight()
+```
+
+`UI:CreateConfigDialog` also accepts `resizable = true`, `minWidth/minHeight`,
+`maxWidth/maxHeight` and `onResize(width, height, dialog)`. Resizing is opt-in;
+the shared widget adapter applies bounds and a grip is created only when
+supported. Dialog surfaces use Design, including its corner preference;
+`square` explicitly overrides it. Consumers own any requested size persistence.
+
+`UI:CreateSwitch(parent, opts)` returns the canonical db-bound on/off element:
+declarative `toggle` controls (table form and one-line grammar) render it with
+no per-addon styling. Its entire element, including the label and surrounding
+hit area, toggles on click; the smaller inset square is visual only.
+`UI:CreateCheckbox(parent, text, opts)` returns
+an unbound 18px checkbox row with `.checkbox` and `.label`, for consumers that
+manage their own state callbacks. Clicking the text calls the checkbox's current
+native click path once, including its checked-state change and `OnClick`
+handler. Disabled checkboxes reject text clicks. The text hit target follows
+the label's bounds and does not cover adjacent inline controls.
+
+`CreateCheckbox` and `CreateToggle` accept additive `onEnter`/`onLeave`
+callbacks (the checkbox takes them as a third argument). They install with
+`HookScript`, run after the control's own styling, and are failure-isolated:
+one consumer error is reported through `RGX:Error` without disabling later
+hooks or the control.
+
+Highlight ownership: framework row highlights are square color fills
+(`CreateButton` selected/hover state, tab buttons, the switch track); no row
+renderer paints a rounded selected background. Rounded surfaces come only from
+Design nine-slice panels (`Design:CreateFrame` → `CreateSection` →
+`UI:CreateSection`/`UI:CreateCard`), so a rounded highlight seen behind a row
+belongs to the section/card surface, not the row control. Row radius, border,
+height, and text geometry are unchanged.
+
+### `UI:CreateButton(parent, opts)` → `Button`
+
+The table form accepts `text`, `width`, `height`, `tooltip`, `tooltipBody`,
+`onClick`, `onEnter`, and `onLeave`. Hover callbacks run after the framework's
+skin/tooltip behavior and are failure-isolated. The positional form
+`UI:CreateButton(parent, text, width, height)` remains supported.
+
+```lua
+local button = UI:CreateButton(parent, {
+    text = "Preview",
+    onClick = function(button, mouseButton) SelectPage() end,
+    onEnter = function(button) ShowPreview() end,
+    onLeave = function(button) RestorePreview() end,
+})
+```
+
+**Script-composition quirk:** WoW `SetScript("OnEnter", ...)` or
+`SetScript("OnLeave", ...)` replaces the framework's hover styling and tooltip
+handler. Use the table callbacks above, or `HookScript` when extending an
+existing button. `SetScript("OnClick", ...)` remains available for legacy
+click behavior; table `onClick` adds failure isolation.
+
+### `UI:SetResizeBounds(frame, minWidth, minHeight, maxWidth, maxHeight)` → `boolean`
+
+Apply resize limits to a caller-owned frame through the client's supported
+widget API. Prefer the combined `SetResizeBounds`; older clients can use the
+paired setters when both maximum dimensions are supplied. Returns `false`
+when the requested limits cannot be applied. Does not enable resizing, create
+a grip, persist dimensions, or grant permission to modify protected frames.
+
+Options panels with a banner expose `panel.bannerFrame.divider` and
+`panel.bannerFrame.dividerGap`. Banner controls can anchor above the divider
+using that gap to mirror the first tab row below it, independently of any
+consumer content-frame insets.
+
+### `UI:CreateSlider(parent, opts)` → `Frame`
+
+Create a horizontal slider control bound to a storage table — it saves **and restores** its value.
+
+**Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `parent` | Frame | Yes | — | Parent frame |
+| `opts.key` | string | Yes | — | Storage key the slider reads/writes |
+| `opts.storage` | table | No | `{}` | Table holding `storage[key]` (usually your db) |
+| `opts.label` | string | No | key | Label text |
+| `opts.min` / `opts.max` | number | No | 0 / 100 | Range |
+| `opts.step` | number | No | 1 | Step increment |
+| `opts.default` | number | No | min | Value when storage is empty; Reset target |
+| `opts.suffix` | string | No | `""` | Appended to the displayed value, e.g. `"%"` |
+| `opts.width` | number | No | 200 | Track width |
+| `opts.progress` | boolean | No | `true` | Show the primary-colored fill behind the thumb; `false` for a bare track |
+| `opts.valueDisplay` | string | No | `"always"` | `"always"` keeps the value above the track, `"hover"` shows only the hover value, `"none"` hides both |
+| `opts.onChange` | function | No | — | `onChange(value)` |
+
+> The thumb re-positions itself on `OnShow`, so a slider built on a panel that
+> is still hidden (login/load) lands at the correct spot the first time the
+> panel opens — no set/reset needed.
+
+```lua
+local slider = UI:CreateSlider(parent, {
+    key = "scale", storage = MyAddonDB,
+    label = "Scale", min = 50, max = 150, step = 5,
+    default = 100, suffix = "%",
+    onChange = function(val) MyFrame:SetScale(val / 100) end,
+})
+```
+
+---
+
+### `UI:CreatePanelAlpha(parent, opts)` → `Frame`
+
+Create a 0-100 transparency control bound to a storage table. It is the
+shipped slider with a percent value display, plus optional named preset
+buttons that snap the track to known values. The control stores a plain
+number; apply it where you own the frame (for example
+`MyFrame:SetAlpha(value / 100)`).
+
+**Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `parent` | Frame | Yes | — | Parent frame |
+| `opts.key` | string | Yes | — | Storage key holding the 0-100 value |
+| `opts.storage` | table | No | `{}` | Table holding `storage[key]` (usually your db) |
+| `opts.label` | string | No | key | Label text |
+| `opts.default` | number | No | 100 | Value when storage is empty; Reset target |
+| `opts.width` | number | No | 200 | Track width |
+| `opts.step` | number | No | 1 | Step increment |
+| `opts.presets` | table | No | — | Ordered `{ label = "Low", value = 25 }` snap buttons; each value must be 0-100 |
+| `opts.presetWidth` | number | No | 44 | Preset button width |
+| `opts.valueDisplay` | string | No | `"always"` | Same modes as `UI:CreateSlider` |
+| `opts.progress` | boolean | No | `true` | Show the primary-colored fill behind the thumb |
+| `opts.onChange` | function | No | — | `onChange(value)` on drag, scroll, preset, or Reset |
+
+Returns the slider container plus `.presetRow` and `.presetButtons` (an
+ordered array). `SetValue(value)` commits like a user edit. The value is
+storage-bound and the thumb re-positions whenever the control is shown.
+
+```lua
+local alpha = UI:CreatePanelAlpha(parent, {
+    key = "panelAlpha", storage = MyAddonDB,
+    label = "Panel Opacity", default = 100,
+    presets = {
+        { label = "Low", value = 25 },
+        { label = "Med", value = 50 },
+        { label = "High", value = 100 },
+    },
+    onChange = function(value) MyPanel:SetAlpha(value / 100) end,
+})
+```
+
+---
+
+### `UI:CreateToggle(parent, opts)` → `Frame`
+
+Create a checkbox toggle bound to a storage table. Both the checkbox and its
+text activate the same persisted change callback; Reset restores the default.
+Legacy imperative helper: declarative `toggle` controls render
+`UI:CreateSwitch`; `CreateToggle` remains supported for existing
+checkbox-style rows.
+
+**Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `parent` | Frame | Yes | — | Parent frame |
+| `opts.key` | string | Yes | — | Storage key |
+| `opts.storage` | table | No | `{}` | Table holding `storage[key]` |
+| `opts.label` | string | No | key | Label text beside the checkbox |
+| `opts.default` | bool | No | — | Value when storage is empty; Reset target |
+| `opts.onChange` | function | No | — | `onChange(checked)` |
+| `opts.onEnter` | function | No | — | `onEnter(check)` after native styling; pcall-isolated |
+| `opts.onLeave` | function | No | — | `onLeave(check)` after native styling; pcall-isolated |
+
+```lua
+local toggle = UI:CreateToggle(parent, {
+    key = "notifications", storage = MyAddonDB,
+    label = "Enable Notifications", default = true,
+    onChange = function(checked) ... end,
+})
+```
+
+---
+
+### `UI:CreateTextInput(parent, opts)` → `Frame`
+
+Create a single-line text input bound to a storage table — it saves and
+restores its value. `Enter` and `Escape` both commit and blur; Reset writes
+the default back. When `opts.placeholder` is set and the stored value is
+empty, the placeholder renders in the muted color and is never persisted. An
+empty commit (or Reset) resolves to `opts.default`.
+
+**Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `parent` | Frame | Yes | — | Parent frame |
+| `opts.key` | string | Yes | — | Storage key the input reads/writes |
+| `opts.storage` | table | No | `{}` | Table holding `storage[key]` |
+| `opts.label` | string | No | key | Label text beside the input |
+| `opts.default` | string | No | `""` | Value when storage is empty; empty-commit and Reset target |
+| `opts.width` | number | No | 200 | Input box width |
+| `opts.placeholder` | string | No | — | Muted hint shown while the stored value is empty |
+| `opts.onChange` | function | No | — | `onChange(text)` on commit or Reset |
+
+The returned frame exposes `.input` (the `EditBox`), `.label`, `.resetButton`,
+`:GetValue()`, `:SetValue(value)` (commits like a user edit and fires
+`onChange`), and `:Refresh()` (re-projects storage without firing).
+
+```lua
+local input = UI:CreateTextInput(parent, {
+    key = "keyword", storage = MyAddonDB,
+    label = "Keyword", default = "", placeholder = "Type a keyword",
+    onChange = function(text) RefreshList(text) end,
+})
+```
+
+---
+
+### `UI:CreateProfilesPanel(parent, opts)` → `Frame` (card)
+
+A complete profile manager bound to an existing framework database owner:
+title band with icon, intro line, and a card with an active-profile highlight
+box (name + current character), a profile dropdown with count, and stacked
+Create/Rename/Reset/Copy buttons, with a confirmed Delete action beside each
+non-Default profile in the dropdown. Create and Rename enter the name in
+a small dialog; Copy auto-generates a name; duplicates are rejected, the
+`Default` profile cannot be renamed or deleted, and failures are isolated
+to panel feedback instead of breaking the UI.
+
+**Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `parent` | Frame | Yes | — | Parent frame |
+| `opts.db` | database | Yes | — | Framework database owner |
+| `opts.title` | string | No | `"Profiles"` | Title band and card title |
+| `opts.height` | number | No | `214` | Profile-management card height; allow room for all four action buttons |
+| `opts.icon` | string | No | — | Title-band texture path |
+| `opts.description` | string | No | `"Create, switch, and manage your saved profiles."` | Intro line |
+| `opts.onChange` | function | No | — | `onChange(activeName, db)` after any change |
+| `opts.createFromCurrent` | boolean | No | `false` | Create deep-copies the current profile, including nested colors; otherwise creates from defaults |
+| `opts.pagedPresets` | boolean | No | `false` | Paginates only the Presets card; navigation lives in its header; exposes `card.presetsCard.pager` |
+| `opts.presetsPerPage` | number | No | `3` | Presets per page, a positive multiple of three; `6` gives two rows per page |
+| `opts.presets` | table | No | — | Array of `{ name, description?, disabled?, ... }`; disabled entries are future slots that cannot apply settings; hidden when empty |
+| `opts.onPreset` | function | No | — | Required with presets: `onPreset(preset, db)` applies one; failures isolated |
+
+```lua
+local card = UI:CreateProfilesPanel(tab, {
+    db = MyAddon.db, title = "Profiles", icon = MY_ICON,
+    onChange = function(active) MyAddon:Refresh() end,
+    presets = { { name = "Raid", mode = "raid" } },
+    onPreset = function(preset, db) MyAddon:ApplyPreset(preset) end,
+})
+-- card:Refresh() re-syncs the panel; card.dropdown/status/buttons,
+-- card.activeInfo, and card.openNameDialog expose the seams for tests
+-- and advanced use.
+```
+
+---
+
+### `UI:CreateLabel(parent, opts)` → `FontString`
+
+Create a styled label using the theme's named sizes and colors.
+
+**Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `parent` | Frame | Yes | — | Parent frame |
+| `opts.text` | string | Yes | — | Label text |
+| `opts.size` | string | No | `"normal"` | `"small"` \| `"normal"` \| `"large"` |
+| `opts.color` | string | No | `"normal"` | `"normal"` \| `"muted"` \| `"accent"` \| `"red"` \| `"green"` \| `"yellow"` (theme tokens) |
+| `opts.width` | number | No | — | **Enables word wrap** at this fixed width — required for long text, which otherwise renders past the parent frame's edge on a single line |
+| `opts.wrap` | boolean | No | `false` | **Enables word wrap** without a fixed width — flow layouts clamp the label to the row and supply the width |
+| `opts.justify` | string | No | `"LEFT"` | Horizontal justify (only with `width` or `wrap`) |
+
+```lua
+local hint = UI:CreateLabel(parent, {
+    text = "A long descriptive sentence that needs to wrap inside the panel.",
+    size = "small", color = "muted", width = 340,
+})
+```
+
+---
+
+### `UI:CreateColorPicker(parent, opts)` → `table`
+
+Create a color swatch control that opens the ColorPicker on click.
+
+**Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `parent` | Frame | Yes | — | Parent frame |
+| `opts.label` | string | No | — | Label text |
+| `opts.value` | table | No | {1,1,1,1} | Initial color {r,g,b,a} |
+| `opts.onChange` | function | No | — | `onChange(r, g, b, a)` callback |
+
+**Returns:** `{ frame, swatch, label }`
+
+```lua
+local cp = UI:CreateColorPicker(parent, {
+    label = "Background Color",
+    value = {0.1, 0.1, 0.2, 1.0},
+    onChange = function(r, g, b, a)
+    myFrame:SetBackdropColor(r, g, b, a)
+    end,
+})
+```
+
+The returned control exposes `:Refresh()`, which re-reads `storage[key]` and
+repaints the swatch; it runs before the picker opens and on show, so a peer
+that wrote storage directly is reflected without a stale swatch.
+
+---
+
+### `UI:CreateColorPickerCard(parent, opts)` → `Frame`
+
+The **embeddable** color picker — the full honeycomb spectrum + vertical
+brightness bar + live Class Colors row + preview + hex inline as a card, for
+placing directly in an options tab (instead of the popup swatch). Multi-instance
+with its own state; bound to `storage[key] = {r,g,b}`.
+Click or **drag** the honeycomb and brightness bar to pick.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `opts.key` | string | No | — | Storage key holding `{r,g,b}` |
+| `opts.storage` | table | No | `{}` | Table the widget reads/writes |
+| `opts.default` | table | No | white | `{r,g,b}` when storage is empty |
+| `opts.width` | number | No | 220 | Card width |
+| `opts.border` | table | No | design token | Brand edge `{r,g,b}` or `{r=,g=,b=}` |
+| `opts.onChange` | function | No | — | `onChange(r, g, b)` on every change |
+
+Returns the widget frame, with `:SetColor(r,g,b)` / `:GetColor()`. Call
+`:Refresh()` to re-read `storage[key]` and repaint without writing storage or
+firing `onChange` (it also re-projects on show), so peer or theme changes are
+reflected.
+
+```lua
+local card = UI:CreateColorPickerCard(container, {
+    key = "accent", storage = MyAddonDB, default = { r = 1, g = 0, b = 0 },
+    onChange = function(r, g, b) MyAddon:SetAccent(r, g, b) end,
+})
+```
+
+---
+
+### `UI:CreateColorSettingControl(parent, opts)` → `table`
+
+Color swatch + label bound to a saved variable. Changes write directly to `storage[key]`.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `parent` | Frame | Yes | Parent frame |
+| `opts.label` | string | Yes | Label text |
+| `opts.storage` | table | Yes | Saved variable table |
+| `opts.key` | string | Yes | Key within storage |
+| `opts.onChange` | function | No | Additional change callback |
+
+```lua
+local ctrl = UI:CreateColorSettingControl(parent, {
+    label = "Bar Color",
+    storage = MyAddonDB.profile,
+    key = "barColor",
+})
+```
+
+---
+
+### `UI:CreateStatusBarDropdown(parent, opts)` → `table`
+
+Statusbar texture selection dropdown. Delegates to the Textures module.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `parent` | Frame | Yes | Parent frame |
+| `opts.label` | string | No | Label text |
+| `opts.value` | string | No | Initial statusbar name |
+| `opts.onChange` | function | No | `onChange(barName)` callback |
+
+---
+
+### `UI:CreateFontDropdown(parent, opts)` → `table`
+
+Font family selection dropdown. Delegates to the Fonts module.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `parent` | Frame | Yes | Parent frame |
+| `opts.label` | string | No | Label text |
+| `opts.value` | string | No | Initial font name |
+| `opts.onChange` | function | No | `onChange(fontName)` callback |
+
+---
+
+### `UI:CreateFontSettingControl(parent, opts)` → `table`
+
+Font dropdown + reset button bound to `storage[key]`. Delegates to the Fonts module.
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `parent` | Frame | Yes | Parent frame |
+| `opts.label` | string | Yes | Label text |
+| `opts.storage` | table | Yes | Saved variable table |
+| `opts.key` | string | Yes | Key within storage |
+| `opts.onChange` | function | No | Additional change callback |
+
+---
+
+## Options Panel Builder
+
+### `UI:CreateScrollPage(parent, height)` → `canvas, scrollFrame`
+
+Create a clipped, scrollable canvas for option cards taller than the tab's
+visible area. Position sections on the canvas; the canvas tracks the scroll
+frame width. Classic-era's `UIPanelScrollFrameTemplate` supplies the scrollbar.
+
+```lua
+local page = UI:CreateScrollPage(content, 620)
+local section = UI:CreateSection(page, { title = "General", height = 140 })
+```
+
+`UI:CreateSection` uses the same `RGXDesign:CreateSection` frame and
+primary-bordered header that production consumers use; RGXUI handles geometry while RGXDesign owns textures
+and themed colors. After adding controls to `section.content`, call
+`section:FitContent()` to measure visible direct children and FontStrings
+and size the card to them. Stacked cards anchored to its bottom follow the
+resulting height. `UI:CreateColumns(parent, 2, { titles = { "Options", "Layout" } })`
+returns card content frames; call `left.card:FitContent()` and
+`right.card:FitContent()` once both columns are built.
+
+`UI:CreateCard(parent, { title = "Font" })` provides a section with a flow
+layout. Anchor stacked cards to the previous card's bottom so `FitContent()`
+or `AutoHeight()` can reflow the column. Use
+`UI:CreateColumns(parent, 2, { card = false })` for plain column hosts when
+the cards themselves supply the section borders.
+
+`UI:CreateButtonGroup(parent, { "Left", "Right" }, { y = -8 })` centers a
+styled button pair in its parent (default 84px buttons, 8px gap). Buttons
+are available as `group.buttons[1]` and `group.buttons[2]`.
+
+`UI:AnchorRowReset(row, reset, control)` puts every reset at the same right
+inset (8px) and centers it vertically on the control rather than its label.
+Framework sliders and font dropdowns use this automatically.
+
+### `UI:CreateCloseButton(parent, opts)` → `button`
+
+The framework's standard window close ("X") button, attachable to any
+framework-built window, dialog, or panel so consumers never hand-roll window
+chrome. Uses the native `UIPanelCloseButton` art on every supported flavor.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `parent` | frame | Yes | — | Frame the button attaches to (also default hide target) |
+| `opts.width` / `opts.height` | number | No | 30 | Button size |
+| `opts.point` / `opts.relativePoint` | string | No | `"TOPRIGHT"` | Anchor points |
+| `opts.relativeTo` | frame | No | parent | Anchor target |
+| `opts.x` / `opts.y` | number | No | 0 | Anchor offsets |
+| `opts.onClick` | function | No | hides `parent` | Click handler |
+| `opts.tooltip` | string | No | — | Hover tooltip text |
+| `opts.hidden` | boolean | No | false | Start hidden (host owns the chrome) |
+
+The button is also stored as `parent.closeButton`. `CreateOptionsPanel` uses
+this factory for its own close button (hidden while the panel is embedded in
+the Settings canvas, which owns its chrome there); pass
+`opts.closeButton = false` to that panel to skip it.
+
+```lua
+UI:CreateCloseButton(myDialog, { point = "TOPRIGHT", x = -6, y = -6,
+    tooltip = "Close", onClick = function() myDialog:Hide() end })
+```
+
+### `UI:CreateConfigButton(anchor, opts)` → `button` and `UI:CreateConfigDialog(parent, opts)` → `dialog`
+
+The sub-menu configuration affordance: a small gear button attached to a
+control that opens a configuration dialog, so consumers never hand-roll
+"advanced settings" chrome.
+
+`UI:CreateConfigButton(anchor, opts)` — gear icon (desaturated until hovered)
+next to the anchor control:
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `anchor` | frame | Yes | — | Control the gear sits beside |
+| `opts.point` / `opts.relativePoint` | string | No | `"LEFT"` / `"RIGHT"` | Anchor points |
+| `opts.relativeTo` | frame | No | anchor | Anchor target |
+| `opts.x` / `opts.y` | number | No | 6 / 0 | Anchor offsets |
+| `opts.dialog` | frame | No | — | Dialog shown by the default click action |
+| `opts.onClick` | function | No | show `opts.dialog` | Custom click handler |
+| `opts.tooltip` | string | No | — | Hover tooltip text |
+| `opts.width` / `opts.height` | number | No | 18 | Gear size |
+| `opts.hidden` | boolean | No | false | Start hidden |
+
+The button is published as `anchor.configButton`.
+
+`UI:CreateConfigDialog(parent, opts)` — movable, design-skinned dialog frame
+with the framework close button and an optional Reset action; consumers
+populate the returned frame and show it from a config button:
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `parent` | frame | No | UIParent | Dialog parent |
+| `opts.title` | string | No | "Configuration" | Header title |
+| `opts.width` / `opts.height` | number | No | 420 / 260 | Dialog size |
+| `opts.onReset` | function | No | — | Adds a Reset button when present |
+| `opts.onShow` | function | No | — | Hooked to the dialog's OnShow |
+| `opts.strata` | string | No | `"FULLSCREEN_DIALOG"` | Frame strata |
+| `opts.hidden` | boolean | No | true | Start hidden |
+
+```lua
+local dialog = UI:CreateConfigDialog(myPanel, { title = "Advanced", onReset = ResetAdvanced })
+UI:CreateConfigButton(myToggle, { dialog = dialog, tooltip = "Advanced settings" })
+```
+
+### `UI:Confirm(opts)` → `dialog`
+
+The themed StaticPopup replacement: one shared confirm dialog with a
+message plus Confirm/Cancel, ESC-closable, reconfigured on every call so no
+consumer needs a `StaticPopupDialogs` table:
+
+```lua
+UI:Confirm({
+    title = "Reset All Settings", confirm = "Yes", cancel = "No",
+    message = "Are you sure you want to reset all settings to defaults?",
+    onConfirm = function() MyAddon:ResetSettings() end,
+})
+```
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `opts.title` | string | No | "Confirm" | Header title |
+| `opts.message` | string | No | "" | Wrapped message text |
+| `opts.confirm` / `opts.cancel` | string | No | "Confirm" / "Cancel" | Button labels |
+| `opts.onConfirm` | function | No | — | Fires once on confirm (failure-isolated); dialog hides first |
+| `opts.width` / `opts.height` | number | No | 340 / 160 | Dialog size |
+
+For a single informational page without tab chrome, pass `content = function(frame)
+... end` instead of `tabs`. Existing `tabs = { ... }` panels retain their tab
+row and page lifecycle. The framework's AddOns settings category uses this
+single-page form to link to RGX-Hello and list the available modules and tools.
+
+### `UI:CreateOptionsPanel(name, opts)` → `panel`
+
+Create a full options panel with tab system, scroll container, and header.
+
+**Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `name` | string | Yes | — | Panel name (used as frame name) |
+| `opts.title` | string | No | name | Title text in header |
+| `opts.subtitle` | string | No | "" | Subtitle text |
+| `opts.width` | number | No | 800 | Panel width |
+| `opts.height` | number | No | 600 | Panel height |
+| `opts.version` | string | No | — | Version string shown in header |
+| `opts.author` | string | No | — | Author string shown in header |
+| `opts.website` | string | No | — | Website URL shown in header |
+| `opts.closeButton` | boolean | No | true | Standard window close button (hidden while embedded in Settings) |
+
+**Returns:** Panel object with methods below.
+
+### Panel Methods
+
+#### Providing tabs
+
+Tabs are supplied at creation through `opts.tabs`; each `content(container)`
+builder runs once, the first time its tab is shown:
+
+```lua
+local panel = UI:CreateOptionsPanel({
+    addonName = "MyAddon",
+    tabs = {
+        { text = "General", content = function(container)
+            UI:CreateToggle(container, { key = "enabled", label = "Enabled", storage = MyAddonDB })
+            UI:CreateSlider(container, { key = "scale", label = "Scale", min = 50, max = 150, storage = MyAddonDB })
+        end },
+        { text = "Colors", content = function(container)
+            UI:CreateColorPicker(container, { key = "primary", label = "Primary Color", storage = MyAddonDB })
+        end },
+    },
+})
+```
+
+#### Extending another addon's panel — `RGX:AddOptionsTab(addonName, text, builder[, geom])`
+
+Register extra tabs onto an addon's panel **by name, before it is built** (i.e.
+at file-parse time, from a second file). The declarative panel builder appends
+them after the addon's own `options` tabs, so a bundled dev/test suite can live
+on the addon's own panel instead of a separate window. `geom` optionally hints
+panel `width`/`height`/`maxPerRow`; the largest hint across all registrations
+wins. Panels are not rebuilt after creation, so this must run before the addon's
+`ADDON_LOADED`.
+
+```lua
+RGX:AddOptionsTab("MyAddon", "Debug", function(container)
+    UI:CreateButton(container, "Dump State", 120, 24, DumpState)
+end, { maxPerRow = 5 })
+```
+
+`RGX:GetAddon(name)` returns the addon object (with `.panel`) if you need it.
+
+#### `panel:Open()`
+
+Open the panel and navigate to it in Interface Options:
+
+```lua
+panel:Open()
+```
+
+#### `panel:Close()` / `panel:Toggle()`
+
+`Close()` hides the floating panel or its Settings host through the framework's
+safe-hide boundary. `Toggle()` closes a visible panel and otherwise opens it;
+visibility includes the host so a hidden Settings window can reopen normally.
+
+#### `panel:SelectTab(index)`
+
+Switch to a tab by 1-based index:
+
+```lua
+panel:SelectTab(2) -- switch to Fonts tab
+```
+
+#### `panel:SelectTabByName(name)`
+
+Switch to a tab by its name:
+
+```lua
+panel:SelectTabByName("Fonts")
+```
+
+#### `panel:InvalidateAllTabs()`
+
+Mark all tabs for rebuild. Next time each tab is shown, its `buildFn` will be re-executed:
+
+```lua
+panel:InvalidateAllTabs()
+```
+
+#### `panel:Refresh()`
+
+Force-refresh the currently visible tab:
+
+```lua
+panel:Refresh()
+```
+
+#### `panel:SetTheme(config)`
+
+Apply the panel's colors at runtime. Repaints the accent line (accent color
+only when the panel theme opts in with `accentHeader = true`, else primary),
+version label and tab styling (primary color) from `panel.theme`, and
+rebuilds/refreshes tab content under
+that theme, without mutating the shared global theme (it is scoped and
+restored, exactly like construction). Accepts the same named or array color
+forms as `Design:SetTheme`:
+
+```lua
+panel:SetTheme({ primary = { r = 0.35, g = 0.75, b = 0.51 } })
+```
+
+---
+
+## Complete Options Panel Example
+
+```lua
+local UI = RGX:GetUI()
+
+local panel = UI:CreateOptionsPanel("MyAddonOptions", {
+    title = "My Addon",
+    subtitle = "v1.0.0 by Me",
+    width = 800,
+    height = 600,
+})
+
+panel:AddTab("General", function(container)
+    UI:CreateToggle(container, {
+        label = "Enable Addon",
+        value = MyAddonDB.profile.enabled,
+        onChange = function(v) MyAddonDB.profile.enabled = v end,
+    })
+    UI:CreateSlider(container, {
+        label = "Update Interval",
+        min = 0.1,
+        max = 5.0,
+        step = 0.1,
+        value = MyAddonDB.profile.interval,
+        onChange = function(v) MyAddonDB.profile.interval = v end,
+    })
+end)
+
+panel:AddTab("Appearance", function(container)
+    UI:CreateFontDropdown(container, {
+        label = "Font Family",
+        value = MyAddonDB.profile.fontFamily,
+        onChange = function(v) MyAddonDB.profile.fontFamily = v end,
+    })
+    UI:CreateSlider(container, {
+        label = "Font Size",
+        min = 8,
+        max = 24,
+        step = 1,
+        value = MyAddonDB.profile.fontSize,
+        onChange = function(v) MyAddonDB.profile.fontSize = v end,
+    })
+    UI:CreateColorPicker(container, {
+        label = "Text Color",
+        value = MyAddonDB.profile.textColor,
+        onChange = function(r, g, b, a)
+        MyAddonDB.profile.textColor = {r, g, b, a}
+        end,
+    })
+    UI:CreateStatusBarDropdown(container, {
+        label = "Bar Texture",
+        value = MyAddonDB.profile.barTexture,
+        onChange = function(v) MyAddonDB.profile.barTexture = v end,
+    })
+end)
+
+-- Register with WoW
+InterfaceOptions_AddCategory(panel.frame)
+
+-- Open from slash command
+SLASH_MYADDON1 = "/myaddon"
+SlashCmdList.MYADDON = function()
+    panel:Open()
+end
+```
+
+---
+
+## Layout Notes
+
+- Framework scroll pages are clipping viewports with mouse-wheel scrolling;
+  native scrollbar widgets are not created or shown. Canvas width uses the
+  content area rather than reserving a visible-bar gutter.
+- Numeric and discrete volume slider thumbs refresh after show and geometry
+  changes, reading the current bound storage; redraw does not overwrite settings.
+- Controls are positioned automatically within the scroll container
+- Each control is anchored below the previous one
+- Use `container` (the scroll child) as the parent for all controls
+- The scroll container handles overflow automatically
+- Tab content is built lazily on first show and cached unless invalidated
+
+## Definition Round Trip (Source Development Slice)
+
+This first editor slice is available on its feature source branch, not in the
+published `v2.7.9` addon. It edits **one plain-text label definition**, using one
+canonical schema (`contract/schemas/rgx-definition.schema.json`) and equivalent guarded
+Lua/runtime and pure JavaScript/tooling implementations. It does not implement
+the complete Trigger/Conditions/Display/Actions/Load model, a Studio shell, or
+Blizzard Edit Mode registration.
+
+```lua
+local definition = {
+    version = 1, kind = "label", id = "example", text = "Hello RGX",
+    enabled = true, x = 0, y = 0, scale = 100,
+}
+local UI = RGX:GetUI()
+local editor, err = UI:CreateDefinitionEditor(parent, {
+    definition = definition,
+    onSave = function(saved)
+        addon.db.labelDefinition = saved -- persist through the consumer's RGX DB
+    end,
+})
+```
+
+All fields are required. `id` is an ASCII identifier (letter followed by up to
+47 letters/digits/underscores/hyphens); `text` is valid UTF-8 of at most 256 bytes
+without ASCII controls; `enabled` preserves explicit false; x/y are integer
+offsets in -500..500 (positive y is upward); scale is integer percent in 25..300.
+The model owns coordinates and scale, not pixel-identical fonts across platforms.
+
+`CreateDefinitionSession` owns independent saved and draft copies. Patch/Import
+change only a successfully validated draft. Save calls a synchronous `onSave`
+with an independent copy: nil/no return or true accepts; false, another return,
+or an error rejects. Callback side effects are the callback's responsibility;
+the session cannot roll back arbitrary consumer writes. Cancel and closing the
+in-game control restore the last saved draft. Invalid visible fields block Save.
+Getters return independent copies, not mutable session storage.
+
+Import/export uses the data-only envelope
+`RGXD1|label|id|enabled-bit|scale|x|y|percent-encoded-UTF8-text`.
+Every text byte is encoded as `%XX`; no Lua parser, `loadstring`, code execution,
+or live-game bridge is involved in imports. Unknown versions/fields, malformed
+UTF-8/numbers, and inaccessible values are rejected without replacing the saved
+definition. This is a transfer encoding, not a second authoring DSL.
+
+### Try Both Adapters
+
+1. Run `node tools/editor/serve.mjs` from a source checkout, then open
+   `http://127.0.0.1:18790`. The allowlisted static server is loopback-only and
+   read-only. The browser stores an explicitly saved definition in localStorage.
+2. Install a manifest-built feature runtime in the intended test client; run
+   `/rgxf editor`. Save uses the framework's own DB leaf
+   `RGXFrameworkDB.definitionExample`; closing/reloading must restore the saved
+   definition. Unsupported stored definitions are preserved and reported.
+3. Change and export a browser draft; paste/import it in-game. Change it there,
+   export, and import back into the browser. Both directions must preserve text,
+   false, position and scale. Import is a draft operation; Save remains explicit.
+4. Test Save/Cancel, invalid fields, malformed imports, reopen/reload persistence,
+   overflow/preview clipping, and unaffected panels in each affected client.
+
+The in-game preview uses the existing RGX scroll viewport, sections, controls,
+and options lifecycle. The ordinary InputBox template and user-input distinction
+are verified in active Retail/Classic source mirrors under
+`Blizzard_SharedXML/Shared/InputBox/InputBoxTemplates.xml` and `.lua`; legacy
+Cataclysm/Forever visual behavior still needs client validation.
+
+`npm --prefix tools/ci run definition-check` crosses the actual JS/Lua validators
+and sessions in both directions, checks the JSON schema, exercises the real Lua
+editor adapter with explicit widget seams, and verifies the static server routes.
+Headless widget seams do not prove WoW geometry, protected-action behavior, or
+actual browser rendering. Record those manual results under framework #27.
+
+For AI-assisted authoring, `rgx_edit_definition` uses the same pure engine and
+returns normalized data plus an interoperable export string. Its schema resource
+is `rgx://schemas/definition`. It is optional source tooling and labels this slice
+`sourceOnly`; it never writes files or executes generated actions.
