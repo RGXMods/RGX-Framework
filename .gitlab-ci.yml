@@ -1,0 +1,6 @@
+variables:
+  GITHUB_MIRROR_REPOSITORY: RGXMods/RGX-Framework
+
+include:
+  - local: /.gitlab/ci/addon.yml
+  - local: /.gitlab/ci/reference.yml
