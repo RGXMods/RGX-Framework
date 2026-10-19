@@ -42,6 +42,7 @@ jobs:
           if [ -f docs/STUDIO-ROADMAP.md ]; then npm run docs-check; fi
 
       - name: Validate canonical wiki sources
+        if: ${{ hashFiles('docs/STUDIO-ROADMAP.md') != '' }}
         run: node tools/wiki/build-wiki.mjs "${RUNNER_TEMP}/wiki-out"
 
       - name: Install source conformance fixture
