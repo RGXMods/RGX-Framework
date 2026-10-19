@@ -1,0 +1,333 @@
+--=====================================================================================
+-- RGX-Framework | RGXReputation
+-- Reputation and Renown tracking library for any RGX-Framework addon.
+-- Normalizes WoW's hostile reputation API so addons don't need to.
+--
+-- WoW's C_Reputation API differs significantly between expansions and
+-- between classic/retail — this module handles all of that complexity.
+--
+-- Usage (zero boilerplate):
+--   local Rep = RGX:GetReputation()
+--
+--   Rep:OnRankUp(function(factionName, factionID, oldRank, newRank)
+--       print(factionName .. " rank up: " .. oldRank .. " -> " .. newRank)
+--   end)
+--
+--   Rep:OnGain(function(factionName, factionID, amount, newTotal)
+--       -- fires on every rep tick
+--   end)
+--
+--   Rep:OnRenownUp(function(factionName, factionID, oldLevel, newLevel)
+--       -- retail: major factions (Dragonscale Expedition, etc.)
+--   end)
+--
+--   Rep:GetAll()           -- returns flat array of { id, name, standing, value, max }
+--   Rep:Get(factionID)     -- single faction data
+--   Rep:GetByName(name)    -- lookup by faction name
+--   Rep:IsMaxed(factionID) -- true if Exalted (or max renown)
+--
+-- Rank constants (exported as Rep.Ranks):
+--   Hated=1, Hostile=2, Unfriendly=3, Neutral=4,
+--   Friendly=5, Honored=6, Revered=7, Exalted=8
+--=====================================================================================
+
+local addonName, RGX = ...
+
+local Rep = {}
+
+-- Locale strings (libraries/locale/locale.lua + overrides.lua) must load before
+-- this module via RGX-Framework.xml; fall back to English if absent so the
+-- framework still boots during isolated tooling linting.
+local LocaleMod = RGX:GetModule("locale")
+local L = (LocaleMod and LocaleMod.L) or {}
+
+-- ── Constants ─────────────────────────────────────────────────────────────────
+
+Rep.Ranks = {
+    [1] = L["REP_RANK_1"] or "Hated",
+    [2] = L["REP_RANK_2"] or "Hostile",
+    [3] = L["REP_RANK_3"] or "Unfriendly",
+    [4] = L["REP_RANK_4"] or "Neutral",
+    [5] = L["REP_RANK_5"] or "Friendly",
+    [6] = L["REP_RANK_6"] or "Honored",
+    [7] = L["REP_RANK_7"] or "Revered",
+    [8] = L["REP_RANK_8"] or "Exalted",
+}
+
+local SCAN_DELAY = 0.10
+
+-- ── State ─────────────────────────────────────────────────────────────────────
+
+Rep._factions     = {}   -- [name]       = { id, standing, value }
+Rep._factionsById = {}   -- [id]         = { name, standing, value, max }
+Rep._renown       = {}   -- [factionID]  = { level }
+Rep._covenantRenown = {} -- ["covenant_<id>"] = { level, name }
+Rep._pendingScan  = false
+Rep._eventsInit   = false
+
+Rep._onRankUp    = {}
+Rep._onGain      = {}
+Rep._onRenownUp  = {}
+
+-- ── Callback helpers ──────────────────────────────────────────────────────────
+
+local function AddCb(list, fn)
+    if type(fn) ~= "function" then return nil end
+    table.insert(list, fn)
+    return function()
+        for i = #list, 1, -1 do
+            if list[i] == fn then
+                table.remove(list, i)
+                return
+            end
+        end
+    end
+end
+
+local function Fire(list, ...)
+    for _, fn in ipairs(list) do
+        local ok, err = pcall(fn, ...)
+        if not ok then RGX:Debug("[RGXReputation] Callback error: " .. tostring(err)) end
+    end
+end
+
+-- ── Public callback registration ─────────────────────────────────────────────
+
+-- fn(factionName, factionID, oldRankIndex, newRankIndex)
+function Rep:OnRankUp(fn)   return AddCb(self._onRankUp, fn)   end
+
+-- fn(factionName, factionID, amount, newTotal)
+function Rep:OnGain(fn)     return AddCb(self._onGain, fn)     end
+
+-- fn(factionName, factionID, oldLevel, newLevel)  — retail only
+function Rep:OnRenownUp(fn) return AddCb(self._onRenownUp, fn) end
+
+-- ── Scan helpers ──────────────────────────────────────────────────────────────
+
+local function GetFactionData(index)
+    if RGX.API and RGX.API.GetFactionDataByIndex then
+        local ok, d = pcall(RGX.API.GetFactionDataByIndex, index)
+        if ok and d then return d end
+    end
+    return nil
+end
+
+local function GetFactionCount()
+    if RGX.API and RGX.API.GetFactionCount then
+        local ok, n = pcall(RGX.API.GetFactionCount)
+        return ok and n or 0
+    end
+    return 0
+end
+
+-- Scan and cache all faction standings
+function Rep:Scan()
+    local count = GetFactionCount()
+    for i = 1, count do
+        local d = GetFactionData(i)
+        if d and d.name and d.reaction then
+            local id   = d.factionID or 0
+            local name = d.name
+
+            self._factions[name] = {
+                id       = id,
+                standing = d.reaction,
+                value    = d.currentStanding or 0,
+            }
+
+            if id and id > 0 then
+                self._factionsById[id] = {
+                    name     = name,
+                    standing = d.reaction,
+                    value    = d.currentStanding or 0,
+                    max      = d.nextReactionThreshold or 0,
+                    index    = i,
+                }
+            end
+        end
+    end
+
+    -- Renown (retail TWW/DF major factions)
+    if C_MajorFactions and C_MajorFactions.GetMajorFactionIDs then
+        local ok, ids = pcall(C_MajorFactions.GetMajorFactionIDs)
+        if ok and ids then
+            for _, fid in ipairs(ids) do
+                local ok2, data = pcall(C_MajorFactions.GetMajorFactionData, fid)
+                if ok2 and data then
+                    self._renown[fid] = {
+                        level = data.renownLevel or 0,
+                        name  = data.name or string.format(L["REP_FACTION_FALLBACK_FORMAT"] or "Faction %d", fid),
+                    }
+                end
+            end
+        end
+    end
+end
+
+-- ── Check for changes since last scan ────────────────────────────────────────
+
+function Rep:CheckChanges()
+    local count = GetFactionCount()
+
+    for i = 1, count do
+        local d = GetFactionData(i)
+        if d and d.name and d.reaction then
+            local id   = d.factionID or 0
+            local name = d.name
+            local old  = self._factions[name]
+
+            local oldStanding = old and old.standing or 0
+            local oldValue    = old and old.value    or 0
+            local newStanding = d.reaction
+            local newValue    = d.currentStanding or 0
+
+            -- Rep gained (value went up within same rank, or rank changed)
+            if newValue > oldValue or newStanding > oldStanding then
+                local gained = newValue - oldValue
+                if newStanding > oldStanding then
+                    -- crossed a threshold; gained = (max of old rank - old value) + new value
+                    gained = newValue
+                end
+                if gained > 0 then
+                    Fire(self._onGain, name, id, gained, newValue)
+                end
+            end
+
+            -- Rank up
+            if newStanding > oldStanding then
+                Fire(self._onRankUp, name, id, oldStanding, newStanding)
+            end
+
+            -- Update cache
+            self._factions[name] = { id = id, standing = newStanding, value = newValue }
+            if id and id > 0 then
+                self._factionsById[id] = {
+                    name     = name,
+                    standing = newStanding,
+                    value    = newValue,
+                    max      = d.nextReactionThreshold or 0,
+                    index    = i,
+                }
+            end
+        end
+    end
+
+    -- Renown changes
+    if C_MajorFactions and C_MajorFactions.GetMajorFactionIDs then
+        local ok, ids = pcall(C_MajorFactions.GetMajorFactionIDs)
+        if ok and ids then
+            for _, fid in ipairs(ids) do
+                local ok2, data = pcall(C_MajorFactions.GetMajorFactionData, fid)
+                if ok2 and data then
+                    local oldLevel = self._renown[fid] and self._renown[fid].level or 0
+                    local newLevel = data.renownLevel or 0
+                    if newLevel > oldLevel then
+                        local fname = data.name or string.format(L["REP_FACTION_FALLBACK_FORMAT"] or "Faction %d", fid)
+                        Fire(self._onRenownUp, fname, fid, oldLevel, newLevel)
+                        self._renown[fid] = { level = newLevel, name = fname }
+                    end
+                end
+            end
+        end
+    end
+end
+
+function Rep:_QueueCheck()
+  if self._pendingScan then return end
+  self._pendingScan = true
+  -- Prefer RGX timer API for framework budget/diagnostics
+  local function run()
+    self._pendingScan = false
+    self:CheckChanges()
+  end
+  if RGX and type(RGX.After) == "function" then
+    RGX:After(SCAN_DELAY, run, "Reputation:_QueueCheck")
+  elseif C_Timer and C_Timer.After then
+    C_Timer.After(SCAN_DELAY, run)
+  else
+    run()
+  end
+end
+
+-- ── Public accessors ──────────────────────────────────────────────────────────
+
+-- Returns array of all known factions: { id, name, standing, rankName, value }
+function Rep:GetAll()
+    local result = {}
+    for id, data in pairs(self._factionsById) do
+        table.insert(result, {
+            id       = id,
+            name     = data.name,
+            standing = data.standing,
+            rankName = self.Ranks[data.standing] or L["REP_UNKNOWN"] or "Unknown",
+            value    = data.value,
+            max      = data.max,
+        })
+    end
+    table.sort(result, function(a, b) return string.lower(a.name) < string.lower(b.name) end)
+    return result
+end
+
+-- Returns data for a single faction by numeric ID
+function Rep:Get(factionID)
+    return self._factionsById[factionID]
+end
+
+-- Case-insensitive name lookup
+function Rep:GetByName(name)
+    local lower = string.lower(name)
+    for fname, data in pairs(self._factions) do
+        if string.lower(fname) == lower then
+            return data
+        end
+    end
+    return nil
+end
+
+function Rep:IsMaxed(factionID)
+    local d = self._factionsById[factionID]
+    return d and d.standing == 8
+end
+
+-- Returns all renown data: { [factionID] = { level, name } }
+function Rep:GetRenown()
+    return self._renown
+end
+
+-- ── Init ──────────────────────────────────────────────────────────────────────
+
+function Rep:Init()
+    if self._eventsInit then return end
+    self._eventsInit = true
+
+    RGX:RegisterEvent("UPDATE_FACTION", function()
+        Rep:_QueueCheck()
+    end)
+
+    RGX:RegisterEvent("PLAYER_ENTERING_WORLD", function()
+        Rep:Scan()
+    end)
+
+    if RGX:HasCapability("renown") then
+        RGX:RegisterEvent("MAJOR_FACTION_RENOWN_LEVEL_CHANGED", function()
+            Rep:_QueueCheck()
+        end)
+
+        if RGX:HasEvent("COVENANT_SANCTUM_RENOWN_LEVEL_CHANGED") then
+            RGX:RegisterEvent("COVENANT_SANCTUM_RENOWN_LEVEL_CHANGED", function(_, newLevel, oldLevel)
+                local covenantID = C_Covenants and C_Covenants.GetActiveCovenantID and C_Covenants.GetActiveCovenantID() or 0
+                local key = "covenant_" .. tostring(covenantID or 0)
+                local name = L["REP_COVENANT"] or "Covenant"
+                if type(newLevel) == "number" and type(oldLevel) == "number" and newLevel > oldLevel then
+                    Rep._covenantRenown[key] = { level = newLevel, name = name }
+                    Fire(Rep._onRenownUp, name, key, oldLevel, newLevel)
+                end
+            end)
+        end
+    end
+end
+
+-- ── Wire into framework ───────────────────────────────────────────────────────
+
+_G.RGXReputation = Rep
+RGX:RegisterModule("reputation", Rep, { category = "game" })

@@ -1,0 +1,372 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/RGXMods/RGX-Framework/contract/schemas/rgx-addon.schema.json",
+  "title": "RGXAddon declarative options table",
+  "description": "The opts table accepted by RGXAddon(name, opts) / RGXAddon \"Name\" { }. Governed by the additive Simplicity Contract in docs/DECLARATIVE-API.md: keys and grammars never silently change meaning. Keys marked x-rgx-ships:\"today\" are implemented in core/core.lua RGX.Addon; keys marked \"tier4\" are frozen future targets, not yet implemented. Lua functions cannot be expressed in JSON; they are modeled as {\"$lua\":\"function\"} placeholders for validation purposes.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "table": {
+      "x-rgx-ships": "today",
+      "description": "Optional pre-existing table to become the addon object (RGX.Addon augments it in place).",
+      "type": "object"
+    },
+    "brand": {
+      "x-rgx-ships": "today",
+      "description": "Hex color (no #) for the chat prefix. Default 58be81.",
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{6}$"
+    },
+    "slash": {
+      "x-rgx-ships": "today",
+      "description": "Slash command(s) without the leading slash. Bare: string or array of aliases; the assumed handler opens the options panel. Advanced: the same table plus handler = function(addon, msg) when opening the panel is not the right default. Contract rule 4: Tier 4 defaults this to the lowercase addon name when omitted.",
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+        {
+          "type": "object",
+          "description": "Advanced form. In JSON transcription the Lua table's array part (the aliases) becomes numeric-string keys.",
+          "properties": { "handler": { "$ref": "#/$defs/luaFunction" } },
+          "patternProperties": { "^[0-9]+$": { "type": "string", "minLength": 1 } },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "minimap": {
+      "x-rgx-ships": "today",
+      "description": "Bare: true = minimap button with default icon; string = icon texture path. The assumed left-click opens the options panel and the dragged angle persists to addon.db. Advanced: a full minimap-button opts table (tooltip, defaultAngle, onRightClick, onCtrlRight, angleKey, ...) passed through to the minimap module's Create.",
+      "oneOf": [
+        { "type": "boolean" },
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "description": "Advanced passthrough form. Unlisted keys pass through to MM:Create.",
+          "properties": {
+            "icon": { "type": "string", "minLength": 1 },
+            "defaultAngle": { "type": "number" },
+            "angleKey": { "type": "string" },
+            "enabledKey": { "type": "string" },
+            "tooltip": { "type": "object" },
+            "onLeftClick": { "$ref": "#/$defs/luaFunction" },
+            "onRightClick": { "$ref": "#/$defs/luaFunction" },
+            "onCtrlRight": { "$ref": "#/$defs/luaFunction" }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "db": {
+      "x-rgx-ships": "today",
+      "description": "Profile defaults table. Creates addon.db (RGX:NewDatabase proxy) on ADDON_LOADED. SavedVariables name defaults to <Name>DB with non-identifier characters stripped from the name (\"RGX-Hello\" -> RGXHelloDB, matching rgx_generate_addon); pass dbName to override (contract rule 4).",
+      "type": "object"
+    },
+    "dbName": {
+      "x-rgx-ships": "today",
+      "description": "Override the SavedVariables name (default <Name>DB). Must match a ## SavedVariables entry in the consumer TOC.",
+      "type": "string",
+      "minLength": 1
+    },
+    "global": {
+      "x-rgx-ships": "today",
+      "description": "Passed through to RGX:NewDatabase opts.global (cross-character storage).",
+      "type": "boolean"
+    },
+    "onSwitch": {
+      "x-rgx-ships": "today",
+      "description": "Profile-switch callback, passed to RGX:NewDatabase.",
+      "$ref": "#/$defs/luaFunction"
+    },
+    "compat": {
+      "x-rgx-ships": "today",
+      "description": "Declarative compatibility shims. Each entry names one or more global API paths (for example C_GossipInfo.GetAvailableQuests or GetGossipAvailableQuests); the first callable path on the current client wins and becomes addon.compat.<name>(...). An optional normalize function receives the raw return values. A declaration with no callable path fails before the addon registers.",
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string", "minLength": 1, "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$" },
+          {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$" }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "prefer": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$" },
+              "fallback": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$" },
+              "normalize": { "$ref": "#/$defs/luaFunction" }
+            },
+            "required": ["prefer"],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "title": {
+      "x-rgx-ships": "today",
+      "description": "Options panel title. Defaults to the addon name (contract rule 4).",
+      "type": "string"
+    },
+    "options": {
+      "x-rgx-ships": "today",
+      "description": "Tab name -> array of control nodes or page nodes. Requires db. Controls bind to addon.db. Table and one-line forms are implemented. The local reserved key 'columns' (1|2|3) distributes plain control lists into balanced sequential column flows. Page nodes author multi-page tabs with a 1-2 column card grid; see DECLARATIVE-API.md for the layout model.",
+      "type": "object",
+      "properties": {
+        "columns": {
+          "x-rgx-ships": "today",
+          "description": "Local implementation: column-flow count for all tabs. Accepts 1, 2 or 3; does not create declarative cards or pages. Client geometry acceptance remains required.",
+          "enum": [1, 2, 3]
+        }
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            { "$ref": "#/$defs/control" },
+            { "$ref": "#/$defs/pageNode" }
+          ]
+        }
+      }
+    },
+    "welcome": {
+      "x-rgx-ships": "today",
+      "description": "Message printed with the addon's branded prefix on load.",
+      "type": "string"
+    },
+    "onInit": {
+      "x-rgx-ships": "today",
+      "description": "function(addon) called on ADDON_LOADED after db/options are ready. The escape hatch for imperative setup.",
+      "$ref": "#/$defs/luaFunction"
+    },
+    "on": {
+      "x-rgx-ships": "tier4",
+      "description": "Human trigger vocabulary -> handler. Trigger names are plain words mapped 1:1 to framework modules (contract rule 2); any UPPER_CASE key passes through as a raw WoW event (escape hatch). See the contract's trigger table.",
+      "type": "object",
+      "propertyNames": {
+        "anyOf": [
+          { "$ref": "#/$defs/triggerName" },
+          { "pattern": "^[A-Z][A-Z0-9_]+$" }
+        ]
+      },
+      "additionalProperties": { "$ref": "#/$defs/luaFunction" }
+    },
+    "every": {
+      "x-rgx-ships": "today",
+      "description": "Named repeating timers with printable names containing a non-space character. Each timer starts after the addon's ADDON_LOADED database/options/minimap setup, first fires after its interval, and calls function(addon, timer). Names provide deterministic same-declaration dispatch and stable diagnostic labels; handlers remain failure-isolated and may self-cancel with addon:CancelTimer(timer).",
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^(?=.*[^ ])[^\\u0000-\\u001f\\u007f]+$"
+      },
+      "additionalProperties": {
+        "type": "array",
+        "prefixItems": [
+          { "type": "number", "exclusiveMinimum": 0 },
+          { "$ref": "#/$defs/luaFunction" }
+        ],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    }
+  },
+  "$defs": {
+    "luaFunction": {
+      "description": "A Lua function. JSON representation for tooling: {\"$lua\": \"function\"}.",
+      "type": "object",
+      "properties": { "$lua": { "const": "function" } },
+      "required": ["$lua"],
+      "additionalProperties": false
+    },
+    "triggerName": {
+      "description": "The frozen trigger vocabulary (contract: additive-only — this enum only grows).",
+      "enum": [
+        "login",
+        "levelup",
+        "achievement", "achievement.criteria",
+        "quest.accepted", "quest.complete", "quest.turnin", "quest.progress",
+        "combat.start", "combat.stop", "combat.kill", "combat.died", "combat.crit", "combat.lowhealth",
+        "pet.levelup", "pet.capture", "pet.battlestart", "pet.battleend",
+        "rep.gain", "rep.rankup", "rep.renown",
+        "honor",
+        "delve.companion", "delve.lifelost", "delve.lifegained",
+        "housing.favor", "housing.levelup", "housing.rewards", "housing.decor",
+        "tradingpost.purchase", "tradingpost.currency",
+        "prey.start", "prey.ambush", "prey.capped", "prey.complete",
+        "collect.mount", "collect.toy", "collect.transmog", "collect.heirloom",
+        "loot.rare", "loot.currency",
+        "aura.applied", "aura.removed", "aura.updated",
+        "media.updated"
+      ]
+    },
+    "control": {
+      "description": "One options control. Table forms and one-line string forms per the contract grammar are implemented; one-line forms first shipped in 2.7.15-beta.2.",
+      "oneOf": [
+        { "$ref": "#/$defs/controlString" },
+        { "$ref": "#/$defs/toggleControl" },
+        { "$ref": "#/$defs/sliderControl" },
+        { "$ref": "#/$defs/panelAlphaControl" },
+        { "$ref": "#/$defs/textboxControl" },
+        { "$ref": "#/$defs/colorControl" },
+        { "$ref": "#/$defs/dropdownControl" },
+        { "$ref": "#/$defs/buttonControl" },
+        { "$ref": "#/$defs/sectionControl" }
+      ]
+    },
+    "controlString": {
+      "x-rgx-ships": "today",
+      "description": "One-line control string, contract grammar: \"toggle <key> ['Label']\" | \"slider <key> <min>-<max> [step] ['Label']\" | \"panel_alpha <key> ['Label']\" | \"textbox <key> ['Label']\" | \"dropdown <key> a|b|c ['Label']\" | \"color <key> ['Label']\" | \"font <key> ['Label']\" | \"button 'Text' <method>\" | \"header 'Text'\" | \"label 'Text'\". Labels inferred from keys when omitted. Validated before addon registration and compiled to existing factories. Slider bounds/step must be finite, min <= max and step > 0; semantic numeric checks are enforced by the shared engine/runtime.",
+      "type": "string",
+      "pattern": "^(?:(?:toggle|color|font|textbox|panel_alpha)[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"]+(?:[ \\t\\r\\n\\f\\v]+'[^']*')?|slider[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"]+[ \\t\\r\\n\\f\\v]+[+-]?\\d*\\.?\\d+-[+-]?\\d*\\.?\\d+(?:[ \\t\\r\\n\\f\\v]+[+-]?\\d*\\.?\\d+)?(?:[ \\t\\r\\n\\f\\v]+'[^']*')?|dropdown[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"]+[ \\t\\r\\n\\f\\v]+[^ \\t\\r\\n\\f\\v'\"|]+(?:\\|[^ \\t\\r\\n\\f\\v'\"|]+)*(?:[ \\t\\r\\n\\f\\v]+'[^']*')?|button[ \\t\\r\\n\\f\\v]+'[^']*'[ \\t\\r\\n\\f\\v]+[A-Za-z_][A-Za-z0-9_]*|(?:header|label)[ \\t\\r\\n\\f\\v]+'[^']*')[ \\t\\r\\n\\f\\v]*$"
+    },
+    "toggleControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["toggle"],
+      "properties": {
+        "toggle": { "type": "string", "description": "db key" },
+        "label": { "type": "string" },
+        "default": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "sliderControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["slider"],
+      "properties": {
+        "slider": { "type": "string", "description": "db key" },
+        "label": { "type": "string" },
+        "min": { "type": "number", "default": 0 },
+        "max": { "type": "number", "default": 100 },
+        "step": { "type": "number", "default": 1 },
+        "suffix": { "type": "string", "description": "appended to the displayed value, e.g. \"%\"" },
+        "progress": { "type": "boolean", "default": true },
+        "valueDisplay": { "enum": ["always", "hover", "none"], "default": "always", "description": "Persistent value label, hover-only value, or no visible value" }
+      },
+      "additionalProperties": false
+    },
+    "panelAlphaControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["panel_alpha"],
+      "properties": {
+        "panel_alpha": { "type": "string", "description": "db key holding a 0-100 transparency value" },
+        "label": { "type": "string" },
+        "default": { "type": "number", "minimum": 0, "maximum": 100 },
+        "presets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label", "value"],
+            "properties": {
+              "label": { "type": "string" },
+              "value": { "type": "number", "minimum": 0, "maximum": 100 }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "textboxControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["textbox"],
+      "properties": {
+        "textbox": { "type": "string", "description": "db key holding a string" },
+        "label": { "type": "string" },
+        "default": { "type": "string", "default": "" },
+        "placeholder": { "type": "string", "description": "Muted hint shown while the stored value is empty" }
+      },
+      "additionalProperties": false
+    },
+    "colorControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["color"],
+      "properties": {
+        "color": { "type": "string", "description": "db key holding a {r,g,b} table" },
+        "label": { "type": "string" },
+        "default": {
+          "type": "object",
+          "description": "Assumed from the db defaults for the key when omitted.",
+          "properties": {
+            "r": { "type": "number" },
+            "g": { "type": "number" },
+            "b": { "type": "number" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "dropdownControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["dropdown"],
+      "properties": {
+        "dropdown": { "type": "string", "description": "db key" },
+        "label": { "type": "string" },
+        "items": { "type": "array", "items": {} },
+        "width": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "buttonControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["button", "action"],
+      "properties": {
+        "button": { "type": "string", "description": "button text" },
+        "action": { "$ref": "#/$defs/luaFunction" },
+        "width": { "type": "number", "default": 120 },
+        "height": { "type": "number", "default": 22 }
+      },
+      "additionalProperties": false
+    },
+    "sectionControl": {
+      "x-rgx-ships": "today",
+      "type": "object",
+      "required": ["section"],
+      "properties": {
+        "section": { "type": "string", "description": "section header text" }
+      },
+      "additionalProperties": false
+    },
+    "pageNode": {
+      "x-rgx-ships": "today",
+      "description": "One page of a multi-page options tab. The page's cards fill a one or two column card grid in declaration order.",
+      "type": "object",
+      "required": ["page", "cards"],
+      "properties": {
+        "page": { "type": "string", "minLength": 1, "description": "page title" },
+        "grid": { "enum": [1, 2], "description": "card-grid column count" },
+        "cards": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/cardNode" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "cardNode": {
+      "x-rgx-ships": "today",
+      "description": "One card in a declarative page. Controls fill the card's internal one or two column flows in declaration order.",
+      "type": "object",
+      "required": ["card", "controls"],
+      "properties": {
+        "card": { "type": "string", "minLength": 1, "description": "card title" },
+        "columns": { "enum": [1, 2], "description": "internal card column count" },
+        "controls": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/control" }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
