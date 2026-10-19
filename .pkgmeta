@@ -1,0 +1,41 @@
+# RGX-Framework Package Metadata
+# Exclusion policy for the in-house release packager
+# (tools/ci/package-manifest-check.mjs + tools/release/publish-release.mjs).
+
+package-as: RGX-Framework
+
+# Files and folders excluded from the packaged zip.
+# NOTE: directory entries must NOT have a trailing slash — the legacy
+# community packager matcher treated "docs/" and "docs" differently, and the slash form
+# silently failed (verified against the v2.2.0 zip, which leaked
+# docs/schemas/tools). The in-house packager matches both forms.
+# Fonts are committed under media/fonts/ — no download step is required.
+ignore:
+  - .gitignore
+  - .mcp.json
+  - AGENTS.md
+  - README.md
+  - docs
+  - contract
+  - skills
+  - tools
+  - tests
+  - .github
+  - .reference
+  - .release
+  - artifacts
+  - graphify-out
+  - .agents
+  - .claude
+  - media/kiwi.gif
+  - media/logo.png
+  - media/round.png
+  - media/square.png
+
+# MCP and other executable tooling remain source-only. Public API/MCP/editor
+# distribution belongs to RGX Studio.
+
+# Release notes come from the canonical changelog summary.
+manual-changelog:
+  filename: docs/CHANGES.md
+  markup-type: markdown
