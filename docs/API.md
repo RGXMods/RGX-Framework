@@ -1,0 +1,1092 @@
+# RGX-Framework API Reference
+
+Current release: `v2.8.0`. Existing public API semantics are preserved.
+
+
+Complete public API by module. See individual module docs for deeper detail:
+
+- [docs/FONTS.md](FONTS.md) — font system
+- [docs/DROPDOWNS.md](DROPDOWNS.md) — dropdown system
+- [docs/ARCHITECTURE.md](ARCHITECTURE.md) — load order, module system, lifecycle
+
+---
+
+## Core (`RGXFramework` / `RGX`)
+
+### Lifecycle
+
+| Method | Description |
+|---|---|
+| `RGX:IsReady()` | `true` after ADDON_LOADED init completes |
+| `RGX:OnReady(fn)` | Call `fn` now if ready, otherwise queue |
+| `RGX:OnLogin(fn)` | Run `fn` on PLAYER_LOGIN |
+| `RGX:OnLoad(addonName, fn)` | Run `fn` when a specific addon loads |
+
+### Module Access
+
+| Method | Description |
+|---|---|
+| `RGX:GetModule(name)` | Soft get; returns nil if not loaded |
+| `RGX:RequireModule(name)` | Hard get; logs error if missing |
+| `RGX:IsModuleLoaded(name)` | Boolean |
+| `RGX:GetLoadedModules()` | Sorted list of registered module names |
+| `RGX:RegisterModule(name, module, opts)` | Register a module table |
+
+### Shortcut Getters
+
+| Method | Module |
+|---|---|
+| `RGX:GetFonts()` | RGXFonts |
+| `RGX:GetColors()` | RGXColors |
+| `RGX:GetTextures()` | RGXTextures |
+| `RGX:GetDropdowns()` | RGXDropdowns |
+| `RGX:GetUI()` | RGXUI |
+| `RGX:GetColorPicker()` | RGXColorPicker |
+| `RGX:GetMinimap()` | RGXMinimap |
+| `RGX:GetTimers()` | RGXTimers |
+| `RGX:GetDesign()` | RGXDesign |
+| `RGX:GetDisplay()` | RGXDisplay |
+| `RGX:GetDataBroker()` | RGXDataBroker |
+| `RGX:GetSound()` | RGXSound |
+| `RGX:GetPetBattles()` | RGXPetBattles |
+| `RGX:GetSharedMedia()` | RGXSharedMedia |
+| `RGX:GetCombat()` | RGXCombat |
+| `RGX:GetReputation()` | RGXReputation |
+| `RGX:GetAuras()` | RGXAuras |
+| `RGX:GetTooltip()` | RGXTooltip |
+| `RGX:GetAchievement()` | RGXAchievement |
+| `RGX:GetLevelUp()` | RGXLevelUp |
+| `RGX:GetCollectibles()` | RGXCollectibles |
+| `RGX:GetLoot()` | RGXLoot |
+| `RGX:GetQuest()` | RGXQuest |
+| `RGX:GetHonor()` | RGXHonor |
+| `RGX:GetDelves()` | RGXDelves |
+| `RGX:GetHousing()` | RGXHousing |
+| `RGX:GetTradingPost()` | RGXTradingPost |
+| `RGX:GetPrey()` | RGXPrey |
+| `RGX:GetWorldMap()` | RGXWorldMap |
+
+### Output
+
+| Method | Description |
+|---|---|
+| `RGX:Print(...)` | Framework icon + green `[RGX]` prefix |
+| `RGX:Warn(...)` | Framework icon + yellow `[RGX]` prefix |
+| `RGX:Error(...)` | Framework icon + red `[RGX]` prefix |
+| `RGX:Debug(...)` | Prints only when `debugMode` is true |
+| `RGX:LoginMessage(message, opts?)` | Print a startup message when the global login-message preference is enabled |
+| `RGX:IsLoginMessagesEnabled()` | Return the persisted global login-message preference (default `true`) |
+| `RGX:SetLoginMessagesEnabled(enabled)` | Persist the global login-message preference in `RGXFrameworkDB` |
+
+### Chat Prefix
+
+```lua
+local prefix = RGX:CreateChatPrefix({
+    icon = "Interface\\AddOns\\MyAddon\\media\\logo.tga",
+    tag = "MYA",
+    tagColor = "58be81",
+    iconSize = 16,
+    spacer = " - ",
+})
+```
+
+The bare form uses the framework icon, ` - ` spacer, and green `[RGX]` tag.
+Pass `icon = ""` to suppress the icon. Players can manage startup messages with
+`/rgxf login on|off|status`; normal `Print`, `Warn`, and `Error` output is never
+gated.
+
+### Object Composition
+
+| Method | Description |
+|---|---|
+| `RGX:Mixin(target, ...)` | Copy all fields from source tables into target; returns target |
+| `RGX:CopyTable(orig)` | Deep copy including metatables |
+| `RGX:Clamp(val, min, max)` | Number clamp |
+| `RGX:Lerp(a, b, t)` | Linear interpolation, t clamped to [0,1] |
+| `RGX:TableCount(tbl)` | Count all keys |
+
+### Convenience Wrappers
+
+| Method | Description |
+|---|---|
+| `RGX:Minimap(config)` | Shortcut for `RGX:GetMinimap():Create(config)` |
+| `RGX:CreateMinimapButton(config)` | Convenience minimap pattern with auto-wiring |
+| `RGX:Options(config)` | Shortcut for `RGX:GetUI():CreateOptionsPanel(config)` |
+| `RGX:Toggle(parent, opts)` | Shortcut for `UI:CreateToggle` (legacy checkbox helper; declarative options render `UI:CreateSwitch`) |
+| `RGX:Slider(parent, opts)` | Shortcut for `UI:CreateSlider` |
+| `RGX:ColorPicker(parent, opts)` | Shortcut for `UI:CreateColorPicker` |
+| `RGX:Section(parent, opts)` | Shortcut for `UI:CreateSection` |
+| `RGX:Label(parent, opts)` | Shortcut for `UI:CreateLabel` |
+| `RGX:Font(fontString, name?, size?, flags?)` | One-call font application — `RGX:Font(text)` alone uses the framework default font/size/flags; override any subset. Shortcut for `Fonts:Quick` |
+| `RGX:PlaySound(id, channel)` | Lookup path via SharedMedia and play |
+| `RGXAddon(name, opts)` / `RGXAddon "Name" { }` | Global addon factory (wraps `RGX.Addon`; curried form supported). The front door per the Simplicity Contract |
+| `RGX.Addon(name, opts)` | The factory itself — `slash`, `minimap`, `db`, `options`, `welcome`, `onInit`; returns the addon object with scoped event/timer/print methods |
+
+### Properties
+
+| Property | Type | Description |
+|---|---|---|
+| `RGX.version` | string | From TOC metadata (e.g. `"1.6.0"`) |
+| `RGX.debugMode` | boolean | Enable `Debug()` output |
+| `RGX.db` | table | `RGXFrameworkDB` SavedVar reference |
+| `RGX.timers` | array | Active timer table |
+| `RGX.combatQueue` | array | Pending combat-locked operations |
+| `RGX.timerBudget` | table | `{ maxPerFrame=256, maxSeconds=0.033, slowSeconds=0.250, slowByLabel={ ["SharedMedia:QueueScan"]=0.500 } }` |
+
+---
+
+## Events & Messages
+
+### WoW Events
+
+| Method | Description |
+|---|---|
+| `RGX:RegisterEvent(event, callback, id, owner)` | Register a C event handler; returns handler ID or false |
+| `RGX:UnregisterEvent(event, id)` | Remove a specific handler |
+| `RGX:UnregisterAllEvents(id)` | Remove all handlers for an ID |
+| `RGX:FireEvent(event, ...)` | Manually dispatch into the event registry |
+
+### Unit Events
+
+| Method | Description |
+|---|---|
+| `RGX:RegisterUnitEvent(event, unit, callback, id, owner)` | Per-unit event filtering; `unit` is a token or a table of tokens (`"player"`, `{"player","target"}`) |
+| `RGX:UnregisterUnitEvent(event, id)` | Remove a specific unit-event handler |
+| `RGX:UnregisterAllUnitEvents(id)` | Remove all unit-event handlers for an ID |
+
+Callback signature: `function(event, unit, ...)` — the unit token is always the second argument, matching WoW's native unit event signature.
+
+### Messages
+
+| Method | Description |
+|---|---|
+| `RGX:RegisterMessage(message, callback, id, owner)` | Register an internal message handler |
+| `RGX:UnregisterMessage(message, id)` | Remove handler |
+| `RGX:UnregisterAllMessages(id)` | Remove all handlers for an ID |
+| `RGX:SendMessage(message, ...)` | Dispatch message to all handlers |
+
+`RegisterCallback` / `UnregisterCallback` / `UnregisterAllCallbacks` are aliases for the message API.
+
+### CreateEmitter
+
+```lua
+local emitter = RGX:CreateEmitter(name)
+emitter:RegisterCallback(signal, fn, id)
+emitter:UnregisterCallback(signal, id)
+emitter:UnregisterAllCallbacks(id)
+emitter:Fire(signal, ...)
+```
+
+---
+
+## Timers
+
+| Method | Description |
+|---|---|
+| `RGX:After(duration, callback, label)` | One-shot delay; returns timer ref |
+| `RGX:Every(duration, callback, label)` | Repeating ticker; callback receives timer ref |
+| `RGX:CancelTimer(timer)` | Stop a ticker or pending one-shot |
+| `RGX:CancelAllTimers()` | Cancel all active timers |
+| `RGX:CreateTimer(duration, callback, repeating, label)` | Low-level; returns timer table |
+
+`Every` callback signature: `function(timer)` — repeating timers can cancel themselves.
+
+Addon-scoped `After` and `Every` refs carry `owner = addon`. Declarative
+`every = { name = { seconds, handler } }` handlers receive
+`function(addon, timer)`, bind after the addon's matching `ADDON_LOADED` setup,
+and carry `name`, `declarativeName`, and stable `AddonName:every:name` labels.
+Definitions in one declaration dispatch lexically by name when they become due
+on the same update. Timer callback failures are reported with the label and
+remain isolated from unrelated timers.
+
+---
+
+## Hooks
+
+| Method | Description |
+|---|---|
+| `RGX:Hook(target, method, callback)` | Post-hook via `hooksecurefunc`; cannot be unhooked |
+| `RGX:Unhook(target, method)` | Not supported (hooksecurefunc limitation) |
+| `RGX:UnhookAll()` | Not supported |
+
+Callback signature: `function(original, self, ...) return original(self, ...) end`
+
+---
+
+## Combat Queue
+
+| Method | Description |
+|---|---|
+| `RGX:QueueForCombat(func, ...)` | Run now if not in combat, otherwise queue for PLAYER_REGEN_ENABLED |
+| `RGX:ProcessCombatQueue()` | Flush all queued operations |
+| `RGX:ShouldQueueOperation()` | Returns `InCombatLockdown()` |
+
+### Safe Helpers
+
+| Method | Description |
+|---|---|
+| `RGX:SafeShow(frame)` | Combat-safe Show |
+| `RGX:SafeHide(frame)` | Combat-safe Hide |
+| `RGX:SafeSetPoint(frame, ...)` | Combat-safe ClearAllPoints + SetPoint |
+| `RGX:SafeSetSize(frame, w, h)` | Combat-safe SetSize |
+| `RGX:SafeSetText(region, text)` | Combat-safe SetText |
+| `RGX:SafeUIDropDownMenu_SetText(dd, text)` | Combat-safe dropdown text |
+| `RGX:SafeUIDropDownMenu_Initialize(dd, init, displayMode)` | Combat-safe dropdown init |
+| `RGX:SafeUIDropDownMenu_Refresh(dd)` | Combat-safe dropdown refresh |
+| `RGX:SafeUIDropDownMenu_EnableDropDown(dd)` | Combat-safe dropdown enable |
+| `RGX:SafeUIDropDownMenu_DisableDropDown(dd)` | Combat-safe dropdown disable |
+| `RGX:SafeToggleDropDownMenu(...)` | Combat-safe ToggleDropDownMenu |
+| `RGX:SafeCloseDropDownMenus(...)` | Combat-safe CloseDropDownMenus |
+| `RGX:SafeEnable(button)` / `RGX:SafeDisable(button)` | Combat-safe Enable/Disable |
+| `RGX:SafeSetChecked(checkbox, checked)` | Combat-safe SetChecked |
+| `RGX:SafeSetValue(slider, value)` | Combat-safe SetValue |
+| `RGX:SafeSetMinMaxValues(slider, min, max)` | Combat-safe SetMinMaxValues |
+
+---
+
+## Slash Commands
+
+| Method | Description |
+|---|---|
+| `RGX:RegisterSlashCommand(commands, callback, id)` | Register; commands: string or table; returns token |
+| `RGX:Slash(command, callback)` | Shorthand for single-command registration |
+
+---
+
+## Database & Profiles
+
+| Method | Description |
+|---|---|
+| `RGX:NewDatabase(name, defaults, opts)` | Profile-aware SavedVariables proxy with metamethod access; `opts`: `{ global, char, profileIsGlobal, legacyFlat, onSwitch }`. `legacyFlat=true` migrates an older flat settings table into the Default profile instead of discarding or aliasing it. |
+| `RGX:DB(name, defaults)` | Simple (non-profile) SavedVariables table with deep-merged defaults |
+| `RGX:GetDB()` | The framework's own `RGXFrameworkDB` reference |
+| `RGX:DBGet(db, path, fallback)` / `RGX:DBSet(db, path, value)` | Dotted-path get/set (`"a.b.c"`) |
+| `RGX:MigrateDB(db, name, currentVersion, migrations)` | Ordered version-based migrations |
+| `RGX:SerializeTable(t)` / `RGX:DeserializeTable(str)` | Table ↔ string for import/export |
+| `RGX:ShowExportDialog(title, data)` / `RGX:ShowImportDialog(title, onImport)` | Copy-paste dialogs |
+
+The proxy returned by `NewDatabase` carries profile CRUD (verified against `core/systems/database.lua`):
+
+| Proxy method | Description |
+|---|---|
+| `db:GetProfile()` / `db:GetActiveProfile()` | Active profile table / name |
+| `db:GetChar()` | Per-character storage table |
+| `db:ListProfiles()` / `db:GetProfiles()` | Profile names / tables |
+| `db:CreateProfile(name)` / `db:LoadProfile(name)` / `db:DeleteProfile(name)` | Profile CRUD |
+| `db:RenameProfile(old, new)` / `db:CopyProfile(src, dst)` / `db:ResetProfile(name)` | Profile management |
+| `db:OnProfileChanged(callback)` | Switch notification |
+| `db:RegisterDefaults(defaults)` | Source-development addition: bind late-loaded defaults to the existing proxy, fill missing values across profiles, then notify observers; preserves explicit false and existing values |
+
+Profile notifications are failure-isolated: a failing callback is reported and
+does not skip later observers or leave the notification guard locked. Newly
+registered observers participate on the next notification. `Adopt()` keeps the
+TOC-declared global bound even when a client-loaded saved file assigns nil.
+Keep that storage global as the raw persistence owner; captured active-profile
+views belong in addon-local variables, not over the declared SavedVariables name.
+| `db:Get(path, fallback)` / `db:Set(path, value)` | Dotted-path access on the active profile |
+| `db:SerializeProfile(name)` | Export one profile as a string |
+
+Never overwrite the proxy (`db = something`) — internal fields are metamethod-guarded.
+
+---
+
+## Utilities
+
+### String
+
+| Method | Description |
+|---|---|
+| `RGX:Trim(str)` | Strip leading/trailing whitespace |
+| `RGX:Split(str, delimiter)` | Split string, returns table |
+| `RGX:Format(pattern, ...)` | `string.format` wrapper |
+| `RGX:StartsWith(str, prefix)` | Boolean |
+| `RGX:EndsWith(str, suffix)` | Boolean |
+
+### Table
+
+| Method | Description |
+|---|---|
+| `RGX:TableKeys(tbl)` | Array of all keys |
+| `RGX:TableValues(tbl)` | Array of all values |
+| `RGX:TableContains(tbl, value)` | Boolean |
+| `RGX:TableMap(tbl, fn)` | New table with fn(v) applied |
+| `RGX:TableFilter(tbl, fn)` | New array of values where fn(v) is true |
+| `RGX:TableFind(tbl, fn)` | First value where fn(v) is true |
+| `RGX:MergeTable(dst, src)` | Shallow merge src into dst; returns dst |
+
+### Math
+
+| Method | Description |
+|---|---|
+| `RGX:Round(num, decimals)` | Round to N decimal places |
+| `RGX:Clamp(val, min, max)` | Number clamp |
+| `RGX:Lerp(a, b, t)` | Linear interpolation, t ∈ [0,1] |
+
+### Function Helpers
+
+| Method | Description |
+|---|---|
+| `RGX:DeepCopy(value)` | Recursive copy (cycle-safe) |
+| `RGX:Throttle(key, seconds, func)` | Run `func` at most once per `seconds` for this key |
+| `RGX:Debounce(key, seconds, func)` | Run `func` only after `seconds` of quiet for this key |
+
+### WoW Version
+
+| Method | Description |
+|---|---|
+| `RGX:GetWoWVersion()` | Numeric build version |
+| `RGX:IsRetail()` | Boolean |
+| `RGX:IsClassicEra()` | Boolean |
+
+---
+
+## Fonts (`RGXFonts`)
+
+See [docs/FONTS.md](FONTS.md) for complete documentation.
+
+### Registry
+
+| Method | Description |
+|---|---|
+| `Fonts:Register(name, path, info)` | Register a font |
+| `Fonts:RegisterAddonFont(addon, name, file, info)` | Register font from external addon |
+| `Fonts:RegisterFontPack(addon, definitions)` | Batch-register fonts |
+| `Fonts:Exists(name)` | Boolean (includes unavailable) |
+| `Fonts:IsAvailable(name)` | Boolean (excludes blocklist) |
+| `Fonts:GetPath(name)` | Absolute font path or nil |
+| `Fonts:Get(name, size, flags)` | Returns path, size, flags |
+| `Fonts:GetFont(name, size, flags)` | Alias for Get |
+| `Fonts:GetInfo(name)` | Full registry entry |
+| `Fonts:List()` | All registered names |
+| `Fonts:ListAvailable()` | Available names only |
+| `Fonts:ListByCategory(cat)` | Names in category |
+| `Fonts:GetCategories()` | Distinct categories |
+| `Fonts:GetFamilies()` | Distinct families |
+| `Fonts:GetGroupedFonts()` | Nested { [cat] = { [fam] = { name, ... } } } |
+| `Fonts:FindByPath(path)` | Path → name reverse lookup |
+| `Fonts:ResolveName(value, fallback)` | Accept name or path, return name |
+| `Fonts:ResolvePath(value, fallback)` | Return safe path and name |
+
+### Apply
+
+| Method | Description |
+|---|---|
+| `Fonts:Apply(fontString, name, size, flags)` | SetFont on FontString |
+| `Fonts:Quick(fontString, name, size, flags)` | Same with nil guards |
+| `Fonts:ApplyChildren(frame, name, size, flags)` | Recursive apply to child FontStrings |
+| `Fonts:CreateString(parent, name, size, flags, layer)` | Create + apply |
+| `Fonts:FromTemplate(parent, template, text, layer)` | Create from named template |
+
+### Defaults
+
+| Method | Description |
+|---|---|
+| `Fonts:SetDefault(name)` | Set default font name |
+| `Fonts:GetDefault()` | Get default font name |
+| `Fonts:SetDefaultSize(size)` | Set default size |
+| `Fonts:SetDefaultFlags(flags)` | Set default flags |
+| `Fonts:SetAutoScale(enable)` | Enable auto-scaling |
+
+### Styles
+
+| Method | Description |
+|---|---|
+| `Fonts:CreateStyle(tbl)` | Create normalized style object |
+| `Fonts:ApplyStyle(fs, style)` | Apply all style fields to FontString |
+| `Fonts:ApplyTextStyle(fs, style)` | Alias for ApplyStyle |
+| `Fonts:NormalizeStyle(style)` | Fill missing fields with defaults |
+| `Fonts:NormalizeColorValue(color)` | Normalize color to {r,g,b,a} |
+| `Fonts:GetStyle(font, size, flags)` | Build minimal style table |
+
+### Flags
+
+| Method | Description |
+|---|---|
+| `Fonts:SplitFlags(flags)` | String → array |
+| `Fonts:NormalizeFlags(flags)` | String or table → canonical string |
+| `Fonts:DescribeFlags(flags)` | Human-readable description |
+| `Fonts:GetFlagPresets()` | Preset flag combinations |
+
+### Controls
+
+| Method | Description |
+|---|---|
+| `Fonts:CreateFontDropdown(parent, opts)` | Full grouped font dropdown |
+| `Fonts:CreateFontSettingControl(parent, opts)` | Font dropdown + reset + flag + size |
+| `Fonts:CreateStyleSelector(parent, opts)` | Full style editor with preview |
+| `Fonts:CreateSimpleFontSelector(parent, opts)` | Minimal font selector |
+| `Fonts:CreateSimpleStyleSelector(parent, opts)` | Minimal style selector |
+| `Fonts:AttachFontSelector(parent, db, key, opts)` | One-line DB-bound font UI |
+| `Fonts:AttachStyleSelector(parent, db, key, opts)` | One-line DB-bound style UI |
+
+### Menu Items
+
+| Method | Description |
+|---|---|
+| `Fonts:CreateFontMenuItems(opts)` | UIDropDownMenu-compatible font items |
+| `Fonts:CreateFlagMenuItems(opts)` | Flag selection items |
+| `Fonts:CreateSizeMenuItems(opts)` | Size selection items |
+| `Fonts:CreateStyleMenuItems(opts)` | Composite style items |
+
+### Internal
+
+| Method | Description |
+|---|---|
+| `Fonts:BuildGroupedFontItems(opts)` | Build grouped menu items (single source of truth) |
+| `Fonts:Init()` | Module initialization (called by TryInit) |
+
+---
+
+## Colors (`RGXColors`)
+
+### Lookup
+
+| Method | Description |
+|---|---|
+| `Colors:Get(name)` | Color table `{r, g, b, hex}` (+ `a` when known), or `nil` |
+| `Colors:GetRGB(name)` | Returns r, g, b (multi-return; fallback 1, 1, 1) |
+| `Colors:GetHex(name)` | Bare `"RRGGBB"` (no `#`; fallback `"ffffff"`) |
+| `Colors:GetClass(className)` | Returns r, g, b (multi-return; class name) |
+| `Colors:GetQuality(name)` | Returns r, g, b (multi-return; quality name) |
+| `Colors:GetPower(token)` | Returns r, g, b (multi-return; short power token) |
+
+### Text Wrapping
+
+| Method | Description |
+|---|---|
+| `Colors:Wrap(text, colorName)` | `|cffRRGGBBtext|r` |
+| `Colors:WrapClass(text, className)` | Wrap class name via palette lookup (class tokens are not in the generic palette; prefer `GetClass`) |
+| `Colors:WrapQuality(text, quality)` | Wrap in quality color |
+
+### Color Math
+
+| Method | Description |
+|---|---|
+| `Colors:Create(r, g, b, a)` | New color table `{r, g, b, hex[, a]}` |
+| `Colors:Clone(color)` | Copy of a named/table color, or `nil` |
+| `Colors:Darken(colorName, amount)` | Darkened r, g, b (amount defaults to 0.2) |
+| `Colors:Lighten(colorName, amount)` | Lightened r, g, b (amount defaults to 0.2) |
+| `Colors:SetAlpha(colorName, alpha)` | r, g, b, alpha |
+| `Colors:Lerp(c1, c2, t)` | Interpolate two colors (returns `{r, g, b}`) |
+| `Colors:Gradient(pct, low, mid, high)` | 3-stop gradient; mid optional (returns `{r, g, b}`) |
+| `Colors:Health(percent)` | Health gradient (green → yellow → red; returns `{r, g, b}`) |
+| `Colors:RGBToHex(r, g, b)` | Returns `"RRGGBB"` |
+| `Colors:HexToRGB(hex)` | Returns r, g, b |
+
+### Apply
+
+| Method | Description |
+|---|---|
+| `Colors:ApplyText(fontString, colorName)` | Set text color |
+| `Colors:ApplyTexture(texture, colorName)` | Set texture color |
+| `Colors:ApplyStatusBar(statusBar, colorName)` | Set bar color |
+
+### Picker (Blizzard API)
+
+```lua
+Colors:OpenPicker({
+    color = "primary",
+    hasOpacity = false,
+    onChanged = function(color, r, g, b, a, cancelled) end,
+})
+```
+
+### Inline Controls
+
+| Method | Description |
+|---|---|
+| `Colors:CreateColorPicker(parent, opts)` | Inline color swatch + picker |
+| `Colors:CreateColorSettingControl(parent, opts)` | DB-bound color control |
+
+---
+
+## ColorPicker (`RGXColorPicker`)
+
+Custom HSV color picker widget. Features:
+
+- Flat-top hexagonal honeycomb spectrum (hue by angle, saturation by ring distance, white centre) that stays at full value so every color stays readable
+- Vertical brightness bar shaded to black, using the current saturation, that retains hue/saturation at black
+- Live Class Colors row from `RAID_CLASS_COLORS`
+- RGB and HEX input fields
+- Quality and Basic preset palettes
+
+Open it with `RGX:GetColorPicker():Show(color, callback, opts)` or a `UI:CreateColorPicker()` swatch. `opts` may set `classes`, `preview`, `rgb`, or `presets` to `false` to hide that section for this consumer; hidden sections collapse and the panel shrinks to fit, and a later `Show` without `opts` restores every section. `opts.scale` (positive number) uniformly shrinks the dialog for compact consumers and resets to `1` when absent. `Colors:OpenPicker()` and `Colors:CreateColorPicker()` use Blizzard's picker instead.
+
+---
+
+## Textures (`RGXTextures`)
+
+### Registry
+
+| Method | Description |
+|---|---|
+| `Textures:RegisterBar(name, path, opts)` | Register a statusbar texture |
+| `Textures:RegisterBars(source, bars, opts)` | Batch-register |
+| `Textures:Exists(name)` | Boolean |
+| `Textures:GetInfo(name)` | `{ name, path, group, source }` |
+| `Textures:GetBar(name)` | Returns path string |
+| `Textures:GetDefault()` | Default texture name |
+| `Textures:GetDefaultPath()` | Default texture path |
+| `Textures:SetDefault(name)` | Set default |
+| `Textures:ListBars()` | Sorted array of all names |
+| `Textures:ListAvailable()` | Alias for ListBars |
+| `Textures:GetGroups()` | Distinct group strings |
+| `Textures:ListByGroup(group)` | Names in a group |
+| `Textures:GetDropdownItems()` | Grouped item list for CreateNestedDropdown |
+| `Textures:ImportLibSharedMedia(force)` | Pull LSM bars into registry |
+
+### Apply
+
+| Method | Description |
+|---|---|
+| `Textures:ApplyToStatusBar(bar, name)` | Set statusbar texture |
+| `Textures:ApplyToTexture(region, name)` | Set texture |
+
+### Controls
+
+| Method | Description |
+|---|---|
+| `Textures:CreateBarDropdown(parent, opts)` | Texture dropdown |
+| `Textures:CreateBarSettingControl(parent, opts)` | DB-bound texture control |
+| `Textures:AttachBarSelector(parent, db, key, opts)` | One-line DB-bound texture UI |
+
+---
+
+## Dropdowns (`RGXDropdowns`)
+
+See [docs/DROPDOWNS.md](DROPDOWNS.md) for complete documentation.
+
+| Method | Description |
+|---|---|
+| `Drops:CreateNestedDropdown(parent, opts)` | Full nested dropdown widget |
+| `Drops:ForceWidth(level, min, inset, opts)` | Auto-size list frame |
+| `Drops:AddInlineButton(btnFrame, opts)` | Add per-item action widget |
+| `Drops:HideInlineButtons(level, key)` | Hide inline buttons before re-populate |
+| `Drops:GetListFrame(level)` | Returns `DropDownListN` frame |
+| `Drops:ShortenLabel(text, maxChars)` | Truncate with "..." |
+| `Drops:CopyItem(item)` | Normalize single item |
+| `Drops:NormalizeItems(items)` | Normalize item array in place |
+
+---
+
+## Theme Setters (core wrappers)
+
+| Method | Description |
+|---|---|
+| `RGX:SetTheme(config)` | Forwarded to `RGXDesign:SetTheme` when Design is loaded |
+| `RGX:SetHighlightColor(color, accent)` | Forwarded to `RGXDesign:SetHighlightColor` |
+
+---
+
+## Design (`RGXDesign`)
+
+### Theme Tokens
+
+| Key | Default | Usage |
+|---|---|---|
+| `primary` (also `main`, `mainColor`, `highlight`) | `#00e6ff` | Main theme color; overridden by the active theme or preset |
+| `accent` | `#bc6fa8` | Secondary highlight; active states |
+| `borderActive` | `primary` | Focused / selected borders |
+| `mainSurface` / `mainHover` / `mainBorder` | derived from `primary` | 10% / 20% / 35% brightness shades |
+
+Access tokens via `Design:GetColor("primary")` / `Design:GetColor("accent")` or
+`Design:Unpack(key)`. `SetTheme`, `SetHighlightColor`, and the aliases
+`SetMainColor` / `SetColors` / `UseTheme` override the tokens; the framework
+settings preset selector stores its choice in `RGXFrameworkDB.themePreset`.
+
+#### `GetColor` resolution order
+
+`Design:GetColor(key)` resolves in this exact order (see
+`docs/THEMING.md#getcolor-resolution-order` and
+`libraries/design/design.lua`):
+
+1. main-shade derivatives — `mainSurface`/`mainHover`/`mainBorder` are
+   computed live from `Theme.primary` (`× 0.10 / 0.20 / 0.35`) and win over
+   everything else;
+2. theme tokens — the exact stage-2 keys from `THEME_KEYS`: `primary`,
+   `main`, `mainColor`, `highlight` (→ `Theme.primary`), `accent`
+   (→ `Theme.accent`), and `borderActive` (→ `Theme.primary`). The wider
+   alias set (`highlightColor`, `themeColor`, `secondary`,
+   `secondaryHighlight`) is accepted only on the *write* side by
+   `SetTheme`; it is not readable through `GetColor`;
+3. structural palette — the key is looked up in `Design.Colors`, populated
+   by the active interface style via `Design:SetStyle`;
+4. terminal fallback — any other key returns `{1, 1, 1}` (white).
+
+#### Partial-theme semantics
+
+`SetTheme(config)` is a partial override: it replaces only the tokens that
+are present *and* normalizable in `config` (`{r, g, b}` arrays or
+`{r = …, g = …, b = …}` tables). Absent or malformed tokens keep their
+current value — passing only `primary` leaves `accent` at its previous
+(global) value, which is the "gold accent fallback" observed when a consumer
+re-themes only the main color. To render a coherent pair, supply both tokens,
+use `Design:WithTheme({ primary = …, accent = … }, fn)` for scoped
+construction, or recolor a specific panel via `SetPanelColor`. Named presets
+(`SetThemePreset`) always set both tokens; every `THEME_PRESETS` entry is a
+complete `{primary, accent}` pair.
+
+### Structural Palette (`Design.Colors`)
+
+| Key | Usage |
+|---|---|
+| `surface` / `panelAlt` | Panel and card backgrounds |
+| `background` | Main window backgrounds |
+| `text` / `subtext` / `label` | Text tiers |
+| `success` / `warning` / `error` | Semantic colors |
+| `border` / `hover` / `track` | Borders and widget tracks |
+
+Access via `Design.Colors.surface`, etc. `Design:GetColor` resolves theme
+tokens (and live main-shade derivatives) first and falls back to this table;
+unknown keys return `{1, 1, 1}`. Full resolution order and defaults:
+`docs/THEMING.md#theme-key-contract`.
+
+### Interface Styles (`Design.SetStyle`)
+
+Interface styles select a full visual style — corner treatment plus the
+structural palette — independently of the primary/accent color presets. See
+`docs/THEMING.md#interface-styles` for the style table and resolution order.
+
+| Method | Description |
+|---|---|
+| `Design:SetStyle(name)` | Apply a named style from `Design.STYLES` (`framework`, `retail`, `classic`, `forever`). Returns `false` for unknown names without touching current state; `primary`/`accent` tokens are never modified. Styles take effect on UI built after the call; open windows re-skin on reload. |
+| `Design:GetStyle()` | Current style name, or `nil` after a direct `SetCornerStyle`/`SetTheme` edit. |
+
+```lua
+Design:SetStyle("classic")  -- square corners, warm palette; primary/accent untouched
+Design:GetStyle()            -- "classic"
+```
+
+The active style persists in `RGXFrameworkDB.style`, restored on login before
+modules build. Any style combines with any color preset: styles own corners +
+structural tokens (`surface`/`border`/`text`), themes own brand colors
+(`primary`/`accent`). Retail/classic/forever palettes are starting points for
+in-game tuning; `framework` is the shipped default.
+
+---
+
+## Display (`RGXDisplay`)
+
+Bare-metal screen elements: anchored, scalable units for aura icons, alerts, and other consumer visuals. Elements are sandwich frames — the container frame owns the anchor while a child content frame carries scale and alpha.
+
+### Module Methods
+
+| Method | Description |
+|---|---|
+| `Display:RegisterPosition(name, spec)` | Add/replace a named position |
+| `Display:GetPosition(name)` | Copy of a position spec |
+| `Display:ListPositions()` | Sorted position names |
+| `Display:CreateElement(opts)` | Element or `nil, error` |
+| `Display:RegisterDefaults(context, values)` | Merge `scale`/`alpha` into a context |
+| `Display:GetDefaults(context)` | Resolved `scale`/`alpha` copy (default context `"default"`) |
+| `Display:SetEditMode(on)` | Show/hide drag movers on every element |
+| `Display:IsEditMode()` | Whether edit mode is on |
+
+### Built-In Positions
+
+| Name | Anchored |
+|---|---|
+| `CENTER` | Parent center |
+| `LEFT` / `RIGHT` | Flanking the parent's left/right edge; positive spread pushes away |
+| `TOP` / `BOTTOM` | Above/below the parent; positive spread pushes away |
+| `LEFTOUTSIDE` / `RIGHTOUTSIDE` | 160 units outside the parent edge |
+
+### Position Specs
+
+`position` accepts a built-in name, a name registered with `RegisterPosition`, or an inline spec:
+
+| Key | Description |
+|---|---|
+| `point` | Element anchor point (required) |
+| `relativePoint` | Parent anchor point (default: same as `point`) |
+| `x`, `y` | Base offset in parent units |
+| `spreadX`, `spreadY` | Direction a positive element `spread` pushes |
+
+### CreateElement Options
+
+| Key | Description |
+|---|---|
+| `name` | Unique persistence key (required); prefix with the consumer addon name |
+| `position` | Name or inline spec (default `"CENTER"`) |
+| `x`, `y` | Element offset (default `0`) |
+| `spread` | Offset along the position's spread axis (default `0`) |
+| `scale` | Explicit percent scale; omit to inherit context default |
+| `alpha` | `0`–`1`; omit to inherit context default |
+| `context` | Defaults context (default `"default"`) |
+| `parent` | Anchor target (default `UIParent`) |
+| `width`, `height` | Container size (default `64`) |
+| `storage` | Consumer storage table for offset persistence |
+| `offsetKey` | Storage key (default: `name`) |
+| `onMove` | `function(element)` called after a drag settles (errors isolated) |
+
+### Element Methods
+
+| Method | Description |
+|---|---|
+| `element:SetOffset(x, y)` | Move and persist the element offset |
+| `element:SetSpread(value)` | Offset along the position's spread axis |
+| `element:SetPositionName(name)` | Switch to a named position |
+| `element:SetScale(percent)` | Explicit percent scale; `nil` inherits context |
+| `element:SetAlpha(value)` | `0`–`1`; `nil` inherits context |
+| `element:SetContext(context)` | Switch defaults context |
+| `element:SetSize(width, height)` | Resize the container |
+| `element:SetShown(show)` | Show/hide |
+| `element:IsShown()` | Visibility |
+| `element:GetResolved()` | Resolved position/offset/scale/alpha table |
+| `element:Destroy()` | Unregister and hide (the durable offset is kept) |
+
+### Persistence
+
+Dragged offsets are written to both the consumer `storage[offsetKey]` and the framework durable `RGXFrameworkDB.RGXDisplayPositions[name]`. On creation the durable store wins and is mirrored back into consumer storage, so offsets survive consumer storage resets.
+
+---
+
+## UI Controls (`RGXUI`)
+
+### Control Factory
+
+| Method | Description |
+|---|---|
+| `UI:CreateFontDropdown(parent, opts)` | Font selector dropdown |
+| `UI:CreateStatusBarDropdown(parent, opts)` | Texture selector dropdown |
+| `UI:CreateTextureDropdown(parent, opts)` | Texture selector dropdown |
+| `UI:OpenFontMenu(anchor, opts)` | Pop-up font menu |
+| `UI:CreateColorPicker(parent, opts)` | Inline color swatch + picker; returns a control with `:Refresh()` to re-project storage |
+| `UI:CreateSlider(parent, opts)` | Numeric slider (`suffix` appends to the displayed value, e.g. `"%"`) |
+| `UI:CreatePanelAlpha(parent, opts)` | 0-100 panel-transparency slider with optional `{ label, value }` snap presets |
+| `UI:CreateTextInput(parent, opts)` | Single-line text input bound to storage (`placeholder`, `Enter`/`Escape` commit, Reset to default) |
+| `UI:CreateSwitch(parent, opts)` | Canonical db-bound on/off switch; declarative `toggle` controls render this widget |
+| `UI:CreateToggle(parent, opts)` | Legacy imperative checkbox toggle (use `UI:CreateSwitch` for new on/off rows) |
+| `UI:CreateLabel(parent, opts)` | Text label (pass `width` to enable word wrap for long text; omit for single-line) |
+| `UI:CreateCheckbox(parent, text, opts)` | Legacy imperative checkbox row with label forwarding |
+| `UI:CreateDropdown(parent, opts)` | Generic dropdown |
+| `UI:CreateResetButton(parent, callback)` | Reset button |
+| `UI:CreateSection(parent, opts)` | Section divider with optional title |
+| `UI:CreatePreviewFrame(parent, opts)` | Styled backdrop panel |
+
+### Definition Editor (Source Development Slice)
+
+These additive methods exist on the feature source checkout, not the published
+`v2.7.9` archive. Check method availability before a consumer uses them. They
+edit version-1 plain-text label data, not arbitrary Lua or a complete Studio project.
+
+| Method | Returns / behavior |
+|---|---|
+| `UI:NormalizeDefinition(data)` | Validated independent copy, or `nil, error`; rejects inaccessible values, unsupported versions and unknown fields |
+| `UI:ImportDefinition(wire)` / `ExportDefinition(data)` | Decode/encode the strict `RGXD1` data transfer format; never evaluate Lua |
+| `UI:CreateDefinitionSession(data, onSave)` | Draft/saved session with `GetDefinition`, `GetDraft`, `Patch`, `Import`, `Export`, `Save`, `Cancel` |
+| `UI:CreateDefinitionEditor(parent, opts)` | Framework control editor with `opts.definition`, synchronous failure-isolated `opts.onSave`, and `.session`; returns `nil, error` on invalid initial data |
+
+Run `/rgxf editor` for the in-game reference adapter. See [[UI Controls]] for the
+format, external editor command, persistence, and required manual checks.
+
+### Options Panel
+
+```lua
+local panel = UI:CreateOptionsPanel({
+    title = "My Addon",
+    tabs = {
+        { text = "General", content = function(parent) ... end },
+        { text = "Appearance", content = function(parent) ... end },
+    },
+})
+panel:Open()
+panel:SelectTab(1)
+panel:SelectTabByName("Appearance")
+```
+
+| Method | Description |
+|---|---|
+| `panel:SelectTab(index)` | Show a tab and build/refresh its visible content under `panel.theme` |
+| `panel:Refresh()` | Rebuild dirty tabs and refresh visible bound controls under `panel.theme` |
+| `panel:SetTheme(config)` | Apply a theme at runtime: repaints the accent line (accent color only with `theme.accentHeader = true`, else primary), version label and tab styling (primary color) from the panel's own colors without mutating the shared global theme |
+| `panel:InvalidateAllTabs()` | Mark every tab dirty for rebuild on next selection |
+
+Both `Refresh` and `SetTheme` scope the panel's colors to its own content; the
+shared global theme is left unchanged. `SetTheme` accepts the same named or
+array color forms as `Design:SetTheme`.
+
+---
+
+## Minimap (`RGXMinimap`)
+
+### Create
+
+```lua
+local btn = MM:Create({
+    name = "MyAddonMinimapButton",
+    icon = "Interface\\...",
+    defaultAngle = 220,
+    buttonSize = 32,
+    iconSize = 19,
+    storage = db,
+    angleKey = "minimapAngle",
+    enabledKey = "minimapEnabled",
+    tooltip = { title = "...", lines = {...} },
+    onLeftClick = function(btn) end,
+    onRightClick = function(btn) end,
+    onCtrlRight = function(btn) btn:SetVisible(false) end,
+    onVisibilityChanged = function(visible, btn) end,
+})
+```
+
+### Button API
+
+| Method | Description |
+|---|---|
+| `btn:SetVisible(bool)` | Show/hide + write storage + fire callback |
+| `btn:Toggle()` | Flip visibility |
+| `btn:Show()` | Place at angle, show frame |
+| `btn:Hide()` | Hide frame |
+| `btn:IsShown()` | Boolean |
+| `btn:GetEnabled()` | Reads storage enabledKey |
+| `btn:PlaceAtAngle()` | Reposition from stored angle |
+| `btn:GetAngle()` | Current angle in degrees |
+| `btn:SetAngle(deg)` | Store angle |
+| `btn:SetItemAction(itemID/nil)` | On opt-in secure buttons, arm/disarm a left-click item action; returns false in combat, ordinary mode, or for invalid IDs |
+| `btn.frame` | Raw WoW Button frame |
+
+### Secure item actions (since v2.7.17)
+
+`MM:Create({ secure = true, ... })` opts into `SecureActionButtonTemplate`.
+Creation returns nil in combat. The template's `OnClick` is preserved; consumer
+callbacks run once on release through `PostClick`, after the secure action.
+`useOnKeyDown = false` keeps actions on release regardless of action-bar settings.
+Calling `btn:SetItemAction(itemID)` from the first click callback prepares the
+**next** hardware left-click. Right-click does not use the item. Passing nil
+disarms it. Ordinary buttons retain their existing behavior.
+
+Secure visibility, positioning, dragging and action reconfiguration are denied
+during combat; they are not queued. A previously armed secure item action remains
+available to Blizzard's hardware-click handler in combat, subject to the game's
+item restrictions. Consumers must refresh their intended state after combat.
+Do not replace the inherited `OnClick`, call `Click()` programmatically, or claim
+that mocked execution proves protected-action/taint safety. Retail player
+acceptance is required; opt-in behavior on other flavors is not yet validated.
+
+### Registry
+
+| Method | Description |
+|---|---|
+| `MM:Get(name)` | Retrieve button wrapper by frame name |
+
+---
+
+## Timer Bars (`RGXTimers`)
+
+See [docs/TIMERS.md](TIMERS.md) for the full guide and lifecycle semantics.
+
+| Method | Description |
+|---|---|
+| `Timers:New(texture, width, height)` | Create a frame-based bar (hidden); defaults 200x16, Blizzard bar texture |
+| `Timers:CancelAll()` | Stop every running bar; returns how many were stopped |
+| `bar:SetDuration(seconds)` / `GetDuration()` | Total time; countdown drains from it, progress fills to it |
+| `bar:SetLabel(text)` / `GetLabel()` | Label text |
+| `bar:SetIcon(texture)` | Icon texture; nil hides the icon |
+| `bar:SetColor(r, g, b, a)` | Status bar color (0-1 range) |
+| `bar:SetTexture(texture)` | Status bar texture; nil restores the default |
+| `bar:SetHeight(height)` | Frame height; keeps the icon square |
+| `bar:SetCountdown(bool)` / `SetFill(bool)` | Display mode: drain to zero vs fill to duration |
+| `bar:SetTimeVisible(bool)` / `SetLabelVisible(bool)` | Toggle the time text / label |
+| `bar:SetOnComplete(callback)` | Fires once when the bar reaches its end |
+| `bar:SetOnCancel(callback)` | Fires once when Stop interrupts a running bar |
+| `bar:Start()` | Start timing and show; returns false without a duration |
+| `bar:Stop()` | Stop (cancel callback) and hide; idle bars only hide |
+| `bar:SetValue(value)` / `GetValue()` | Manual update, clamped to [0, duration] |
+| `bar:IsRunning()` | Timer state |
+
+Bars are real frames: `SetPoint`, `SetScript`, `Show`, `Hide`, `IsShown`,
+`SetScale`, ... resolve natively. `bar.exp` / `bar.start` expose the absolute
+expiry stamp used by pooled consumers.
+
+---
+
+## Sound (`RGXSound`)
+
+```lua
+Sound:Register(name, opts)
+-- opts: { path, channel, variants, defaultSound, muteable }
+```
+
+Level-up sound system with variant playback, default-sound muting, and SavedVar integration. Used by the level-up sound-pack products and other production consumers.
+
+---
+
+## DataBroker (`RGXDataBroker`)
+
+```lua
+local dataObj = DB:NewDataObject(name, attrs)
+```
+
+LibDataBroker-compatible proxy data source with optional LDB bridge.
+
+---
+
+## Combat (`RGXCombat`)
+
+Combat-state callback library. Every method registers a handler; all dispatch is pcall-wrapped.
+
+| Method | Fires when |
+|---|---|
+| `Combat:OnEnter(fn)` | Player enters combat |
+| `Combat:OnLeave(fn)` | Player leaves combat |
+| `Combat:OnKill(fn)` | Player gets a killing blow |
+| `Combat:OnPlayerDied(fn)` | Player dies |
+| `Combat:OnPlayerDamaged(fn)` / `OnPlayerHealed(fn)` | Player takes damage / is healed |
+| `Combat:OnCrit(fn)` / `OnCritHeal(fn)` | Player lands a crit / crit heal |
+| `Combat:OnLowHealth(fn)` | Player drops below low-health threshold |
+| `Combat:OnExecuteWindow(fn)` | Target enters execute range |
+| `Combat:OnResourceCapped(fn)` / `OnResourceLow(fn)` | Primary resource capped / low |
+| `Combat:OnTargetLost(fn)` / `OnProc(fn)` | Target lost / proc detected |
+| `Combat:IsInCombat()` / `Combat:GetDuration()` | Query current combat state |
+
+---
+
+## PetBattles (`RGXPetBattles`)
+
+| Method | Description |
+|---|---|
+| `PB:OnLevelUp(fn)` | Register level-up callback |
+| `PB:OnCapture(fn)` | Register capture callback |
+| `PB:OnBattleStart(fn)` / `PB:OnBattleEnd(fn)` | Battle start / end callbacks |
+| `PB:OnPetChanged(fn)` | Register pet changed callback |
+| `PB:IsAvailable()` / `PB:IsInBattle()` | System accessible / in active battle |
+| `PB:GetNumPets()` | Owned pet count |
+| `PB:GetPetInfoByIndex(i)` / `PB:GetPetInfoByID(id)` | C_PetJournal result table |
+| `PB:GetPetLevel(id)` | Cached level |
+| `PB:ScanPetLevels()` / `PB:CheckPetLevels()` | Populate cache / diff scan → fire OnLevelUp |
+| `PB:SchedulePetLevelScan(delay)` | Delayed scan |
+
+---
+
+## Reputation (`RGXReputation`)
+
+Reputation and renown tracking, normalized across expansions.
+
+| Method | Description |
+|---|---|
+| `Rep:OnRankUp(fn)` | Standing rank increases |
+| `Rep:OnGain(fn)` | Reputation gained |
+| `Rep:OnRenownUp(fn)` | Major-faction renown level up |
+| `Rep:Scan()` / `Rep:CheckChanges()` | Snapshot / diff scan |
+| `Rep:GetAll()` / `Rep:Get(factionID)` / `Rep:GetByName(name)` | Lookup |
+| `Rep:IsMaxed(factionID)` / `Rep:GetRenown()` | Query state |
+
+---
+
+## Auras (`RGXAuras`)
+
+RGXAuras is an accessible-only boundary. Aura-specific and generic Blizzard predicates run before values are queried, indexed, compared, cached, or forwarded. Restricted or unverifiable data fails closed; `pcall` remains failure isolation, not taint prevention.
+
+| Method | Description |
+|---|---|
+| `Auras:HasPlayerAura(spellId)` / `GetPlayerAura(spellId)` | RequiresNonSecretAura player lookup; restricted matches return false/nil |
+| `Auras:HasAura(spellId, unit)` / `GetAura(spellId, unit)` | Accessible-only lookup (`unit` defaults `"player"`); denied or unverifiable results return false/nil |
+| `Auras:IterateAuras(unit, filter, fn)` | Deliver accessible snapshots only; stops before a denied entry and returns the delivered count |
+| `Auras:WatchUnit(unit)` / `UnwatchUnit(unit)` | Maintain a predicate-approved incremental cache. Denied events invalidate it without callbacks; player is watched by default |
+| `Auras:GetAuraByInstanceID(unit, id)` | Predicate-checked live lookup on supported clients; refreshes/clears watched cache entries |
+| `Auras:CooldownState(spellId)` | Tri-state: `"idle"` \| `"active"` \| `"unknown"`; modern table and legacy tuple results are guarded; restricted, missing, or invalid data answers `"unknown"`; on-hold cooldowns remain `"active"` |
+| `Auras:AuraState(unit, spellId[, filter])` | Tri-state aura presence: `"present"` \| `"absent"` \| `"unknown"`; absence requires a complete accessible index scan (both HELPFUL/HARMFUL by default); restricted or unavailable scans answer `"unknown"` |
+| `Auras:CastReadiness(spellId, blockedAuraSpellId)` | Fail-closed readiness for rules like PW:S: `"ready"` only when cooldown provably idle AND the blocking aura provably absent; `"blocked"` when either holds; `"unknown"` when either was restricted |
+| `Auras:OnApplied(fn)` | `fn(unit, auraData)` with predicate-approved arguments |
+| `Auras:OnRemoved(fn)` | `fn(unit, auraInstanceID)` |
+| `Auras:OnUpdated(fn)` | `fn(unit, auraData)` with predicate-approved arguments |
+
+All `On*` registrars return an unsubscribe closure.
+Raw `RGX:RegisterEvent("UNIT_AURA", ...)` payloads remain unsanitized; normal
+consumers should use RGXAuras instead.
+
+---
+
+## Tooltip (`RGXTooltip`)
+
+Tooltip composition and native-tooltip augmentation. Generalizes the `SetOwner → ClearLines → AddLine/AddDoubleLine × N → Show` boilerplate found across every consumer that hand-builds hover tooltips (one surveyed consumer has 71 such call sites), and safely wraps Blizzard's `TooltipDataProcessor` — whose dispatch is **not** pcall-wrapped by Blizzard, so one addon's uncaught error can otherwise break tooltip rendering for every addon.
+
+| Method | Description |
+|---|---|
+| `Tip:Show(anchorFrame, opts)` | Compose and show a tooltip in one call. `opts`: `anchor` (default `"ANCHOR_RIGHT"`), `offsetX`/`offsetY`, `title`, `lines` (array of `string` \| `{ text, r, g, b, wrap }` \| `{ left, right }` for a double-line) |
+| `Tip:Hide()` | `GameTooltip:Hide()` |
+| `Tip:Attach(frame, builder)` | Wires `OnEnter`/`OnLeave` in one call; `builder(frame)` returns the `opts` table for `Show`, or `nil` to skip |
+| `Tip:HookNative(typeName, callback)` | Append to Blizzard's native item/spell/unit/aura/pet/mount/macro tooltip. `typeName` is a human word, never `Enum.TooltipDataType`; `callback(tooltip, data)` is pcall-wrapped, and each type registers with Blizzard exactly once no matter how many consumers hook it |
+
+Valid `HookNative` type names: `item`, `spell`, `unit`, `aura`, `pet`, `mount`, `macro`.
+
+---
+
+## SharedMedia (`RGXSharedMedia`)
+
+Multi-type media registry (`sound`, `statusbar`, `font`) with an external-addon scanner. No LibStub / LibSharedMedia dependency. Replaces per-addon local scanning (e.g. a consumer's local sharedmedia).
+
+```lua
+SM:Register(mediaType, name, path, opts)        -- register one entry
+SM:RegisterPack(mediaType, packName, entries)   -- register a batch under a pack
+SM:RegisterSoundPack(packName, entries)         -- convenience for "sound"
+SM:RegisterStatusBarPack(packName, entries)     -- convenience for "statusbar"
+SM:RegisterFont(name, path, opts)                -- convenience for "font"
+SM:RegisterFontPack(packName, entries)          -- convenience for "font" batches
+SM:Fetch(mediaType, id) / SM:Find(mediaType, name) / SM:GetPath(mediaType, id)
+SM:List(mediaType, filter) / SM:ListPacks(mediaType)
+SM:Scan(includeGeneric)                         -- re-run scanners (DBM registrars, known-addon compat, generic addon-global scan)
+SM:QueueScan(delay, includeGeneric)             -- deduped delayed scan
+SM:ExcludeFolder(addonFolderName)               -- don't bridge sounds from this AddOn folder (see below)
+```
+
+**`SM:ExcludeFolder(name)`** — a consumer that registers its own bundled/user sounds directly should exclude its AddOn folder so the generic addon-global scan does not re-discover and duplicate those paths as bridge entries. Call it before the generic scan runs (e.g. in `OnReady` or module init). The framework's own folder is always excluded.
+
+```lua
+local SM = RGX:GetSharedMedia()
+SM:ExcludeFolder("MyAddon")   -- Interface\AddOns\MyAddon\ sounds won't be bridged back in
+```
+
+After every scan, RGXSharedMedia fires an internal message so consumers can re-import results and refresh media pickers:
+
+```lua
+RGX:RegisterMessage("RGX_SHAREDMEDIA_UPDATED", function(_, mediaType)
+    -- mediaType == "sound"; pull entries with SM:List("sound")
+end)
+```
+
+---
+
+## Event Callback Modules
+
+Milestone/progression modules. Each method registers a pcall-wrapped callback. Used by the level-up sound-pack products and other production consumers.
+
+| Module (`Global`) | Callbacks |
+|---|---|
+| Achievement (`RGXAchievement`) | `OnEarned(fn)`, `OnCriteriaEarned(fn)` |
+| LevelUp (`RGXLevelUp`) | `OnLevelUp(fn)` |
+| Collectibles (`RGXCollectibles`) | `OnMount(fn)`, `OnToy(fn)`, `OnTransmog(fn)`, `OnHeirloom(fn)` |
+| Loot (`RGXLoot`) | `OnRareLoot(fn)`, `OnCurrencyGained(fn)` |
+| Quest (`RGXQuest`) | `OnAccepted(fn)`, `OnComplete(fn)`, `OnTurnedIn(fn)`, `OnProgress(fn)` |
+| Honor (`RGXHonor`) | `OnLevelUp(fn)` |
+| Delves (`RGXDelves`) | `OnCompanionLevelUp(fn)`, `OnLifeLost(fn)`, `OnLifeGained(fn)`, `GetCompanionLevel()`, `GetLivesRemaining()` |
+| Housing (`RGXHousing`) | `OnFavorGained(fn)`, `OnLevelUp(fn)`, `OnRewards(fn)`, `OnDecorCollected(fn)` |
+| TradingPost (`RGXTradingPost`) | `OnPurchase(fn)`, `OnCurrencyGained(fn)`, `GetCurrencyAmount()` |
+| Prey (`RGXPrey`) | `OnHuntStarted(fn)`, `OnAmbush(fn)`, `OnCapped(fn)`, `OnComplete(fn)` |
+
+## WorldMap (`RGXWorldMap`)
+
+World-map pin and waypoint primitives. Pin methods manage frames on the world map and minimap. Coordinate helpers route through the `RGXWorldMap:GetCoordsAdapter()` seam, which wraps the native C_Map API only (no external coordinate library is referenced or embedded) and is capability-gated per flavor.
+
+| Method | Description |
+|---|---|
+| `RGXWorldMap:AddWorldMapIcon(pinFrame, icon, mapID, x, y, name)` | Place a pin on the world map |
+| `RGXWorldMap:RemoveWorldMapIcon(name)` | Remove a world-map pin by name |
+| `RGXWorldMap:UpdateWorldMapIcon(name, x, y)` | Update a world-map pin position |
+| `RGXWorldMap:RemoveAllWorldMapIcons()` | Remove all world-map pins |
+| `RGXWorldMap:AddMinimapIcon(pinFrame, icon, mapID, x, y, name)` | Place a pin on the minimap |
+| `RGXWorldMap:RemoveMinimapIcon(name)` | Remove a minimap pin by name |
+| `RGXWorldMap:UpdateMinimapIcon(name, x, y)` | Update a minimap pin position |
+| `RGXWorldMap:RemoveAllMinimapIcons()` | Remove all minimap pins |
+| `RGXWorldMap:GetPlayerWorldPosition()` | Returns `worldX, worldY` (continent yards), `continentID` of the player |
+| `RGXWorldMap:GetPlayerZone()` | Returns the player's `uiMapID` |
+| `RGXWorldMap:GetZoneSize(mapID)` | Returns `width, height` in yards (retail/forever; nils where `C_Map.GetMapWorldSize` is absent) |
+| `RGXWorldMap:GetWorldCoordinatesFromZone(zoneX, zoneY, mapID, floor)` | Zone 0-100 coords → `worldX, worldY, continentID` (`floor` unused) |
+| `RGXWorldMap:GetZoneCoordinatesFromWorld(worldX, worldY, continentID)` | World coords → zone 0-100 coords + `uiMapID` |
+| `RGXWorldMap:GetWorldVector(instance, x1, y1, x2, y2)` | Returns `angle, distance` between two world points |
+| `RGXWorldMap:GetWorldDistance(instance, x1, y1, x2, y2)` | Returns distance between two world points |
+
+The worldmap module registers with `category = "game"`. Every coordinate call is capability-gated: a flavor that lacks an API (for example `C_Map.GetMapWorldSize` on classic-era/tbc/mists) returns documented nils, never errors. The `RGXWorldMap` global is a compatibility alias.
+
+As of **v2.1.0** every module above is loaded by the XML loader. There are no dormant modules.
