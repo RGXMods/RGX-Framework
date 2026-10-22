@@ -1,6 +1,6 @@
 -- Runtime scenarios for the honeycomb ColorPicker. Executed by
 -- tools/ci/colorpicker-runtime-check.mjs, which has already installed the
--- widget mock and loaded library/colors/colorpicker.lua as `CP`.
+-- widget mock and loaded libraries/colors/colorpicker.lua as `CP`.
 --
 -- Geometry the mock cannot provide (frame left/bottom) is assigned directly,
 -- mirroring how control-interaction-check treats mouse delivery as an engine
@@ -51,7 +51,7 @@ scenario("dialog builds a 61-cell honeycomb with valid hue/saturation", function
   for _, cell in ipairs(f.spectrum.cells) do
     assert(cell.h >= 0 and cell.h < 1, "hue out of range: " .. tostring(cell.h))
     assert(cell.s >= 0 and cell.s <= 1, "saturation out of range: " .. tostring(cell.s))
-    assert(cell.tex.texture == "Interface\\AddOns\\RGX-Framework\\media\\hexmask.tga",
+    assert(cell.tex.texture == "Interface\\AddOns\\RGX-Framework\\libraries\\colors\\hexmask.tga",
       "cell is not using the hex fill asset")
     assert(cell.tex.width == cell.tex.height and cell.tex.width == 2 * 14,
       "cell quad is not the 2*size square padded hex")
@@ -59,7 +59,7 @@ scenario("dialog builds a 61-cell honeycomb with valid hue/saturation", function
     assert(pt and pt[1] == "CENTER" and pt[4] == cell.x and pt[5] == cell.y,
       "cell texture is not centred on its cell")
   end
-  assert(f.spectrum.marker.texture == "Interface\\AddOns\\RGX-Framework\\media\\hexring.tga",
+  assert(f.spectrum.marker.texture == "Interface\\AddOns\\RGX-Framework\\libraries\\colors\\hexring.tga",
     "selection marker is not using the hex ring asset")
   assert(f.spectrum.marker.width == f.spectrum.marker.height,
     "ring marker quad is not square")
@@ -284,9 +284,9 @@ scenario("class row renders live client colors inside its declared width", funct
   local sw = f.classRow.swatches
   assert(#sw == 13, "expected 13 playable class swatches, got " .. #sw)
   for _, s in ipairs(sw) do
-    assert(s.tex.texture == "Interface\\AddOns\\RGX-Framework\\media\\hexmask.tga",
+    assert(s.tex.texture == "Interface\\AddOns\\RGX-Framework\\libraries\\colors\\hexmask.tga",
       "class swatch is not using the hex fill asset")
-    assert(s.ring.texture == "Interface\\AddOns\\RGX-Framework\\media\\hexring.tga",
+    assert(s.ring.texture == "Interface\\AddOns\\RGX-Framework\\libraries\\colors\\hexring.tga",
       "class swatch has no ring asset")
   end
   -- The canonical first swatch is Warrior; compare against the mock client value.
@@ -646,6 +646,26 @@ scenario("Escape resolves the popup frame without replacing its module alias", f
   assert(resolved:IsShown(), "popup is not shown before Escape")
   resolved:Hide()
   assert(not CP.frame:IsShown() and calls == 0, "Escape did not dismiss without committing")
+end)
+
+scenario("live drag widgets cannot get stuck dragging", function()
+  CP:Show({ r = 0.2, g = 0.4, b = 0.6 }, function() end)
+  local frame = CP:GetFrame()
+  local spectrum = frame.spectrum and frame.spectrum.frame
+  local valueBar = frame.valueBar and frame.valueBar.frame
+  assert(spectrum and valueBar, "picker must build the spectrum and value bar")
+
+  -- Missed mouse-up (alt-tab, dialog closed mid-drag): the next OnUpdate
+  -- with no button held must clear the flag instead of color-following the
+  -- cursor forever. The deleted superseded builders lacked this guard.
+  for _, widget in ipairs({ spectrum, valueBar }) do
+    widget.scripts.OnMouseDown(widget, "LeftButton")
+    assert(widget.dragging == true, "mouse down must start dragging")
+    mouseDown = false
+    widget.scripts.OnUpdate(widget)
+    assert(widget.dragging ~= true,
+      "drag widget must clear dragging when the button is released mid-drag")
+  end
 end)
 
 print(string.format("COLORPICKER %d passed, %d failed", pass, fail))

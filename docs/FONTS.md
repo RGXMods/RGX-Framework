@@ -12,7 +12,7 @@ The Fonts module (`RGXFonts`) provides:
 - A **blocklist** of 10 in-tree fonts with corrupted assets (not selectable; 40 bundled + 4 WoW defaults = 44 total, 10 blocked, 34 available)
 - **Style objects** — normalized tables describing a complete text appearance
 - **Apply helpers** — one-call font application to FontStrings and frame trees
-- **Dropdown schemas** — dual-schema menu items for both RGX and legacy BPU consumers
+- **Dropdown schemas** — dual-schema menu items for both RGX and legacy consumers
 - **UI controls** — font dropdown, font setting control, style selector, preview panel
 - **Default management** — framework-wide default font, size, and flags
 
@@ -130,7 +130,7 @@ Fonts:ResolvePath(value, fallback) -- returns safe path, name
 - Font dropdowns and selectors only show available fonts
 - `BuildGroupedFontItems` only includes available fonts in menu items
 
-**Fixing:** Replace the corrupted files with real font assets in `media/fonts/`, then remove the entries from `unavailableFonts` in `definitions.lua`.
+**Fixing:** Replace the corrupted files with real font assets in `libraries/fonts/media/`, then remove the entries from `unavailableFonts` in `definitions.lua`.
 
 ---
 
@@ -258,22 +258,22 @@ Used by `CreateNestedDropdown`, `CreateFontDropdown`, and all RGX-native selecto
           onClick = function() end -- RGX MenuUtil path
         },
     },
-    menuList = <same table as children>,  -- dual reference for BPU compat
+    menuList = <same table as children>,  -- dual reference for legacy compatibility
     hasArrow = true,
     notCheckable = true,
 }
 ```
 
-### Legacy UIDropDownMenu Schema (BPU compat)
+### Legacy UIDropDownMenu Schema (legacy compatibility)
 
 Used by `CreateFontMenuItems` for consumers that build their own `UIDropDownMenu`:
 
 ```lua
 {
     text = "Inter",
-    menuList = {          -- BPU reads menuList
+    menuList = {          -- legacy consumers read menuList
         { text = "Regular", value = "Inter-Regular",
-          func = function() end,  -- BPU reads func
+          func = function() end,  -- legacy consumers read func
           onClick = function() end, -- also present for RGX consumers
         },
     },
@@ -286,10 +286,10 @@ Used by `CreateFontMenuItems` for consumers that build their own `UIDropDownMenu
 
 Every leaf item produced by `BuildGroupedFontItems` carries **both**:
 
-- `children` AND `menuList` — same table reference; RGX reads `children`, BPU reads `menuList`
-- `func` AND `onClick` — `func` for legacy BPU path, `onClick` for RGX MenuUtil path
+- `children` AND `menuList` — same table reference; RGX reads `children`, legacy consumers read `menuList`
+- `func` AND `onClick` — `func` for the legacy path, `onClick` for the RGX MenuUtil path
 
-This ensures a single `CreateFontMenuItems` call works for both RGX-native and BPU-legacy context menus.
+This ensures a single `CreateFontMenuItems` call works for both RGX-native and legacy context menus.
 
 ### BuildGroupedFontItems
 
@@ -418,7 +418,7 @@ Montserrat-Regular, Montserrat-Bold, Merriweather-Regular, Merriweather-Bold, Pl
 ## File Layout
 
 ```
-library/fonts/
+libraries/fonts/
 ├── definitions.lua   — 40 font definitions + unavailableFonts blocklist
 ├── init.lua          — Fonts:Init() + RegisterModule("fonts")
 ├── registry.lua      — Register, RegisterAddonFont, RegisterFontPack

@@ -28,6 +28,7 @@ and [scoped agent guidance](AGENTS.md).
 | `rgx_validate_addon` | Validate an RGXAddon opts table (JSON; Lua functions as `{"$lua":"function"}`) against `contract/schemas/rgx-addon.schema.json`; flags contract-frozen `tier4` keys that don't run yet |
 | `rgx_audit_lua` | Scan a `.lua` file or addon directory for the unsafe patterns the framework prevents: raw `C_Timer`, manual `OnEvent` frames, `SLASH_` globals, unguarded `SetAttribute`, raw aura event/API plumbing, and hook reassignment. Deterministic |
 | `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys (`RGXAddon "Name" { ... }`), including named `every` timers |
+| `rgx_generate_addon_toc` | Emit the deterministic consumer TOC: `RequiredDeps`, `SavedVariables` matching the dbName derivation, and title/name |
 | `rgx_get_contract` | Return the schema + shipped-surface reference for agent context |
 | `rgx_edit_definition` | Source-development label definition normalize/import/patch/export; delegates to the pure shared engine and returns data only |
 | `rgx_search_wow_api` | Search the synced WoW API dumps (main capability reference) with flavor/build/commit provenance; deterministic, offline after `sync-wow-api-dump.mjs` |
@@ -71,7 +72,7 @@ The framework source checkout includes `.mcp.json`; published artifacts do not. 
 
 ## Testing
 
-`test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK (stdio transport, no protocol reimplementation) against [RGX-Hello](https://github.com/RGXMods/RGX-Hello). It parses and validates the actual curried `RGXAddon` table, generates the matching supported surface with named timers, and audits the actual Lua tree. It verifies that `every` is shipped while `on` remains Tier 4, and uses paired fixtures to require RGXAuras consumer code to pass while raw aura plumbing fails. Validation reports `tier4KeysUsed` separately; schema-valid future keys are not evidence of shipped behavior. Generation is limited to supported shipped forms.
+`test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK (stdio transport, no protocol reimplementation) against [RGX-Hello](https://github.com/RGXMods/RGX-Hello). It parses and validates the actual curried `RGXAddon` table, generates the matching supported surface with named timers, generates the deterministic TOC through the shared `tocCases` vectors, and audits the actual Lua tree. It verifies that `every` is shipped while `on` remains Tier 4, and uses paired fixtures to require RGXAuras consumer code to pass while raw aura plumbing fails. Validation reports `tier4KeysUsed` separately; schema-valid future keys are not evidence of shipped behavior. Generation is limited to supported shipped forms.
 
 ```bash
 node test/test-rgx-hello.mjs /path/to/RGX-Hello

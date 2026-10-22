@@ -12,7 +12,7 @@ Common issues and their fixes.
 
 **Cause:** The font is in the `unavailableFonts` blocklist in `definitions.lua`. These 10 fonts have corrupted asset files (HTML placeholders instead of actual font data).
 
-**Fix:** Replace the font file in `media/fonts/` with a valid TTF/OTF file, then remove the font name from the `unavailableFonts` table in `library/fonts/definitions.lua`.
+**Fix:** Replace the font file in `libraries/fonts/media/` with a valid TTF/OTF file, then remove the font name from the `unavailableFonts` table in `libraries/fonts/definitions.lua`.
 
 ### Font applies but renders as rectangles
 
@@ -175,15 +175,15 @@ Enable framework debug output:
 ```lua
 RGX.debugMode = true
 -- or via slash command:
-/rgx debug
+/rgxf debug
 ```
 
 This enables `RGX:Debug()` output including event registration errors, timer budget warnings, and module resolution diagnostics.
 
-Available slash commands:
+Canonical commands use `/rgxf`; `/rgx` remains a legacy alias. Available slash commands:
 
 | Command | Description |
 |---|---|
-| `/rgx modules` | List loaded modules |
-| `/rgx fonts` | List registered fonts |
-| `/rgx debug` | Toggle debug mode |
+| `/rgxf modules` | List loaded modules |
+| `/rgxf fonts` | List registered fonts |
+| `/rgxf debug` | Toggle debug mode |

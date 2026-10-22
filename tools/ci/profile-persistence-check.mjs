@@ -435,5 +435,98 @@ try {
   `);
   count++; console.log("PASS serialized reload into an independent Lua VM");
 } finally { second.global.close(); }
+await scenario("serialization round-trips backslash paths, separators and keys", `
+  local sample = {
+    soundPath = [[Interface\\AddOns\\BLU\\sounds\\levelup.ogg]],
+    docsPath = [[docs\\readme\\export\\lists.txt]],
+    punctuation = [[a;b=c{d}e\\f]],
+    flag = true,
+    count = 42,
+    nested = { note = [[lists\\semicolons]] },
+  }
+  sample[ [[a=b]] ] = "escaped key"
+  sample[7] = "numeric key"
+  local restored = assert(RGX:DeserializeTable(RGX:SerializeTable(sample)))
+  assert(restored.soundPath == sample.soundPath, "backslash path corrupted: " .. tostring(restored.soundPath))
+  assert(restored.docsPath == sample.docsPath, "readme/export path corrupted: " .. tostring(restored.docsPath))
+  assert(restored.punctuation == sample.punctuation, "separator characters corrupted: " .. tostring(restored.punctuation))
+  assert(restored.nested.note == sample.nested.note, "nested path corrupted")
+  assert(restored.flag == true and restored.count == 42, "primitives corrupted")
+  assert(restored[ [[a=b]] ] == "escaped key", "key containing '=' must survive the round trip")
+  assert(restored[7] == "numeric key", "numeric key must survive the round trip")
+`);
+await scenario("wire format stays stable for legacy readers", `
+  local wire = RGX:SerializeTable({ path = [[Interface\\AddOns\\logo.tga]] })
+  local expected = [[RGX_DB_v1:T{path=SInterface\\\\AddOns\\\\logo.tga}]]
+  assert(wire == expected, "wire format drifted: " .. wire)
+`);
+await scenario("migration failures keep completed steps durable", `
+  local db = {}
+  local runs = { 0, 0, 0 }
+  local migrations = {
+    [1] = function(d) runs[1] = runs[1] + 1; d.alpha = true end,
+    [2] = function() runs[2] = runs[2] + 1; error("expected migration failure") end,
+    [3] = function(d) runs[3] = runs[3] + 1; d.omega = true end,
+  }
+  RGX:MigrateDB(db, "MigrationDB", 3, migrations)
+  assert(db._dbVersion == 1, "successful steps must persist before a later failure, got " .. tostring(db._dbVersion))
+  assert(runs[1] == 1 and runs[2] == 1, "first login must run v1 once and fail v2")
+  RGX:MigrateDB(db, "MigrationDB", 3, migrations)
+  assert(runs[1] == 1 and runs[2] == 2, "retry must resume at the failed step without re-running v1")
+  assert(db._dbVersion == 1, "failed step must not advance the stored version")
+  migrations[2] = function(d) runs[2] = runs[2] + 1; d.beta = true end
+  RGX:MigrateDB(db, "MigrationDB", 3, migrations)
+  assert(db._dbVersion == 3, "all steps must complete")
+  assert(runs[1] == 1 and runs[2] == 3 and runs[3] == 1, "completed steps must never re-run, got " .. table.concat(runs, ","))
+`);
+await scenario("profile API refuses destructive operations", `
+  local db = RGX:NewDatabase("GuardDB", { enabled = true })
+  assert(db:CreateProfile("Work"))
+  db.enabled = false
+  assert(db:CreateProfile("Work") == false, "create over an existing profile must refuse instead of wiping it")
+  assert(db:LoadProfile("Work") and db.enabled == false, "existing profile data lost to a refused create")
+  assert(db:RenameProfile("Work", "Work") == false, "same-name rename must be refused")
+  assert(db:LoadProfile("Work") and db.enabled == false, "profile deleted by a same-name rename")
+  assert(db:CreateProfile("Home") and db:LoadProfile("Home") and db.enabled == true)
+  assert(db:RenameProfile("Work", "Home") == false, "rename onto an existing profile must be refused")
+  assert(db:LoadProfile("Home") and db.enabled == true, "rename target clobbered by a refused rename")
+  assert(db:LoadProfile("Work") and db.enabled == false, "rename source clobbered by a refused rename")
+  assert(db:CreateProfile("Bravo") and db:LoadProfile("Bravo"))
+  assert(db:DeleteProfile("Bravo") and db:GetActiveProfile() == "Default",
+    "deleting the active profile must fall back to Default deterministically")
+`);
+await scenario("BLU retail layout: framework store adopted, not duplicated (BLU #12)", `
+  -- Model of BLU's actual Retail main: core.lua lets the framework create
+  -- the declared SavedVariables store (RGX.Addon db=true, dbName BLUDB) and
+  -- core/systems/database.lua adopts that same proxy, registers its
+  -- profile defaults late, and wires a switch-driven visual refresh.
+  BLUDB = nil
+  local db = RGX:NewDatabase("BLUDB", {})
+  assert(type(db) == "table" and db.RegisterDefaults ~= nil, "framework proxy expected")
+
+  -- Consumer adoption: same store, late defaults, refresh on switch.
+  local refreshed = 0
+  db:OnProfileChanged(function() refreshed = refreshed + 1 end)
+  assert(db:RegisterDefaults({ enabled = true, volume = 30, theme = { accent = "05dffa" } }))
+  local initialSwitches = refreshed
+  assert(BLUDB and BLUDB.profiles and BLUDB.profiles.Default.enabled == true,
+    "late defaults must merge into the declared SavedVariables global")
+  assert(db.enabled == true and db.theme.accent == "05dffa", "adoption must expose the merged defaults")
+
+  -- The consumer wrapper is an alias, never a second database:
+  assert(db:GetActiveProfile() == "Default")
+  db.volume = 55
+  assert(BLUDB.profiles.Default.volume == 55, "consumer writes must land in the framework-owned store")
+
+  -- Profile lifecycle drives the consumer visual refresh exactly once per switch.
+  assert(db:CreateProfile("Raid"))
+  assert(refreshed == initialSwitches + 1,
+    "creating and switching to a profile must fire the visual refresh exactly once, got "
+    .. (refreshed - initialSwitches))
+  db.enabled = false
+  assert(BLUDB.profiles.Raid.enabled == false)
+  assert(db:LoadProfile("Default") and refreshed == initialSwitches + 2, "switching back must refresh again")
+  assert(db.enabled == true, "Default must keep its own values after the Raid switch")
+`);
 assert.equal(failures.length, 0, `Persistence regressions: ${failures.join(", ")}`);
 console.log(`PROFILE PERSISTENCE OK ${count} ownership/defaults/callback/widget/fresh-VM scenarios`);

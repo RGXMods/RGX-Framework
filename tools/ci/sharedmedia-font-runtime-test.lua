@@ -1,7 +1,7 @@
 -- Runtime scenarios for the RGXSharedMedia "font" media type.
 -- Executed by tools/ci/sharedmedia-font-runtime-check.mjs, which has already
 -- installed a minimal RGX stand-in and loaded
--- library/sharedmedia/sharedmedia.lua as the global `RGXSharedMedia` (SM).
+-- libraries/sharedmedia/sharedmedia.lua as the global `RGXSharedMedia` (SM).
 --
 -- Covers the acceptance criteria for issue #82:
 --   1. SM:Register("font", name, path, opts) works for individual registration

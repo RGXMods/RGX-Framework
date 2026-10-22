@@ -2,7 +2,6 @@
 
 Current release: `v2.8.0`. Existing public API semantics are preserved.
 
-
 Complete public API by module. See individual module docs for deeper detail:
 
 - [docs/FONTS.md](FONTS.md) — font system
@@ -92,7 +91,7 @@ local prefix = RGX:CreateChatPrefix({
 
 The bare form uses the framework icon, ` - ` spacer, and green `[RGX]` tag.
 Pass `icon = ""` to suppress the icon. Players can manage startup messages with
-`/rgx login on|off|status`; normal `Print`, `Warn`, and `Error` output is never
+`/rgxf login on|off|status`; normal `Print`, `Warn`, and `Error` output is never
 gated.
 
 ### Object Composition
@@ -122,11 +121,20 @@ gated.
 | `RGXAddon(name, opts)` / `RGXAddon "Name" { }` | Global addon factory (wraps `RGX.Addon`; curried form supported). The front door per the Simplicity Contract |
 | `RGX.Addon(name, opts)` | The factory itself — `slash`, `minimap`, `db`, `options`, `welcome`, `onInit`; returns the addon object with scoped event/timer/print methods |
 
+### Contract Compatibility
+
+| Method | Description |
+|---|---|
+| `RGX:SupportsContract(format)` | Additive capability query — `true` when this framework consumes that contract format; never errors. See docs/DECLARATIVE-API.md → Contract compatibility handshake |
+| `RGX:RequireContract(name, format, minFrameworkVersion?)` | Generated-consumer guard — `true` when the format is supported and the optional framework floor is met; otherwise one clear load-time error |
+| `RGX:CompareVersions(a, b)` | Dotted-version compare (`-1`/`0`/`1`, `nil` when unparseable); `"v2.9"` == `"2.9.0"`, prerelease sorts first |
+
 ### Properties
 
 | Property | Type | Description |
 |---|---|---|
 | `RGX.version` | string | From TOC metadata (e.g. `"1.6.0"`) |
+| `RGX.CONTRACT_FORMAT_VERSION` | number | Contract format this framework consumes (currently `1`); independent of the release version |
 | `RGX.debugMode` | boolean | Enable `Debug()` output |
 | `RGX.db` | table | `RGXFrameworkDB` SavedVar reference |
 | `RGX.timers` | array | Active timer table |
@@ -217,7 +225,7 @@ Callback signature: `function(original, self, ...) return original(self, ...) en
 
 | Method | Description |
 |---|---|
-| `RGX:QueueForCombat(func, ...)` | Run now if not in combat, otherwise queue for PLAYER_REGEN_ENABLED |
+| `RGX:QueueForCombat(func, ...)` | Run now if not in combat, otherwise queue for PLAYER_REGEN_ENABLED; returns the function's results on immediate execution, or `false, "queued"` when deferred (queued operations are fire-and-forget at the flush) |
 | `RGX:ProcessCombatQueue()` | Flush all queued operations |
 | `RGX:ShouldQueueOperation()` | Returns `InCombatLockdown()` |
 
@@ -747,10 +755,10 @@ Dragged offsets are written to both the consumer `storage[offsetKey]` and the fr
 
 | Method | Description |
 |---|---|
-| `UI:CreateFontDropdown(parent, opts)` | Font selector dropdown |
-| `UI:CreateStatusBarDropdown(parent, opts)` | Texture selector dropdown |
-| `UI:CreateTextureDropdown(parent, opts)` | Texture selector dropdown |
-| `UI:OpenFontMenu(anchor, opts)` | Pop-up font menu |
+| `Fonts:CreateFontDropdown(parent, opts)` | Font selector dropdown (fonts module) |
+| `Fonts:AttachFontSelector(parent, db, key, opts)` | db-bound font selector row (what declarative `font` controls render) |
+| `UI:CreateStatusBarDropdown(parent, opts)` | Statusbar texture selector dropdown |
+| `Textures:CreateBarDropdown(parent, opts)` | Statusbar texture selector dropdown (textures module; see docs/TEXTURES.md) |
 | `UI:CreateColorPicker(parent, opts)` | Inline color swatch + picker; returns a control with `:Refresh()` to re-project storage |
 | `UI:CreateSlider(parent, opts)` | Numeric slider (`suffix` appends to the displayed value, e.g. `"%"`) |
 | `UI:CreatePanelAlpha(parent, opts)` | 0-100 panel-transparency slider with optional `{ label, value }` snap presets |
@@ -759,7 +767,8 @@ Dragged offsets are written to both the consumer `storage[offsetKey]` and the fr
 | `UI:CreateToggle(parent, opts)` | Legacy imperative checkbox toggle (use `UI:CreateSwitch` for new on/off rows) |
 | `UI:CreateLabel(parent, opts)` | Text label (pass `width` to enable word wrap for long text; omit for single-line) |
 | `UI:CreateCheckbox(parent, text, opts)` | Legacy imperative checkbox row with label forwarding |
-| `UI:CreateDropdown(parent, opts)` | Generic dropdown |
+| `Dropdowns:CreateNestedDropdown(parent, opts)` | Generic dropdown (dropdowns module; retail uses MenuUtil, Classic falls back to legacy frames) |
+| `Dropdowns:CreateContextMenu(parent, opts)` | Context menu (dropdowns module) |
 | `UI:CreateResetButton(parent, callback)` | Reset button |
 | `UI:CreateSection(parent, opts)` | Section divider with optional title |
 | `UI:CreatePreviewFrame(parent, opts)` | Styled backdrop panel |
@@ -777,7 +786,7 @@ edit version-1 plain-text label data, not arbitrary Lua or a complete Studio pro
 | `UI:CreateDefinitionSession(data, onSave)` | Draft/saved session with `GetDefinition`, `GetDraft`, `Patch`, `Import`, `Export`, `Save`, `Cancel` |
 | `UI:CreateDefinitionEditor(parent, opts)` | Framework control editor with `opts.definition`, synchronous failure-isolated `opts.onSave`, and `.session`; returns `nil, error` on invalid initial data |
 
-Run `/rgx editor` for the in-game reference adapter. See [[UI Controls]] for the
+Run `/rgxf editor` for the in-game reference adapter. See [[UI Controls]] for the
 format, external editor command, persistence, and required manual checks.
 
 ### Options Panel
@@ -1045,6 +1054,16 @@ RGX:RegisterMessage("RGX_SHAREDMEDIA_UPDATED", function(_, mediaType)
     -- mediaType == "sound"; pull entries with SM:List("sound")
 end)
 ```
+
+### Coverage and boundaries
+
+**Automatic external discovery is sound-only.** The scanner bridges sounds from DBM pack registrars, a small known-provider list (Prat-3.0, TradeSkillMaster), and an opt-in generic crawl over addon globals. Nothing automatically discovers external fonts or statusbars: `SM:RegisterFont` / `SM:RegisterStatusBarPack` are registration APIs, and LibSharedMedia statusbars come in only through `Textures:ImportLibSharedMedia()` when LSM is loaded. A LibSharedMedia sound pack with no DBM registrar and no reachable addon global is not automatically imported — a known-provider entry or an explicit `SM:RegisterSoundPack` call is the supported path.
+
+**Forever suppresses the generic crawl at login** (it causes a visible startup hitch on the beta client); DBM registrars and known providers still scan on load, and a full generic scan can be requested at any time with `SM:Scan(true)` or `SM:QueueScan(delay, true)`.
+
+**Scan-safety posture.** The generic crawl reads addon globals defensively: traversal, metadata reads, and registrar invocations are pcall-wrapped, with bounded depth, table, and entry caps (MAX_SCAN_DEPTH, MAX_TABLES_PER_SOURCE, MAX_SOUNDS_PER_SCAN), and loose or consumer-owned folders are skipped via `SM:ExcludeFolder`. The module calls no protected Blizzard APIs and never touches combat-protected state; a hostile or corrupted global produces no error in the scan path.
+
+**Adoption example.** BLU (BetterBlizzPlates) consumes this module as its entire external-sound pipeline: its `core/sounds/sharedmedia.lua` is a thin bridge that imports scan results into its own registry, forwards its public pack API to `SM:RegisterSoundPack`, and re-imports on every `RGX_SHAREDMEDIA_UPDATED`.
 
 ---
 

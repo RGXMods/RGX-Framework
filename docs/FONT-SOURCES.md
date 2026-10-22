@@ -8,7 +8,7 @@ WoW addons cannot safely enumerate a player's operating system font folders, so 
 
 The practical replacement is:
 
-- bundled fonts inside `RGX-Framework/media/fonts/`
+- bundled fonts inside `RGX-Framework/libraries/fonts/media/`
 - companion add-on font packs that register more fonts through `RGXFonts:RegisterFontPack(...)`
 - per-addon packaged fonts registered through `RGXFonts:RegisterAddonFont(...)`
 
@@ -23,15 +23,8 @@ The practical replacement is:
 - Poppins — https://fonts.google.com/specimen/Poppins
 - Rajdhani — https://fonts.google.com/specimen/Rajdhani
 
-### Sans / UI — Temporarily Unavailable (corrupted assets)
-- ~~Montserrat~~ — blocked in `unavailableFonts` pending asset replacement
-
 ### Serif
 - Crimson Text — https://fonts.google.com/specimen/Crimson+Text
-
-### Serif — Temporarily Unavailable (corrupted assets)
-- ~~Merriweather~~ — blocked in `unavailableFonts` pending asset replacement
-- ~~Playfair Display~~ — blocked in `unavailableFonts` pending asset replacement
 
 ### Monospace
 - IBM Plex Mono — https://fonts.google.com/specimen/IBM+Plex+Mono
@@ -43,11 +36,6 @@ The practical replacement is:
 - Creepster — https://fonts.google.com/specimen/Creepster
 - Anton — https://fonts.google.com/specimen/Anton
 
-### Display — Temporarily Unavailable (corrupted assets)
-- ~~Oswald~~ — blocked in `unavailableFonts` pending asset replacement
-- ~~Orbitron~~ — blocked in `unavailableFonts` pending asset replacement
-- ~~Audiowide~~ — blocked in `unavailableFonts` pending asset replacement
-
 ### Pixel
 - Press Start 2P — https://fonts.google.com/specimen/Press+Start+2P
 - Silkscreen — https://fonts.google.com/specimen/Silkscreen
@@ -56,18 +44,22 @@ The practical replacement is:
 ### Fantasy / Themed
 - Uncial Antiqua — https://fonts.google.com/specimen/Uncial+Antiqua
 
-### Fantasy / Themed — Temporarily Unavailable (corrupted assets)
-- ~~Cinzel~~ — blocked in `unavailableFonts` pending asset replacement
-
 ## Packaging Notes
 
 When adding another font family:
 
+0. The binary must be a real font: CI validates every shipped `.ttf`/`.otf`
+   header (sfnt/OTTO magic), so a truncated or HTML error page can never be
+   committed again. The ten corrupted placeholder files that motivated this
+   gate (Montserrat, Merriweather, Playfair Display, Oswald, Orbitron,
+   Audiowide, Cinzel) were deleted; their names stay in `unavailableFonts`
+   so saved settings referencing them fail cleanly.
+
 1. Download the font from its official source.
 2. Keep only the specific weights/styles RGX plans to expose.
-3. Place the files in `media/fonts/`.
-4. Register them in `library/fonts/definitions.lua`.
-5. Update `media/fonts/README.md` and this file.
+3. Place the files in `libraries/fonts/media/`.
+4. Register them in `libraries/fonts/definitions.lua`.
+5. Update `libraries/fonts/media/README.md` and this file.
 
 ## License Notes
 

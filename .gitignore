@@ -2,7 +2,9 @@ graphify-out/
 artifacts/
 .release/
 skills/
-.reference/wow-ui-source/
-.reference/wow-api-dump/
+.reference/wow-ui-source/*
+!.reference/wow-ui-source/manifest.json
+.reference/wow-api-dump/*
+!.reference/wow-api-dump/manifest.json
 
 skills-lock.json

@@ -2,7 +2,6 @@
 
 Current release: `v2.8.0`. No declarative keys changed.
 
-
 The authoring surface and human-readable **Simplicity Contract** for RGX addons.
 Evolution is additive-only: what you write today keeps working forever. The
 machine-checkable shape lives in
@@ -20,7 +19,7 @@ buttons bind to their addon, and fonts use the existing bound selector. These
 corrections are local source changes until integrated and released.
 
 The current untagged structural follow-on moves lazy tab/control construction
-to `library/ui/options.lua` while core retains grammar validation and lifecycle.
+to `libraries/ui/options.lua` while core retains grammar validation and lifecycle.
 It changes implementation ownership, not the consumer declaration vocabulary.
 
 ---
@@ -57,9 +56,10 @@ framework bug — report it.
 | `slash` | string \| string[] — registers `/cmd`; assumed handler opens the options panel | same table + `handler = function(addon, msg)` |
 | `minimap` | `true` (default icon) \| string (icon path) — assumed left-click opens the panel; dragged angle persists to `addon.db` | full opts table passed through to the minimap module (`tooltip`, `defaultAngle`, `onRightClick`, `onCtrlRight`, ...) |
 | `db` | table of profile defaults; creates `addon.db` on ADDON_LOADED. SavedVariables name assumes `<Name>DB` with non-identifier characters stripped (`"RGX-Hello"` → `RGXHelloDB`) — declare it in your TOC | `dbName` overrides the name; `global` (cross-character), `onSwitch` (profile-switch callback) |
-| `options` | `TabName = { controls... }`; requires `db`; builds a tabbed panel with db-bound controls (automatic save **and** restore) | per-control advanced keys below; local `columns = 1\|2\|3` distributes controls into column flows, not declarative cards; multi-page tabs stay Tier 4 |
+| `compat` | `name = "Global.API.Path"` or `name = { "Preferred.Path", "FallbackPath" }` — the first callable path on the current client becomes `addon.compat.name(...)` | same names with `{ prefer = "...", fallback = "...", normalize = function(...) }`; `normalize` receives the raw return values |
+| `options` | `TabName = { controls... }`; requires `db`; builds a tabbed panel with db-bound controls (automatic save **and** restore) | per-control advanced keys below; local `columns = 1\|2\|3` distributes plain control lists into column flows; `page` nodes author multi-page tabs and 1–2 column card grids |
 | `title` | — | Panel title; assumes the addon name |
-| `welcome` | startup string printed with the framework icon and `[RGX]` prefix on load; obeys the global `/rgx login on|off` preference | — |
+| `welcome` | startup string printed with the framework icon and `[RGX]` prefix on load; obeys the global `/rgxf login on|off` preference | — |
 | `onInit` | function(addon), runs on ADDON_LOADED after `db`/`options` exist — the imperative escape hatch | — |
 | `every` | `name = { seconds, function(addon, timer) }`; starts after ADDON_LOADED and first fires after the interval | multiple deterministically named repeating timers; handlers may self-cancel with `addon:CancelTimer(timer)` |
 | `brand` | — | Hex color (no `#`) for the chat prefix; also themes the options panel (tab/header accents). Assumes `58be81` |
@@ -99,6 +99,32 @@ carry `owner`, `name`, and `declarativeName` metadata. One handler error is
 reported with its stable label and does not stop unrelated timers; a failing
 repeating timer remains active. Timers do not imply combat safety, so protected
 UI work must still use RGX's safe helpers.
+
+## Declarative compatibility shims
+
+```lua
+RGXAddon "MyAddon" {
+    compat = {
+        GetAvailableQuests = {
+            prefer = "C_GossipInfo.GetAvailableQuests",
+            fallback = "GetGossipAvailableQuests",
+            normalize = function(...)
+                local title, questID, isTrivial = ...
+                return { title = title, questID = questID, trivial = isTrivial }
+            end,
+        },
+        GetCoinText = { "C_CurrencyInfo.GetCoinText", "GetCoinText" },
+    },
+}
+```
+
+Each entry names one or more global API paths. The first callable path on the
+current client wins and becomes `addon.compat.<name>(...)`. `normalize`, when
+present, receives the raw return values and can repack them into the shape the
+addon wants. The complete declaration is resolved before the addon registers:
+if no listed path is callable, the declaration fails instead of shipping a
+dead call site. This is the declarative form of the load-time compatibility
+tables large multi-version addons otherwise hand-write.
 
 ## Controls (table forms, shipped)
 
@@ -215,16 +241,59 @@ remain unchanged.
 
 ### Layout model
 
-One composable vocabulary, top to bottom (proven in production consumers): **panel → main page
-+ tabs → tabs can be multi-paged → 1–2 column card grid → rows/cards holding
-the widgets**. The local columns slice is panel → tabs → controls in 1–3
-column flows (`options.columns`, default 1). It creates no declarative cards
-or multi-page tabs; those remain additive target work.
+One composable vocabulary, top to bottom: **panel → tabs → pages → 1–2 column
+card grid → cards → controls**.
 
-The imperative UI already provides `CreateFlowLayout`, `CreateColumns`,
-`CreatePager`, and `CreateCard` (including one/two internal columns and
-width-triggered auto-height reflow). These are the shared layout foundation;
-their existence alone does not implement the full declarative page/card model.
+Plain tabs keep the original control-list form. A tab that uses pages contains
+only page nodes:
+
+```lua
+options = {
+    General = {
+        {
+            page = "Basics",
+            grid = 2,
+            cards = {
+                {
+                    card = "Display",
+                    columns = 2,
+                    controls = {
+                        { toggle = "enabled", label = "Enable Addon" },
+                        { slider = "scale", label = "Scale", min = 50, max = 150 },
+                    },
+                },
+                {
+                    card = "Audio",
+                    controls = { { slider = "volume", min = 0, max = 100 } },
+                },
+            },
+        },
+        {
+            page = "Advanced",
+            cards = {
+                { card = "Profiles", controls = { { textbox = "profileNote" } } },
+            },
+        },
+    },
+}
+```
+
+- `page` is the page title. A tab may not mix page nodes with plain controls.
+- `grid` is the page card-grid column count (`1` or `2`, default `1`); cards fill
+  the grid in declaration order, balanced like `options.columns`.
+- `card` is the card title. `columns` is the card's internal control column count
+  (`1` or `2`, default `1`); controls fill the card in declaration order.
+- Cards and controls use the same db-bound factories as plain tabs, so reopening
+  a panel or changing profiles restores values and displayed control state.
+- `options.columns` still means the plain control-list column flow. It cannot be
+  combined with page nodes.
+- Layout declarations are validated before the addon registers; an invalid page,
+  card, grid, column count, nested layout, or control string fails without
+  creating the addon, its load handler, or its panel.
+
+The implementation renders these nodes over the existing imperative primitives:
+`CreateScrollPage`, `CreateColumns`, `CreatePager`, `CreateCard`, and
+`CreateFlowLayout`. No second layout engine exists.
 
 ## The addon object
 
@@ -240,6 +309,50 @@ handler ids) and routed through framework-managed, failure-isolated paths:
 | `addon:After(sec, fn)` / `Every(sec, fn)` / `CancelTimer(t)` | Framework timers; returned refs carry `owner = addon` |
 | `addon.db` | The database proxy (after ADDON_LOADED) — see API.md → Database & Profiles |
 | `addon.panel` | The options panel (when `options` was given); `addon.panel:Open()` |
+
+## Contract compatibility handshake
+
+A declarative addon is authored against a **contract format**, not a
+framework version. Formats are additive — format `N` includes every lower
+format — and the number lives in `RGX.CONTRACT_FORMAT_VERSION`
+(currently `1`), independent of either project's release numbers.
+
+The framework answers two questions without ever erroring:
+
+| API | Behavior |
+|---|---|
+| `RGX:SupportsContract(format)` | `true` when this framework can consume that contract format; `false` for nil, non-integer, sub-1, or future formats |
+| `RGX:CompareVersions(a, b)` | `-1`/`0`/`1` for dotted versions (`"2.10.0"` > `"2.9.0"`, `"v2.9"` == `"2.9.0"`, prerelease sorts first); `nil` when either side cannot be parsed |
+
+Generated addons start with a **handshake guard** before their first
+contract call:
+
+```lua
+local RGX = _G.RGXFramework
+if type(RGX) ~= "table" or type(RGX.RequireContract) ~= "function" then
+    error("MyAddon requires RGX-Framework 2.9.0 or newer with the RGX contract compatibility handshake. Update RGX-Framework.", 0)
+end
+RGX:RequireContract("MyAddon", 1, "2.9.0")
+```
+
+`RGX:RequireContract(name, format, minFrameworkVersion)` returns `true` or
+errors with one clear message — an old framework fails loudly at load
+instead of silently ignoring behavior. Hand-written consumers may call the
+same guard; `RGXAddon` itself needs no wrapper beyond it.
+
+### Generated TOC provenance
+
+The generators also record what they produced in custom TOC fields:
+
+| TOC field | Meaning |
+|---|---|
+| `## X-RGX-Contract-Format: 1` | Contract format the file was generated against |
+| `## X-RGX-Framework-MinVersion: 2.9.0` | Minimum framework for the features actually used (the engine computes this floor; an explicit `frameworkMinVersion` spec field raises it) |
+
+These fields are **provenance** for humans and tooling. The real
+dependency remains `## RequiredDeps: RGX-Framework` (load order), and the
+real compatibility enforcement remains the runtime handshake above — WoW
+itself ignores custom `X-` fields.
 
 ## Coming in Tier 4 (frozen contract)
 

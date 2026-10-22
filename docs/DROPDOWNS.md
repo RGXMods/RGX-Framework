@@ -44,7 +44,7 @@ local dd = Drops:CreateNestedDropdown(parent, {
 
     autoWidth = { minWidth = 200, leftInset = 10 }, -- auto-size the list frame
 
-    -- Optional BLU-derived retail button face; the same nested menu remains.
+    -- Optional retail-style button face; the same nested menu remains.
     -- Omit for the client-default dropdown presentation.
     triggerStyle = "retail",
     justifyH = "LEFT", -- retail trigger text alignment: LEFT (default), CENTER, or RIGHT
@@ -67,13 +67,13 @@ right-anchored) room.
 | `text` | string | Display label |
 | `value` | any | Selection value (passed to `onChange`) |
 | `children` | array | Submenu items (creates `hasArrow = true`) |
-| `menuList` | array | Alias for `children` (BPU compat) |
+| `menuList` | array | Alias for `children` (legacy compatibility) |
 | `isHeader` | boolean | Non-selectable section header |
 | `isSeparator` | boolean | Horizontal divider |
 | `icon` | string | Texture path, shown left of label |
 | `colorCode` | string | `|cff` color code for label |
 | `keepOpen` | boolean | Don't close menu on select |
-| `func` | function | Legacy callback (BPU / UIDropDownMenu path) |
+| `func` | function | Legacy callback (`UIDropDownMenu` path) |
 | `onClick` | function | RGX MenuUtil callback |
 | `checked` | boolean | Radio/checkbox check state |
 | `isNotRadio` | boolean | Checkbox style (not radio dot) |
@@ -95,7 +95,7 @@ Transforms various input schemas into canonical UIDropDownMenu format:
 
 | Input field | Output field | Rule |
 |---|---|---|
-| `menuList` | `children` | `menuList → children` (BPU compat) |
+| `menuList` | `children` | `menuList → children` (legacy compatibility) |
 | `arg1` | `value` | `arg1 → value` |
 | `font` | `value` | `font → value` |
 | `name` | `value` | `name → value` if `path` is also present |
@@ -176,7 +176,7 @@ Drops:NormalizeItems(items)         -- normalize item list in place
 `CreateFontDropdown` (in the Fonts module) delegates to `Drops:CreateNestedDropdown` with font-specific item data from `BuildGroupedFontItems`:
 
 ```lua
--- library/fonts/dropdowns.lua
+-- libraries/fonts/dropdowns.lua
 function Fonts:CreateFontDropdown(parent, opts)
     local function buildItems()
         return Fonts:BuildGroupedFontItems({ keepShownOnClick = true })
@@ -202,7 +202,7 @@ Selection is handled by the `onChange` callback on the `CreateNestedDropdown` ho
 
 RGX dropdown items carry both legacy and modern callback fields:
 
-- **`func`** — called by WoW's `UIDropDownMenu` dispatch when a button is clicked (legacy path, used by BPU)
+- **`func`** — called by WoW's `UIDropDownMenu` dispatch when a button is clicked (legacy path)
 - **`onClick`** — called by WoW's `MenuUtil` modular system (modern path, used by RGX)
 
 Both are set to the same closure so either dispatch path produces the same behavior.
@@ -210,7 +210,7 @@ Both are set to the same closure so either dispatch path produces the same behav
 Similarly, submenu data is carried in both:
 
 - **`children`** — read by RGX's `NormalizeItems` and `CreateNestedDropdown`
-- **`menuList`** — read by BPU's `CreateMenuInfo` system
+- **`menuList`** — read by legacy consumer menu builders
 
 After `CopyItem` / `NormalizeItems`, both fields reference the same table.
 
@@ -219,6 +219,6 @@ After `CopyItem` / `NormalizeItems`, both fields reference the same table.
 ## File Layout
 
 ```
-library/dropdowns/
+libraries/dropdowns/
 └── dropdowns.lua   — CreateNestedDropdown, CopyItem, NormalizeItems, ForceWidth, AddInlineButton, HideInlineButtons, GetListFrame, ShortenLabel
 ```

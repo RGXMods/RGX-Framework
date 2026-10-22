@@ -2,7 +2,6 @@
 
 Current release: `v2.8.0`.
 
-
 This page documents the released `v2.7.0` API.
 
 ## A Complete Addon In One Call

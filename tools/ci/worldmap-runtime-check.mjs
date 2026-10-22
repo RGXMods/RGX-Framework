@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// RGXWorldMap runtime harness: loads the real game/worldmap/worldmap.lua into a
+// RGXWorldMap runtime harness: loads the real modules/worldmap/worldmap.lua into a
 // Lua 5.1 VM (wasmoon) and exercises the pin registry + coordinate adapter
 // against a minimal RGX stand-in. Mirrors the sharedmedia-runtime-check harness
 // shape: only the seams worldmap.lua touches are provided (RGX:RegisterModule,
@@ -13,7 +13,7 @@ import { Lua } from "wasmoon-lua5.1";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..");
 const files = {
-  worldmap: join(ROOT, "game", "worldmap", "worldmap.lua"),
+  worldmap: join(ROOT, "modules", "worldmap", "worldmap.lua"),
   test: join(HERE, "worldmap-runtime-test.lua"),
 };
 
@@ -94,7 +94,7 @@ try {
       assert(chunk, err)
       return chunk
     end
-    loadSource(worldmapSource, "game/worldmap/worldmap.lua")("RGX-Framework", RGX)
+    loadSource(worldmapSource, "modules/worldmap/worldmap.lua")("RGX-Framework", RGX)
     loadSource(testSource, "tools/ci/worldmap-runtime-test.lua")("RGX-Framework", RGX)
   `);
 

@@ -557,7 +557,7 @@ consumer needs a `StaticPopupDialogs` table:
 UI:Confirm({
     title = "Reset All Settings", confirm = "Yes", cancel = "No",
     message = "Are you sure you want to reset all settings to defaults?",
-    onConfirm = function() SQP:ResetSettings() end,
+    onConfirm = function() MyAddon:ResetSettings() end,
 })
 ```
 
@@ -827,7 +827,7 @@ definition. This is a transfer encoding, not a second authoring DSL.
    `http://127.0.0.1:18790`. The allowlisted static server is loopback-only and
    read-only. The browser stores an explicitly saved definition in localStorage.
 2. Install a manifest-built feature runtime in the intended test client; run
-   `/rgx editor`. Save uses the framework's own DB leaf
+   `/rgxf editor`. Save uses the framework's own DB leaf
    `RGXFrameworkDB.definitionExample`; closing/reloading must restore the saved
    definition. Unsupported stored definitions are preserved and reported.
 3. Change and export a browser draft; paste/import it in-game. Change it there,

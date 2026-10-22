@@ -54,4 +54,4 @@ One real Blizzard registration per type, ever — all RGX consumers for that typ
 | `Tip:Attach(frame, builder)` | boolean | `builder(frame)` → opts table or nil |
 | `Tip:HookNative(typeName, callback)` | boolean | `callback(tooltip, data)`; false on unknown type |
 
-Source: [`library/tooltip/tooltip.lua`](https://github.com/RGXMods/RGX-Framework/blob/main/library/tooltip/tooltip.lua). Test it in-game via [[RGX-Hello|Testing]]'s Tooltip tab.
+Source: [`libraries/tooltip/tooltip.lua`](https://github.com/RGXMods/RGX-Framework/blob/main/libraries/tooltip/tooltip.lua). Test it in-game via [[RGX-Hello|Testing]]'s Tooltip tab.

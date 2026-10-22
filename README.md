@@ -1,10 +1,7 @@
 # RGX-Framework
 
-The `v2.8.0` release adds `RGXTimers`, a frame-based countdown/progress bar
-module that replaces LibCandyBar-3.0 for consumer addons: pooled bars keep
-native frame methods, completion/cancel callbacks, and `exp`-based sorting.
-See the [release notes](docs/changelogs/2.8.0.md).
-
+The `v2.10.0` release hardens profile safety, event dispatch, and declarative
+validation. See the [release notes](docs/changelogs/2.10.0.md).
 
 **One dependency. Everything your addon suite needs.**
 
@@ -17,8 +14,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.8.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.8.0)
-
+**Latest published release:** [`v2.10.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.10.0)
 
 **1. Declare the dependency:**
 
@@ -193,7 +189,9 @@ Font pack addons can extend the registry at runtime with `Fonts:RegisterFontPack
 
 ## Wiki
 
-Full documentation lives in the [`docs/`](docs/) directory:
+Full documentation lives in the [`docs/`](docs/) directory. The packaged addon
+also includes [`AGENTS.md`](AGENTS.md) for AI agents; it points to the matching
+source docs and tells agents to obtain reference data themselves.
 
 ### Getting Started
 
@@ -220,17 +218,17 @@ user-facing output across all twelve WoW client locales: **enUS** (base),
 **deDE**, **esES**, **esMX**, **frFR**, **itIT**, **koKR**, **ptBR**,
 **ptPT**, **ruRU**, **zhCN**, **zhTW**. The framework's own slash-command
 output, control fallback labels, and reputation rank names are
-read from a single locale registry (`library/locale/locale.lua` +
-`library/locale/overrides.lua`). The English base loads unconditionally and
+read from a single locale registry (`libraries/locale/locale.lua` +
+`libraries/locale/overrides.lua`). The English base loads unconditionally and
 every non-English block is guarded on `GetLocale()`, so untranslated keys
 fall through to English with no nil leaks.
 
 Consumer addons inherit the same convention via the
 `RGXLocale:NewLocale(addonName, locale, isDefault)` registry documented in
-`docs/ROADMAP.md` and `library/locale/locale.lua`: register one `enUS` base
+`docs/ROADMAP.md` and `libraries/locale/locale.lua`: register one `enUS` base
 table plus guarded per-locale blocks. The frozen per-consumer
 `Handle:SetLocale` / `Handle:GetLocale` wire-scope contract in
-`library/sound/sound.lua` is unchanged.
+`libraries/sound/sound.lua` is unchanged.
 
 ### Design & Philosophy
 
@@ -262,7 +260,7 @@ RGX-Framework temporarily maintains an [MCP](https://modelcontextprotocol.io) se
 
 The source-development [definition round trip](docs/UI-CONTROLS.md#definition-round-trip-source-development-slice)
 adds a small external editor (`node tools/editor/serve.mjs`, loopback only) and
-in-game `/rgx editor` adapter over the same versioned data contract. This slice
+in-game `/rgxf editor` adapter over the same versioned data contract. This slice
 is not in the published `v2.7.14` package and is not a complete Studio application
 or Blizzard Edit Mode integration. Browser/WoW visual checks remain required.
 
@@ -281,7 +279,7 @@ RGX-Framework publishes only the framework addon package. See
 
 ## Compatibility
 
-- **Latest published release:** [`v2.7.17`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.7.17)
+- **Latest published release:** [`v2.9.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.9.0)
 
 - **Clients:** Retail `120105`, WoW Forever (beta) `16001`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
 - **Distribution:** one runtime-only addon package; see [Distribution](docs/DISTRIBUTION.md)

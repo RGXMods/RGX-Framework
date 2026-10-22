@@ -93,16 +93,13 @@ function runtimeSourceFiles() {
     "RGX-Framework_Mists.toc",
     "RGX-Framework.xml",
     "LICENSE.txt",
+    "AGENTS.md",
     ...listFiles("core"),
-    ...listFiles("game"),
+    ...listFiles("modules"),
     ...listFiles("libraries"),
-    "media/hexmask.tga",
-    "media/hexring.tga",
     "media/logo.tga",
-    "media/panel_rounded.tga",
     "media/round.tga",
     "media/square.tga",
-    ...listFiles("media/fonts"),
   ];
 }
 
@@ -244,16 +241,17 @@ function validateRuntime(entries, expectedPaths) {
     const allowed = /^RGX-Framework(?:_(?:Vanilla|TBC|Wrath|Cata|Mists))?\.toc$/.test(relativePath)
       || relativePath === "RGX-Framework.xml"
       || relativePath === "LICENSE.txt"
-      || /^(?:core|game|libraries)\/.+\.lua$/.test(relativePath)
-      || relativePath === "media/hexmask.tga"
-      || relativePath === "media/hexring.tga"
+      || relativePath === "AGENTS.md"
+      || /^(?:core|modules|libraries)\/.+\.lua$/.test(relativePath)
       || relativePath === "media/logo.tga"
-      || relativePath === "media/panel_rounded.tga"
       || relativePath === "media/round.tga"
       || relativePath === "media/square.tga"
-      || /^media\/fonts\/(?:.+\.(?:otf|ttf)|README\.md)$/.test(relativePath);
+      || relativePath === "libraries/colors/hexmask.tga"
+      || relativePath === "libraries/colors/hexring.tga"
+      || relativePath === "libraries/design/panel_rounded.tga"
+      || /^libraries\/fonts\/media\/(?:.+\.(?:otf|ttf)|README\.md|LICENSES\.md)$/.test(relativePath);
     if (!allowed) failures.push(`runtime archive: path is outside the player allowlist ${path}`);
-    if (/^(?:core|game|libraries)\/.+\.lua$/.test(relativePath) && !loadReferences.has(relativePath)) failures.push(`runtime archive: Lua file is not in the load graph ${path}`);
+    if (/^(?:core|modules|libraries)\/.+\.lua$/.test(relativePath) && !loadReferences.has(relativePath)) failures.push(`runtime archive: Lua file is not in the load graph ${path}`);
   }
   failures.push(...validateRuntimeMetadata(entries, RUNTIME_ROOT, "runtime archive"));
   return failures;

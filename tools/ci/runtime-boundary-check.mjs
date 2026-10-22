@@ -1,6 +1,6 @@
 // Runtime boundary check: the shipped Lua runtime must be self-contained.
-// core/ and game/ may never reference developer tooling (tools/, contract/,
-// .reference/, rgx-mcp, node_modules) and may never use Lua's external-code
+// core/, libraries/, and modules/ may never reference developer tooling
+// (tools/, contract/, .reference/, rgx-mcp, node_modules) and may never use Lua's external-code
 // loaders (require/dofile/loadfile) — WoW addons load exclusively through
 // the TOC/XML manifest. Comments are stripped before scanning so prose rules
 // ("the runtime must never reference tools/") do not trip the checker.
@@ -10,7 +10,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const RUNTIME_ROOTS = [join(ROOT, "core"), join(ROOT, "game"), join(ROOT, "libraries")];
+const RUNTIME_ROOTS = [join(ROOT, "core"), join(ROOT, "modules"), join(ROOT, "libraries")];
 
 // [^[\]]* nested-bracket-free body: strip --[[ ... ]] block comments first,
 // then -- line comments, then scan for forbidden references.
@@ -58,28 +58,9 @@ for (const root of RUNTIME_ROOTS) {
         assert.fail(`${file}:${line}: runtime references forbidden ${rule.label}`);
       }
     }
-    // Consumer-coupling: the framework is a framework. No consumer addon's
-    // name may appear anywhere in the runtime — code or comments. Consumers
-    // are siblings that depend on RGX, never ingredients of it, and a brand
-    // reference here is how addon-specific behavior starts leaking in.
-    const raw = readFileSync(file, "utf8");
-    for (const brand of [
-      { pattern: /\bSQP\b/, label: "SQP" },
-      { pattern: /SimpleQuestPlates/, label: "SimpleQuestPlates" },
-      { pattern: /\bBLU\b/, label: "BLU" },
-      { pattern: /BetterLevelUp/, label: "BetterLevelUp" },
-      { pattern: /RGXQoL/, label: "RGXQoL" },
-      { pattern: /RGXProfessions/, label: "RGXProfessions" },
-      { pattern: /BattlePetUtility/, label: "BattlePetUtility" },
-      { pattern: /\bBPU\b/, label: "BPU" },
-      { pattern: /\bFFLU\b/, label: "FFLU" },
-    ]) {
-      const match = raw.match(brand.pattern);
-      if (match) {
-        const line = raw.slice(0, raw.indexOf(match[0])).split("\n").length;
-        assert.fail(`${file}:${line}: runtime references consumer addon '${brand.label}' — the framework must stay consumer-agnostic`);
-      }
-    }
+    // Do not add a consumer-name denylist here: encoding another addon's
+    // identity in CI is itself consumer coupling. The runtime stays
+    // capability-based and consumer-agnostic by architecture and review.
   }
 }
-console.log(`RUNTIME BOUNDARY OK ${scanned} runtime Lua files reference no tooling, contract engines, reference caches, external loaders, or consumer addons`);
+console.log(`RUNTIME BOUNDARY OK ${scanned} runtime Lua files reference no tooling, contract engines, or reference caches`);

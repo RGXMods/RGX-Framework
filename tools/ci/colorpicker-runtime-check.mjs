@@ -13,7 +13,7 @@ lua.ctx.colorpicker = readFileSync(join(root, "libraries/colors/colorpicker.lua"
 lua.ctx.design = readFileSync(join(root, "libraries/design/design.lua"), "utf8");
 lua.ctx.scenarios = readFileSync(join(root, "tools/ci/colorpicker-runtime-test.lua"), "utf8");
 
-// Asset verification: the runtime reads media/hexmask.tga and media/hexring.tga
+// Asset verification: the runtime reads libraries/colors/hexmask.tga and libraries/colors/hexring.tga
 // directly, so the checked-in bytes must match the geometry the picker assumes
 // -- 64x64 power-of-two, 32bpp with 8 alpha bits, a centred flat-top hexagon of
 // aspect 2:sqrt(3) with symmetric transparent top/bottom padding, and a ring
@@ -56,8 +56,8 @@ function checkAsset(cond, msg) {
 }
 
 function verifyHexAssets() {
-  const fill = readTga(join(root, "media/hexmask.tga"));
-  const ring = readTga(join(root, "media/hexring.tga"));
+  const fill = readTga(join(root, "libraries/colors/hexmask.tga"));
+  const ring = readTga(join(root, "libraries/colors/hexring.tga"));
   for (const [name, tga] of [["hexmask.tga", fill], ["hexring.tga", ring]]) {
     checkAsset(tga.imageType === 2 && tga.colorMap === 0, `${name}: not an uncompressed true-colour TGA`);
     checkAsset(tga.width === 64 && tga.height === 64, `${name}: ${tga.width}x${tga.height} is not 64x64 POT`);

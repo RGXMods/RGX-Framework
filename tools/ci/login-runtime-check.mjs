@@ -30,10 +30,18 @@ try {
         return nil
     end }
     strtrim = function(s) return (tostring(s or ""):gsub("^%s+", ""):gsub("%s+$", "")) end
-    InCombatLockdown = function() return false end
+    __inCombat = false
+    InCombatLockdown = function() return __inCombat == true end
     UnitAffectingCombat = function() return false end
     C_EventUtils = { IsEventValid = function() return true end }
     SlashCmdList = {}
+    hooksecurefunc = function(target, method, callback)
+        local original = target[method]
+        target[method] = function(...)
+            original(...)
+            callback(...)
+        end
+    end
     geterrorhandler = function()
         return function(message) error(message, 0) end
     end

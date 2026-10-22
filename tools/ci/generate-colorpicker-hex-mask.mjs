@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Generates the ColorPicker honeycomb assets:
-//   media/hexmask.tga  - filled flat-top hexagon (white RGB + antialiased alpha)
-//   media/hexring.tga  - flat-top hexagon outline band (hover/selection ring)
+//   libraries/colors/hexmask.tga  - filled flat-top hexagon (white RGB + antialiased alpha)
+//   libraries/colors/hexring.tga  - flat-top hexagon outline band (hover/selection ring)
 //
 // Both are 64x64 (power-of-two) 32-bit uncompressed true-color TGAs
 // (bottom-left origin, 8 alpha bits) so they load on every supported flavor
