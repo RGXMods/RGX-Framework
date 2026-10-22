@@ -14,12 +14,13 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import luaparse from "luaparse";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { createDefinitionEngine, exampleDefinition } from "../../../contract/engine/definition.mjs";
 import Ajv2020 from "ajv/dist/2020.js";
 import { createValidateAddon } from "../../../contract/engine/validate-addon.mjs";
 import { generateAddonLua } from "../../../contract/engine/generate-addon.mjs";
-import { engineCases } from "../../ci/contract-vectors.mjs";
+import { engineCases, tocCases } from "../../ci/contract-vectors.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SERVER_ENTRY = join(HERE, "..", "src", "server.js");
@@ -98,6 +99,7 @@ const RGX_HELLO_GENERATE_SPEC = {
   slash: "rgxhello",
   minimap: true,
   every: { heartbeat: 1 },
+  compat: { GetAddOnMetadata: ["C_AddOns.GetAddOnMetadata", "GetAddOnMetadata"] },
   db: { enabled: true, volume: 50 },
   toggles: ["enabled"],
   sliders: [{ key: "volume", label: "Volume", min: 0, max: 100, suffix: "%" }],
@@ -176,6 +178,14 @@ try {
         && actualOpts.every.heartbeat[1]?.$lua === "function"),
     JSON.stringify({ minimumFrameworkVersion, every: actualOpts.every })
   );
+  check(
+    "RGX-Hello compatibility declaration is valid when present",
+    actualOpts.compat === undefined
+      || (Array.isArray(actualOpts.compat?.GetAddOnMetadata)
+        && actualOpts.compat.GetAddOnMetadata[0] === "C_AddOns.GetAddOnMetadata"
+        && actualOpts.compat.GetAddOnMetadata[1] === "GetAddOnMetadata"),
+    JSON.stringify({ compat: actualOpts.compat })
+  );
 
   console.log("== rgx_generate_addon (RGX-Hello spec) ==");
   const gen = await client.callTool({ name: "rgx_generate_addon", arguments: RGX_HELLO_GENERATE_SPEC });
@@ -193,6 +203,11 @@ try {
     generatedLua.includes('{ panel_alpha = "overlayOpacity", label = "Panel Opacity", default = 80, presets = { { label = "Low", value = 25 }, { label = "High", value = 100 } } }')
   );
   check("generator emits a named repeating timer", generatedLua.includes("every   = {") && generatedLua.includes("heartbeat = { 1, function(self, timer)"));
+  check(
+    "generator emits declarative compatibility paths",
+    generatedLua.includes("compat  = {")
+      && generatedLua.includes('GetAddOnMetadata = { "C_AddOns.GetAddOnMetadata", "GetAddOnMetadata" }')
+  );
   let generatedParses = true;
   let generatedParseError = "";
   try {
@@ -223,6 +238,62 @@ try {
   });
   check("generator rejects invalid named timers", invalidTimerGen.isError === true, JSON.stringify(invalidTimerGen));
 
+  const invalidCompatGen = await client.callTool({
+    name: "rgx_generate_addon",
+    arguments: { name: "InvalidCompat", compat: { Get: "not a path" } },
+  });
+  check("generator rejects invalid compatibility paths", invalidCompatGen.isError === true, JSON.stringify(invalidCompatGen));
+
+  const layoutGen = await client.callTool({
+    name: "rgx_generate_addon",
+    arguments: {
+      name: "LayoutGen",
+      db: { enabled: true },
+      pages: [{
+        tab: "General",
+        page: "Basics",
+        grid: 2,
+        cards: [
+          { card: "Display", columns: 2, controls: [{ toggle: "enabled", label: "Enable" }, { slider: "scale", label: "Scale", min: 50, max: 150 }] },
+          { card: "Audio", controls: ["slider volume 0-100 'Volume'"] },
+        ],
+      }],
+    },
+  });
+  const layoutLua = layoutGen.content?.[0]?.text ?? "";
+  check(
+    "generator emits declarative page/card layouts",
+    layoutLua.includes('page = "Basics"')
+      && layoutLua.includes('grid = 2')
+      && layoutLua.includes('card = "Display"')
+      && layoutLua.includes('columns = 2')
+  );
+  let layoutParses = true;
+  let layoutParseError = "";
+  try {
+    luaparse.parse(layoutLua, { luaVersion: "5.1" });
+  } catch (error) {
+    layoutParses = false;
+    layoutParseError = error.message;
+  }
+  check("generated declarative layout parses as Lua 5.1", layoutParses, layoutParseError);
+
+  const invalidLayoutGen = await client.callTool({
+    name: "rgx_generate_addon",
+    arguments: { name: "InvalidLayout", pages: [{ page: "Basics", cards: [{ card: "Display", controls: [] }] }] },
+  });
+  check("generator rejects empty declarative cards", invalidLayoutGen.isError === true, JSON.stringify(invalidLayoutGen));
+
+  console.log("\n== rgx_generate_addon_toc (shared vectors) ==");
+  for (const vector of tocCases) {
+    const first = await client.callTool({ name: "rgx_generate_addon_toc", arguments: vector.spec });
+    const second = await client.callTool({ name: "rgx_generate_addon_toc", arguments: vector.spec });
+    const firstToc = first.content?.[0]?.text ?? "";
+    const secondToc = second.content?.[0]?.text ?? "";
+    check(`TOC matches shared vector: ${vector.name}`, firstToc === vector.expected, firstToc);
+    check(`TOC regeneration is byte-identical: ${vector.name}`, firstToc === secondToc, secondToc);
+  }
+
   console.log("\n== rgx_validate_addon (RGX-Hello's parsed opts) ==");
   const val = await client.callTool({ name: "rgx_validate_addon", arguments: { opts: actualOpts } });
   const report = JSON.parse(val.content[0].text);
@@ -230,36 +301,36 @@ try {
   check("RGX-Hello's opts validate against the shipped schema", report.valid === true, JSON.stringify(report.errors));
   check("no tier4-only keys used", (report.tier4KeysUsed ?? []).length === 0, JSON.stringify(report.tier4KeysUsed));
   const sliderValidation = await client.callTool({ name: "rgx_validate_addon", arguments: {
-    opts: { options: { General: [{ slider: "amount", valueDisplay: "hover", progress: false }] } },
+    opts: { db: {}, options: { General: [{ slider: "amount", valueDisplay: "hover", progress: false }] } },
   } });
   check("slider customizations validate against the shared contract", JSON.parse(sliderValidation.content[0].text).valid === true);
   const invalidSlider = await client.callTool({ name: "rgx_validate_addon", arguments: {
-    opts: { options: { General: [{ slider: "amount", valueDisplay: "sometimes" }] } },
+    opts: { db: {}, options: { General: [{ slider: "amount", valueDisplay: "sometimes" }] } },
   } });
   check("invalid slider value-display modes are rejected", JSON.parse(invalidSlider.content[0].text).valid === false);
   const textboxValidation = await client.callTool({ name: "rgx_validate_addon", arguments: {
-    opts: { options: { General: [{ textbox: "keyword", label: "Keyword", default: "", placeholder: "Type a keyword" }] } },
+    opts: { db: {}, options: { General: [{ textbox: "keyword", label: "Keyword", default: "", placeholder: "Type a keyword" }] } },
   } });
   check("textbox controls validate against the shared contract", JSON.parse(textboxValidation.content[0].text).valid === true);
   const textboxString = await client.callTool({ name: "rgx_validate_addon", arguments: {
-    opts: { options: { General: ["textbox keyword 'Keyword'"] } },
+    opts: { db: {}, options: { General: ["textbox keyword 'Keyword'"] } },
   } });
   const textboxStringReport = JSON.parse(textboxString.content[0].text);
   check("one-line textbox controls validate as shipped", textboxStringReport.valid === true && textboxStringReport.tier4KeysUsed.length === 0);
   const invalidTextbox = await client.callTool({ name: "rgx_validate_addon", arguments: {
-    opts: { options: { General: [{ textbox: "keyword", width: 300 }] } },
+    opts: { db: {}, options: { General: [{ textbox: "keyword", width: 300 }] } },
   } });
   check("unknown textbox keys are rejected", JSON.parse(invalidTextbox.content[0].text).valid === false);
   const alphaValidation = await client.callTool({ name: "rgx_validate_addon", arguments: {
-    opts: { options: { General: [{ panel_alpha: "overlayOpacity", label: "Panel Opacity", default: 80, presets: [{ label: "Low", value: 25 }] }] } },
+    opts: { db: {}, options: { General: [{ panel_alpha: "overlayOpacity", label: "Panel Opacity", default: 80, presets: [{ label: "Low", value: 25 }] }] } },
   } });
   check("panel alpha controls validate against the shared contract", JSON.parse(alphaValidation.content[0].text).valid === true);
   const alphaString = await client.callTool({ name: "rgx_validate_addon", arguments: {
-    opts: { options: { General: ["panel_alpha overlayOpacity 'Panel Opacity'"] } },
+    opts: { db: {}, options: { General: ["panel_alpha overlayOpacity 'Panel Opacity'"] } },
   } });
   check("one-line panel alpha controls validate as shipped", JSON.parse(alphaString.content[0].text).valid === true);
   const invalidAlpha = await client.callTool({ name: "rgx_validate_addon", arguments: {
-    opts: { options: { General: [{ panel_alpha: "overlayOpacity", width: 300 }] } },
+    opts: { db: {}, options: { General: [{ panel_alpha: "overlayOpacity", width: 300 }] } },
   } });
   check("unknown panel alpha keys are rejected", JSON.parse(invalidAlpha.content[0].text).valid === false);
 
@@ -273,7 +344,7 @@ try {
 
   const columnsVal = await client.callTool({
     name: "rgx_validate_addon",
-    arguments: { opts: { options: { columns: 2, General: [{ toggle: "enabled" }] } } },
+    arguments: { opts: { db: {}, options: { columns: 2, General: [{ toggle: "enabled" }] } } },
   });
   const columnsReport = JSON.parse(columnsVal.content[0].text);
   check("option columns validate as shipped", columnsReport.valid === true, JSON.stringify(columnsReport.errors));
@@ -281,14 +352,14 @@ try {
 
   const invalidColumnsVal = await client.callTool({
     name: "rgx_validate_addon",
-    arguments: { opts: { options: { columns: 5 } } },
+    arguments: { opts: { db: {}, options: { columns: 5 } } },
   });
   const invalidColumnsReport = JSON.parse(invalidColumnsVal.content[0].text);
   check("invalid column counts are rejected", invalidColumnsReport.valid === false, JSON.stringify(invalidColumnsReport.errors));
 
   const columnsGen = await client.callTool({
     name: "rgx_generate_addon",
-    arguments: { name: "ColumnKeys", columns: 2, toggles: ["enabled"] },
+    arguments: { name: "ColumnKeys", db: { enabled: true }, columns: 2, toggles: ["enabled"] },
   });
   const columnsLua = columnsGen.content?.[0]?.text ?? "";
   check("generator emits the column count", columnsLua.includes("columns = 2"));
@@ -451,7 +522,7 @@ try {
 
   const tier4String = await client.callTool({
     name: "rgx_validate_addon",
-    arguments: { opts: { options: { General: ["toggle enabled"] } } },
+    arguments: { opts: { db: {}, options: { General: ["toggle enabled"] } } },
   });
   const tier4StringReport = JSON.parse(tier4String.content[0].text);
   check(
@@ -510,9 +581,23 @@ try {
     JSON.stringify(orderedFiles)
   );
 
-  const malformedAudit = await client.callTool({
+  // The audit is a Lua source scanner: non-.lua paths are refused outright.
+  const refusedAudit = await client.callTool({
     name: "rgx_audit_lua",
     arguments: { path: join(HERE, "fixtures", "aura-malformed.txt") },
+  });
+  check("non-lua paths are refused by the source audit",
+    refusedAudit.isError === true
+      && (refusedAudit.content?.[0]?.text ?? "").includes(".lua"),
+    JSON.stringify(refusedAudit).slice(0, 200));
+
+  // Parse-failure coverage stays out of the repo tree (lua-check scans every
+  // in-repo .lua), so the malformed source is written to the OS tempdir.
+  const malformedPath = join(tmpdir(), "rgx-malformed-audit-fixture.lua");
+  writeFileSync(malformedPath, "local x = {\n");
+  const malformedAudit = await client.callTool({
+    name: "rgx_audit_lua",
+    arguments: { path: malformedPath },
   });
   const malformedReport = JSON.parse(malformedAudit.content[0].text);
   check(

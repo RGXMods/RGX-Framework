@@ -9,11 +9,10 @@ package-as: RGX-Framework
 # community packager matcher treated "docs/" and "docs" differently, and the slash form
 # silently failed (verified against the v2.2.0 zip, which leaked
 # docs/schemas/tools). The in-house packager matches both forms.
-# Fonts are committed under media/fonts/ — no download step is required.
+# Fonts are committed under libraries/fonts/media/ — no download step is required.
 ignore:
   - .gitignore
   - .mcp.json
-  - AGENTS.md
   - README.md
   - docs
   - contract

@@ -98,6 +98,24 @@ try {
       local fixed=UI:CreateConfigDialog({}, {})
       assert(fixed.resizeGrip==nil)
     `],
+    ["slider snapping is relative to min so every slider can reach its own minimum", `
+      local storage={amount=1}
+      -- min=1, max=9, step=2: old zero-relative snapping reached 2,4,6,8
+      -- and never 1; min-relative snapping must hit 1,3,5,7,9.
+      local slider=UI:CreateSlider({}, {key='amount',storage=storage,min=1,max=9,step=2,default=1})
+      slider:SetValue(1)
+      assert(storage.amount==1, "min must be reachable, got "..tostring(storage.amount))
+      slider:SetValue(3.7)
+      assert(storage.amount==3, "mid-track snap must be min-relative, got "..tostring(storage.amount))
+      slider:SetValue(9)
+      assert(storage.amount==9, "max must be reachable, got "..tostring(storage.amount))
+      slider:SetValue(2)
+      assert(storage.amount==3, "2 is not on the 1+2n lattice; nearest is 3, got "..tostring(storage.amount))
+      -- Even lattices still work.
+      local plain=UI:CreateSlider({}, {key='plain',storage=storage,min=0,max=10,step=5,default=5})
+      plain:SetValue(7)
+      assert(storage.plain==5, "0-relative lattice unchanged, got "..tostring(storage.plain))
+    `],
     ["slider values are optionally hover-only without changing save/reset behavior", `
       local storage={amount=25}
       local slider=UI:CreateSlider({}, {key='amount',storage=storage,default=10,valueDisplay='hover',suffix='%'})

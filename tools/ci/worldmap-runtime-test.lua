@@ -1,6 +1,6 @@
 -- Runtime scenarios for RGXWorldMap pin registry and coordinate adapter.
 -- Executed by tools/ci/worldmap-runtime-check.mjs, which has already installed
--- a minimal RGX stand-in and loaded game/worldmap/worldmap.lua as the
+-- a minimal RGX stand-in and loaded modules/worldmap/worldmap.lua as the
 -- global `RGXWorldMap`.
 --
 -- Covers the acceptance criteria for the worldmap module:

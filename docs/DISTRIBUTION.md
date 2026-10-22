@@ -3,28 +3,27 @@
 The `v2.8.0` release adds `RGXTimers`, a frame-based countdown/progress bar
 module that replaces LibCandyBar-3.0 for consumer addons.
 
-
 RGX-Framework publishes one product: the WoW addon framework. Node tooling,
 schemas, documentation, references, and future Studio code never belong in the
 World of Warcraft addon archive.
 
 ## Current Release
 
-[`v2.8.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.8.0)
+[`v2.10.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.10.0)
 publishes exactly two GitHub assets:
 
 | Asset | Purpose |
 |---|---|
-| `RGX-Framework-v2.8.0.zip` | The only product archive; install this addon |
+| `RGX-Framework-v2.10.0.zip` | The only product archive; install this addon |
 | `release.json` | In-house packager metadata for automation |
 
-The `v2.8.0` ZIP is expected to contain one `RGX-Framework/` root and exactly 113
+The `v2.10.0` ZIP is expected to contain one `RGX-Framework/` root and exactly 105
 runtime files. Verify the asset and digest after publishing with
 GitHub CLI:
 
 ```bash
-gh release view v2.8.0 --repo RGXMods/RGX-Framework --json assets \
-  --jq '.assets[] | select(.name == "RGX-Framework-v2.8.0.zip") | .digest'
+gh release view v2.10.0 --repo RGXMods/RGX-Framework --json assets \
+  --jq '.assets[] | select(.name == "RGX-Framework-v2.10.0.zip") | .digest'
 ```
 
 CurseForge is the currently configured addon service. Wago is configured with
@@ -76,12 +75,14 @@ RGX-Framework_Mists.toc
 RGX-Framework.xml
 LICENSE.txt
 core/**/*.lua
-game/**/*.lua
+modules/**/*.lua
 libraries/**/*.lua
 media/*.tga
-media/fonts/*.ttf
-media/fonts/*.otf
-media/fonts/README.md
+libraries/colors/*.tga
+libraries/design/*.tga
+libraries/fonts/media/*.ttf
+libraries/fonts/media/*.otf
+libraries/fonts/media/README.md
 ```
 
 It rejects JavaScript, TypeScript, JSON, Rust, Tauri, `node_modules`, `tools/`,
@@ -189,6 +190,22 @@ unknown versions.
 The `contract:bundle` CI job (`.gitlab/ci/addon.yml`) builds the bundle,
 verifies every manifest hash, and confirms a second build is
 byte-identical on the default branch, tags, and merge requests.
+
+## Public GitHub Mirror
+
+GitLab remains the complete source. Published GitHub tags are generated from a
+sanitized allowlist so internal reference caches, agent instructions, internal
+CI, historical changelogs, and internal-only docs are not mirrored.
+
+```bash
+node tools/release/build-public-mirror.mjs --ref HEAD --tag vX.Y.Z --out /tmp/rgx-public
+git -C /tmp/rgx-public push https://github.com/RGXMods/RGX-Framework.git refs/tags/vX.Y.Z
+```
+
+The public tag name matches GitLab; the SHA intentionally differs because the
+public tag points to the sanitized release tree. The script also excludes
+historical changelogs except the current release and validates required public
+paths. GitLab tag pipelines still validate the full source.
 
 ## Addon-Service Description
 

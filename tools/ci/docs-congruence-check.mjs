@@ -157,7 +157,10 @@ if (/\]\((?!https?:\/\/|#)[^)]+\)/.test(surfaceText["docs/wago_description.md"])
 
 const currentChangelogPath = `docs/changelogs/${version}.md`;
 const currentChangelog = existsSync(join(ROOT, currentChangelogPath)) ? read(currentChangelogPath) : "";
-for (const required of [`RGX-Framework-v${version}.zip`, `${releaseSnapshot.runtimeFiles} runtime files`]) {
+const currentChangelogFileCount = publishedVersion === version
+  ? publishedRuntimeFiles
+  : releaseSnapshot.runtimeFiles;
+for (const required of [`RGX-Framework-v${version}.zip`, `${currentChangelogFileCount} runtime files`]) {
   if (!currentChangelog.includes(required)) failures.push(`${currentChangelogPath}: missing ${required}`);
 }
 if (publishedVersion !== version) {
@@ -179,8 +182,14 @@ for (const required of ["work_items/30", "work_items/36", "Studio is still block
 }
 
 const auras = surfaceText["docs/AURAS.md"];
-for (const required of ["accessible-only aura boundary", "fail closed", "raw UNIT_AURA", "payload, which remains unsanitized", "v2.7.0", "v2.6.2", "12.1.0.69283"]) {
+for (const required of ["accessible-only aura boundary", "fail closed", "raw UNIT_AURA", "payload, which remains unsanitized", "v2.7.0", "v2.6.2"]) {
   if (!auras.includes(required)) failures.push(`docs/AURAS.md: missing restricted-value boundary '${required}'`);
+}
+const retailInterface = Number(flavorTocs.find(([id]) => id === "retail")?.[4]);
+const retailVersionPrefix = `${Math.floor(retailInterface / 10000)}.${Math.floor((retailInterface % 10000) / 100)}.${retailInterface % 100}`;
+const auraRetailVersion = new RegExp(`Retail[^\\n]*${retailVersionPrefix.replace(/\./g, "\\.")}\\.\\d+`);
+if (!auraRetailVersion.test(auras)) {
+  failures.push(`docs/AURAS.md: missing current Retail ${retailVersionPrefix}.<build> restricted-value boundary`);
 }
 const mcpServer = read("tools/rgx-mcp/src/server.js") + read("contract/engine/audit-lua.mjs");
 for (const required of ["pcall catches errors but does not prevent taint", "fails closed and withholds restricted AuraData", "raw event payloads remain unsanitized"]) {
@@ -231,6 +240,10 @@ for (const required of ["tools/release/publish-release.mjs", "npm run package-bu
 }
 if (releaseWorkflow.includes("BigWigsMods/packager")) failures.push("release workflow: BigWigsMods/packager is retired; use the in-house packager");
 if (releaseWorkflow.includes(".release/")) failures.push("release workflow: the .release staging directory is retired");
+
+// Do not add a consumer-name denylist here: encoding another addon's identity
+// in CI is itself consumer coupling. Current docs describe capabilities, not
+// the addons that consume them.
 
 if (failures.length) {
   for (const failure of failures) console.error(`DOCS ERROR  ${failure}`);

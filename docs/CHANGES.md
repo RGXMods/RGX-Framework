@@ -2,6 +2,32 @@
 
 ## Current Release
 
+### [v2.10.0](changelogs/2.10.0.md) - 2026-10-21
+
+- Added declarative page nodes for multi-page options tabs.
+- Added 1–2 column page card grids and 1–2 column internal card control flows.
+- Extended the MCP generator and schema for declarative pages/cards.
+- Layout validation now rejects invalid declarations before addon registration.
+
+### [v2.8.2](changelogs/2.8.2.md) - 2026-10-19
+
+- Added the declarative `compat` key: first callable global API path wins,
+  optional normalize repacks return values, and missing paths fail before
+  registration.
+- The runtime package now ships the expanded `AGENTS.md` project entry point in
+  place of `AGENT-DIRECTIVE.md`; the file count is unchanged.
+
+### [v2.8.1](changelogs/2.8.1.md) - 2026-10-19
+
+- Repaired the WoW reference cache and added inventory/freshness checks.
+- Restored `modules/` for game-domain modules; library modules remain under
+  `libraries/`.
+- Namespaced framework slash commands as `/rgxframework` and `/rgxf`, keeping
+  `/rgx` as a legacy alias.
+- Colocated library-owned media and kept legacy font paths resolving.
+- Added the shipped `AGENT-DIRECTIVE.md`; public APIs and client Interfaces are
+  unchanged.
+
 ### [v2.8.0](changelogs/2.8.0.md) - 2026-10-17
 
 - New `RGXTimers` library module (`RGX:GetTimers()`, global `RGXTimers`) adds

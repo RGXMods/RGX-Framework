@@ -130,7 +130,65 @@ do
 end
 
 if #failures > 0 then
-    __rgxDbTestResult = "FAILED (" .. #failures .. "): " .. table.concat(failures, " | ")
+    
+-- ── Dotted-path helpers (mutation coverage): string paths, table paths,
+--        missing nodes, intermediate creation, and guard returns.
+local pathDB = { a = { b = { c = 7 } }, items = { [3] = "three" } }
+check(RGX:DBGet(pathDB, "a.b.c") == 7, "string path must resolve")
+check(RGX:DBGet(pathDB, { "a", "b", "c" }) == 7, "table path must resolve")
+check(RGX:DBGet(pathDB, "a.missing.deep", "fallback") == "fallback",
+    "a missing node must return the fallback")
+check(RGX:DBGet(pathDB, "items.3") == "three", "numeric string path segments must index")
+check(RGX:DBGet(pathDB, nil, "fb") == pathDB, "a nil path must return the table itself")
+check(RGX:DBGet(pathDB, "x", 99) == 99, "a missing top segment must return the fallback")
+RGX:DBSet(pathDB, "new.deeper.leaf", 42)
+check(pathDB.new.deeper.leaf == 42, "DBSet must create intermediate tables")
+RGX:DBSet(pathDB, { "items", 4 }, "four")
+check(pathDB.items[4] == "four", "DBSet must accept table paths")
+check(RGX:DBSet(pathDB, nil, 1) == false, "DBSet with a nil path must refuse")
+
+-- ── MigrateDB boundaries: version 1 runs; stored == current is a no-op.
+local m1 = {}
+local ranOne = false
+RGX:MigrateDB(m1, "M1", 1, { [1] = function(d) ranOne = true; d.marked = true end })
+check(ranOne == true and m1._dbVersion == 1, "version 1 must run its migration")
+local mSame = { _dbVersion = 2 }
+local ranSame = false
+RGX:MigrateDB(mSame, "MS", 2, { [1] = function() ranSame = true end })
+check(ranSame == false and mSame._dbVersion == 2,
+    "stored == current must be a no-op without running anything")
+
+-- ── Serialization wire edges: every escape character, separators in keys,
+--        nested tables, empty-table values, and round-trip stability.
+local wireSample = {
+    allEscapes = "a\\b;c=d{e}f",
+    trailing = "end\\",
+    semis = ";;;;",
+    braces = "{{}}",
+    equals = "====",
+    nested = { deep = { deeper = { leaf = "\\;" } }, empty = nil },
+    numericKey = 5,
+    strKey = { ["123"] = "numeric-string key" },
+}
+local encoded = RGX:SerializeTable(wireSample)
+local decoded = RGX:DeserializeTable(encoded)
+check(decoded and decoded.allEscapes == wireSample.allEscapes,
+    "backslash/separator escapes must round-trip")
+check(decoded.trailing == wireSample.trailing, "a trailing backslash must round-trip")
+check(decoded.semis == ";;;;" and decoded.braces == "{{}}" and decoded.equals == "====",
+    "raw separator runs must round-trip")
+check(decoded.nested and decoded.nested.deep and decoded.nested.deep.deeper.leaf == "\\;",
+    "deeply nested escapes must round-trip")
+check(type(decoded.numericKey) == "number" and decoded.numericKey == 5,
+    "a nil table value must not break the tree")
+check(decoded.strKey["123"] == "numeric-string key",
+    "string keys must be escaped and recoverable")
+check(RGX:DeserializeTable("") == nil, "an empty wire string must deserialize to nil")
+check(RGX:DeserializeTable("RGX_DB_v1:T") == nil or type(RGX:DeserializeTable("RGX_DB_v1:T")) == "table",
+    "a malformed body must not crash")
+
+
+__rgxDbTestResult = "FAILED (" .. #failures .. "): " .. table.concat(failures, " | ")
 else
     __rgxDbTestResult = "PASSED"
 end

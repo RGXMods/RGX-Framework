@@ -44,16 +44,16 @@ for _, name in ipairs(bars) do
 end
 ```
 
-### `Textures:GetDefaultBar()` → `string`
+### `Textures:GetDefault()` → `string`
 
 Current default statusbar name. Default: `"Blizzard"`.
 
-### `Textures:SetDefaultBar(name)`
+### `Textures:SetDefault(name)`
 
 Set the default statusbar. Must be a registered name:
 
 ```lua
-Textures:SetDefaultBar("MyBar")
+Textures:SetDefault("MyBar")
 ```
 
 ### `Textures:CreateBarDropdown(parent, opts)` → `table`
@@ -81,14 +81,14 @@ local control = Textures:CreateBarSettingControl(parent, {
 })
 ```
 
-### `Textures:ImportLSM()`
+### `Textures:ImportLibSharedMedia(force?)`
 
 Scan LibSharedMedia-3.0 (if loaded) for statusbar textures and register them. This is called automatically on the first call to `GetBar()`, `ListBars()`, or `CreateBarDropdown()` if LSM is present.
 
 You can call it manually to force a re-scan:
 
 ```lua
-Textures:ImportLSM()
+Textures:ImportLibSharedMedia()
 ```
 
 ---
@@ -117,7 +117,7 @@ To add LSM textures manually at a specific time:
 ```lua
 RGX:OnReady(function()
     local Textures = RGX:GetTextures()
-    Textures:ImportLSM()
+    Textures:ImportLibSharedMedia()
 end)
 ```
 

@@ -27,7 +27,7 @@ import { join, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 import { createDefinitionEngine } from "../../../contract/engine/definition.mjs";
-import { generateAddonLua } from "../../../contract/engine/generate-addon.mjs";
+import { generateAddonLua, generateAddonToc } from "../../../contract/engine/generate-addon.mjs";
 import { createValidateAddon } from "../../../contract/engine/validate-addon.mjs";
 import { createAuditLua } from "../../../contract/engine/audit-lua.mjs";
 
@@ -50,7 +50,15 @@ const DUMP_ROOT = join(FRAMEWORK, ".reference", "wow-api-dump");
 const dumpCaches = new Map();
 
 function loadDumpFlavor(flavorId) {
-  const manifest = JSON.parse(readFileSync(join(DUMP_ROOT, "manifest.json"), "utf8"));
+  let manifest;
+  try {
+    manifest = JSON.parse(readFileSync(join(DUMP_ROOT, "manifest.json"), "utf8"));
+  } catch {
+    throw new Error(
+      "WoW API reference dump is not installed (source-only: .reference/ is excluded from public trees). "
+      + "In a full RGX-Framework checkout run `npm --prefix tools/ci run refs:sync` to populate it."
+    );
+  }
   const entry = manifest.flavors.find((flavor) => flavor.id === flavorId);
   if (!entry || !entry.dumpRef || !entry.path) {
     throw new Error(`Dump flavor '${flavorId}' is unavailable upstream (documented gap) or not synced.`);
@@ -185,6 +193,11 @@ server.tool(
   async ({ path }) => {
     const st = lstatSync(path);
     if (st.isSymbolicLink()) throw new Error("symbolic-link audit roots are not supported");
+    if (!st.isDirectory() && !path.endsWith(".lua")) {
+      // The audit is a Lua source scanner, not a general file reader: keep
+      // every read confined to .lua files the tool is documented to audit.
+      throw new Error("rgx_audit_lua reads .lua files and directories only");
+    }
     const findings = [];
     if (st.isDirectory()) {
       for (const f of walkLuaFiles(path)) {
@@ -211,9 +224,29 @@ server.tool(
   }
 );
 
+const frameworkMinVersionSchema = z.string()
+  .regex(/^\d+\.\d+(\.\d+)?$/, "frameworkMinVersion must be a dotted version like 2.9.0")
+  .optional()
+  .describe("Minimum RGX-Framework version recorded as TOC provenance (## X-RGX-Framework-MinVersion) and enforced by the generated runtime handshake. Defaults to the engine-computed floor for the features used; raise it only when you rely on behavior newer than that.");
+
+const pagesSchema = z.array(
+  z.object({
+    tab: z.string().min(1).optional().describe("Options tab name (default General)"),
+    page: z.string().min(1).describe("Page title"),
+    grid: z.number().int().min(1).max(2).optional().describe("Card-grid column count"),
+    cards: z.array(
+      z.object({
+        card: z.string().min(1).describe("Card title"),
+        columns: z.number().int().min(1).max(2).optional().describe("Internal card column count"),
+        controls: z.array(z.union([z.string(), z.object({}).passthrough()])).min(1),
+      })
+    ).min(1),
+  })
+).min(1).optional().describe("Declarative multi-page/card-grid layout nodes");
+
 server.tool(
   "rgx_generate_addon",
-  "Generate a complete, contract-congruent RGX addon Lua file using ONLY shipped keys (RGXAddon curried form, table-form controls).",
+  "Generate a complete, contract-congruent RGX addon Lua file using ONLY shipped keys (RGXAddon curried form, table-form controls). Output begins with the RGX contract compatibility handshake: it fails clearly when the installed RGX-Framework predates the handshake or the computed minimum framework version.",
   {
     name: z.string().describe("Addon name, e.g. MyAddon"),
     dbName: z.string().optional()
@@ -224,11 +257,20 @@ server.tool(
       z.string().regex(/^(?=.*[^ ])[^\x00-\x1f\x7f]+$/, "timer name must be printable and contain a non-space character"),
       z.number().positive().finite()
     ).optional().describe("Named repeating timers as timer name -> seconds"),
+    compat: z.record(
+      z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/, "compat name must be an identifier"),
+      z.union([
+        z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$/, "compat path must be a dotted global path"),
+        z.array(z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$/, "compat path must be a dotted global path")).min(1),
+      ])
+    ).optional().describe("Declarative compatibility shims as name -> preferred path or ordered path list"),
+    pages: pagesSchema,
+    frameworkMinVersion: frameworkMinVersionSchema,
     db: z.record(z.union([z.string(), z.number(), z.boolean()])).optional()
       .describe("Saved-setting defaults"),
     toggles: z.array(z.string()).optional().describe("db keys to expose as toggles"),
     columns: z.number().int().min(1).max(3).optional()
-      .describe("Local option column-flow count (1-3); full declarative cards/pages remain target work"),
+      .describe("Plain control-list column-flow count (1-3); use pages for declarative card layouts"),
     sliders: z
       .array(z.object({
         key: z.string(),
@@ -267,10 +309,34 @@ server.tool(
   async (spec) => {
     const validate = getValidator();
     const opts = {};
+    // options requires db in the contract (dependentRequired): carry the
+    // declared defaults through so validation and the generated Lua agree.
+    if (spec.db) {
+      opts.db = spec.db;
+    }
     if (spec.every) {
       opts.every = Object.fromEntries(
         Object.entries(spec.every).map(([name, seconds]) => [name, [seconds, { $lua: "function" }]])
       );
+    }
+    if (spec.compat) {
+      opts.compat = spec.compat;
+    }
+    if (spec.pages) {
+      const declarativeTabs = {};
+      for (const page of spec.pages) {
+        const tabName = page.tab ?? "General";
+        const list = declarativeTabs[tabName] ?? (declarativeTabs[tabName] = []);
+        const pageNode = { page: page.page, cards: [] };
+        if (page.grid !== undefined) pageNode.grid = page.grid;
+        for (const card of page.cards) {
+          const cardNode = { card: card.card, controls: card.controls };
+          if (card.columns !== undefined) cardNode.columns = card.columns;
+          pageNode.cards.push(cardNode);
+        }
+        list.push(pageNode);
+      }
+      opts.options = declarativeTabs;
     }
     if (spec.columns !== undefined) {
       opts.options = { columns: spec.columns };
@@ -291,6 +357,24 @@ server.tool(
 );
 
 server.tool(
+  "rgx_generate_addon_toc",
+  "Generate the deterministic TOC file for a consumer addon: RequiredDeps (the real dependency), SavedVariables matching the dbName derivation, title/name from the same canonical spec input, and RGX contract provenance (## X-RGX-Contract-Format plus the engine-computed ## X-RGX-Framework-MinVersion). Pass the same pages/frameworkMinVersion you passed to rgx_generate_addon so both files agree.",
+  {
+    name: z.string().describe("Addon name, e.g. MyAddon"),
+    dbName: z.string().optional()
+      .describe("SavedVariables global override. Defaults to `${name}DB` with non-identifier characters stripped."),
+    title: z.string().optional().describe("TOC Title (defaults to the addon name)"),
+    interface: z.number().int().positive().optional()
+      .describe("TOC Interface value (defaults to 120105)"),
+    db: z.record(z.union([z.string(), z.number(), z.boolean()])).optional()
+      .describe("Saved-setting defaults; presence enables the SavedVariables line"),
+    pages: pagesSchema,
+    frameworkMinVersion: frameworkMinVersionSchema,
+  },
+  async (spec) => ({ content: [{ type: "text", text: generateAddonToc(spec) }] })
+);
+
+server.tool(
   "rgx_get_contract",
   "Return the Simplicity Contract source of truth: the JSON schema plus the shipped-surface reference (DECLARATIVE-API.md).",
   {},
@@ -304,7 +388,7 @@ server.tool(
 
 server.tool(
   "rgx_get_api_catalog",
-  "Return the approved RGX module API catalog (issue #7): per-module getter, global, owner, category, stability, flavors, enumerated methods, and review fields. Optional exact module id filters to one entry. Read-only; the catalog is checked in and verified by framework CI.",
+  "Return the approved RGX module API catalog (issue #7): per-module getter, global, owner, category, stability, flavors, enumerated methods, safety/side-effect categories, and review fields. Optional exact module id filters to one entry. Read-only; the catalog is checked in and verified by framework CI.",
   { module: z.string().optional().describe('Exact module id (for example "auras") to return a single entry') },
   async ({ module: moduleId }) => {
     const catalog = getApiCatalog();

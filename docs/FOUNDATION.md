@@ -40,14 +40,14 @@ The goal is to let someone build a polished WoW addon quickly without first rebu
 
 Existing addons are the design references:
 
-| Addon | Framework Lesson |
+| Reference pattern | Framework lesson |
 |---|---|
-| ETL | Traveler's Log events, lifecycle, minimap, and slash command ergonomics |
-| SQP | large options panels, fonts, nameplate events, and reusable controls |
-| RND | small utility addon pattern with direct events, timers, minimap, and settings |
-| BLU v7 | large sound/progression suite migration and shared media needs |
+| Traveler's-log utility | Traveler's Log events, lifecycle, minimap, and slash command ergonomics |
+| Options-heavy addon | large options panels, fonts, nameplate events, and reusable controls |
+| Small utility addon | direct events, timers, minimap, and settings |
+| Large sound/progression suite | sound categories, progression triggers, and shared media needs |
 
-When one of these addons repeats a pattern that another addon could reuse, that pattern belongs in RGX. When the behavior is product-specific, it stays in the addon.
+When these reference patterns repeat a mechanic that another addon could reuse, that pattern belongs in RGX. When the behavior is product-specific, it stays in the addon.
 
 ## What Is Actually Required
 
@@ -62,7 +62,7 @@ RGX needs:
 - module lookup
 - predictable initialization order
 - a small lifecycle model
-- BLU-style native runtime helpers for shared framework behaviors
+- production-proven native runtime helpers for shared framework behaviors
 
 Why this matters:
 
@@ -84,7 +84,7 @@ Why this matters:
 
 Design note:
 
-- RGX can keep compatibility with BLU-style shared media behavior
+- RGX can keep compatibility with suite-style shared media behavior
 - RGX does not need to literally become Ace/LSM internally to achieve that
 
 ### 3. Event and message dispatch
@@ -106,7 +106,7 @@ Design note:
 
 Related note:
 
-- BLU already proved this direction with its own event/runtime layer, and RGX should absorb that style of native framework capability where it improves simplicity
+- production suites already proved this direction with their own event/runtime layers, and RGX should absorb that style of native framework capability where it improves simplicity
 
 ### 4. SavedVariables and defaults
 
@@ -178,7 +178,7 @@ Why RGX does not need it:
 Decision:
 
 - do not make `LibStub` a core RGX dependency
-- prefer BLU-style native module/runtime services inside RGX over separately embedded version stubs
+- prefer production-proven native module/runtime services inside RGX over separately embedded version stubs
 
 ### CallbackHandler
 

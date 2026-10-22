@@ -48,7 +48,7 @@ RGX-Hello check remains mandatory.
 
 ### Retail restricted-aura acceptance
 
-Use Retail `12.1.0.69283`, record the commit and Framework ZIP SHA-256, enable
+Use Retail `12.1.5.70448`, record the commit and Framework ZIP SHA-256, enable
 `scriptErrors 1` and `taintLog 2`, then follow the Auras-tab procedure in
 [[Auras]]. The scan must report restriction `ACTIVE`; observing only combat is
 insufficient. Both watches must register, and accessible setup must exercise all

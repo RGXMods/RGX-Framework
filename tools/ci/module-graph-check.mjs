@@ -85,7 +85,7 @@ console.log(`TAXONOMY OK ${modules.length} modules declared (libraries ${library
 //   * registry: moduleAliases values + RegisterModule({ global = ... }) names
 const GLOBAL_ALLOWLIST = new Set([
   // core
-  "RGXFramework", "RGXFrameworkDB", "RGXFrameworkDBChar", "RGXAddon",
+  "RGXFramework", "RGXFrameworkDB", "RGXAddon",
   // library modules
   "RGXFonts", "RGXColors", "RGXColorPicker", "RGXTextures", "RGXDropdowns",
   "RGXUI", "RGXDesign", "RGXDisplay", "RGXMinimap", "RGXTooltip", "RGXLocale",

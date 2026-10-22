@@ -1,8 +1,10 @@
 # Agent Guidance — tools/rgx-mcp
 
 Scoped agent guidance for this tool. **Read [`../../AGENTS.md`](../../AGENTS.md)
-first — it is the harness-independent project entry point.** These instructions
-supplement its framework ownership, safety, contract, and verification rules.
+and [`../../docs/MAINTAINER-CONTRACT.md`](../../docs/MAINTAINER-CONTRACT.md)
+first.** The public entry point defines the shared safety and package boundary;
+the maintainer contract defines repository ownership, contract, and verification
+rules. These instructions supplement both.
 
 ## What this is
 

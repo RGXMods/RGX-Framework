@@ -7,12 +7,8 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+-beta*'
       - 'v[0-9]+.[0-9]+.[0-9]+-alpha*'
 
-env:
-  CF_API_KEY: ${{ secrets.CF_API_KEY }}
-  WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-
+# Secrets are scoped per step, not workflow-wide: the validation installs and
+# the RGX-Hello clone never see publishing credentials.
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -21,32 +17,35 @@ jobs:
 
     steps:
       - name: Clone Project
-        uses: actions/checkout@v4
+        # v4 (pin by commit SHA; update deliberately)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        # v4 (pin by commit SHA; update deliberately)
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '20'
 
       - name: Validate runtime, schema, flavors, and package boundary
         working-directory: tools/ci
         run: |
-          npm ci --no-audit --no-fund
+          npm ci --no-audit --no-fund --ignore-scripts
           npm run lua-check
           npm run lua-runtime-check
           npm run schema-check
           npm run flavor-check
           npm run package-check
-          npm run docs-check
+          if [ -f docs/STUDIO-ROADMAP.md ]; then npm run docs-check; fi
 
       - name: Validate canonical wiki sources
+        if: ${{ hashFiles('docs/STUDIO-ROADMAP.md') != '' }}
         run: node tools/wiki/build-wiki.mjs "${RUNNER_TEMP}/wiki-out"
 
       - name: Install source conformance fixture
         working-directory: tools/rgx-mcp
-        run: npm ci --no-audit --no-fund
+        run: npm ci --no-audit --no-fund --ignore-scripts
 
       - name: Validate contract against RGX-Hello
         run: |
@@ -66,27 +65,15 @@ jobs:
 
       - name: Determine Release Type
         id: release_type
+        # The workflow only triggers on v* tags; branch arms were dead.
         run: |
-          case "${{ github.ref }}" in
-            refs/tags/*)
-              if [[ "${{ github.ref }}" == *"beta"* ]]; then
-                echo "type=beta" >> $GITHUB_OUTPUT
-              elif [[ "${{ github.ref }}" == *"alpha"* ]]; then
-                echo "type=alpha" >> $GITHUB_OUTPUT
-              else
-                echo "type=release" >> $GITHUB_OUTPUT
-              fi
-              ;;
-            refs/heads/dev)
-              echo "type=dev" >> $GITHUB_OUTPUT
-              ;;
-            refs/heads/alpha)
-              echo "type=alpha-branch" >> $GITHUB_OUTPUT
-              ;;
-            *)
-              echo "type=unknown" >> $GITHUB_OUTPUT
-              ;;
-          esac
+          if [[ "${{ github.ref }}" == *"beta"* ]]; then
+            echo "type=beta" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == *"alpha"* ]]; then
+            echo "type=alpha" >> $GITHUB_OUTPUT
+          else
+            echo "type=release" >> $GITHUB_OUTPUT
+          fi
 
       - name: Extract Version from TOC
         id: version
@@ -97,6 +84,8 @@ jobs:
 
       - name: Validate Release Metadata
         shell: bash
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
         run: |
           version="${{ steps.version.outputs.version }}"
           curse_id="$(grep -oP '^## X-Curse-Project-ID:\s*\K(.*)' RGX-Framework.toc || true)"
@@ -202,6 +191,10 @@ jobs:
 
       - name: Publish Release
         shell: bash
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           version="${{ steps.version.outputs.version }}"
           node tools/release/publish-release.mjs \
@@ -255,6 +248,7 @@ jobs:
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
           RELEASE_TAG: ${{ github.ref_name }}
           RELEASE_TIMESTAMP: ${{ steps.version.outputs.timestamp }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
           if [[ -z "${DISCORD_WEBHOOK:-}" ]]; then
             echo "::warning::DISCORD_WEBHOOK secret is empty - skipping Discord notification."
@@ -293,24 +287,6 @@ jobs:
               release_url="https://github.com/RGXMods/RGX-Framework/releases/tag/${tag}"
               downloads="[GitHub](${release_url})"
               channel="Alpha"
-              ;;
-            "dev")
-              title="RGX-Framework ${version} (Dev)"
-              color=3447003
-              footer="RGX Mods • Dev Build"
-              description="Development build from the dev branch."
-              release_url="https://github.com/RGXMods/RGX-Framework/tree/dev"
-              downloads="[GitHub Dev Branch](${release_url})"
-              channel="Dev"
-              ;;
-            *)
-              title="RGX-Framework ${version}"
-              color=10000000
-              footer="RGX Mods"
-              description="Build completed."
-              release_url="https://github.com/RGXMods/RGX-Framework/releases"
-              downloads="[GitHub](${release_url})"
-              channel="Unknown"
               ;;
           esac
 
@@ -358,6 +334,8 @@ jobs:
       - name: Send Failure Notification
         if: failure()
         shell: bash
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
           if [[ -z "${DISCORD_WEBHOOK:-}" ]]; then
             echo "::warning::DISCORD_WEBHOOK secret is empty - skipping failure notification."

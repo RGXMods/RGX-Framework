@@ -1,6 +1,6 @@
 -- Runtime scenarios for RGXSharedMedia single-entry registry conveniences.
 -- Executed by tools/ci/sharedmedia-runtime-check.mjs, which has already installed
--- a minimal RGX stand-in and loaded library/sharedmedia/sharedmedia.lua as the
+-- a minimal RGX stand-in and loaded libraries/sharedmedia/sharedmedia.lua as the
 -- global `RGXSharedMedia` (SM).
 --
 -- Covers the acceptance criteria for the SM:RegisterStatusBar convenience:

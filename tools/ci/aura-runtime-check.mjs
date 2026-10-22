@@ -18,7 +18,7 @@ try {
     __coreSource: source("core/core.lua"),
     __eventsSource: source("core/systems/events.lua"),
     __compatSource: source("core/compat.lua"),
-    __aurasSource: source("game/auras/auras.lua"),
+    __aurasSource: source("modules/auras/auras.lua"),
     __testSource: source("tools/ci/aura-runtime-test.lua"),
   });
 
@@ -142,7 +142,7 @@ try {
     loadSource(__coreSource, "core/core.lua")("RGX-Framework", RGX)
     loadSource(__eventsSource, "core/systems/events.lua")("RGX-Framework", RGX)
     loadSource(__compatSource, "core/compat.lua")("RGX-Framework", RGX)
-    loadSource(__aurasSource, "game/auras/auras.lua")("RGX-Framework", RGX)
+    loadSource(__aurasSource, "modules/auras/auras.lua")("RGX-Framework", RGX)
     _G.RGX = RGX
     loadSource(__testSource, "tools/ci/aura-runtime-test.lua")()
   `);

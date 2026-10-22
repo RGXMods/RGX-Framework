@@ -265,7 +265,7 @@ for index, control in ipairs({ "toggle enabled extra", "button nonsense", "slide
     "slider offset 5-1", "slider offset 0-1 0", "dropdown mode low||high", "header 'Title' extra" }) do
     local name = "InvalidControl" .. index
     local handlers = loadHandlerCount()
-    local ok, err = pcall(RGXAddon, name, { slash = name:lower(), options = { General = { control } } })
+    local ok, err = pcall(RGXAddon, name, { slash = name:lower(), db = {}, options = { General = { control } } })
     check(not ok and contains(err, "invalid control string"), "malformed control must explain its rejection")
     check(not RGX:GetAddon(name) and loadHandlerCount() == handlers, "malformed control must not leak registration")
     check(not SlashCmdList[name:upper()], "malformed control must not leak slash registration")

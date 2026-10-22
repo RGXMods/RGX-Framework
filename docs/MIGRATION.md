@@ -21,12 +21,12 @@ Your addon remains a normal addon table with its own branding, saved variables, 
 
 Use the existing RGX-native addons as references:
 
-| Addon | Use As Reference For |
+| Reference pattern | Use As Reference For |
 |---|---|
-| ETL | lifecycle, Traveler's Log events, minimap launchers |
-| SQP | options panels, UI controls, fonts, nameplate-heavy event wiring |
-| RND | small utility addon structure with RGX events/timers/slash/minimap |
-| BLU v7 | larger suite migration, sound categories, media registry pressure |
+| Traveler's-log utility | lifecycle, Traveler's Log events, minimap launchers |
+| Options-heavy addon | options panels, UI controls, fonts, nameplate-heavy event wiring |
+| Small utility addon | direct events/timers/slash/minimap structure |
+| Large suite | broad migration, sound categories, media registry pressure |
 
 The intended migration is incremental: keep the addon working, move one repeated system at a time into RGX, and leave addon-specific behavior in the addon.
 
@@ -183,14 +183,14 @@ Fonts:ApplyStyle(myLabel, db.titleText)
 
 ---
 
-## From BattlePetUtility's Media System
+## From a Legacy Media System
 
 ### Font Registration
 
-**BPU before:**
+**Legacy pattern:**
 
 ```lua
-addon:RegisterMedia("font", "Roboto", "Interface/AddOns/BattlePetUtility/media/fonts/Roboto.ttf")
+addon:RegisterMedia("font", "Roboto", "Interface/AddOns/MyAddon/media/fonts/Roboto.ttf")
 local path = addon:FetchMedia("font", selectedFont)
 ```
 
@@ -205,7 +205,7 @@ No per-addon font registration needed — RGX fonts are already available.
 
 ### Context Menu Fonts
 
-**BPU before:** Build font items manually for UIDropDownMenu context menus.
+**Legacy pattern:** Build font items manually for UIDropDownMenu context menus.
 
 **With RGX:**
 
@@ -217,12 +217,12 @@ local fontItems = Fonts:CreateFontMenuItems({
         addon:RefreshFonts()
     end,
 })
--- dual-schema: func (BPU) + onClick (RGX), menuList (BPU) + children (RGX)
+-- dual-schema: legacy func + RGX onClick, legacy menuList + RGX children
 ```
 
 ### Saved Variables
 
-BPU's saved variable keys are preserved:
+The legacy saved-variable keys are preserved:
 
 - `fontFamily` — font name string
 - `killFontFamily` — font name string
@@ -233,11 +233,11 @@ These can be read by `Fonts:ResolveName(db.fontFamily)` which handles both name 
 
 ---
 
-## From BLU's Systems
+## From a Legacy Suite
 
-**Note:** BLU is ~100% migrated to RGX-Framework (v8.0.1). The one remaining local piece is `core/sounds/sharedmedia.lua`, which will be replaced by `RGXSharedMedia` in the Tier 2 wire-up. This table maps each BLU system to its RGX equivalent.
+**Note:** The reference suite is fully migrated to RGX-Framework. The one remaining local piece is `core/sounds/sharedmedia.lua`, which will be replaced by `RGXSharedMedia` in the Tier 2 wire-up. This table maps each legacy system to its RGX equivalent.
 
-| BLU System | RGX Equivalent | Status |
+| Legacy system | RGX Equivalent | Status |
 |---|---|---|
 | `core/systems/database.lua` | `RGX:NewDatabase(name, defaults, opts)` — profile-aware proxy | Done |
 | `core/sounds/sharedmedia.lua` | `RGXSharedMedia` (enabled v2.0.0) + `Textures:ImportLibSharedMedia()` | Ready to wire |

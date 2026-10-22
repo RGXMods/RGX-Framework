@@ -49,7 +49,7 @@ try {
   annotated.properties.options.properties.columns["x-rgx-ships"] = "tier4";
   annotated.$defs.controlString["x-rgx-ships"] = "tier4";
   const annotationReport = createValidateAddon({ schema: annotated, Ajv: Ajv2020 })({
-    futureFeature: true, on: { login: { $lua: "function" } },
+    futureFeature: true, on: { login: { $lua: "function" } }, db: {},
     options: { columns: 2, General: [{ toggle: "enabled" }, "font titleFont"] },
   });
   if (!annotationReport.valid || JSON.stringify(annotationReport.tier4KeysUsed) !== JSON.stringify(["futureFeature", "options.General[1]", "options.columns"])) {

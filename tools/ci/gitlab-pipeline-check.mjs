@@ -16,6 +16,10 @@ function matches(expression, context) {
     case '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH': return Boolean(context.branch) && context.branch === "main";
     case '$CI_COMMIT_TAG': return Boolean(context.tag);
     case '$CI_COMMIT_TAG =~ /^v/': return Boolean(context.tag) && context.tag.startsWith("v");
+    case '$PUBLIC_MIRROR_ENABLED == "true" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH':
+      return context.publicMirrorEnabled === true && Boolean(context.branch) && context.branch === "main";
+    case '$PUBLIC_MIRROR_ENABLED == "true" && $CI_COMMIT_TAG =~ /^v/':
+      return context.publicMirrorEnabled === true && Boolean(context.tag) && context.tag.startsWith("v");
     default: throw new Error(`Uncovered shared pipeline rule: ${expression}`);
   }
 }
@@ -31,6 +35,7 @@ function selected(job, context) {
 }
 
 let checks = 0;
+for (const publicMirrorEnabled of [true, false]) {
 for (const hasContractTools of [true, false]) {
   for (const scenario of [
     { source: "merge_request_event", branch: "", tag: "", contract: true, mirror: false },
@@ -40,13 +45,13 @@ for (const hasContractTools of [true, false]) {
     { source: "push", branch: "", tag: "nightly-1", contract: true, mirror: false },
     { source: "web", branch: "task/example", tag: "", contract: false, mirror: false },
   ]) {
-    const context = { ...scenario, hasContractTools };
+    const context = { ...scenario, hasContractTools, publicMirrorEnabled };
     const jobs = new Set(Object.entries(config)
       .filter(([name, job]) => name.includes(":") && selected(job, context))
       .map(([name]) => name));
     assert(jobs.has("addon:validate"), `${scenario.source}: missing required addon:validate job`);
     assert.equal(jobs.has("contract:bundle"), scenario.contract && hasContractTools);
-    assert.equal(jobs.has("mirror:github"), scenario.mirror);
+    assert.equal(jobs.has("mirror:github"), scenario.mirror && publicMirrorEnabled);
     for (const name of jobs) {
       for (const dependency of config[name].needs ?? []) {
         const required = typeof dependency === "string" ? dependency : dependency.job;
@@ -55,6 +60,7 @@ for (const hasContractTools of [true, false]) {
     }
     checks++;
   }
+}
 }
 assert.deepEqual(config["contract:bundle"].needs, ["addon:validate"]);
 assert.deepEqual(config["mirror:github"].needs, ["addon:validate"]);
@@ -66,4 +72,24 @@ assert(mirrorScript.includes("refs/tags/${CI_COMMIT_TAG}:refs/tags/${CI_COMMIT_T
 for (const command of config["addon:validate"].script) {
   assert(!/\n\s*&&/.test(command), "YAML folding must not put && at the start of a shell line");
 }
-console.log(`GITLAB PIPELINE RULES OK  ${checks} source/tooling scenarios; required validation preserved`);
+
+// The framework-only full gate set (framework.yml) is included by the
+// framework's own .gitlab-ci.yml, never by consumer addon pipelines.
+const framework = load(readFileSync(join(ROOT, ".gitlab/ci/framework.yml"), "utf8"));
+const gates = framework["framework:gates"];
+assert(gates, "framework pipeline must define framework:gates");
+const gatesScript = gates.script.join("\n");
+for (const gate of [
+  "npm run lua-check",
+  "npm run lua-runtime-check",
+  "npm run schema-check",
+  "npm run docs-check",
+  "npm run flavor-check",
+  "npm run package-check",
+  "npm run arch-check",
+]) {
+  assert(gatesScript.includes(gate), `framework:gates must run ${gate}`);
+}
+assert(gates.rules?.some((rule) => rule.if === '$CI_PIPELINE_SOURCE == "merge_request_event"'),
+  "framework:gates must run on merge request pipelines");
+console.log(`GITLAB PIPELINE RULES OK  ${checks} source/tooling scenarios; framework full gates + required validation preserved; public mirror gated by PUBLIC_MIRROR_ENABLED`);

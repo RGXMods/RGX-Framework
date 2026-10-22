@@ -235,6 +235,37 @@ scenario("pack counts do not inflate across repeated scans", function()
   end
 end)
 
+-- ── scenario 5: a light scan no longer wipes generic-scan results ───────────
+
+scenario("light rescans preserve generic-scan bridge entries", function()
+  SM:Scan(true)
+  local function genericCount()
+    local n = 0
+    for _, entry in pairs(SM.registry["sound"]) do
+      if entry.isBridge and entry.scanSource == "generic" then n = n + 1 end
+    end
+    return n
+  end
+  local fullCount = genericCount()
+  assert(fullCount > 0, "full scan must bridge at least one generic entry")
+
+  -- This is what happens after login on every media-ish ADDON_LOADED:
+  -- a light scan used to wipe every bridge entry, erasing the generic
+  -- results until the next full scan.
+  SM:Scan(false)
+  local lightCount = genericCount()
+  assert(lightCount == fullCount,
+    ("light scan wiped generic results: %d -> %d"):format(fullCount, lightCount))
+
+  -- Repeated light scans stay stable.
+  SM:Scan(false)
+  assert(genericCount() == fullCount, "repeated light scans must stay stable")
+
+  -- A full scan still rebuilds everything it wipes.
+  SM:Scan(true)
+  assert(genericCount() == fullCount, "full scan must repopulate generic results")
+end)
+
 local function render()
   return string.format(
     "SM Scan dedup/self-scan harness: %d passed, %d failed\nRESULT %s",

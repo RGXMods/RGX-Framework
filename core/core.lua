@@ -68,6 +68,131 @@ end
 RGX.version = GetAddOnMetadataCompat(addonName, "Version") or "unknown"
 RGX.debugMode = false
 
+-- Contract compatibility handshake. Contract formats are additive: a
+-- framework that speaks format N also speaks every lower format. This
+-- constant is independent of the framework version so the contract can
+-- evolve without renumbering releases.
+RGX.CONTRACT_FORMAT_VERSION = 1
+
+-- Parse a dotted version string ("2.9.0", "v2.9", "2.10.0-beta.1").
+-- Returns the numeric segments plus an optional prerelease tail, or nil
+-- when the string does not start with a numeric segment.
+local function ParseVersion(value)
+    if type(value) ~= "string" then
+        return nil
+    end
+
+    local text = (value:gsub("^%s+", "")):gsub("%s+$", "")
+    text = (text:gsub("^v", ""))
+
+    local segments = {}
+    local prerelease = nil
+    local index = 1
+    while index <= #text do
+        local number = text:match("^%d+", index)
+        if number then
+            segments[#segments + 1] = tonumber(number)
+            index = index + #number
+        elseif text:sub(index, index) == "." and #segments > 0 then
+            index = index + 1
+            if not text:match("^%d", index) then
+                local tail = text:sub(index)
+                if tail ~= "" then
+                    prerelease = tail
+                end
+                break
+            end
+        else
+            if #segments == 0 then
+                return nil
+            end
+            prerelease = text:sub(index)
+            break
+        end
+    end
+
+    if #segments == 0 then
+        return nil
+    end
+
+    return segments, prerelease
+end
+
+-- Compare two dotted version strings. Returns -1, 0, or 1; nil when
+-- either side cannot be parsed. Missing segments count as zero
+-- ("2.9" == "2.9.0") and a prerelease tail sorts before the same
+-- version without one.
+function RGX:CompareVersions(left, right)
+    local leftSegments, leftPrerelease = ParseVersion(left)
+    local rightSegments, rightPrerelease = ParseVersion(right)
+    if not leftSegments or not rightSegments then
+        return nil
+    end
+
+    local count = math.max(#leftSegments, #rightSegments)
+    for index = 1, count do
+        local leftValue = leftSegments[index] or 0
+        local rightValue = rightSegments[index] or 0
+        if leftValue < rightValue then return -1 end
+        if leftValue > rightValue then return 1 end
+    end
+
+    if leftPrerelease and not rightPrerelease then return -1 end
+    if rightPrerelease and not leftPrerelease then return 1 end
+    if leftPrerelease and rightPrerelease then
+        if leftPrerelease < rightPrerelease then return -1 end
+        if leftPrerelease > rightPrerelease then return 1 end
+    end
+
+    return 0
+end
+
+-- Additive capability query: can this framework consume a consumer
+-- authored against the given contract format? Non-integer, sub-1, or
+-- unknown values are simply unsupported -- the query never errors.
+function RGX:SupportsContract(formatVersion)
+    return type(formatVersion) == "number"
+        and formatVersion >= 1
+        and math.floor(formatVersion) == formatVersion
+        and formatVersion <= self.CONTRACT_FORMAT_VERSION
+end
+
+-- Compatibility guard for generated consumers. Returns true when the
+-- installed framework speaks the requested contract format and meets the
+-- optional framework floor; otherwise errors with one clear message so an
+-- old framework fails loudly instead of silently ignoring behavior.
+function RGX:RequireContract(addonName, formatVersion, minFrameworkVersion)
+    local consumer = tostring(addonName or "RGX consumer")
+    if type(formatVersion) ~= "number"
+        or math.floor(formatVersion) ~= formatVersion
+        or formatVersion < 1 then
+        error(string.format(
+            "%s requested an invalid RGX contract format (%s).",
+            consumer, tostring(formatVersion)), 2)
+    end
+
+    if formatVersion > self.CONTRACT_FORMAT_VERSION then
+        error(string.format(
+            "%s requires RGX contract format %d; this RGX-Framework supports format %d. Update RGX-Framework.",
+            consumer, formatVersion, self.CONTRACT_FORMAT_VERSION), 2)
+    end
+
+    if minFrameworkVersion ~= nil then
+        local comparison = self:CompareVersions(self.version, minFrameworkVersion)
+        if comparison == nil then
+            error(string.format(
+                "%s requires RGX-Framework %s or newer; the installed RGX-Framework reports version %s and could not be verified. Update RGX-Framework.",
+                consumer, tostring(minFrameworkVersion), tostring(self.version)), 2)
+        elseif comparison < 0 then
+            error(string.format(
+                "%s requires RGX-Framework %s or newer; installed RGX-Framework is %s. Update RGX-Framework.",
+                consumer, tostring(minFrameworkVersion), tostring(self.version)), 2)
+        end
+    end
+
+    return true
+end
+
 -- Module storage
 RGX.modules = {}
 RGX.loadedModules = {}
@@ -178,8 +303,10 @@ function RGX:RequireModule(name)
     local module = self:GetModule(name)
     if not module then
         local msg = string.format("[RGX] RequireModule: '%s' not loaded", tostring(name))
+        -- A throwing error-display addon must not turn a missing-module
+        -- report into an error in the caller's frame.
         if type(_G.geterrorhandler) == "function" then
-            _G.geterrorhandler()(msg)
+            pcall(_G.geterrorhandler(), msg)
         else
             self:Error(msg)
         end
@@ -400,6 +527,91 @@ local function CompileDeclarativeEvery(timers)
     return compiled
 end
 
+local function ResolveCompatPath(path)
+    if type(path) ~= "string" or path == "" then return nil end
+    if path:sub(1, 1) == "." or path:sub(-1) == "." or path:find("%.%.") then return nil end
+    local node = _G
+    for segment in path:gmatch("[^%.]+") do
+        if type(node) ~= "table" then return nil end
+        node = node[segment]
+    end
+    if type(node) == "function" then return node end
+    return nil
+end
+
+-- Declarative compatibility shims: each entry names one or more global API
+-- paths (for example "C_GossipInfo.GetAvailableQuests" or
+-- "GetGossipAvailableQuests"); the first callable path on the current client
+-- wins, and an optional normalize function receives the raw return values.
+-- A declaration whose paths are all absent fails before the addon registers,
+-- so the wrong-API-for-expansion class cannot reach runtime.
+local function CompileDeclarativeCompat(declarations)
+    if declarations == nil then return nil end
+    if type(declarations) ~= "table" then
+        error("RGXAddon: 'compat' must be a table of name = path declarations", 3)
+    end
+
+    local compiled = {}
+    for name, declaration in pairs(declarations) do
+        if type(name) ~= "string" or not name:match("^[%a_][%a%d_]*$") then
+            error("RGXAddon: compat name must be a non-empty identifier", 3)
+        end
+
+        local paths
+        local normalize
+        if type(declaration) == "string" then
+            paths = { declaration }
+        elseif type(declaration) == "table" then
+            paths = {}
+            if type(declaration.prefer) == "string" then
+                paths[#paths + 1] = declaration.prefer
+                if type(declaration.fallback) == "string" then
+                    paths[#paths + 1] = declaration.fallback
+                end
+            elseif type(rawget(declaration, 1)) == "string" then
+                for index = 1, #declaration do
+                    if type(declaration[index]) ~= "string" then
+                        error("RGXAddon: 'compat." .. name .. "' path list must contain only strings", 3)
+                    end
+                    paths[#paths + 1] = declaration[index]
+                end
+            else
+                error("RGXAddon: 'compat." .. name .. "' must declare at least one API path", 3)
+            end
+            normalize = declaration.normalize
+        else
+            error("RGXAddon: 'compat." .. name .. "' must be a path, path list, or prefer/fallback table", 3)
+        end
+
+        if #paths == 0 then
+            error("RGXAddon: 'compat." .. name .. "' must declare at least one API path", 3)
+        end
+        if normalize ~= nil and type(normalize) ~= "function" then
+            error("RGXAddon: normalize for 'compat." .. name .. "' must be a function", 3)
+        end
+
+        local selected
+        for index = 1, #paths do
+            selected = ResolveCompatPath(paths[index])
+            if selected then break end
+        end
+        if not selected then
+            error("RGXAddon: 'compat." .. name .. "' has no callable path on this client", 3)
+        end
+
+        if normalize then
+            compiled[name] = function(...)
+                return normalize(selected(...))
+            end
+        else
+            compiled[name] = function(...)
+                return selected(...)
+            end
+        end
+    end
+    return compiled
+end
+
 local function BindDeclarativeEvery(addon, timers)
     if not timers then return end
 
@@ -478,6 +690,105 @@ local function CompileDeclarativeColumns(options)
     return columns
 end
 
+-- Declarative page/card layout: a tab that uses pages contains only page
+-- nodes. Each page holds a 1-2 column card grid; each card holds controls.
+-- Structural errors (and nested one-line strings) are rejected before the
+-- addon registers, mirroring every/options.columns validation.
+local function IsDeclarativePageNode(entry)
+    return type(entry) == "table" and type(entry.page) == "string"
+end
+
+local DECLARATIVE_CONTROL_KINDS = {
+    toggle = true, slider = true, panel_alpha = true, textbox = true,
+    color = true, font = true, dropdown = true, button = true, section = true,
+}
+
+local function ValidateDeclarativeLayoutControls(owner, pageName, cardName, controls, compiledStrings)
+    if type(controls) ~= "table" then
+        error("RGXAddon: controls for '" .. cardName .. "' on page '" .. pageName .. "' must be a table", 3)
+    end
+    if #controls == 0 then
+        error("RGXAddon: card '" .. cardName .. "' on page '" .. pageName .. "' must contain at least one control", 3)
+    end
+    for index = 1, #controls do
+        local control = controls[index]
+        if control == nil then
+            error("RGXAddon: control list for card '" .. cardName .. "' on page '" .. pageName
+                .. "' has a hole at position " .. index, 3)
+        end
+        if type(control) == "string" then
+            compiledStrings[control] = ParseInlineControl(control, owner)
+        elseif type(control) == "table" then
+            if type(control.page) == "string" or type(control.card) == "string" then
+                error("RGXAddon: pages and cards cannot nest inside '" .. cardName .. "'", 3)
+            end
+            -- A table control must name exactly one recognized kind. An
+            -- empty table or a typo'd key ({ toogle = "x" }) previously
+            -- passed validation and then silently rendered nothing.
+            local kinds = {}
+            for key in pairs(control) do
+                if DECLARATIVE_CONTROL_KINDS[key] then
+                    kinds[#kinds + 1] = key
+                end
+            end
+            if #kinds == 0 then
+                error("RGXAddon: unrecognized control table in card '" .. cardName .. "' on page '"
+                    .. pageName .. "'; expected exactly one of toggle, slider, panel_alpha, textbox, "
+                    .. "color, font, dropdown, button, section", 3)
+            end
+            if #kinds > 1 then
+                error("RGXAddon: control table in card '" .. cardName .. "' on page '" .. pageName
+                    .. "' declares multiple kinds (" .. table.concat(kinds, ", ") .. ")", 3)
+            end
+            if control.button ~= nil and type(control.action) ~= "function" then
+                error("RGXAddon: button control in card '" .. cardName .. "' requires an action function", 3)
+            end
+        else
+            error("RGXAddon: controls for '" .. cardName .. "' must be control tables or strings", 3)
+        end
+    end
+end
+
+local function CompileDeclarativeLayout(options, owner, compiledStrings)
+    if type(options) ~= "table" then return end
+    for tabName, controls in pairs(options) do
+        if tabName ~= "columns" and type(controls) == "table" then
+            local pageCount = 0
+            for _, entry in ipairs(controls) do
+                if IsDeclarativePageNode(entry) then pageCount = pageCount + 1 end
+            end
+            if pageCount > 0 then
+                if options.columns ~= nil then
+                    error("RGXAddon: options.columns cannot be combined with page layouts", 3)
+                end
+                if pageCount ~= #controls then
+                    error("RGXAddon: options tab '" .. tostring(tabName) .. "' cannot mix pages with controls", 3)
+                end
+                for _, page in ipairs(controls) do
+                    if page.page == "" then
+                        error("RGXAddon: page names must be non-empty", 3)
+                    end
+                    if page.grid ~= nil and page.grid ~= 1 and page.grid ~= 2 then
+                        error("RGXAddon: grid for page '" .. page.page .. "' must be 1 or 2", 3)
+                    end
+                    if type(page.cards) ~= "table" or #page.cards == 0 then
+                        error("RGXAddon: page '" .. page.page .. "' must contain at least one card", 3)
+                    end
+                    for _, card in ipairs(page.cards) do
+                        if type(card) ~= "table" or type(card.card) ~= "string" or card.card == "" then
+                            error("RGXAddon: page '" .. page.page .. "' cards must use a non-empty card title", 3)
+                        end
+                        if card.columns ~= nil and card.columns ~= 1 and card.columns ~= 2 then
+                            error("RGXAddon: columns for card '" .. card.card .. "' must be 1 or 2", 3)
+                        end
+                        ValidateDeclarativeLayoutControls(owner, page.page, card.card, card.controls, compiledStrings)
+                    end
+                end
+            end
+        end
+    end
+end
+
 function RGX.Addon(name, opts)
     if type(name) ~= "string" or name == "" then return end
     if opts == nil then
@@ -487,7 +798,18 @@ function RGX.Addon(name, opts)
     end
     local RGX = _G.RGXFramework
     local declarativeEvery = CompileDeclarativeEvery(opts.every)
+    local declarativeCompat = CompileDeclarativeCompat(opts.compat)
     local declarativeColumns = CompileDeclarativeColumns(opts.options)
+
+    -- options requires db: the panel and every db-bound control need the
+    -- database the declarative contract promises. Failing at registration
+    -- beats building nothing silently at ADDON_LOADED. A pre-existing table
+    -- that already carries its own .db is the imperative escape hatch.
+    if type(opts.options) == "table" and opts.db == nil
+        and not (type(opts.table) == "table" and type(opts.table.db) == "table") then
+        error("RGXAddon: '" .. name .. "' declares options without db; "
+            .. "options controls bind to addon.db, so pass db = { ... }", 2)
+    end
 
     if RGX._addons and RGX._addons[name] then
         error("RGXAddon: addon '" .. name .. "' is already registered", 2)
@@ -512,6 +834,7 @@ function RGX.Addon(name, opts)
                 compiledOptions[tab] = controls
             end
         end
+        CompileDeclarativeLayout(opts.options, addon, compiledStrings)
     end
     addon.name = name
     RGX._addons = RGX._addons or {}
@@ -519,6 +842,12 @@ function RGX.Addon(name, opts)
     addon._rgxEventIds = addon._rgxEventIds or {}
     addon._rgxUnitEventIds = addon._rgxUnitEventIds or {}
     addon._rgxMessageIds = addon._rgxMessageIds or {}
+    if declarativeCompat then
+        addon.compat = addon.compat or {}
+        for name, shim in pairs(declarativeCompat) do
+            addon.compat[name] = shim
+        end
+    end
 
     -- Brand
     local color = type(opts.brand) == "string" and opts.brand or "58be81"
@@ -669,7 +998,8 @@ function RGX.Addon(name, opts)
         RGX:RegisterSlashCommand(cmds, function(msg)
             if customHandler then customHandler(addon, msg) return end
             if addon.panel then addon.panel:Open() return end
-            addon:Print((cmds[1] or "?") .. " v?")
+            addon:Print("no options panel is configured; pass a custom handler "
+                .. "via slash = { handler = function(addon, msg) ... } }")
         end, name:upper())
     end
 
@@ -767,7 +1097,7 @@ function RGX.Addon(name, opts)
 
         BindDeclarativeEvery(addon, declarativeEvery)
         -- Declarative welcome is a login message: it uses the framework chat
-        -- prefix and obeys the global login-message preference (/rgx login off).
+        -- prefix and obeys the global login-message preference (/rgxf login off).
         if opts.welcome then RGX:LoginMessage(opts.welcome) end
         if opts.onInit then opts.onInit(addon) end
         RGX:UnregisterEvent("ADDON_LOADED", name .. "_RGXAddon")

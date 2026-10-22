@@ -1,6 +1,6 @@
 # ColorPicker — `RGXColorPicker`
 
-A custom RGX HSV color picker (`library/colors/colorpicker.lua`). The panel is a honeycomb spectrum plus a vertical brightness bar, styled with [[RGXDesign|Theming]] tokens: ring-and-fill drag handles, a live class-color row, circular swatches/preview, and themed focus states. The separate `Colors:OpenPicker()` API opens Blizzard's picker.
+A custom RGX HSV color picker (`libraries/colors/colorpicker.lua`). The panel is a honeycomb spectrum plus a vertical brightness bar, styled with [[RGXDesign|Theming]] tokens: ring-and-fill drag handles, a live class-color row, circular swatches/preview, and themed focus states. The separate `Colors:OpenPicker()` API opens Blizzard's picker.
 
 ---
 
@@ -43,12 +43,12 @@ The frame is a singleton, so the scale resets to `1` on every `Show` without
 the key; non-numeric or non-positive values are ignored.
 
 `opts.border` (`{r, g, b}` or `{r=, g=, b=}`) outlines the dialog in a
-consumer brand color — e.g. SQP green `{ 0.345, 0.745, 0.506 }`. Omitted,
+consumer brand color — e.g. a green `{ 0.345, 0.745, 0.506 }`. Omitted,
 the design border token returns. The outline is four solid quads (the 1px
 backdrop edge drops sides under fractional dialog scale); the backdrop
 edge itself stays transparent.
 
-The SQP minimal popup is honeycomb + brightness bar + one-line class row
+The compact popup is honeycomb + brightness bar + one-line class row
 with a single OK:
 `{ presets = false, rgb = false, preview = false, scale = 0.85, buttons = "ok" }`.
 
