@@ -1,0 +1,632 @@
+--[[
+    RGX-Framework - Cross-Version Compatibility Layer
+    
+    Provides API shims and version detection for WoW Classic Era, TBC, Wrath,
+    Cataclysm, MoP, and Retail.
+]]
+
+local addonName, RGX = ...
+
+local interfaceVersion = 0
+if type(GetBuildInfo) == "function" then
+    local _, _, _, tocVersion = GetBuildInfo()
+    interfaceVersion = tonumber(tocVersion) or 0
+end
+RGX.interfaceVersion = interfaceVersion
+
+-- Version detection. Forever reports WOW_PROJECT_CAMELOT (18); the constant
+-- may be renamed upstream, so the nil guard keeps old clients misdetect-free.
+local function GetWoWVersion()
+    local projectID = WOW_PROJECT_ID
+    if WOW_PROJECT_CAMELOT ~= nil and projectID == WOW_PROJECT_CAMELOT then
+        return "forever"
+    end
+    if projectID == WOW_PROJECT_CLASSIC then return "classic_era" end
+    if projectID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC then return "tbc" end
+    if projectID == WOW_PROJECT_WRATH_CLASSIC then return "wrath" end
+    if projectID == WOW_PROJECT_CATACLYSM_CLASSIC then return "cata" end
+    if projectID == WOW_PROJECT_MISTS_CLASSIC then return "mists" end
+    if projectID == WOW_PROJECT_MAINLINE then return "retail" end
+    return "unknown"
+end
+
+RGX.wowVersion = GetWoWVersion()
+RGX.isRetail = (RGX.wowVersion == "retail")
+RGX.isClassic = (RGX.wowVersion ~= "retail")
+RGX.isClassicEra = (RGX.wowVersion == "classic_era")
+RGX.isTBC = (RGX.wowVersion == "tbc")
+RGX.isWrath = (RGX.wowVersion == "wrath")
+RGX.isCata = (RGX.wowVersion == "cata")
+RGX.isMists = (RGX.wowVersion == "mists")
+-- WoW Forever is a Classic beta product (branch 1.60.x) that reports the
+-- Retail-era API surface at Interface 16001. Treat this as an API capability,
+-- never as a fixed client build.
+RGX.isForever = RGX.interfaceVersion >= 16000 and RGX.interfaceVersion < 17000
+
+local function HasFunction(namespace, name)
+    return type(namespace) == "table" and type(namespace[name]) == "function"
+end
+
+local function HasEvent(name)
+    if HasFunction(C_EventUtils, "IsEventValid") then
+        return C_EventUtils.IsEventValid(name) == true
+    end
+    -- Fallback for clients without the validation API. Every supported flavor
+    -- (Retail, Classic Era, TBC, Wrath/Titan, Cataclysm, Mists) ships
+    -- C_EventUtils.IsEventValid, so this path is unreachable on those clients.
+    -- Capability decisions that affect protected behavior (e.g. combatLogEvent)
+    -- must NOT rely on this fallback; they gate on explicit flavor knowledge.
+    return true
+end
+
+RGX.Capabilities = {
+    events = HasFunction(C_EventUtils, "IsEventValid"),
+    modernAuras = HasFunction(C_UnitAuras, "GetAuraDataByIndex"),
+    playerAuraBySpell = HasFunction(C_UnitAuras, "GetPlayerAuraBySpellID"),
+    unitAuraBySpell = HasFunction(C_UnitAuras, "GetUnitAuraBySpellID"),
+    auraByInstance = HasFunction(C_UnitAuras, "GetAuraDataByAuraInstanceID"),
+    auraSecrecy = HasFunction(C_Secrets, "HasSecretRestrictions")
+        and HasFunction(C_Secrets, "ShouldAurasBeSecret"),
+    valueAccessPredicate = type(canaccessvalue) == "function" or type(issecretvalue) == "function",
+    tableAccessPredicate = type(canaccesstable) == "function" or type(issecrettable) == "function",
+    modernQuestLog = HasFunction(C_QuestLog, "GetNumQuestLogEntries") and HasFunction(C_QuestLog, "GetInfo"),
+    legacyQuestLog = type(GetNumQuestLogEntries) == "function" and type(GetQuestLogTitle) == "function",
+    modernReputation = HasFunction(C_Reputation, "GetNumFactions") and HasFunction(C_Reputation, "GetFactionDataByIndex"),
+    legacyReputation = type(GetNumFactions) == "function" and type(GetFactionInfo) == "function",
+    achievements = HasEvent("ACHIEVEMENT_EARNED"),
+    petBattles = HasFunction(C_PetBattles, "GetHealth") and HasEvent("PET_BATTLE_OPENING_START"),
+    modernHonor = type(UnitHonorLevel) == "function" and HasEvent("HONOR_LEVEL_UPDATE"),
+    legacyHonor = HasEvent("HONOR_XP_UPDATE") or HasEvent("PLAYER_PVP_RANK_CHANGED"),
+    renown = HasFunction(C_MajorFactions, "GetMajorFactionIDs") and HasFunction(C_MajorFactions, "GetMajorFactionData") and HasEvent("MAJOR_FACTION_RENOWN_LEVEL_CHANGED"),
+    delves = HasFunction(C_DelvesUI, "GetFactionForCompanion") or HasFunction(C_DelvesUI, "GetDelvesFactionForSeason"),
+    housing = HasEvent("CURRENT_HOUSE_INFO_RECIEVED") and (type(C_Housing) == "table" or type(C_HousingDecor) == "table"),
+    tradingPost = HasFunction(C_PerksProgram, "GetCurrencyAmount") and HasEvent("PERKS_PROGRAM_CURRENCY_REFRESH"),
+    prey = HasFunction(C_QuestLog, "GetActivePreyQuest") and HasEvent("UPDATE_UI_WIDGET"),
+    -- Interface 12 clients reject addon-side CLEU registration even when the
+    -- product flavor reports Classic. Event documentation does not describe
+    -- registration safety, so retain the explicit interface capability gate.
+    combatLogEvent = RGX.interfaceVersion < 120000
+        and (RGX.isClassicEra or RGX.isTBC or RGX.isWrath or RGX.isCata or RGX.isMists),
+    settings = HasFunction(Settings, "RegisterCanvasLayoutCategory") and HasFunction(Settings, "RegisterAddOnCategory") and HasFunction(Settings, "OpenToCategory"),
+    menuUtil = HasFunction(MenuUtil, "CreateContextMenu"),
+}
+
+function RGX:HasCapability(name)
+    return self.Capabilities[name] == true
+end
+
+-- Module load gating is capability-first: a module registers only when the
+-- client's own global surface contains what the module drives. Decisions are
+-- evidence-coded against the Ketho client dumps (Resources/GlobalAPI.lua):
+--   housing      C_Housing                        retail only
+--   delves       C_DelvesUI                       retail only
+--   tradingpost  C_PerksProgram                   retail only
+--   collectibles C_ToyBox/C_MountJournal          retail only
+--   prey         C_QuestLog.GetActivePreyQuest    retail + forever beta
+-- Deliberately keying on the namespace function keeps this correct even as
+-- flavor builds change; Blizzard's typo'd CURRENT_HOUSE_INFO_RECIEVED event
+-- exists on every flavor and is NOT a housing signal by itself.
+function RGX:ModuleSupported(name)
+    if name == "housing" then return type(C_Housing) == "table" or type(C_HousingDecor) == "table" end
+    if name == "delves" then return HasFunction(C_DelvesUI, "GetFactionForCompanion") or HasFunction(C_DelvesUI, "GetDelvesFactionForSeason") end
+    if name == "tradingpost" then return HasFunction(C_PerksProgram, "GetCurrencyAmount") end
+    if name == "collectibles" then return type(C_ToyBox) == "table" or type(C_MountJournal) == "table" end
+    if name == "prey" then return HasFunction(C_QuestLog, "GetActivePreyQuest") end
+    -- Unlisted modules are framework-structural and load everywhere.
+    return true
+end
+
+function RGX:HasEvent(name)
+    return HasEvent(name)
+end
+
+function RGX:CreateCompatibleFrame(frameType, name, parent, preferredTemplate, fallbackTemplate)
+    if preferredTemplate then
+        local ok, frame = pcall(CreateFrame, frameType, name, parent, preferredTemplate)
+        if ok and frame then return frame, true end
+    end
+    return CreateFrame(frameType, name, parent, fallbackTemplate), false
+end
+
+-- API shims for Classic (Retail APIs that don't exist on Classic).
+-- Deliberately NO C_AddOns global polyfill: creating _G.C_AddOns on clients
+-- without it made other addons misdetect the client (the only global leak the
+-- audit found). Every framework call site that reads C_AddOns.* carries its
+-- own legacy fallback (GetAddOnMetadata / LoadAddOn / IsAddOnLoaded /
+-- GetNumAddOns / GetAddOnInfo), so those branches own the Classic paths and
+-- the unified RGX.API wrappers below resolve identically either way.
+
+-- Safe API wrappers (return nil if API doesn't exist). Preserve any wrappers
+-- an earlier compat file already installed; this table is shared state.
+RGX.API = RGX.API or {}
+
+function RGX.API.GetAddOnMetadata(name, field)
+    if C_AddOns and C_AddOns.GetAddOnMetadata then
+        return C_AddOns.GetAddOnMetadata(name, field)
+    end
+    return GetAddOnMetadata and GetAddOnMetadata(name, field)
+end
+
+function RGX.API.LoadAddOn(name)
+    if C_AddOns and C_AddOns.LoadAddOn then
+        return C_AddOns.LoadAddOn(name)
+    end
+    return LoadAddOn and LoadAddOn(name)
+end
+
+function RGX.API.IsAddOnLoaded(name)
+    if C_AddOns and C_AddOns.IsAddOnLoaded then
+        return C_AddOns.IsAddOnLoaded(name)
+    end
+    return IsAddOnLoaded and IsAddOnLoaded(name)
+end
+
+function RGX.API.GetQuestLogTitle(index)
+    if C_QuestLog and C_QuestLog.GetTitleForLogIndex then
+        return C_QuestLog.GetTitleForLogIndex(index)
+    end
+    return GetQuestLogTitle and GetQuestLogTitle(index)
+end
+
+function RGX.API.GetNumQuestLogEntries()
+    if C_QuestLog and C_QuestLog.GetNumQuestLogEntries then
+        return C_QuestLog.GetNumQuestLogEntries()
+    end
+    return GetNumQuestLogEntries and GetNumQuestLogEntries()
+end
+
+function RGX.API.GetQuestLogIndexByID(questID)
+    if C_QuestLog and C_QuestLog.GetLogIndexForQuestID then
+        return C_QuestLog.GetLogIndexForQuestID(questID)
+    end
+    return GetQuestLogIndexByID and GetQuestLogIndexByID(questID)
+end
+
+function RGX.API.GetQuestObjectives(questID)
+    if C_QuestLog and C_QuestLog.GetQuestObjectives then
+        return C_QuestLog.GetQuestObjectives(questID)
+    end
+    return nil
+end
+
+function RGX.API.IsQuestTask(questID)
+    if C_QuestLog and C_QuestLog.IsQuestTask then
+        return C_QuestLog.IsQuestTask(questID)
+    end
+    return false
+end
+
+function RGX.API.GetQuestInfoByQuestID(questID)
+    if C_TaskQuest and C_TaskQuest.GetQuestInfoByQuestID then
+        return C_TaskQuest.GetQuestInfoByQuestID(questID)
+    end
+    return nil
+end
+
+function RGX.API.GetNamePlateForUnit(unit)
+    if C_NamePlate and C_NamePlate.GetNamePlateForUnit then
+        return C_NamePlate.GetNamePlateForUnit(unit)
+    end
+    return nil
+end
+
+function RGX.API.GetNamePlates()
+    if C_NamePlate and C_NamePlate.GetNamePlates then
+        return C_NamePlate.GetNamePlates()
+    end
+    return {}
+end
+
+local function SecretPredicate(name, ...)
+    if type(C_Secrets) ~= "table" or type(C_Secrets[name]) ~= "function" then
+        return nil
+    end
+
+    local ok, result = pcall(C_Secrets[name], ...)
+    if not ok or type(result) ~= "boolean" then
+        return nil
+    end
+    return result
+end
+
+-- A client is secret-capable only when it actually ships the secret-value
+-- machinery. Clients without it (the 4.4.2 Cataclysm contract, the WoW Forever
+-- beta) cannot produce secret values at all.
+local function SecretMachineryPresent()
+    if type(canaccessvalue) == "function"
+        or type(issecretvalue) == "function"
+        or type(canaccesstable) == "function"
+        or type(issecrettable) == "function" then
+        return true
+    end
+    return type(C_Secrets) == "table"
+end
+
+function RGX.API.HasSecretRestrictions()
+    local restricted = SecretPredicate("HasSecretRestrictions")
+    if type(restricted) == "boolean" then
+        return restricted
+    end
+
+    -- The supported 4.4.2 Cataclysm contract predates secret values entirely.
+    if RGX.isCata then
+        return false
+    end
+
+    -- docs/AURAS.md: a contract with no secret-value system preserves
+    -- unrestricted behavior; only an unknown or partially supported
+    -- secret-capable environment fails closed.
+    if not SecretMachineryPresent() then
+        return false
+    end
+    return nil
+end
+
+local function AuraSecretPredicate(name, ...)
+    local restrictions = RGX.API.HasSecretRestrictions()
+    if restrictions == false then
+        return false
+    end
+    if restrictions ~= true then
+        return nil
+    end
+    return SecretPredicate(name, ...)
+end
+
+function RGX.API.ShouldAurasBeSecret()
+    return AuraSecretPredicate("ShouldAurasBeSecret")
+end
+
+function RGX.API.ShouldSpellCooldownBeSecret(spellID)
+    if not RGX.API.CanAccessValue(spellID) or type(spellID) ~= "number" then
+        return nil
+    end
+    return AuraSecretPredicate("ShouldSpellCooldownBeSecret", spellID)
+end
+
+function RGX.API.ShouldUnitAuraIndexBeSecret(unit, index, filter)
+    if not RGX.API.CanAccessValue(unit) or type(unit) ~= "string" or unit == "" then
+        return nil
+    end
+    if not RGX.API.CanAccessValue(index) or type(index) ~= "number" then
+        return nil
+    end
+    if type(filter) ~= "nil" and not RGX.API.CanAccessValue(filter) then
+        return nil
+    end
+    return AuraSecretPredicate("ShouldUnitAuraIndexBeSecret", unit, index, filter)
+end
+
+function RGX.API.ShouldUnitAuraInstanceBeSecret(unit, auraInstanceID)
+    if not RGX.API.CanAccessValue(unit) or type(unit) ~= "string" or unit == "" then
+        return nil
+    end
+    if not RGX.API.CanAccessValue(auraInstanceID) or type(auraInstanceID) ~= "number" then
+        return nil
+    end
+    return AuraSecretPredicate("ShouldUnitAuraInstanceBeSecret", unit, auraInstanceID)
+end
+
+function RGX.API.UnitAura(unit, index, filter)
+    if not RGX.API.CanAccessValue(unit) or type(unit) ~= "string" or unit == "" then
+        return nil, "restricted"
+    end
+    if not RGX.API.CanAccessValue(index) or type(index) ~= "number" then
+        return nil, "restricted"
+    end
+    if type(filter) ~= "nil" and not RGX.API.CanAccessValue(filter) then
+        return nil, "restricted"
+    end
+    if RGX.API.ShouldUnitAuraIndexBeSecret(unit, index, filter) ~= false then
+        return nil, "restricted"
+    end
+
+    if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
+        local ok, auraData = pcall(C_UnitAuras.GetAuraDataByIndex, unit, index, filter)
+        if not ok then return nil, "restricted" end
+        if type(auraData) == "nil" then return nil, "missing" end
+        if not RGX.API.CanAccessTable(auraData) then return nil, "restricted" end
+        return auraData, "accessible"
+    end
+    if type(UnitAura) ~= "function" then return nil, "restricted" end
+    local name, icon, applications, dispelName, duration, expirationTime,
+        sourceUnit, isStealable, _, spellId, canApplyAura, isBossAura,
+        castByPlayer, nameplateShowAll, timeMod = UnitAura(unit, index, filter)
+    if type(name) == "nil" then return nil, "missing" end
+    if not RGX.API.CanAccessValue(name) then return nil, "restricted" end
+    return {
+        name = name,
+        icon = icon,
+        applications = applications,
+        dispelName = dispelName,
+        duration = duration,
+        expirationTime = expirationTime,
+        sourceUnit = sourceUnit,
+        isStealable = isStealable,
+        spellId = spellId,
+        canApplyAura = canApplyAura,
+        isBossAura = isBossAura,
+        isFromPlayerOrPlayerPet = castByPlayer,
+        nameplateShowAll = nameplateShowAll,
+        timeMod = timeMod,
+    }, "accessible"
+end
+
+function RGX.API.GetPlayerAuraBySpellID(spellID)
+    if not RGX.API.CanAccessValue(spellID) or type(spellID) ~= "number" then
+        return nil
+    end
+    if C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID then
+        local ok, auraData = pcall(C_UnitAuras.GetPlayerAuraBySpellID, spellID)
+        if not ok or type(auraData) == "nil" or not RGX.API.CanAccessTable(auraData) then
+            return nil
+        end
+        return auraData
+    end
+    -- Fallback: scan manually
+    for i = 1, 40 do
+        local aura = RGX.API.UnitAura("player", i, "HELPFUL")
+        if type(aura) == "nil" then break end
+        local auraSpellID = aura.spellId
+        if RGX.API.CanAccessValue(auraSpellID) and auraSpellID == spellID then
+            return aura
+        end
+    end
+    return nil
+end
+
+function RGX.API.GetUnitAuraBySpellID(unit, spellID)
+    if not RGX.API.CanAccessValue(unit) or type(unit) ~= "string" or unit == "" then
+        return nil
+    end
+    if not RGX.API.CanAccessValue(spellID) or type(spellID) ~= "number" then
+        return nil
+    end
+    if not C_UnitAuras or type(C_UnitAuras.GetUnitAuraBySpellID) ~= "function" then
+        return nil
+    end
+
+    local ok, auraData = pcall(C_UnitAuras.GetUnitAuraBySpellID, unit, spellID)
+    if not ok or type(auraData) == "nil" or not RGX.API.CanAccessTable(auraData) then
+        return nil
+    end
+    return auraData
+end
+
+function RGX.API.GetAuraDataByInstanceID(unit, auraInstanceID)
+    if not RGX.API.CanAccessValue(unit) or type(unit) ~= "string" or unit == "" then
+        return nil, "restricted"
+    end
+    if not RGX.API.CanAccessValue(auraInstanceID) or type(auraInstanceID) ~= "number" then
+        return nil, "restricted"
+    end
+    if RGX.API.ShouldUnitAuraInstanceBeSecret(unit, auraInstanceID) ~= false then
+        return nil, "restricted"
+    end
+    if not C_UnitAuras or type(C_UnitAuras.GetAuraDataByAuraInstanceID) ~= "function" then
+        return nil, "missing"
+    end
+
+    local ok, auraData = pcall(C_UnitAuras.GetAuraDataByAuraInstanceID, unit, auraInstanceID)
+    if not ok then return nil, "restricted" end
+    if type(auraData) == "nil" then return nil, "missing" end
+    if not RGX.API.CanAccessTable(auraData) then return nil, "restricted" end
+    return auraData, "accessible"
+end
+
+function RGX.API.GetSpellInfo(spellID)
+    if C_Spell and C_Spell.GetSpellInfo then
+        local info = C_Spell.GetSpellInfo(spellID)
+        if info then
+            return info.name, info.rank, info.iconID, info.castTime, info.minRange, info.maxRange, info.spellID, info.originalIconID
+        end
+    end
+    return type(GetSpellInfo) == "function" and GetSpellInfo(spellID) or nil
+end
+
+function RGX.API.GetSpellCooldown(spellID)
+    if C_Spell and C_Spell.GetSpellCooldown then
+        local info = C_Spell.GetSpellCooldown(spellID)
+        if info then
+            return info.startTime or 0, info.duration or 0, info.isEnabled and 1 or 0, info.modRate or 1
+        end
+    end
+    return type(GetSpellCooldown) == "function" and GetSpellCooldown(spellID) or nil
+end
+
+function RGX.API.IsUsableSpell(spellID)
+    if C_Spell and C_Spell.IsSpellUsable then
+        local usable, noMana = C_Spell.IsSpellUsable(spellID)
+        if type(usable) == "table" then
+            return usable.isUsable, usable.notEnoughMana
+        end
+        return usable, noMana
+    end
+    return type(IsUsableSpell) == "function" and IsUsableSpell(spellID) or nil
+end
+
+function RGX.API.GetItemInfo(item)
+    if C_Item and C_Item.GetItemInfo then
+        local info = C_Item.GetItemInfo(item)
+        if type(info) == "table" then
+            return info.itemName, info.itemLink, info.itemQuality, info.itemLevel, info.itemMinLevel, info.itemType, info.itemSubType, info.itemStackCount, info.itemEquipLoc, info.iconFileID, info.itemSellPrice
+        end
+    end
+    return type(GetItemInfo) == "function" and GetItemInfo(item) or nil
+end
+
+function RGX.API.GetItemCount(itemID, includeBank)
+    if C_Item and C_Item.GetItemCount then
+        return C_Item.GetItemCount(itemID, includeBank)
+    end
+    return type(GetItemCount) == "function" and GetItemCount(itemID, includeBank) or 0
+end
+
+function RGX.API.GetItemIcon(itemID)
+    if C_Item and C_Item.GetItemIconByID then
+        return C_Item.GetItemIconByID(itemID)
+    end
+    return type(GetItemIcon) == "function" and GetItemIcon(itemID)
+        or "Interface\\Icons\\INV_Misc_QuestionMark"
+end
+
+function RGX.API.GetGossipOptions()
+    if C_GossipInfo and C_GossipInfo.GetOptions then
+        return C_GossipInfo.GetOptions()
+    end
+    return GetGossipOptions and GetGossipOptions() or {}
+end
+
+function RGX.API.GetNumGossipOptions()
+    if C_GossipInfo and C_GossipInfo.GetOptions then
+        return #C_GossipInfo.GetOptions()
+    end
+    return GetNumGossipOptions and GetNumGossipOptions() or 0
+end
+
+function RGX.API.IsTravelersLogAvailable()
+    if C_PlayerInfo and C_PlayerInfo.IsTravelersLogAvailable then
+        return C_PlayerInfo.IsTravelersLogAvailable()
+    end
+    return false
+end
+
+-- Module loading conditionals
+RGX.ModuleAvailability = {
+    achievement = "achievements",
+    petbattles = "petBattles",
+    honor = function(self) return self:HasCapability("modernHonor") or self:HasCapability("legacyHonor") end,
+    delves = "delves",
+    housing = "housing",
+    tradingpost = "tradingPost",
+    prey = "prey",
+}
+
+function RGX:IsModuleAvailable(moduleName)
+    local rule = self.ModuleAvailability[moduleName]
+    if type(rule) == "string" then return self:HasCapability(rule) end
+    if type(rule) == "function" then return rule(self) == true end
+    return true
+end
+
+for moduleName, module in pairs(RGX.modules or {}) do
+    module.available = RGX:IsModuleAvailable(moduleName)
+end
+
+function RGX.API.GetQuestLogInfo(index)
+    if C_QuestLog and type(C_QuestLog.GetInfo) == "function" then
+        return C_QuestLog.GetInfo(index)
+    end
+    if type(GetQuestLogTitle) ~= "function" then return nil end
+    local title, level, suggestedGroup, isHeader, isCollapsed, isComplete,
+        frequency, questID = GetQuestLogTitle(index)
+    return {
+        title = title,
+        level = level,
+        suggestedGroup = suggestedGroup,
+        isHeader = isHeader == true,
+        isCollapsed = isCollapsed == true,
+        isComplete = isComplete,
+        frequency = frequency,
+        questID = questID,
+        questLogIndex = index,
+    }
+end
+
+function RGX.API.GetFactionCount()
+    if C_Reputation and type(C_Reputation.GetNumFactions) == "function" then
+        return C_Reputation.GetNumFactions()
+    end
+    return type(GetNumFactions) == "function" and GetNumFactions() or 0
+end
+
+function RGX.API.GetFactionDataByIndex(index)
+    if C_Reputation and type(C_Reputation.GetFactionDataByIndex) == "function" then
+        return C_Reputation.GetFactionDataByIndex(index)
+    end
+    if type(GetFactionInfo) ~= "function" then return nil end
+    local name, description, standingID, barMin, barMax, barValue,
+        atWarWith, canToggleAtWar, isHeader, isCollapsed, hasRep,
+        isWatched, isChild, factionID, hasBonusRepGain, canSetInactive = GetFactionInfo(index)
+    if not name then return nil end
+    return {
+        factionID = factionID,
+        name = name,
+        description = description,
+        reaction = standingID,
+        currentReactionThreshold = barMin,
+        nextReactionThreshold = barMax,
+        currentStanding = barValue,
+        atWarWith = atWarWith,
+        canToggleAtWar = canToggleAtWar,
+        isHeader = isHeader,
+        isHeaderWithRep = hasRep,
+        isCollapsed = isCollapsed,
+        isWatched = isWatched,
+        isChild = isChild,
+        hasBonusRepGain = hasBonusRepGain,
+        canSetInactive = canSetInactive,
+    }
+end
+
+-- Conditional module loader
+function RGX:TryLoadModule(moduleName)
+    if not self:IsModuleAvailable(moduleName) then
+        self:Debug("Module " .. moduleName .. " not available on " .. self.wowVersion)
+        return false
+    end
+    
+    local global = self.moduleAliases[moduleName]
+    if global then
+        local mod = _G[global]
+        if mod and type(mod.Init) == "function" then
+            local ok, err = pcall(mod.Init, mod)
+            if not ok then
+                self:Error("Init error " .. global .. ": " .. tostring(err))
+            end
+            return true
+        end
+    end
+    return false
+end
+
+if type(RGX.Debug) == "function" then RGX:Debug("Compat layer loaded: " .. RGX.wowVersion) end
+
+-- Secret value/table access helpers for addons
+function RGX.API.CanAccessValue(value)
+    if type(value) == "nil" then return false end
+    if type(canaccessvalue) == "function" then
+        return canaccessvalue(value) == true
+    end
+    if type(issecretvalue) == "function" then
+        return not issecretvalue(value)
+    end
+    return RGX.API.HasSecretRestrictions() == false
+end
+
+function RGX.API.CanAccessTable(tbl)
+    local valueType = type(tbl)
+    if valueType ~= "table" then return false end
+    if type(canaccesstable) == "function" then
+        return canaccesstable(tbl) == true
+    end
+    if type(issecrettable) == "function" then
+        return not issecrettable(tbl)
+    end
+    return RGX.API.HasSecretRestrictions() == false
+end
+
+-- Safe iteration helper
+function RGX.API.SafeIterate(tbl, fn)
+    if not RGX.API.CanAccessTable(tbl) then return end
+    for k, v in pairs(tbl) do
+        fn(k, v)
+    end
+end
+
+function RGX.API.SafeIpairs(tbl, fn)
+    if not RGX.API.CanAccessTable(tbl) then return end
+    for i, v in ipairs(tbl) do
+        fn(i, v)
+    end
+end

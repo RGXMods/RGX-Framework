@@ -1,0 +1,73 @@
+<!-- RGX-Framework Library Loader -->
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+
+<!-- Core -->
+<Script file="core/compat.lua" />
+<Script file="core/compat_api.lua" />
+<Script file="core/core.lua" />
+<Script file="core/systems/config.lua" />
+<Script file="core/systems/database.lua" />
+<Script file="core/systems/events.lua" />
+<Script file="core/systems/runtime.lua" />
+<Script file="core/systems/utils.lua" />
+
+<!-- Locale (must load before any module that reads framework strings) -->
+<Script file="libraries/locale/locale.lua" />
+<Script file="libraries/locale/overrides.lua" />
+
+<!-- Modules -->
+<Script file="libraries/dropdowns/dropdowns.lua" />
+ <Script file="libraries/fonts/definitions.lua" />
+	<Script file="libraries/fonts/init.lua" />
+	<Script file="libraries/fonts/registry.lua" />
+	<Script file="libraries/fonts/query.lua" />
+	<Script file="libraries/fonts/defaults.lua" />
+	<Script file="libraries/fonts/apply.lua" />
+	<Script file="libraries/fonts/normalize.lua" />
+	<Script file="libraries/fonts/styles.lua" />
+	<Script file="libraries/fonts/grouping.lua" />
+	<Script file="libraries/fonts/dropdowns.lua" />
+	<Script file="libraries/fonts/controls.lua" />
+	<Script file="libraries/fonts/menuitems.lua" />
+	<Script file="libraries/fonts/selectors.lua" />
+	<Script file="libraries/fonts/preview.lua" />
+<Script file="libraries/colors/colors.lua" />
+<Script file="libraries/colors/colorpicker.lua" />
+<Script file="libraries/textures/textures.lua" />
+<Script file="libraries/design/design.lua" />
+<Script file="libraries/display/display.lua" />
+ <Script file="libraries/ui/controls.lua" />
+ <Script file="libraries/ui/options.lua" />
+<Script file="libraries/ui/layout.lua" />
+<Script file="libraries/ui/profiles.lua" />
+ <Script file="libraries/ui/guide.lua" />
+<Script file="libraries/minimap/minimap.lua" />
+<Script file="libraries/timers/timers.lua" />
+  <Script file="libraries/sharedmedia/sharedmedia.lua" />
+  <Script file="modules/combat/combat.lua" />
+  <Script file="modules/petbattles/petbattles.lua" />
+  <Script file="modules/reputation/reputation.lua" />
+  <Script file="modules/auras/auras.lua" />
+  <Script file="libraries/tooltip/tooltip.lua" />
+  <Script file="libraries/databroker/databroker.lua" />
+  <Script file="libraries/sound/sound.lua" />
+  <Script file="modules/achievement/achievement.lua" />
+  <Script file="modules/levelup/levelup.lua" />
+  <Script file="modules/quest/quest.lua" />
+  <Script file="modules/honor/honor.lua" />
+  <Script file="modules/delves/delves.lua" />
+  <Script file="modules/housing/housing.lua" />
+  <Script file="modules/tradingpost/tradingpost.lua" />
+  <Script file="modules/prey/prey.lua" />
+  <Script file="modules/collectibles/collectibles.lua" />
+  <Script file="modules/loot/loot.lua" />
+  <Script file="modules/triggers/triggers.lua" />
+  <Script file="modules/worldmap/worldmap.lua" />
+
+  <!-- Commands -->
+<Script file="core/commands.lua" />
+
+<!-- Init -->
+<Script file="core/initialization.lua" />
+
+</Ui>
