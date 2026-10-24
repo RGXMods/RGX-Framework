@@ -2463,6 +2463,50 @@
       ]
     },
     {
+      "module": "triggers",
+      "getter": "RGX:GetTriggers()",
+      "global": "RGXTriggers",
+      "owner": "modules/triggers/triggers.lua",
+      "category": "game",
+      "stability": "stable",
+      "flavors": null,
+      "methods": [
+        {
+          "name": "Get",
+          "params": [
+            "id"
+          ]
+        },
+        {
+          "name": "New",
+          "params": [
+            "id"
+          ]
+        },
+        {
+          "name": "OnChanged",
+          "params": [
+            "id",
+            "fn"
+          ]
+        },
+        {
+          "name": "Remove",
+          "params": [
+            "id"
+          ]
+        }
+      ],
+      "introduced": "2.11.0",
+      "authorable": true,
+      "preview": "fixture-driven",
+      "docs": "docs/API.md#triggers-rgxtriggers",
+      "safety": [
+        "read-only",
+        "local-state"
+      ]
+    },
+    {
       "module": "ui",
       "getter": "RGX:GetUI()",
       "global": "RGXUI",

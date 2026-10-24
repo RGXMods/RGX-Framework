@@ -2,8 +2,9 @@
 
 ## Current Release
 
-### [v2.10.0](changelogs/2.10.0.md) - 2026-10-21
+### [v2.11.0](changelogs/2.11.0.md) - 2026-10-24
 
+- Added the RGXTriggers module: a clone-keyed trigger state store with engine-diffed changed flags, stale-clone sweep, guaranteed progress shapes, and failure-isolated change notifications.
 - Added declarative page nodes for multi-page options tabs.
 - Added 1–2 column page card grids and 1–2 column internal card control flows.
 - Extended the MCP generator and schema for declarative pages/cards.
@@ -132,7 +133,6 @@ esES, esMX, frFR, itIT, koKR, ptBR, ptPT, ruRU, zhCN, zhTW. The same
 coverage list is published in every flavor TOC's `## X-Localizations:`
 header and in `README.md`. Consumer addons inherit the
 `RGXLocale:NewLocale(addonName, locale, isDefault)` registry convention.
-
 
 ### [v2.7.10](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.10.md) - 2026-10-03
 
