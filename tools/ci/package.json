@@ -17,7 +17,7 @@
     "contract-handshake-check": "node contract-handshake-check.mjs",
     "combat-runtime-check": "node combat-runtime-check.mjs",
     "modules-gameplay-runtime-check": "node modules-gameplay-runtime-check.mjs",
-    "lua-runtime-check": "node lua-runtime-check.mjs && node aura-runtime-check.mjs && node events-runtime-check.mjs && node framework-commands-check.mjs && node login-runtime-check.mjs && node database-runtime-check.mjs && node profile-persistence-check.mjs && node layout-card-check.mjs && node display-position-check.mjs && node control-interaction-check.mjs && node colorpicker-runtime-check.mjs && node dropdown-capability-check.mjs && node profiles-ui-check.mjs && node options-toggle-check.mjs && node sharedmedia-runtime-check.mjs && node sharedmedia-font-runtime-check.mjs && node font-path-check.mjs && node worldmap-runtime-check.mjs && node sharedmedia-scan-runtime-check.mjs && node timers-runtime-check.mjs && node contract-handshake-check.mjs && node combat-runtime-check.mjs && node modules-gameplay-runtime-check.mjs",
+    "lua-runtime-check": "node lua-runtime-check.mjs && node aura-runtime-check.mjs && node events-runtime-check.mjs && node framework-commands-check.mjs && node login-runtime-check.mjs && node database-runtime-check.mjs && node profile-persistence-check.mjs && node layout-card-check.mjs && node display-position-check.mjs && node control-interaction-check.mjs && node colorpicker-runtime-check.mjs && node dropdown-capability-check.mjs && node profiles-ui-check.mjs && node options-toggle-check.mjs && node sharedmedia-runtime-check.mjs && node sharedmedia-font-runtime-check.mjs && node font-path-check.mjs && node worldmap-runtime-check.mjs && node sharedmedia-scan-runtime-check.mjs && node timers-runtime-check.mjs && node contract-handshake-check.mjs && node combat-runtime-check.mjs && node modules-gameplay-runtime-check.mjs && node triggers-runtime-check.mjs",
     "arch-check": "node module-graph-check.mjs && node runtime-boundary-check.mjs && node audit-encoding-check.mjs && node api-ownership-check.mjs && node api-catalog-check.mjs && node compat-loader-check.mjs && node contract-toc-check.mjs",
     "package-build": "node package-manifest-check.mjs ../.. --out ../../artifacts",
     "package-check": "node package-manifest-check.mjs ../.. && node build-addon-package-check.mjs",
@@ -28,7 +28,8 @@
     "flavor-check": "node flavor-toc-check.mjs && node flavor-compat-check.mjs && node flavor-package-check.mjs",
     "refs:check": "node ../reference/check-freshness.mjs",
     "refs:sync": "node ../reference/sync-wow-ui-source.mjs && node ../reference/sync-wow-api-dump.mjs && node ../reference/build-wow-api-graph.mjs",
-    "contract-toc-check": "node contract-toc-check.mjs"
+    "contract-toc-check": "node contract-toc-check.mjs",
+    "triggers-runtime-check": "node triggers-runtime-check.mjs"
   },
   "engines": {
     "node": ">=18"

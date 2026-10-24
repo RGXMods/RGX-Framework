@@ -94,7 +94,7 @@ const GLOBAL_ALLOWLIST = new Set([
   "RGXAuras", "RGXCombat", "RGXPetBattles", "RGXReputation",
   "RGXAchievement", "RGXLevelUp", "RGXQuest", "RGXHonor", "RGXDelves",
   "RGXHousing", "RGXTradingPost", "RGXPrey", "RGXCollectibles", "RGXLoot",
-  "RGXWorldMap",
+  "RGXWorldMap", "RGXTriggers",
 ]);
 
 const writtenGlobals = new Set();

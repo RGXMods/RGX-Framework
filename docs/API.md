@@ -1,5 +1,6 @@
 # RGX-Framework API Reference
 
+
 Current release: `v2.8.0`. Existing public API semantics are preserved.
 
 Complete public API by module. See individual module docs for deeper detail:
@@ -1064,6 +1065,28 @@ end)
 **Scan-safety posture.** The generic crawl reads addon globals defensively: traversal, metadata reads, and registrar invocations are pcall-wrapped, with bounded depth, table, and entry caps (MAX_SCAN_DEPTH, MAX_TABLES_PER_SOURCE, MAX_SOUNDS_PER_SCAN), and loose or consumer-owned folders are skipped via `SM:ExcludeFolder`. The module calls no protected Blizzard APIs and never touches combat-protected state; a hostile or corrupted global produces no error in the scan path.
 
 **Adoption example.** BLU (BetterBlizzPlates) consumes this module as its entire external-sound pipeline: its `core/sounds/sharedmedia.lua` is a thin bridge that imports scan results into its own registry, forwards its public pack API to `SM:RegisterSoundPack`, and re-imports on every `RGX_SHAREDMEDIA_UPDATED`.
+
+---
+
+## Triggers (`RGXTriggers`)
+
+Trigger state store — the substrate for the trigger evaluation engine (rgx-mod's Trigger → Conditions → Display pipeline). Trigger authors mutate clone-keyed state; the engine diffs every field write, sets `state.changed` only when a value actually changed or the clone is new, and stale clones cannot survive a sweep. Change notifications are failure-isolated.
+
+| Method | Behavior |
+|---|---|
+| `Triggers:New(id)` | Create a trigger instance; duplicate or malformed ids fail before anything registers |
+| `Triggers:Get(id)` | Look up an instance by id |
+| `Triggers:Remove(id)` | Clear a trigger's clones (with notifications), drop its handlers, remove it |
+| `Triggers:OnChanged(id, fn)` | `fn(id, states)` fires when that trigger's diff changed anything; returns an unsubscribe function |
+| `trigger:Update(cloneId, fields)` | Diff-apply fields to one clone; returns `changed, state` |
+| `trigger:UpdateProgress(cloneId, progress)` | Apply the guaranteed progress shape. Timed: `{ duration = seconds, autoHide = bool? }` sets `progressType = "timed"`, `duration`, `expirationTime = GetTime() + duration`. Static: `{ value = v, total = t > 0, inverse = bool? }` sets `progressType = "static"`. Switching forms clears the other form's fields in the same diff |
+| `trigger:Remove(cloneId)` | Remove one clone; notifies when a clone was removed |
+| `trigger:Sweep(keep)` | Remove every clone not present in the keep set (a `nil` keep set removes all); one coalesced notification; returns the number removed |
+| `trigger:Clear()` | Remove all clones; returns the number removed |
+| `trigger:States()` | The live clone-keyed state table (read-mostly) |
+| `trigger:Count()` | Number of live clones |
+
+`state.changed` describes the last write, not a sticky flag. Guaranteed progress fields (`progressType`, `duration`, `expirationTime`, `value`, `total`, `inverse`, `autoHide`) give conditions and displays one stable shape to read.
 
 ---
 

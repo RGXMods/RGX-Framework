@@ -29,6 +29,7 @@ const TARGETS = {
   "core/systems/runtime.lua": ["login-runtime-check", "events-runtime-check", "framework-commands-check"],
   "core/systems/database.lua": ["database-runtime-check", "profile-persistence-check"],
   "core/systems/events.lua": ["events-runtime-check", "login-runtime-check"],
+  "modules/triggers/triggers.lua": ["triggers-runtime-check"],
 };
 
 const SKIP_COPY = new Set([".git", "node_modules", ".reference", "artifacts", "graphify-out"]);

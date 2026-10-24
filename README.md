@@ -1,7 +1,7 @@
 # RGX-Framework
 
-The `v2.10.0` release hardens profile safety, event dispatch, and declarative
-validation. See the [release notes](docs/changelogs/2.10.0.md).
+The `v2.11.0` release adds `RGXTriggers`, the clone-keyed trigger state
+store behind the upcoming trigger evaluation engine. See the [release notes](docs/changelogs/2.11.0.md).
 
 **One dependency. Everything your addon suite needs.**
 
@@ -14,7 +14,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.10.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.10.0)
+**Latest published release:** [`v2.11.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.11.0)
 
 **1. Declare the dependency:**
 

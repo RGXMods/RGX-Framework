@@ -1,5 +1,6 @@
 # Distribution
 
+
 The `v2.8.0` release adds `RGXTimers`, a frame-based countdown/progress bar
 module that replaces LibCandyBar-3.0 for consumer addons.
 
@@ -9,21 +10,21 @@ World of Warcraft addon archive.
 
 ## Current Release
 
-[`v2.10.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.10.0)
+[`v2.11.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.11.0)
 publishes exactly two GitHub assets:
 
 | Asset | Purpose |
 |---|---|
-| `RGX-Framework-v2.10.0.zip` | The only product archive; install this addon |
+| `RGX-Framework-v2.11.0.zip` | The only product archive; install this addon |
 | `release.json` | In-house packager metadata for automation |
 
-The `v2.10.0` ZIP is expected to contain one `RGX-Framework/` root and exactly 105
+The `v2.11.0` ZIP is expected to contain one `RGX-Framework/` root and exactly 106
 runtime files. Verify the asset and digest after publishing with
 GitHub CLI:
 
 ```bash
-gh release view v2.10.0 --repo RGXMods/RGX-Framework --json assets \
-  --jq '.assets[] | select(.name == "RGX-Framework-v2.10.0.zip") | .digest'
+gh release view v2.11.0 --repo RGXMods/RGX-Framework --json assets \
+  --jq '.assets[] | select(.name == "RGX-Framework-v2.11.0.zip") | .digest'
 ```
 
 CurseForge is the currently configured addon service. Wago is configured with
