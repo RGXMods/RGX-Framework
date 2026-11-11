@@ -543,6 +543,10 @@ local function CreateOptionsPanel(UI, opts)
     panel.tabs     = {}
     panel.contents = {}
     panel.theme    = opts.theme or opts.colors
+    -- The interface style the panel was built in (opts.style, or the style active when it was created). Tab
+    -- content is built later, when the panel first opens, outside whatever WithStyle scope built the panel, so
+    -- the style is remembered here and re-applied for every content build.
+    panel.style    = D and type(D.GetStyleId) == "function" and D:GetStyleId() or nil
 
     -- Outer container
     local container = CreateFrame("Frame", nil, panel, "BackdropTemplate")
@@ -810,10 +814,15 @@ end
     -- back to a direct call when the panel carries no theme. Content callbacks
     -- keep their own pcall isolation; this only scopes the color surface.
     local function withPanelTheme(fn)
+        local run = fn
+        if panel.style and D and type(D.WithStyle) == "function" and type(D.GetStyleId) == "function"
+            and D:GetStyleId() ~= panel.style then
+            run = function() D:WithStyle(panel.style, fn) end
+        end
         if type(panel.theme) == "table" then
-            D:WithTheme(panel.theme, fn)
+            D:WithTheme(panel.theme, run)
         else
-            fn()
+            run()
         end
     end
 
@@ -1312,6 +1321,14 @@ local function Inject()
     local UI = _G.RGXUI
     if not UI then return false end
     UI.CreateOptionsPanel = function(self, opts)
+        -- opts.style builds the whole panel, header and content, in that interface style (for example
+        -- "materialround") without changing the operator's global choice.
+        local D = GetDesign()
+        local style = type(opts) == "table" and opts.style or nil
+        local id = style and D and type(D.ResolveStyle) == "function" and D:ResolveStyle(style) or nil
+        if id and type(D.WithStyle) == "function" and D:GetStyleId() ~= id then
+            return D:WithStyle(id, function() return CreateOptionsPanel(self, opts) end)
+        end
         return CreateOptionsPanel(self, opts)
     end
     UI.CreateStandardCard = function(self, parent, opts)

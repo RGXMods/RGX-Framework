@@ -2,6 +2,10 @@
 
 ## Current Release
 
+### [v2.17.7](changelogs/2.17.7.md) - 2026-11-11
+
+- `UI:CreateOptionsPanel` takes `style` and remembers the interface style it was built in, so tab content built later keeps it (RGX Material Round panels no longer fall back to the default look).
+
 ### [v2.17.6](changelogs/2.17.6.md) - 2026-11-11
 
 - The framework settings page shows its Theme card (main colour, interface style, corners) only when BLU or Simple Quest Plates is loaded.
