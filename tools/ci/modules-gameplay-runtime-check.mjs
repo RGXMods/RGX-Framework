@@ -161,6 +161,70 @@ await scenario("loot delivers the session's first currency gain", rgxStub(`
   assert(#gained == 3, "a loss must not fire a gain, fired " .. #gained)
 `), { __lootSource: "modules/loot/loot.lua" });
 
+await scenario("loot reports each newly acquired item once and still reports rares", rgxStub(`
+  NUM_BAG_SLOTS = 1
+  local isNew, quality = {}, {}
+  C_Container = {
+    GetContainerNumSlots = function() return 2 end,
+    GetContainerItemInfo = function(bag, slot) return { quality = quality[bag .. ":" .. slot] } end,
+  }
+  C_NewItems = { IsNewItem = function(bag, slot) return isNew[bag .. ":" .. slot] == true end }
+
+  loadModule(__lootSource, "modules/loot/loot.lua")
+  local Loot = _G.RGXLoot
+  Loot:Init()
+
+  local looted, rares = {}, {}
+  Loot:OnItemLooted(function(bag, slot, q) looted[#looted + 1] = { bag, slot, q } end)
+  Loot:OnRareLoot(function(bag, slot, q) rares[#rares + 1] = { bag, slot, q } end)
+  local function update() RGX._events.BAG_NEW_ITEMS_UPDATED() end
+
+  isNew["0:1"] = true; quality["0:1"] = 1
+  update()
+  assert(#looted == 1 and looted[1][3] == 1 and #rares == 0, "a new common item fires OnItemLooted only")
+
+  update()
+  assert(#looted == 1, "an item that stays flagged new must not fire again, fired " .. #looted)
+
+  isNew["0:2"] = true; quality["0:2"] = 4
+  update()
+  assert(#looted == 2 and looted[2][1] == 0 and looted[2][2] == 2 and looted[2][3] == 4, "the new epic is the item reported")
+  assert(#rares == 1 and rares[1][3] == 4, "the epic also fires OnRareLoot once")
+
+  update()
+  assert(#looted == 2 and #rares == 1, "no repeats while both items stay new")
+
+  isNew["0:1"] = nil
+  update()
+  isNew["0:1"] = true; quality["0:1"] = 2
+  update()
+  assert(#looted == 3 and looted[3][2] == 1, "a slot that stopped being new reports again when a new item lands in it")
+
+  Loot:OnItemLooted(function() error("boom") end)
+  isNew["0:2"] = nil; update(); isNew["0:2"] = true; quality["0:2"] = 1; update()
+  assert(#looted == 4, "a failing callback must not block other callbacks")
+`), { __lootSource: "modules/loot/loot.lua" });
+
+await scenario("honor reports every honor award and tolerates unreadable messages", rgxStub(`
+  loadModule(__honorSource, "modules/honor/honor.lua")
+  local Honor = _G.RGXHonor
+  Honor:Init()
+  local gains = {}
+  Honor:OnHonorGain(function(amount, message) gains[#gains + 1] = { amount, message } end)
+
+  RGX._events.CHAT_MSG_COMBAT_HONOR_GAIN(nil, "You have been awarded 15 honor points.")
+  assert(#gains == 1 and gains[1][1] == 15, "award message amount, got " .. tostring(gains[1] and gains[1][1]))
+
+  RGX._events.CHAT_MSG_COMBAT_HONOR_GAIN(nil, "Thrall dies, honorable kill Rank: Grunt (82 Honor Points)")
+  assert(#gains == 2 and gains[2][1] == 82, "honorable kill amount, got " .. tostring(gains[2] and gains[2][1]))
+
+  RGX._events.CHAT_MSG_COMBAT_HONOR_GAIN(nil, "Erhalten: 10 Ehre")
+  assert(#gains == 3 and gains[3][1] == nil, "an unreadable message still fires with a nil amount")
+
+  RGX._events.CHAT_MSG_COMBAT_HONOR_GAIN(nil, nil)
+  assert(#gains == 4 and gains[4][1] == nil, "a non-string payload still fires with a nil amount")
+`), { __honorSource: "modules/honor/honor.lua" });
+
 await scenario("quest progress suppressed by cooldown is delivered, not lost", rgxStub(`
   local now = 1000
   GetTime = function() return now end

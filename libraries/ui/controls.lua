@@ -397,7 +397,10 @@ function UI:CreateSlider(parent, options)
 	local reset = self:CreateResetButton(container, function()
 		apply(default)
 	end)
-    self:AnchorRowReset(parent, reset, trackFrame)
+    -- The reset sits in the 28px the slider reserves at the right of its own row (the value label is inset by
+    -- that much). It used to anchor to the PARENT's right edge minus 8, which put it 8px inside a card row
+    -- and over the end of the track, and far from the slider whenever the slider was narrower than its parent.
+    self:AnchorRowReset(container, reset, trackFrame, 0)
 
 	-- Re-place the thumb every time the slider is shown: the first apply() below
 	-- runs while the panel is usually still hidden (login/load), so this is what

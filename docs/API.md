@@ -74,6 +74,7 @@ Complete public API by module. See individual module docs for deeper detail:
 | `RGX:Warn(...)` | Framework icon + yellow `[RGX]` prefix |
 | `RGX:Error(...)` | Framework icon + red `[RGX]` prefix |
 | `RGX:Debug(...)` | Prints only when `debugMode` is true |
+| `RGX:CreateChat(opts)` | Per-addon chat output that honours the standard options (`chatOutput`, `chatPrefix`, `loginMessage`); see [Addon Chat](#addon-chat) |
 | `RGX:LoginMessage(message, opts?)` | Print a startup message when the global login-message preference is enabled |
 | `RGX:IsLoginMessagesEnabled()` | Return the persisted global login-message preference (default `true`) |
 | `RGX:SetLoginMessagesEnabled(enabled)` | Persist the global login-message preference in `RGXFrameworkDB` |
@@ -94,6 +95,28 @@ The bare form uses the framework icon, ` - ` spacer, and green `[RGX]` tag.
 Pass `icon = ""` to suppress the icon. Players can manage startup messages with
 `/rgxf login on|off|status`; normal `Print`, `Warn`, and `Error` output is never
 gated.
+
+### Addon Chat
+
+Every RGX addon talks to chat the same way, driven by the standard options
+(`UI:CreateStandardCard`):
+
+```lua
+local chat = RGX:CreateChat({
+    storage = function() return MyAddonDB end,   -- or the table itself once it exists
+    name = "MyAddon",
+    label = "MyAddon",                          -- the text in the brackets
+    icon = "Interface\\AddOns\\MyAddon\\media\\icon.tga",
+})
+chat:Print("Saved.")            -- prints "<icon> - [MyAddon] Saved."; silent when chatOutput == false
+chat:Login("Loaded. /my to open.")  -- also silent when loginMessage == false
+```
+
+Every line uses the `RGX:CreateChatPrefix` format (icon, then the label in
+brackets), the same as the other RGX mods. A `chatPrefix` the player typed replaces
+the label; an empty prefix, or one equal to `name`, uses `label` (default `name`).
+`icon` defaults to the RGX logo and `tagColor` to the RGX green. Absent keys mean on.
+`Login` also respects the framework-wide `/rgxf login` switch.
 
 ### Object Composition
 
@@ -644,6 +667,8 @@ complete `{primary, accent}` pair.
 | `text` / `subtext` / `label` | Text tiers |
 | `success` / `warning` / `error` | Semantic colors |
 | `border` / `hover` / `track` | Borders and widget tracks |
+| `ring` | Outline of rounded panels and cards (defaults to the `border` colour; `RGX Material Round` resolves it live from the mod's `primary` colour) |
+| `headerFill` | Fill of a rounded section-header band |
 
 Access via `Design.Colors.surface`, etc. `Design:GetColor` resolves theme
 tokens (and live main-shade derivatives) first and falls back to this table;
@@ -658,8 +683,14 @@ structural palette — independently of the primary/accent color presets. See
 
 | Method | Description |
 |---|---|
-| `Design:SetStyle(name)` | Apply a named style from `Design.STYLES` (`framework`, `retail`, `classic`, `forever`). Returns `false` for unknown names without touching current state; `primary`/`accent` tokens are never modified. Styles take effect on UI built after the call; open windows re-skin on reload. |
-| `Design:GetStyle()` | Current style name, or `nil` after a direct `SetCornerStyle`/`SetTheme` edit. |
+| `Design:SetStyle(name)` | Apply a named style: `framework` ("RGX Framework", the default), `materialround` ("RGX Material Round") or `classic` ("RGX Classic"). The old ids `retail` and `forever` still work as aliases of `framework` and `classic`. Returns `false` for unknown names without touching current state; `primary`/`accent` tokens are never modified. Styles take effect on UI built after the call; open windows re-skin on reload. |
+| `Design:GetStyle()` | The style id that was set, or `nil` after a direct `SetCornerStyle`/`SetTheme` edit. |
+| `Design:GetStyleId()` | Canonical id (`framework` / `materialround` / `classic`) with aliases resolved. |
+| `Design:GetStyleLabel()` | Display name of the active style, such as `RGX Material Round`. |
+| `Design:ResolveStyle(name)` | Canonical id for a style id or legacy alias, or `nil` when unknown. |
+| `Design:WithStyle(name, fn)` | Run `fn` (typically a window builder) in a style, then restore the previous style, palette and corner treatment, even if `fn` errors. Unknown names raise an error. |
+
+`Design.STYLE_ORDER` lists the canonical ids in display order.
 
 ```lua
 Design:SetStyle("classic")  -- square corners, warm palette; primary/accent untouched
@@ -764,6 +795,7 @@ Dragged offsets are written to both the consumer `storage[offsetKey]` and the fr
 | `UI:CreateSlider(parent, opts)` | Numeric slider (`suffix` appends to the displayed value, e.g. `"%"`) |
 | `UI:CreatePanelAlpha(parent, opts)` | 0-100 panel-transparency slider with optional `{ label, value }` snap presets |
 | `UI:CreateTextInput(parent, opts)` | Single-line text input bound to storage (`placeholder`, `Enter`/`Escape` commit, Reset to default) |
+| `UI:CreateStandardCard(parent, opts)` | The shared "General" settings card every RGX addon offers: minimap button, Addons menu, chat output, login message and chat prefix under the same storage keys; see [UI-CONTROLS](UI-CONTROLS.md#standard-options-card) |
 | `UI:CreateSwitch(parent, opts)` | Canonical db-bound on/off switch; declarative `toggle` controls render this widget |
 | `UI:CreateToggle(parent, opts)` | Legacy imperative checkbox toggle (use `UI:CreateSwitch` for new on/off rows) |
 | `UI:CreateLabel(parent, opts)` | Text label (pass `width` to enable word wrap for long text; omit for single-line) |
@@ -1099,9 +1131,9 @@ Milestone/progression modules. Each method registers a pcall-wrapped callback. U
 | Achievement (`RGXAchievement`) | `OnEarned(fn)`, `OnCriteriaEarned(fn)` |
 | LevelUp (`RGXLevelUp`) | `OnLevelUp(fn)` |
 | Collectibles (`RGXCollectibles`) | `OnMount(fn)`, `OnToy(fn)`, `OnTransmog(fn)`, `OnHeirloom(fn)` |
-| Loot (`RGXLoot`) | `OnRareLoot(fn)`, `OnCurrencyGained(fn)` |
+| Loot (`RGXLoot`) | `OnItemLooted(fn)`, `OnRareLoot(fn)`, `OnCurrencyGained(fn)` |
 | Quest (`RGXQuest`) | `OnAccepted(fn)`, `OnComplete(fn)`, `OnTurnedIn(fn)`, `OnProgress(fn)` |
-| Honor (`RGXHonor`) | `OnLevelUp(fn)` |
+| Honor (`RGXHonor`) | `OnLevelUp(fn)`, `OnHonorGain(fn)` |
 | Delves (`RGXDelves`) | `OnCompanionLevelUp(fn)`, `OnLifeLost(fn)`, `OnLifeGained(fn)`, `GetCompanionLevel()`, `GetLivesRemaining()` |
 | Housing (`RGXHousing`) | `OnFavorGained(fn)`, `OnLevelUp(fn)`, `OnRewards(fn)`, `OnDecorCollected(fn)` |
 | TradingPost (`RGXTradingPost`) | `OnPurchase(fn)`, `OnCurrencyGained(fn)`, `GetCurrencyAmount()` |

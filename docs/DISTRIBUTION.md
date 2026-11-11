@@ -10,27 +10,33 @@ World of Warcraft addon archive.
 
 ## Current Release
 
-[`v2.11.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.11.0)
+[`v2.17.5`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.17.5)
 publishes exactly two GitHub assets:
 
 | Asset | Purpose |
 |---|---|
-| `RGX-Framework-v2.11.0.zip` | The only product archive; install this addon |
+| `RGX-Framework-v2.17.5.zip` | The only product archive; install this addon |
 | `release.json` | In-house packager metadata for automation |
 
-The `v2.11.0` ZIP is expected to contain one `RGX-Framework/` root and exactly 106
+The `v2.17.5` ZIP is expected to contain one `RGX-Framework/` root and exactly 106
 runtime files. Verify the asset and digest after publishing with
 GitHub CLI:
 
 ```bash
-gh release view v2.11.0 --repo RGXMods/RGX-Framework --json assets \
-  --jq '.assets[] | select(.name == "RGX-Framework-v2.11.0.zip") | .digest'
+gh release view v2.17.5 --repo RGXMods/RGX-Framework --json assets \
+  --jq '.assets[] | select(.name == "RGX-Framework-v2.17.5.zip") | .digest'
 ```
 
 CurseForge is the currently configured addon service. Wago is configured with
 the suite connection `X-Wago-ID: E6gz1DN10`, carried in every flavor TOC so
 Wago can identify each per-flavor package; the existing connection and ID
 must be preserved exactly.
+
+WoWInterface listing `27287` (`RGX | RGX-Framework`) is set by `## X-WoWI-ID` in
+`RGX-Framework.toc`. The release job uploads the stable archive there when the
+`WOWI_API_TOKEN` repository secret is set. Beta and alpha tags do not update it.
+Without the secret, `tools/release/publish-wowinterface.mjs` skips with exit 0, so a
+green run does not prove a WoWInterface upload.
 
 ## Flavor Metadata
 
@@ -218,3 +224,7 @@ and verified against this file; the GitHub Wiki is generated automatically from
 the Markdown pages listed in `tools/wiki/manifest.json`.
 Service-page Markdown is explicitly listed as `sourceOnly` in that manifest
 so it remains maintained source without generating a duplicate Wiki page.
+
+WoWInterface uses the same description source as CurseForge,
+`docs/curse_description.html`, converted to BBCode. The uploader does not change the
+WoWInterface description; apply it through the listing or the description update API.

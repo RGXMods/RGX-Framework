@@ -79,4 +79,36 @@ local ordinary = env.RGXMinimap:Create({ name = "OrdinaryFixture", icon = "icon"
     onLeftClick = function() calls = calls + 1 end })
 ordinary.frame.scripts.OnClick(ordinary.frame, "LeftButton")
 assert(calls == 1 and not ordinary._secure and not ordinary:SetItemAction(65274))
+-- Addon compartment: every button also registers in Blizzard's Addons menu.
+local registered = {}
+env.AddonCompartmentFrame = { RegisterAddon = function(_, data) registered[#registered + 1] = data end }
+local clicks = { left = 0, right = 0 }
+local listed = env.RGXMinimap:Create({ name = "CompartmentFixtureMinimapButton", icon = "icon",
+    tooltip = { title = "Fixture" },
+    onLeftClick = function() clicks.left = clicks.left + 1 end,
+    onRightClick = function() clicks.right = clicks.right + 1 end })
+assert(listed and #registered == 1, "button must register one compartment entry")
+local entry = registered[1]
+assert(entry.text == "Fixture" and entry.icon == "icon" and entry.notCheckable and entry.registerForAnyClick)
+entry.func(nil, { buttonName = "LeftButton" })
+entry.func(nil, { buttonName = "RightButton" })
+assert(clicks.left == 1 and clicks.right == 1, "compartment clicks must reach the button handlers")
+assert(type(entry.funcOnEnter) == "function" and type(entry.funcOnLeave) == "function")
+env.RGXMinimap:Create({ name = "OptOutFixture", icon = "icon", compartment = false })
+assert(#registered == 1, "compartment = false must skip registration")
+-- Runtime toggle: an addon can offer the Addons-menu entry as a setting.
+local unregistered = {}
+env.AddonCompartmentFrame.UnregisterAddon = function(_, data) unregistered[#unregistered + 1] = data end
+assert(listed:IsCompartmentVisible(), "entry starts visible")
+assert(listed:SetCompartmentVisible(false) and not listed:IsCompartmentVisible() and unregistered[1] == entry, "hiding removes the registered entry")
+assert(listed:SetCompartmentVisible(false), "hiding twice is a no-op that still reports success")
+assert(listed:SetCompartmentVisible(true) and listed:IsCompartmentVisible() and #registered == 2, "showing registers it again")
+assert(registered[2].text == "Fixture", "re-registered entry keeps its label and handlers")
+local optedOut = env.RGXMinimap:Get("OptOutFixture")
+assert(optedOut and not optedOut:IsCompartmentVisible(), "an opted-out button starts hidden")
+assert(optedOut:SetCompartmentVisible(true) and optedOut:IsCompartmentVisible() and #registered == 3, "an opted-out button can be turned on later")
+env.AddonCompartmentFrame.UnregisterAddon = nil
+assert(listed:SetCompartmentVisible(false) == false and listed:IsCompartmentVisible(), "a client that cannot remove entries reports false and leaves it listed")
+env.AddonCompartmentFrame = nil
+assert(env.RGXMinimap:Create({ name = "NoCompartmentFixture", icon = "icon" }), "clients without the compartment still create buttons")
 print("PASS secure minimap: preserved handler, two-click order, right-click exclusion, combat guards and ordinary mode")

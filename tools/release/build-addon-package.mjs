@@ -45,7 +45,16 @@ for(const [file,bytes]of [...files].sort(([a],[b])=>a.localeCompare(b))) {
  entries[`${folder}/${file}`]=bytes;
  manifest.push({file,sha256:createHash('sha256').update(bytes).digest('hex')});
 }
-const archive=zipSync(entries,{level:6,mtime:new Date('2000-01-01T00:00:00Z')});
+// Bytes 510-511 of 0x55 0xAA make MIME sniffing report a DOS/MBR boot sector, and Wago then rejects the
+// upload as not a zip. Unknown extra fields on the first entry are skipped by every zip reader, so pad it
+// until the coincidence disappears.
+const zipOptions={level:6,mtime:new Date('2000-01-01T00:00:00Z')};
+const firstKey=Object.keys(entries)[0];
+let archive=zipSync(entries,zipOptions);
+for(let pad=1;pad<16&&archive.length>=512&&archive[510]===0x55&&archive[511]===0xaa;pad++){
+ archive=zipSync({...entries,[firstKey]:[entries[firstKey],{...zipOptions,extra:{0x5a5a:new Uint8Array(4*pad)}}]},zipOptions);
+}
+assert(!(archive.length>=512&&archive[510]===0x55&&archive[511]===0xaa),'could not avoid a boot-sector signature in the archive header');
 const decoded=unzipSync(archive);
 assert(Object.keys(decoded).length===manifest.length);
 for(const row of manifest)assert(createHash('sha256').update(decoded[folder+'/'+row.file]).digest('hex')===row.sha256);

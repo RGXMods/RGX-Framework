@@ -55,6 +55,9 @@ Dropdowns.version = "2.0.0"
 
 local _dropdownCounter = 0
 
+-- Inline Play/Stop buttons added by the onPreview option of CreateNestedDropdown.
+local PREVIEW_KEY = "rgxPreviewBtn"
+
 -- WoW measures buttons as listFrame:GetWidth() - (BORDER * 2)
 local BORDER_THICKNESS = UIDROPDOWNMENU_BORDER_THICKNESS or 15
 local BORDER_PAD       = BORDER_THICKNESS * 2
@@ -246,112 +249,224 @@ end
                     instead of right-aligning them (default false)
         countKey    (string) — field name for a count label widget
 ]]
+-- Applies one ForceWidth layout pass to a list frame. Separate from ForceWidth so it
+-- can run synchronously from the list frame's OnShow (no one-frame overflow flash)
+-- as well as on the next frame.
+local function ApplyListLayout(listFrame, p)
+    local maxButtons = UIDROPDOWNMENU_MAXBUTTONS or 32
+
+    -- Pass 1: measure widest content needed
+    local neededContent = (p.minWidth or 200) - BORDER_PAD
+    local visible = 0
+    for i = 1, maxButtons do
+        local btn = _G[listFrame:GetName() .. "Button" .. i]
+        if btn and btn:IsShown() then
+            visible = visible + 1
+            local nt          = _G[btn:GetName() .. "NormalText"]
+            local expandArrow = _G[btn:GetName() .. "ExpandArrow"]
+            local tw          = nt and math.ceil(nt:GetStringWidth() or 0) or 0
+            local countLabel  = p.countKey and btn[p.countKey]
+            local cw          = (countLabel and countLabel:IsShown())
+                                and math.ceil(countLabel:GetStringWidth() or 0) or 0
+            local hasArrow    = expandArrow and expandArrow:IsShown()
+
+            -- measure rightmost inline widget
+            local inlineW = 0
+            for _, key in ipairs(p.inlineKeys) do
+                if btn[key] and btn[key]:IsShown() then
+                    inlineW = math.max(inlineW, btn[key]:GetWidth() or 0)
+                end
+            end
+
+            local rightRes = inlineW > 0 and (inlineW + 14)
+                or (hasArrow and 14 or 6) + (cw > 0 and (cw + 6) or 0)
+            neededContent = math.max(neededContent, p.leftInset + tw + rightRes)
+        end
+    end
+
+    if visible == 0 then return end
+
+    -- Pass 2: apply widths and re-anchor
+    local btnWidth   = neededContent
+    local frameWidth = neededContent + BORDER_PAD
+    listFrame:SetWidth(frameWidth)
+
+    for i = 1, maxButtons do
+        local btn = _G[listFrame:GetName() .. "Button" .. i]
+        if btn and btn:IsShown() then
+            btn:SetWidth(btnWidth)
+            local nt          = _G[btn:GetName() .. "NormalText"]
+            local expandArrow = _G[btn:GetName() .. "ExpandArrow"]
+            local countLabel  = p.countKey and btn[p.countKey]
+            local hasArrow    = expandArrow and expandArrow:IsShown()
+            local hasCount    = countLabel and countLabel:IsShown()
+
+            -- Find rightmost visible inline widget
+            local inlineBtn = nil
+            for _, key in ipairs(p.inlineKeys) do
+                if btn[key] and btn[key]:IsShown() then
+                    inlineBtn = btn[key]
+                    break
+                end
+            end
+
+            if inlineBtn then
+                if p.compactRight and nt then
+                    local tw = math.ceil(nt:GetStringWidth() or 0)
+                    inlineBtn:ClearAllPoints()
+                    inlineBtn:SetPoint("LEFT", btn, "LEFT", p.leftInset + tw + 4, 0)
+                else
+                    inlineBtn:ClearAllPoints()
+                    inlineBtn:SetPoint("RIGHT", btn, "RIGHT", -6, 0)
+                end
+            end
+
+            if nt then
+                nt:ClearAllPoints()
+                nt:SetPoint("LEFT", btn, "LEFT", p.leftInset, 0)
+                nt:SetJustifyH("LEFT")
+                if hasCount and countLabel then
+                    if hasArrow and expandArrow then
+                        expandArrow:ClearAllPoints()
+                        expandArrow:SetPoint("RIGHT", btn, "RIGHT", -3, 0)
+                        countLabel:ClearAllPoints()
+                        countLabel:SetPoint("RIGHT", expandArrow, "LEFT", -4, 0)
+                    else
+                        countLabel:ClearAllPoints()
+                        countLabel:SetPoint("RIGHT", btn, "RIGHT", -6, 0)
+                    end
+                    nt:SetPoint("RIGHT", countLabel, "LEFT", -6, 0)
+                elseif not inlineBtn and not p.compactRight then
+                    nt:SetPoint("RIGHT", btn, "RIGHT", hasArrow and -16 or -6, 0)
+                end
+            end
+
+            if expandArrow and not hasCount and not inlineBtn then
+                expandArrow:ClearAllPoints()
+                expandArrow:SetPoint("RIGHT", btn, "RIGHT", -3, 0)
+            end
+        end
+    end
+end
+
+-- Dropdown list frames are shared by every addon's menus, so the skin and the
+-- re-layout only apply while a menu opened by a ForceWidth caller is showing.
+local SKIN_PARTS = { "Border", "MenuBackdrop", "Backdrop" }
+
+local function SetNativeChromeAlpha(listFrame, alpha)
+    local name = listFrame:GetName()
+    for _, part in ipairs(SKIN_PARTS) do
+        local frame = rawget(listFrame, part) or (name and _G[name .. part])
+        if frame and frame.SetAlpha then frame:SetAlpha(alpha) end
+    end
+end
+
+local function ApplyListTheme(listFrame, colors)
+    local D = RGX and RGX.GetDesign and RGX:GetDesign()
+    colors = colors or {}
+    local function token(key, fr, fg, fb)
+        -- An addon palette passed through ForceWidth's `skin` option wins over
+        -- the shared design tokens, so a menu matches its addon's own frames.
+        local override = colors[key]
+        if type(override) == "table" then return override[1], override[2], override[3] end
+        if D and D.Unpack then
+            local r, g, b = D:Unpack(key)
+            if r then return r, g, b end
+        end
+        return fr, fg, fb
+    end
+
+    local skin = listFrame._rgxSkin
+    if not skin then
+        skin = CreateFrame("Frame", nil, listFrame, "BackdropTemplate")
+        -- Inset from the list frame so the skin hugs the rows instead of the
+        -- 15px native border zone.
+        skin:SetPoint("TOPLEFT", listFrame, "TOPLEFT", 6, -6)
+        skin:SetPoint("BOTTOMRIGHT", listFrame, "BOTTOMRIGHT", -6, 6)
+        skin:SetFrameLevel(listFrame:GetFrameLevel())
+        skin:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            tile = false, edgeSize = 1,
+            insets = { left = 0, right = 0, top = 0, bottom = 0 },
+        })
+        listFrame._rgxSkin = skin
+    end
+    local sr, sg, sb = token("surface", 0.08, 0.10, 0.13)
+    local alpha = type(colors.surface) == "table" and colors.surface[4] or 0.98
+    skin:SetBackdropColor(sr, sg, sb, alpha)
+    skin:SetBackdropBorderColor(token("border", 0.14, 0.20, 0.28))
+    skin:Show()
+    SetNativeChromeAlpha(listFrame, 0)
+    listFrame._rgxThemed = true
+end
+
+local function RestoreListTheme(listFrame)
+    if not listFrame._rgxThemed then return end
+    if listFrame._rgxSkin then listFrame._rgxSkin:Hide() end
+    SetNativeChromeAlpha(listFrame, 1)
+    listFrame._rgxThemed = nil
+end
+
+local function ReapplyIfOwned(listFrame)
+    local layout = listFrame._rgxLayout
+    if layout and layout.owner ~= nil and layout.owner == _G.UIDROPDOWNMENU_OPEN_MENU then
+        ApplyListLayout(listFrame, layout)
+        ApplyListTheme(listFrame, layout.skin)
+    else
+        RestoreListTheme(listFrame)
+    end
+end
+
+local function HookListFrame(listFrame)
+    if listFrame._rgxHooked then return end
+    listFrame._rgxHooked = true
+    listFrame:HookScript("OnShow", function(self) ReapplyIfOwned(self) end)
+    listFrame:HookScript("OnHide", function(self)
+        self._rgxLayout = nil
+        RestoreListTheme(self)
+    end)
+end
+
+local sizeHookInstalled = false
+local function InstallSizeHook(self_ref)
+    if sizeHookInstalled or type(hooksecurefunc) ~= "function" then return end
+    if type(_G.UIDropDownMenu_RefreshDropDownSize) ~= "function" then return end
+    sizeHookInstalled = true
+    -- The client re-sizes rows from its own measurements after selection/refresh,
+    -- which would drop the reserved inline-button width again.
+    hooksecurefunc("UIDropDownMenu_RefreshDropDownSize", function(listFrame)
+        if listFrame and listFrame._rgxLayout then ReapplyIfOwned(listFrame) end
+    end)
+end
+
 function Dropdowns:ForceWidth(level, minWidth, leftInset, opts)
-    leftInset = leftInset or 10
     opts = opts or {}
-    local inlineKeys     = opts.inlineKeys or {}
-    local compactRight   = opts.compactRight == true
-    local countKey       = opts.countKey
-    local self_ref       = self
+    local layout = {
+        minWidth     = minWidth,
+        leftInset    = leftInset or 10,
+        inlineKeys   = opts.inlineKeys or {},
+        compactRight = opts.compactRight == true,
+        countKey     = opts.countKey,
+        skin         = opts.skin,
+        owner        = _G.UIDROPDOWNMENU_OPEN_MENU,
+    }
+    local self_ref = self
+
+    local early = self:GetListFrame(level)
+    if early then
+        early._rgxLayout = layout
+        HookListFrame(early)
+        InstallSizeHook(self)
+    end
 
     RGX:After(0, function()
         local listFrame = self_ref:GetListFrame(level)
         if not listFrame or not listFrame:IsShown() then return end
-
-        local maxButtons = UIDROPDOWNMENU_MAXBUTTONS or 32
-
-        -- Pass 1: measure widest content needed
-        local neededContent = (minWidth or 200) - BORDER_PAD
-        local visible = 0
-        for i = 1, maxButtons do
-            local btn = _G[listFrame:GetName() .. "Button" .. i]
-            if btn and btn:IsShown() then
-                visible = visible + 1
-                local nt          = _G[btn:GetName() .. "NormalText"]
-                local expandArrow = _G[btn:GetName() .. "ExpandArrow"]
-                local tw          = nt and math.ceil(nt:GetStringWidth() or 0) or 0
-                local countLabel  = countKey and btn[countKey]
-                local cw          = (countLabel and countLabel:IsShown())
-                                    and math.ceil(countLabel:GetStringWidth() or 0) or 0
-                local hasArrow    = expandArrow and expandArrow:IsShown()
-
-                -- measure rightmost inline widget
-                local inlineW = 0
-                for _, key in ipairs(inlineKeys) do
-                    if btn[key] and btn[key]:IsShown() then
-                        inlineW = math.max(inlineW, btn[key]:GetWidth() or 0)
-                    end
-                end
-
-                local rightRes = inlineW > 0 and (inlineW + 8)
-                    or (hasArrow and 14 or 6) + (cw > 0 and (cw + 6) or 0)
-                neededContent = math.max(neededContent, leftInset + tw + rightRes)
-            end
-        end
-
-        if visible == 0 then return end
-
-        -- Pass 2: apply widths and re-anchor
-        local btnWidth   = neededContent
-        local frameWidth = neededContent + BORDER_PAD
-        listFrame:SetWidth(frameWidth)
-
-        for i = 1, maxButtons do
-            local btn = _G[listFrame:GetName() .. "Button" .. i]
-            if btn and btn:IsShown() then
-                btn:SetWidth(btnWidth)
-                local nt          = _G[btn:GetName() .. "NormalText"]
-                local expandArrow = _G[btn:GetName() .. "ExpandArrow"]
-                local countLabel  = countKey and btn[countKey]
-                local hasArrow    = expandArrow and expandArrow:IsShown()
-                local hasCount    = countLabel and countLabel:IsShown()
-
-                -- Find rightmost visible inline widget
-                local inlineBtn = nil
-                for _, key in ipairs(inlineKeys) do
-                    if btn[key] and btn[key]:IsShown() then
-                        inlineBtn = btn[key]
-                        break
-                    end
-                end
-
-                if inlineBtn then
-                    if compactRight and nt then
-                        local tw = math.ceil(nt:GetStringWidth() or 0)
-                        inlineBtn:ClearAllPoints()
-                        inlineBtn:SetPoint("LEFT", btn, "LEFT", leftInset + tw + 4, 0)
-                    else
-                        inlineBtn:ClearAllPoints()
-                        inlineBtn:SetPoint("RIGHT", btn, "RIGHT", -4, 0)
-                    end
-                end
-
-                if nt then
-                    nt:ClearAllPoints()
-                    nt:SetPoint("LEFT", btn, "LEFT", leftInset, 0)
-                    nt:SetJustifyH("LEFT")
-                    if hasCount and countLabel then
-                        if hasArrow and expandArrow then
-                            expandArrow:ClearAllPoints()
-                            expandArrow:SetPoint("RIGHT", btn, "RIGHT", -3, 0)
-                            countLabel:ClearAllPoints()
-                            countLabel:SetPoint("RIGHT", expandArrow, "LEFT", -4, 0)
-                        else
-                            countLabel:ClearAllPoints()
-                            countLabel:SetPoint("RIGHT", btn, "RIGHT", -6, 0)
-                        end
-                        nt:SetPoint("RIGHT", countLabel, "LEFT", -6, 0)
-                    elseif not inlineBtn and not compactRight then
-                        nt:SetPoint("RIGHT", btn, "RIGHT", hasArrow and -16 or -6, 0)
-                    end
-                end
-
-                if expandArrow and not hasCount and not inlineBtn then
-                    expandArrow:ClearAllPoints()
-                    expandArrow:SetPoint("RIGHT", btn, "RIGHT", -3, 0)
-                end
-            end
-        end
+        listFrame._rgxLayout = layout
+        HookListFrame(listFrame)
+        ApplyListLayout(listFrame, layout)
+        if layout.owner ~= nil then ApplyListTheme(listFrame, layout.skin) end
     end)
 end
 
@@ -389,15 +504,37 @@ function Dropdowns:AddInlineButton(buttonFrame, opts)
             tile = false, edgeSize = 1,
             insets = {left=0, right=0, top=0, bottom=0}
         })
-        existing:SetBackdropColor(0.08, 0.10, 0.13, 0.95)
-        existing:SetBackdropBorderColor(0.14, 0.20, 0.28, 1)
-
+        -- Theme from the design system, matching the dropdown trigger (surface, border, primary on hover).
+        local D = RGX and RGX.GetDesign and RGX:GetDesign()
+        local function token(name, fr, fg, fb)
+            local colors = existing._rgxColors
+            local override = colors and colors[name]
+            if type(override) == "table" then return override[1], override[2], override[3] end
+            if D and D.Unpack then
+                local r, g, b = D:Unpack(name)
+                if r then return r, g, b end
+            end
+            return fr, fg, fb
+        end
         local lbl = existing:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         lbl:SetAllPoints()
         lbl:SetJustifyH("CENTER")
         existing.label = lbl
+        local function restState(btn)
+            local sr, sg, sb = token("surface", 0.08, 0.10, 0.13)
+            btn:SetBackdropColor(sr, sg, sb, 0.95)
+            btn:SetBackdropBorderColor(token("border", 0.14, 0.20, 0.28))
+            lbl:SetTextColor(token("text", 0.91, 0.91, 0.93))
+        end
+        existing._rgxRest = restState
+        restState(existing)
 
-        existing:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        existing:HookScript("OnEnter", function(btn)
+            btn:SetBackdropBorderColor(token("primary", 0, 0.9, 1))
+        end)
+        existing:HookScript("OnLeave", function(btn) restState(btn) end)
+
+        existing:HookScript("OnLeave", function() GameTooltip:Hide() end)
         buttonFrame[key] = existing
         -- Native menu rows are recycled by other dropdowns after closing.
         -- An inline action must be explicitly shown for its new row owner.
@@ -405,6 +542,10 @@ function Dropdowns:AddInlineButton(buttonFrame, opts)
     end
 
     -- Update per-call properties
+    -- opts.colors = { surface = {r,g,b}, border = {r,g,b}, primary = {r,g,b}, text = {r,g,b} }
+    -- lets an addon match the button to its own palette.
+    existing._rgxColors = opts.colors
+    if existing._rgxRest then existing._rgxRest(existing) end
     existing.label:SetText(opts.text or "")
     if opts.width  then existing:SetSize(opts.width,  existing:GetHeight()) end
     if opts.height then existing:SetSize(existing:GetWidth(), opts.height)  end
@@ -461,6 +602,11 @@ end
                         leaf items; use Drops:AddInlineButton here
         autoWidth       (table)            — { minWidth, leftInset, opts }
                         triggers ForceWidth on each open
+        onPreview       (fn(value, item, holder)) - Play/Stop button on each leaf with a value.
+                        Forces the UIDropDownMenu path. Set item.preview = false to skip a row.
+        previewLabel    (string)  - default "Play"
+        previewStopLabel(string)  - default "Stop"
+        isPreviewing    (fn(value, item, holder)) -> bool - chooses Play or Stop
 
     Item fields:
         text        (string)
@@ -476,6 +622,7 @@ end
         tooltipTitle(string)
         tooltipText (string)
         keepOpen    (bool)     — don't CloseDropDownMenus on select
+        preview     (bool)     - false hides this leaf's Play button (onPreview)
         keepShownOnClick(bool) — UIDropDownMenu-compatible alias for keepOpen
 ]]
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -753,7 +900,31 @@ function Dropdowns:CreateNestedDropdown_Legacy(parent, opts)
     holder._menuData = {}
     local menuKeyCounter = 0
 
+    -- Play/Stop state. Only used when opts.onPreview is set.
+    local onPreview = opts.onPreview
+    local previewLabel = opts.previewLabel or "Play"
+    local previewStopLabel = opts.previewStopLabel or "Stop"
+    local isPreviewing = opts.isPreviewing
+    holder._previewButtons = {}
+
+    local function previewTextFor(item)
+        if type(isPreviewing) == "function" and isPreviewing(item.value, item, holder) then
+            return previewStopLabel
+        end
+        return previewLabel
+    end
+
+    -- The row that UIDropDownMenu_AddButton has just created on this level.
+    local function lastButtonAt(level)
+        local listFrame = Dropdowns:GetListFrame(level)
+        if not listFrame or not listFrame.numButtons then return nil end
+        return _G[listFrame:GetName() .. "Button" .. listFrame.numButtons]
+    end
+
     local function addItems(items, level)
+        -- List rows are shared by every open UIDropDownMenu and recycled between opens, so
+        -- clear Play buttons left by any earlier menu, including one from another dropdown.
+        Dropdowns:HideInlineButtons(level, PREVIEW_KEY)
         for _, item in ipairs(items or {}) do
             local info = UIDropDownMenu_CreateInfo()
 
@@ -824,15 +995,46 @@ function Dropdowns:CreateNestedDropdown_Legacy(parent, opts)
                         end
                     end
                 end
+
+                -- Play/Stop button. A leaf with a value gets one unless item.preview is false.
+                if onPreview and item.value ~= nil and item.preview ~= false then
+                    local row = lastButtonAt(level)
+                    if row then
+                        local preview = Dropdowns:AddInlineButton(row, {
+                            key = PREVIEW_KEY,
+                            text = previewTextFor(item),
+                            width = 34,
+                            height = 16,
+                            onClick = function(rowFrame)
+                                onPreview(item.value, item, holder)
+                                local inline = rowFrame[PREVIEW_KEY]
+                                if inline and inline.label then
+                                    inline.label:SetText(previewTextFor(item))
+                                end
+                            end,
+                        })
+                        preview.item = item
+                        holder._previewButtons[#holder._previewButtons + 1] = preview
+                    end
+                end
             end
         end
 
-        -- Auto-width after all items added at this level
-        if autoW then
+        -- Auto-width after all items added at this level. Play buttons take row width too,
+        -- so the preview key is reserved here and consumers do not list it in autoWidth.opts.
+        if autoW or onPreview then
+            local fo = autoW and autoW.opts or {}
+            local inlineKeys = {}
+            for _, key in ipairs(fo.inlineKeys or {}) do
+                inlineKeys[#inlineKeys + 1] = key
+            end
+            if onPreview then
+                inlineKeys[#inlineKeys + 1] = PREVIEW_KEY
+            end
             Dropdowns:ForceWidth(level,
-                autoW.minWidth  or 200,
-                autoW.leftInset or 10,
-                autoW.opts)
+                (autoW and autoW.minWidth) or 200,
+                (autoW and autoW.leftInset) or 10,
+                { inlineKeys = inlineKeys, countKey = fo.countKey, compactRight = fo.compactRight })
         end
     end
 
@@ -843,6 +1045,7 @@ function Dropdowns:CreateNestedDropdown_Legacy(parent, opts)
             -- Prevents stale key accumulation and ensures TWW compat.
             holder._menuData = {}
             menuKeyCounter = 0
+            holder._previewButtons = {}
             addItems(holder:GetItems(), level)
         else
             local children = type(menuList) == "table" and menuList
@@ -856,6 +1059,15 @@ function Dropdowns:CreateNestedDropdown_Legacy(parent, opts)
     function holder:Refresh(value)
         if value ~= nil then self.value = value end
         SetDropdownText(self.dropdown, self:GetValueText(self.value))
+    end
+
+    -- Re-read Play/Stop labels, for example after the consumer's playback ends.
+    function holder:RefreshPreviews()
+        for _, preview in ipairs(self._previewButtons or {}) do
+            if preview:IsShown() and preview.label and preview.item then
+                preview.label:SetText(previewTextFor(preview.item))
+            end
+        end
     end
 
     function holder:SetEnabled(enabled)
@@ -963,7 +1175,9 @@ end
 function Dropdowns:CreateNestedDropdown(parent, opts)
     opts = opts or {}
     local holder
-    if HasModernDropdownTemplate() then
+    -- Play buttons need UIDropDownMenu list frames, where ForceWidth reserves row width.
+    -- MenuUtil rows expose no list frame, so onPreview always takes the legacy path.
+    if HasModernDropdownTemplate() and opts.onPreview == nil then
         RGX:Debug("RGXDropdown: dispatching to MenuUtil path")
         holder = self:CreateNestedDropdown_MenuUtil(parent, opts)
     else

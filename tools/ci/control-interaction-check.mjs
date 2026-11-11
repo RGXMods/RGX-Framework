@@ -34,6 +34,7 @@ try {
       function w:SetColorTexture(...) self.color = {...} end
       function w:SetTextColor(...) self.textColor = {...} end
       function w:SetBackdropBorderColor(...) self.borderColor = {...} end
+      function w:SetBackdropColor(...) self.backdropColor = {...} end
       function w:SetText(text) self.text = text end
       function w:GetText() return self.text end
       function w:SetFocus()
@@ -97,6 +98,20 @@ try {
       dialog.resizeGrip.scripts.OnDragStop(); assert(resized and dialog.sizing==nil)
       local fixed=UI:CreateConfigDialog({}, {})
       assert(fixed.resizeGrip==nil)
+    `],
+    ["a slider's reset button sits at the right edge of the slider's own row, not the parent's", `
+      local parent = {}
+      local slider = UI:CreateSlider(parent, {key='amount', storage={}, min=0, max=10, default=5})
+      local reset = slider.resetButton
+      assert(reset, 'slider has a reset button')
+      -- the reset is centred on an anchor frame that CreateRowReset... AnchorRowReset pins to the row's right edge
+      local anchorFrame = reset.points[#reset.points][2]
+      assert(anchorFrame, 'reset is anchored to a row anchor frame')
+      local right
+      for _, p in ipairs(anchorFrame.points) do if p[1] == 'RIGHT' then right = p end end
+      assert(right, 'the row anchor is pinned to the right edge')
+      assert(right[2] == slider, 'the reset follows the slider row, not its parent (anchored to ' .. tostring(right[2] == parent and 'parent' or 'other') .. ')')
+      assert(right[4] == 0, 'the reset sits flush in the 28px the row reserves, not 8px inside it (inset ' .. tostring(right[4]) .. ')')
     `],
     ["slider snapping is relative to min so every slider can reach its own minimum", `
       local storage={amount=1}
@@ -359,6 +374,103 @@ try {
       assert(qr == pr and qg == pg and qb == pb, 'style touched primary')
       assert(D:SetStyle('framework') and D.cornerStyle == 'rounded')
       assert(D:GetColor('border')[1] == 0.137, 'framework palette did not restore')
+    `],
+    ["RGX styles: framework, materialround and classic are listed in order with their names", `
+      local labels = {}
+      for _, id in ipairs(D.STYLE_ORDER) do labels[#labels + 1] = D.STYLES[id].label end
+      assert(table.concat(labels, '|') == 'RGX Framework|RGX Material Round|RGX Classic', 'style names: ' .. table.concat(labels, '|'))
+      assert(D.STYLES.retail == nil and D.STYLES.forever == nil, 'old retail/forever styles must not be listed')
+      assert(D:ResolveStyle('retail') == 'framework' and D:ResolveStyle('forever') == 'classic', 'legacy ids lost their aliases')
+      assert(D:ResolveStyle('bogus') == nil)
+      assert(D:SetStyle('forever') and D:GetStyle() == 'forever' and D:GetStyleId() == 'classic' and D.cornerStyle == 'square', 'forever must behave as classic')
+      assert(D:GetStyleLabel() == 'RGX Classic')
+      assert(D:SetStyle('framework') and D:GetStyleId() == 'framework')
+    `],
+    ["RGX Material Round: rounded cards, header bands and buttons; ring and titles come from the mod's primary/accent", `
+      local RED, CORAL = { 0.545, 0.082, 0.220 }, { 0.929, 0.420, 0.522 }
+      assert(D:SetStyle('materialround') and D:GetStyleId() == 'materialround' and D.cornerStyle == 'rounded')
+      local fill = D:GetColor('surface')
+      assert(fill[1] == fill[2] and fill[3] > fill[1] and fill[1] < 0.2, 'fills stay grey/dark, never brand coloured')
+      local parent = CreateFrame('Frame')
+      D:WithTheme({ primary = RED, accent = CORAL }, function()
+        local ring = D:GetColor('ring')
+        assert(ring[1] == RED[1] and ring[2] == RED[2] and ring[3] == RED[3], 'ring must be the mod primary colour')
+        local header = D:CreateSectionHeader(parent, 'Materials')
+        assert(header._panelBorder and header._panelFill, 'material round header is a rounded band')
+        local c = header.label.textColor
+        assert(c[1] == CORAL[1] and c[2] == CORAL[2] and c[3] == CORAL[3], 'card titles must be the mod accent colour')
+        local card = D:CreateFrame(parent, {})
+        assert(card._panelBorder and card._panelFill, 'cards are rounded panels')
+        local btn = D:CreateButton(parent, 'Go', 100, 24)
+        assert(btn._panelBorder and btn._panelFill, 'buttons are rounded in material round')
+        assert(btn.bg and btn.bg.SetColorTexture and btn.border and btn.border.SetBackdropBorderColor, 'bg/border surface is kept for callers')
+        btn.scripts.OnEnter(btn)
+        assert(btn.label.textColor[1] == CORAL[1] and btn.label.textColor[3] == CORAL[3], 'hover label is the mod accent colour')
+        btn.scripts.OnLeave(btn)
+      end)
+      -- a different mod, a different brand: the same style, branded by that mod
+      D:WithTheme({ primary = { 0.1, 0.6, 0.9 }, accent = { 0.9, 0.9, 0.2 } }, function()
+        local ring = D:GetColor('ring')
+        assert(ring[1] == 0.1 and ring[2] == 0.6 and ring[3] == 0.9, 'another mod gets its own ring colour')
+        local c = D:CreateSectionHeader(parent, 'Other').label.textColor
+        assert(c[1] == 0.9 and c[2] == 0.9 and c[3] == 0.2, 'another mod gets its own title colour')
+      end)
+      assert(D:SetStyle('framework'))
+      local plain = D:CreateButton(parent, 'Go', 100, 24)
+      assert(not plain._panelBorder, 'framework style keeps its square button')
+      local plainHeader = D:CreateSectionHeader(parent, 'Plain')
+      assert(not plainHeader._panelBorder, 'framework style keeps its square header')
+      assert(D:GetColor('ring')[1] == 0.137, 'framework ring is the border colour again, whatever the brand colour')
+    `],
+    ["Design:WithStyle builds in a style and restores the operator's choice", `
+      assert(D:SetStyle('classic'))
+      local seen
+      D:WithTheme({ primary = { 0.545, 0.082, 0.220 } }, function()
+        D:WithStyle('materialround', function()
+          seen = { id = D:GetStyleId(), corner = D.cornerStyle, ring = D:GetColor('ring')[1], rounded = D:CreateButton(CreateFrame('Frame'), 'x')._panelBorder ~= nil }
+        end)
+        assert(D:GetColor('ring')[1] == 0.25, 'classic ring must be back after WithStyle')
+      end)
+      assert(seen.id == 'materialround' and seen.corner == 'rounded' and seen.ring == 0.545 and seen.rounded, 'scoped style not applied')
+      assert(D:GetStyleId() == 'classic' and D.cornerStyle == 'square', 'style not restored')
+      assert(D:GetColor('border')[1] == 0.25 and D:GetColor('ring')[1] == 0.25, 'palette not restored')
+      assert(D:CreateButton(CreateFrame('Frame'), 'x')._panelBorder == nil, 'button treatment not restored')
+      local ok = pcall(function() D:WithStyle('materialround', function() error('boom') end) end)
+      assert(not ok and D:GetStyleId() == 'classic', 'a failing builder must still restore the style')
+      assert(not pcall(function() D:WithStyle('bogus', function() end) end), 'unknown style must be rejected')
+      D:SetStyle('framework')
+    `],
+    ["a rounded button keeps the building mod's ring colour on hover, after the mod's theme scope has ended", `
+      local RED = { 0.545, 0.082, 0.220 }
+      local btn
+      D:WithTheme({ primary = RED, accent = { 0.9, 0.4, 0.5 } }, function()
+        D:WithStyle('materialround', function() btn = D:CreateButton(CreateFrame('Frame'), 'Go', 100, 24) end)
+      end)
+      D:SetTheme({ primary = { 0.1, 0.8, 0.2 } })   -- another mod owns the shared theme now
+      local seen
+      btn.SetPanelColor = function(_, fill, border) if border then seen = border end end
+      btn.scripts.OnEnter(btn)
+      assert(seen and seen[1] == RED[1] and seen[2] == RED[2] and seen[3] == RED[3], 'hover ring must stay the building mod colour')
+      D:SetTheme({ primary = { 0, 0.902, 1 }, accent = { 0.737, 0.435, 0.659 } })
+    `],
+    ["WithTheme and WithStyle hand back what the builder returns", `
+      local frame = D:WithTheme({ primary = { 0.5, 0.5, 0.5 } }, function() return D:WithStyle('materialround', function() return 'built', 7 end) end)
+      assert(frame == 'built', 'builder result lost')
+      local a, b = D:WithStyle('classic', function() return 'x', 'y' end)
+      assert(a == 'x' and b == 'y', 'multiple results lost')
+      D:SetStyle('framework')
+    `],
+    ["every style is branded by the mod: highlights follow primary/accent in framework, classic and material round", `
+      local BRAND = { 0.2, 0.7, 0.3 }
+      D:WithTheme({ primary = BRAND, accent = { 0.8, 0.2, 0.6 } }, function()
+        for _, id in ipairs({ 'framework', 'classic', 'materialround' }) do
+          D:WithStyle(id, function()
+            local p = D:GetColor('primary')
+            assert(p[1] == BRAND[1] and p[2] == BRAND[2] and p[3] == BRAND[3], id .. ' must pass the mod primary through')
+            assert(D:GetColor('accent')[1] == 0.8, id .. ' must pass the mod accent through')
+          end)
+        end
+      end)
     `],
     ["confirm dialog fires once, hides, and joins UISpecialFrames", `
       UISpecialFrames = {}

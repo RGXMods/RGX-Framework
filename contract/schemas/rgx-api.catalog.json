@@ -870,8 +870,22 @@
           "params": []
         },
         {
+          "name": "GetStyleId",
+          "params": []
+        },
+        {
+          "name": "GetStyleLabel",
+          "params": []
+        },
+        {
           "name": "GetThemePreset",
           "params": []
+        },
+        {
+          "name": "ResolveStyle",
+          "params": [
+            "name"
+          ]
         },
         {
           "name": "RGBToHex",
@@ -916,6 +930,13 @@
           "name": "Unpack",
           "params": [
             "key"
+          ]
+        },
+        {
+          "name": "WithStyle",
+          "params": [
+            "name",
+            "fn"
           ]
         },
         {
@@ -1538,6 +1559,12 @@
           ]
         },
         {
+          "name": "OnHonorGain",
+          "params": [
+            "fn"
+          ]
+        },
+        {
           "name": "OnLevelUp",
           "params": [
             "fn"
@@ -1680,6 +1707,12 @@
       "methods": [
         {
           "name": "OnCurrencyGained",
+          "params": [
+            "fn"
+          ]
+        },
+        {
+          "name": "OnItemLooted",
           "params": [
             "fn"
           ]
@@ -2694,6 +2727,14 @@
           "params": [
             "parent",
             "options"
+          ]
+        },
+        {
+          "name": "CreateStandardCard",
+          "params": [
+            "self",
+            "parent",
+            "opts"
           ]
         },
         {

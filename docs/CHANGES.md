@@ -2,13 +2,78 @@
 
 ## Current Release
 
-### [v2.11.0](changelogs/2.11.0.md) - 2026-10-24
+### [v2.17.5](changelogs/2.17.5.md) - 2026-11-11
 
-- Added the RGXTriggers module: a clone-keyed trigger state store with engine-diffed changed flags, stale-clone sweep, guaranteed progress shapes, and failure-isolated change notifications.
-- Added declarative page nodes for multi-page options tabs.
-- Added 1–2 column page card grids and 1–2 column internal card control flows.
-- Extended the MCP generator and schema for declarative pages/cards.
-- Layout validation now rejects invalid declarations before addon registration.
+- A slider's reset button is anchored to the slider's own row, so it no longer sits 8px inside a card row and over the end of the track.
+
+### [v2.17.4](changelogs/2.17.4.md) - 2026-11-11
+
+- `UI:CreateOptionsPanel` takes `hideTabRow = true`: a one-tab panel hides its tab row so the page starts right under the header.
+
+### [v2.17.3](changelogs/2.17.3.md) - 2026-11-10
+
+- `UI:CreateStandardCard` takes `addonMenu = false` and `loginMessage = false` to omit those switches.
+
+### [v2.17.2](changelogs/2.17.2.md) - 2026-11-10
+
+- `RGX:CreateChat` prints the standard RGX prefix, `icon - [Label] message` (the `RGX:CreateChatPrefix` format), with `label`, `icon` and `tagColor` options.
+
+### [v2.17.1](changelogs/2.17.1.md) - 2026-11-10
+
+- `UI:CreateStandardCard` takes `description = false` and `prefix = false` to omit the muted line under the title and the chat-prefix box.
+
+### [v2.17.0](changelogs/2.17.0.md) - 2026-11-10
+
+- `UI:CreateStandardCard`: one card with the options every mod shares (minimap icon, Addons-menu entry, chat output, login message, chat prefix).
+- `RGX:CreateChat`: addon chat with the shared prefix and on/off rules.
+
+### [v2.16.0](changelogs/2.16.0.md) - 2026-11-09
+
+- Minimap buttons can show or hide their Addons-menu entry at runtime (`SetCompartmentVisible`).
+- New shared addon release kit: guide plus templates for the GitHub workflow, `.pkgmeta` and GitLab CI.
+
+### [v2.15.2](changelogs/2.15.2.md) - 2026-11-07
+
+- Rounded buttons keep the building mod's hover ring colour; `WithTheme` and `WithStyle` return the builder's results.
+
+### [v2.15.1](changelogs/2.15.1.md) - 2026-11-07
+
+- Every interface style is branded by the mod's own primary and accent colours. RGX Material Round's ring now follows `primary` and its card titles follow `accent`, instead of a fixed red and coral.
+
+### [v2.15.0](changelogs/2.15.0.md) - 2026-11-07
+
+- New **RGX Material Round** interface style (rounded cards, header bands and buttons on grey with the RGX red ring), a drop-in for every RGX addon.
+- Styles are named **RGX Framework**, **RGX Material Round** and **RGX Classic**; `retail` and `forever` remain as aliases.
+- Added `Design:WithStyle` for building one addon's UI in a style without changing the operator's choice.
+
+### [v2.14.2](changelogs/2.14.2.md) - 2026-11-05
+
+- Addons can pass their own palette to dropdown list frames (`ForceWidth` `opts.skin`) and inline buttons (`AddInlineButton` `opts.colors`).
+
+### [v2.14.1](changelogs/2.14.1.md) - 2026-11-05
+
+- Dropdown list frames opened through `ForceWidth` use the design-system theme, and inline Play buttons stay inside the row.
+- Release zips avoid a boot-sector byte signature that Wago rejected.
+
+### [v2.14.0](changelogs/2.14.0.md) - 2026-11-05
+
+- Added `RGXLoot:OnItemLooted` (any new item) and `RGXHonor:OnHonorGain`; `OnRareLoot` no longer repeats for items that stay flagged new.
+- The dropdown inline Play button is themed with the design system and keeps clear of the frame edge.
+- Release tooling publishes the exact CurseForge and Wago game version per flavor.
+
+### [v2.13.0](changelogs/2.13.0.md) - 2026-11-05
+
+- Every button created with `RGXMinimap:Create` is now also listed in Blizzard's Addons menu on the minimap (the addon compartment), with the same icon, tooltip, left click and right click.
+- Added `compartment = false` to opt a button out and `compartmentText` to set the menu label.
+- Clients without the addon compartment are unchanged.
+
+### [v2.12.0](changelogs/2.12.0.md) - 2026-11-03
+
+- Added `onPreview` to `CreateNestedDropdown`: a Play/Stop button on each leaf with a value. Use `isPreviewing`, `previewLabel` and `previewStopLabel` to control it, and set `item.preview = false` to skip a row.
+- Menus with `onPreview` use the UIDropDownMenu path, where the framework reserves row width for the button.
+- Added `holder:RefreshPreviews()` to re-read Play/Stop labels after playback ends.
+- Play buttons are cleared whenever a dropdown builds a menu level, because menu rows are shared between dropdowns.
+- Documented the Play button API in `docs/DROPDOWNS.md`.
 
 ### [v2.8.2](changelogs/2.8.2.md) - 2026-10-19
 

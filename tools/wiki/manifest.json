@@ -49,6 +49,7 @@
       "title": "Project",
       "pages": [
         { "doc": "DISTRIBUTION.md",    "wiki": "Distribution" },
+        { "doc": "ADDON-RELEASE.md",   "wiki": "Addon-Release" },
         { "doc": "ROADMAP.md",         "wiki": "Roadmap" },
         { "doc": "STUDIO-ROADMAP.md",  "wiki": "Studio-Roadmap" },
         { "doc": "MIGRATION.md",       "wiki": "Migration" },

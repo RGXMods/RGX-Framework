@@ -591,6 +591,7 @@ Create a full options panel with tab system, scroll container, and header.
 | `opts.author` | string | No | — | Author string shown in header |
 | `opts.website` | string | No | — | Website URL shown in header |
 | `opts.closeButton` | boolean | No | true | Standard window close button (hidden while embedded in Settings) |
+| `opts.hideTabRow` | boolean | No | false | With exactly one tab, hide the tab row so the page starts right under the header |
 
 **Returns:** Panel object with methods below.
 
@@ -763,6 +764,35 @@ end
 ```
 
 ---
+
+## Standard Options Card
+
+`UI:CreateStandardCard(parent, opts)` returns one card holding the settings every
+RGX addon offers, stored under the same keys so every mod behaves alike:
+
+| Key | Setting |
+|---|---|
+| `minimapIconEnabled` | Show the minimap button (applied through the button's `SetVisible`) |
+| `addonMenu` | List in the Addons menu (`SetCompartmentVisible`; a client that cannot remove an entry tells the player to reload) |
+| `chatOutput` | Print messages to chat (read by `RGX:CreateChat`) |
+| `loginMessage` | Print a loaded message at login (read by `RGX:CreateChat`) |
+| `chatPrefix` | Chat prefix; empty uses the addon's `[label]` |
+
+Absent keys mean on. Options: `storage` (required, the addon's saved-variables
+table), `minimap` (the minimap button or a function returning it; `false` omits
+the two minimap rows), `labels` (override any string for localisation), `title`,
+`defaultPrefix` (placeholder text for the prefix box), `description = false` (omit the muted line under the title), `addonMenu = false` and `loginMessage = false` (omit those switches, for an addon where the Addons-menu entry is always on or the loaded message is always shown), `prefix = false` (omit the chat-prefix box, for an addon that keeps its branded prefix) and `onChange(key, value)`.
+
+```lua
+local card = UI:CreateStandardCard(column, {
+    storage = MyAddonDB,
+    minimap = function() return MyAddon.minimapButton end,
+    defaultPrefix = "MyAddon",
+})
+```
+
+Because the card is a normal card it can sit in a column grid next to the
+addon's own cards. `npm --prefix tools/ci run lua-runtime-check` covers it.
 
 ## Layout Notes
 

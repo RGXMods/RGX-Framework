@@ -136,3 +136,27 @@ button:SetVisible(false)
 -- Later: change tooltip
 button:SetTooltip("MyAddon - Active")
 ```
+
+## Addons menu (addon compartment)
+
+Every button created with `Minimap:Create` is also listed in Blizzard's Addons menu on the minimap. The entry uses the button `icon`, shows the same `tooltip`, and calls `onLeftClick` or `onRightClick` for the matching mouse button. It stays available when the round button is hidden.
+
+| Option | Default | Effect |
+|--------|---------|--------|
+| `compartment` | `true` | `false` skips the Addons menu entry |
+| `compartmentText` | `title`, then `tooltip.title`, then the button name | Menu label |
+
+Clients without `AddonCompartmentFrame` skip registration.
+
+To offer the entry as a setting, change it at runtime:
+
+| Method | Effect |
+|--------|--------|
+| `btn:SetCompartmentVisible(show)` | Adds or removes the Addons menu entry. Returns `true` when the menu now matches `show`, `false` when the client has no Addons menu or cannot remove an entry (the choice then applies after the next reload). |
+| `btn:IsCompartmentVisible()` | Whether the entry is currently listed. |
+
+```lua
+local btn = RGX:GetMinimap():Create({ name = "MyAddon_MinimapButton", icon = icon, compartment = settings.addonMenu ~= false })
+-- in a settings toggle:
+btn:SetCompartmentVisible(value)
+```

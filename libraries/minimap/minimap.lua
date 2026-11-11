@@ -229,12 +229,12 @@ end
     TOOLTIP BUILDER
 ============================================================================]]
 
-local function ShowTooltip(btn, opts)
+local function ShowTooltip(btn, opts, owner, anchor)
     if not GameTooltip then return end
     local tt = opts.tooltip
     if not tt then return end
 
-    GameTooltip:SetOwner(btn.frame, "ANCHOR_LEFT")
+    GameTooltip:SetOwner(owner or btn.frame, anchor or "ANCHOR_LEFT")
     GameTooltip:ClearLines()
 
     local title = tt.title or ""
@@ -261,6 +261,80 @@ local function ShowTooltip(btn, opts)
     end
 
     GameTooltip:Show()
+end
+
+--[[============================================================================
+    ADDON COMPARTMENT
+    Blizzard's "Addons" menu on the minimap (AddonCompartmentFrame). Every
+    button created here gets an entry there too, so the addon stays reachable
+    when the round button is hidden, collected by another addon, or the
+    player keeps the compartment as their only addon launcher.
+============================================================================]]
+
+local function RegisterCompartment(btn, opts)
+    local compartment = _G.AddonCompartmentFrame
+    btn._compartmentOpts = opts
+    if opts.compartment == false then return end
+    if not compartment or type(compartment.RegisterAddon) ~= "function" then return end
+    if btn._compartmentData then return end
+
+    local tt = opts.tooltip
+    local text = opts.compartmentText or opts.title or (tt and tt.title)
+    if type(text) ~= "string" or text == "" then
+        text = (opts.name:gsub("MinimapButton$", ""):gsub("_$", ""))
+    end
+
+    local data = {
+        text = text,
+        icon = opts.icon,
+        notCheckable = true,
+        registerForAnyClick = true,
+        func = function(_, menuInputData)
+            local mouseButton = menuInputData and menuInputData.buttonName
+            if mouseButton == "RightButton" and type(opts.onRightClick) == "function" then
+                opts.onRightClick(btn)
+            elseif type(opts.onLeftClick) == "function" then
+                opts.onLeftClick(btn)
+            end
+        end,
+        funcOnEnter = function(menuButton)
+            ShowTooltip(btn, opts, menuButton, "ANCHOR_LEFT")
+        end,
+        funcOnLeave = function()
+            if GameTooltip then GameTooltip:Hide() end
+        end,
+    }
+    btn._compartmentData = data
+    local ok = pcall(compartment.RegisterAddon, compartment, data)
+    if not ok then btn._compartmentData = nil end
+end
+
+--- Show or hide this button's entry in the Blizzard "Addons" minimap menu at runtime, so an addon can
+--- offer it as a setting. Returns true when the menu now matches `show`; false when the client has no
+--- addon menu (or cannot remove an entry), in which case the choice applies after the next reload.
+function Button:SetCompartmentVisible(show)
+    show = show and true or false
+    local opts = self._compartmentOpts
+    local compartment = _G.AddonCompartmentFrame
+    if not opts or not compartment then return false end
+    if show then
+        opts.compartment = nil
+        RegisterCompartment(self, opts)
+        return self._compartmentData ~= nil
+    end
+    opts.compartment = false
+    local data = self._compartmentData
+    if not data then return true end
+    if type(compartment.UnregisterAddon) == "function" then
+        local ok = pcall(compartment.UnregisterAddon, compartment, data)
+        if ok then self._compartmentData = nil end
+        return ok
+    end
+    return false
+end
+
+function Button:IsCompartmentVisible()
+    return self._compartmentData ~= nil
 end
 
 --[[============================================================================
@@ -304,6 +378,10 @@ end
 
         -- Visibility change
         onVisibilityChanged (fn(visible, btn))
+
+        -- Addon compartment (Blizzard "Addons" minimap menu)
+        compartment     (boolean) — default true; false skips the entry
+        compartmentText (string)  — menu label (default opts.title, tooltip.title, or name)
 ]]
 function Minimap:Create(opts)
     assert(type(opts) == "table", "RGXMinimap:Create requires an options table")
@@ -457,6 +535,8 @@ function Minimap:Create(opts)
 
     self._buttons[opts.name] = btn
     _G[opts.name] = frame
+
+    RegisterCompartment(btn, opts)
 
     return btn
 end

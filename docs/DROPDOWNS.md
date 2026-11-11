@@ -127,6 +127,9 @@ Drops:ForceWidth(level, minWidth, leftInset, opts)
 - `opts.inlineKeys` — inline button keys to account for
 - `opts.compactRight` — reduce right margin
 - `opts.countKey` — item count key for sizing
+- `opts.skin` — `{ surface = {r,g,b,a}, border = {r,g,b} }` palette for the list frame; defaults to the design tokens. The list frame is skinned (and the native Blizzard border hidden) only while a menu opened by a `ForceWidth` caller is showing; other addons' menus keep the native look.
+
+The layout is also applied synchronously when the list frame is shown and again after the client re-measures its rows, so inline buttons stay inside the row.
 
 **Implementation:** `ForceWidth` is deferred via `RGX:After(0)`. On the first pass, it measures all button `FontString:GetWidth()` values. On the second pass, it applies the resolved width to the list frame and all buttons.
 
@@ -145,11 +148,13 @@ Drops:AddInlineButton(buttonFrame, {
     width   = 20,            -- button width
     height  = 16,            -- button height
     tooltip = "Preview",     -- tooltip text on hover
+    colors  = { surface = {r,g,b}, border = {r,g,b}, primary = {r,g,b}, text = {r,g,b} }, -- optional addon palette
     onClick = function(inlineBtn, buttonFrame) end,
 })
 ```
 
 The inline button is positioned to the right of the dropdown button's text, inset from the right edge.
+Do not use `rgxPreviewBtn` as an inline key; the framework reserves it for Play buttons.
 
 ### HideInlineButtons
 
@@ -158,6 +163,40 @@ Drops:HideInlineButtons(level, key) -- hide all inline buttons with key at level
 ```
 
 Call before re-populating a menu level to clear stale inline buttons.
+
+### Play buttons (onPreview)
+
+Pass `onPreview` to add a Play button to each leaf that has a value. The button calls
+`onPreview(value, item, holder)`. `isPreviewing(value, item, holder)` chooses the label:
+Stop while that value is playing, Play otherwise. Call `holder:RefreshPreviews()` when
+playback ends, so the labels update without reopening the menu.
+
+```lua
+local dd = Drops:CreateNestedDropdown(parent, {
+    width = 260,
+    items = {
+        { text = "Chimes", children = {
+            { text = "Chime A", value = 1 },
+            { text = "Chime B", value = 2 },
+        }},
+        { text = "None", value = 0, preview = false },  -- no Play button on this row
+    },
+    onChange = function(value) end,
+    onPreview = function(value) PlaySoundFile(chimePath[value], "Master") end,
+    isPreviewing = function(value) return playingValue == value end,
+    previewLabel = "Play",       -- default
+    previewStopLabel = "Stop",   -- default
+})
+```
+
+- Play width is reserved when the framework sizes the menu, so do not list the Play key
+  (`rgxPreviewBtn`) in `autoWidth.opts.inlineKeys`. The framework adds it when `onPreview` is set.
+- `onPreview` uses the UIDropDownMenu path even when MenuUtil is available. MenuUtil rows
+  expose no list frame, so the framework cannot size them around a Play button.
+- Menu rows are shared by every open dropdown, so the framework clears Play buttons whenever
+  any dropdown builds a menu level. Other inline keys keep the rules above.
+- `tools/ci/dropdown-preview-runtime-check.mjs` checks behaviour against a widget mock. It does
+  not prove placement or size. Check button placement in game.
 
 ---
 

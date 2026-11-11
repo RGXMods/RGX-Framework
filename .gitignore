@@ -1,7 +1,6 @@
 graphify-out/
 artifacts/
 .release/
-skills/
 .reference/wow-ui-source/*
 !.reference/wow-ui-source/manifest.json
 .reference/wow-api-dump/*

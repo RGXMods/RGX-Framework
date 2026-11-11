@@ -520,6 +520,8 @@ local function CreateOptionsPanel(UI, opts)
         -- Reuse the existing lazy content lifecycle without drawing a tab row.
         tabs = { { text = "", content = opts.content } }
     end
+    -- A page with one tab can hide the tab row so the content starts right under the header (opts.hideTabRow).
+    local hideTabRow = singlePage or (opts.hideTabRow == true and #tabs == 1)
     local maxPerRow  = opts.maxPerRow or 6
 
     _panelCounter = _panelCounter + 1
@@ -686,7 +688,8 @@ local function CreateOptionsPanel(UI, opts)
 
     -- ── Tab container ─────────────────────────────────────────────────────────
     local rowCount      = GetRowCount(tabs, maxPerRow)
-    local tabAreaHeight = singlePage and 0 or GetTabContainerHeight(rowCount)
+    -- 1px, not 0: the content frame anchors to this area's bottom edge, and a zero-height anchor is not a safe layout edge.
+    local tabAreaHeight = hideTabRow and 1 or GetTabContainerHeight(rowCount)
 
     local tabArea = CreateFrame("Frame", nil, container)
     tabArea:SetPoint("TOPLEFT",  tabAnchor, "BOTTOMLEFT",  0, -TAB_AREA_GAP)
@@ -696,7 +699,7 @@ local function CreateOptionsPanel(UI, opts)
     local tabBg = tabArea:CreateTexture(nil, "BACKGROUND")
     tabBg:SetAllPoints()
     tabBg:SetColorTexture(br, bg, bb, 0.60)
-    if singlePage then tabBg:Hide() end
+    if hideTabRow then tabBg:Hide() end
 
     -- ── Build tabs and content frames ─────────────────────────────────────────
     for i, tabInfo in ipairs(tabs) do
@@ -707,7 +710,7 @@ local function CreateOptionsPanel(UI, opts)
             tabArea, tabInfo.text, i, row, col, panel, tabInfo.icon, addonKey
         )
         panel.tabs[i] = tabBtn
-        if singlePage then tabBtn:Hide() end
+        if hideTabRow then tabBtn:Hide() end
 
         -- Content frame for this tab
         local content = CreateFrame("Frame", nil, container, "BackdropTemplate")
@@ -1218,6 +1221,90 @@ end
     return panel
 end
 
+-- ── Standard options card ────────────────────────────────────────────────────
+-- The settings every RGX addon offers, in one card, under the same storage keys, so every mod behaves alike:
+--   minimapIconEnabled  show the minimap button           (opts.minimap = false omits the two minimap rows)
+--   addonMenu           list in the Addons menu           (applied through the minimap button, which tells the
+--                                                           player when a client needs a reload)
+--   chatOutput          print messages to chat            (read by RGX:CreateChat)
+--   loginMessage        print a loaded message at login   (read by RGX:CreateChat)
+--   chatPrefix          the prefix on chat messages       (empty = the addon's branded title)
+-- Absent keys mean on. opts: storage (table, required), minimap (the minimap button, or a function returning it
+-- because the button may not exist yet), labels (override any string for localisation), title, defaultPrefix
+-- (greyed placeholder text for the prefix box), onChange(key, value).
+
+local STANDARD_LABELS = {
+    title = "General",
+    description = "Minimap button, Addons menu and chat messages.",
+    minimap = "Show the minimap button",
+    addonMenu = "List in the Addons menu",
+    addonMenuReload = "The Addons menu change applies after you reload your UI.",
+    chat = "Print messages to chat",
+    login = "Print a loaded message at login",
+    prefix = "Chat prefix",
+}
+
+local function CreateStandardCard(UI, parent, opts)
+    opts = opts or {}
+    local labels = {}
+    for key, text in pairs(STANDARD_LABELS) do labels[key] = (opts.labels and opts.labels[key]) or text end
+    local storage = opts.storage
+    if type(storage) ~= "table" then
+        error("RGX UI: CreateStandardCard needs opts.storage (the addon's saved-variables table)", 2)
+    end
+
+    local card = UI:CreateCard(parent, { title = opts.title or labels.title })
+    -- Rows fill the card: a switch keeps a fixed 200px width otherwise, and a long label then runs into its
+    -- ON/OFF text. Filling puts the toggle at the card's right edge and gives the label the rest.
+    local function Add(widget) card.flow:Add(widget, { fill = true }); return widget end
+
+    local function Changed(key, value)
+        if type(opts.onChange) == "function" then pcall(opts.onChange, key, value) end
+    end
+    local function Button()
+        local button = opts.minimap
+        if type(button) == "function" then button = button() end
+        return button
+    end
+    local function Switch(label, key, onChange)
+        return Add(UI:CreateSwitch(card.content, {
+            label = label, storage = storage, key = key, default = true,
+            onChange = function(value) if onChange then onChange(value) end; Changed(key, value) end,
+        }))
+    end
+
+    if opts.description ~= false then
+        Add(UI:CreateLabel(card.content, { text = labels.description, size = "small", color = "muted", wrap = true }))
+    end
+
+    if opts.minimap ~= false then
+        Switch(labels.minimap, "minimapIconEnabled", function(value)
+            local button = Button()
+            if button and button.SetVisible then button:SetVisible(value) end
+        end)
+        if opts.addonMenu ~= false then
+            Switch(labels.addonMenu, "addonMenu", function(value)
+                local button = Button()
+                if button and button.SetCompartmentVisible and button:SetCompartmentVisible(value) == false then
+                    RGX:Print(labels.addonMenuReload)
+                end
+            end)
+        end
+    end
+    Switch(labels.chat, "chatOutput")
+    if opts.loginMessage ~= false then Switch(labels.login, "loginMessage") end
+    if opts.prefix ~= false then
+        Add(UI:CreateTextInput(card.content, {
+            label = labels.prefix, storage = storage, key = "chatPrefix", default = "",
+            placeholder = opts.defaultPrefix or "", width = 200,
+            onChange = function(value) Changed("chatPrefix", value) end,
+        }))
+    end
+
+    card:AutoHeight()
+    return card
+end
+
 -- ── Inject into RGXUI once it's available ────────────────────────────────────
 -- controls.lua runs first and sets up RGXUI; this file extends it.
 
@@ -1226,6 +1313,9 @@ local function Inject()
     if not UI then return false end
     UI.CreateOptionsPanel = function(self, opts)
         return CreateOptionsPanel(self, opts)
+    end
+    UI.CreateStandardCard = function(self, parent, opts)
+        return CreateStandardCard(self, parent, opts)
     end
     UI._BuildAddonOptionTabs = BuildAddonOptionTabs
     return true

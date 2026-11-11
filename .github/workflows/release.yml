@@ -331,6 +331,18 @@ jobs:
             exit 1
           fi
 
+      - name: Publish to WoWInterface
+        if: steps.release_type.outputs.type == 'release'
+        shell: bash
+        env:
+          WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          node tools/release/publish-wowinterface.mjs \
+            --toc RGX-Framework.toc \
+            --archive "artifacts/RGX-Framework-v${version}.zip" \
+            --changelog-file "${RUNNER_TEMP}/release-notes.md"
+
       - name: Send Failure Notification
         if: failure()
         shell: bash

@@ -23,10 +23,28 @@ invent a second API for a problem the framework already owns.
 If you have the full repository, read
 [`docs/MAINTAINER-CONTRACT.md`](docs/MAINTAINER-CONTRACT.md) before changing
 code, contracts, CI, references, or release tooling. It contains the
-maintainer-only operating contract, ownership rails, build loop, and escalation
-rules. It is not shipped in the player package or the public mirror.
+maintainer-only operating contract, Working Rules, ownership rails, build loop,
+and escalation rules. It is not shipped in the player package or the public
+mirror.
 
 Also read every scoped `AGENTS.md` in the subtree you are editing.
+
+### Skills (source tree only)
+
+`skills/` holds agent- and harness-neutral WoW API guidance: one pack per area, each a
+`SKILL.md` plus `references/`. See [`skills/README.md`](skills/README.md) for the pack list
+and the RGX module each pack maps to. `skills/` is not in the player package or the public
+mirror, so installed-addon agents will not have it.
+
+- Start with `wow-client-targets` to resolve the client (retail, forever, classic) before any
+  API lookup, then the domain pack (for example `wow-api-events`, `wow-api-framexml`).
+- Authority order: the framework contract and tools (`contract/`, `tools/rgx-mcp`) first, then
+  `docs/MAINTAINER-CONTRACT.md`, then these skills. A skill is guidance, not evidence.
+- Record flavor, client build, upstream commit, file and line for every WoW API claim. Say so
+  when an answer comes from memory.
+- Delegate bulk reading and review to a cheaper model where the host allows it, and have a
+  stronger reviewer check milestones before you call work done. Mark any check you could not
+  run as not run.
 
 ## Installed-Addon Agents: Start Here
 
@@ -155,6 +173,14 @@ Reference data is development-only and never a runtime or release dependency.
   compatibility changes. If stale, sync the references and rebuild the graph.
 - Reference caches, manifests, graphs, and gap reports are source-only. Never
   package them or mirror them publicly.
+- Ecosystem prior art: AddonLearner (`rgxmods/warcraft/AddonLearner` on GitLab) mines
+  popular addons for compatibility, flavor-gating, timer, event, secure-frame, TOC and locale
+  patterns. Read it there before changing those areas: curated `docs/findings/` and
+  `docs/candidates/`, machine baselines in `docs/learned/`. Its knowledge is never copied
+  into this repo. Treat a matching upstream pattern as prior art to verify against the
+  contract and reference data, not as evidence. Cite it as `<addon>@<sha> file:line`, and never
+  copy upstream addon code. File prior art that invalidates an assumption in the owning
+  project's tracker with the finding linked.
 
 ## Validation
 
@@ -214,6 +240,15 @@ permission to bypass it.
 GitLab is authoritative for development, issues, MRs, and CI. GitHub is the
 downstream public distribution. Public GitHub tags are sanitized release trees;
 their SHAs intentionally differ from the full-source GitLab tags.
+
+**Workforce exclusion.** The Hermes workforce does not operate on this
+repository. Operator directive 2026-10-27: no workforce role implements,
+reviews, gates, merges, or releases here, and workforce roles are not
+assigned to this repository. Any workforce session that arrives here must
+report the exclusion to the operator and stop; all work and merges are
+operator-owned. This keeps the shared validation pipeline, protected
+release tags, Wago, and README preservation under direct operator
+control.
 
 ## Package and Public Boundary
 
