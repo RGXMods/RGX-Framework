@@ -9,6 +9,21 @@ local function AddLine(UI, card, text)
     card.flow:Add(label)
 end
 
+-- The global theme controls (main color, interface style, corners) change the framework's shared theme, which
+-- only addons that build under it follow. Every other RGX addon paints its own brand, so for them the controls
+-- would do nothing. Show them only when one of the addons that follow the global theme is loaded.
+local THEME_CONSUMERS = { "BLU", "BLU_Classic", "BLU_Forever", "SimpleQuestPlates", "SimpleQuestPlates_Classic" }
+
+local function ThemeConsumerLoaded()
+    local isLoaded = (_G.C_AddOns and _G.C_AddOns.IsAddOnLoaded) or _G.IsAddOnLoaded
+    if type(isLoaded) ~= "function" then return false end
+    for _, name in ipairs(THEME_CONSUMERS) do
+        local ok, loaded = pcall(isLoaded, name)
+        if ok and loaded then return true end
+    end
+    return false
+end
+
 local function BuildGuide(content)
     local UI = RGX:GetUI()
     local left, right = UI:CreateColumns(content, 2, { card = false, gap = 8 })
@@ -16,10 +31,10 @@ local function BuildGuide(content)
     -- Sections read like a book: opener, the model, what ships today, then
     -- current runtime facts from the actual loaded framework (not docs text).
 
-    -- FIRST: the operator-facing theme controls (the coolest options lead).
+    -- FIRST (when a theme-following addon is loaded): the operator-facing theme controls.
     local Design = RGX:GetDesign()
-    local theme = UI:CreateCard(left, { title = "Theme" })
-    if Design and Design.THEME_PRESETS then
+    local theme = ThemeConsumerLoaded() and UI:CreateCard(left, { title = "Theme" }) or nil
+    if theme and Design and Design.THEME_PRESETS then
         local Drops = _G.RGXDropdowns
         if Drops and type(Drops.CreateNestedDropdown) == "function" then
             local items = {}
@@ -89,18 +104,20 @@ local function BuildGuide(content)
             UpdateCornerButtons()
         end)
         local note = UI:CreateLabel(theme.content, {
-            text = "Style owns corners and palette; main color stays independent. Applies to every RGX panel; reload to re-skin already-open windows.",
+            text = "Style owns corners and palette; main color stays independent. Applies to the addons that follow the framework theme; reload to re-skin already-open windows.",
             size = "small", color = "muted", width = 292,
         })
         theme.flow:AddSpacer(90)
         theme.flow:Add(note)
     end
-    theme:AutoHeight()
+    if theme then theme:AutoHeight() end
 
     local about = UI:CreateCard(left, { title = "About RGX-Framework", above = nil })
-    about:ClearAllPoints()
-    about:SetPoint("TOPLEFT", theme, "BOTTOMLEFT", 0, -8)
-    about:SetPoint("TOPRIGHT", theme, "BOTTOMRIGHT", 0, -8)
+    if theme then
+        about:ClearAllPoints()
+        about:SetPoint("TOPLEFT", theme, "BOTTOMLEFT", 0, -8)
+        about:SetPoint("TOPRIGHT", theme, "BOTTOMRIGHT", 0, -8)
+    end
     AddLine(UI, about, "One shared foundation for the RGX Mods suite. Addons depend on it once and inherit events, timers, profiles, options, and safety boundaries instead of rebuilding them.")
     AddLine(UI, about, "The design goal is to make common addon bugs unrepresentable at the consumer boundary rather than fixed repeatedly in every product.")
     AddLine(UI, about, "Feature content stays in the addon; reusable plumbing belongs here.")

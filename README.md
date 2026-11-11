@@ -1,6 +1,6 @@
 # RGX-Framework
 
-The `v2.17.5` release aligns a slider's reset button with its own row. See the [release notes](docs/changelogs/2.17.5.md).
+The `v2.17.6` release shows the framework settings page's Theme controls only when an addon that follows the framework theme is loaded. See the [release notes](docs/changelogs/2.17.6.md).
 
 **One dependency. Everything your addon suite needs.**
 
@@ -13,7 +13,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.17.5`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.17.5)
+**Latest published release:** [`v2.17.6`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.17.6)
 
 **1. Declare the dependency:**
 

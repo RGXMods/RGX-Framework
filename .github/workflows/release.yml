@@ -262,7 +262,7 @@ jobs:
 
           case "$release_type" in
             "release")
-              title="RGX-Framework ${version}"
+              title="RGX | RGX-Framework ${version}"
               color=385018
               footer="RGX Mods • Stable Release"
               description="A new stable release of the RGX shared library is live."
@@ -271,7 +271,7 @@ jobs:
               channel="Release"
               ;;
             "beta")
-              title="RGX-Framework ${version} (Beta)"
+              title="RGX | RGX-Framework ${version} (Beta)"
               color=16744448
               footer="RGX Mods • Beta Build"
               description="Beta build available for testing."
@@ -280,7 +280,7 @@ jobs:
               channel="Beta"
               ;;
             "alpha"|"alpha-branch")
-              title="RGX-Framework ${version} (Alpha)"
+              title="RGX | RGX-Framework ${version} (Alpha)"
               color=9109504
               footer="RGX Mods • Alpha Build"
               description="Alpha build available for testing."
@@ -291,7 +291,7 @@ jobs:
           esac
 
           jq -n \
-            --arg username "RGX-Framework Releases" \
+            --arg username "RGX Releases" \
             --arg avatar_url "https://raw.githubusercontent.com/RGXMods/RGX-Framework/main/media/logo.png" \
             --arg title "$title" \
             --arg url "$release_url" \
@@ -361,7 +361,7 @@ jobs:
             --arg run_id "$run_id" \
             --arg timestamp "$timestamp" \
             '{
-              username: "RGX-Framework Build Failed",
+              username: "RGX Build Failed",
               avatar_url: "https://raw.githubusercontent.com/RGXMods/RGX-Framework/main/media/logo.png",
               embeds: [{
                 title: "RGX-Framework Build Failed",

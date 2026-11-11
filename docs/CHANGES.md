@@ -2,6 +2,10 @@
 
 ## Current Release
 
+### [v2.17.6](changelogs/2.17.6.md) - 2026-11-11
+
+- The framework settings page shows its Theme card (main colour, interface style, corners) only when BLU or Simple Quest Plates is loaded.
+
 ### [v2.17.5](changelogs/2.17.5.md) - 2026-11-11
 
 - A slider's reset button is anchored to the slider's own row, so it no longer sits 8px inside a card row and over the end of the track.
