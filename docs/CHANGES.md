@@ -2,6 +2,10 @@
 
 ## Current Release
 
+### [v2.18.1](changelogs/2.18.1.md) - 2026-11-12
+
+- Switches and tick boxes carry the addon's primary colour in every interface style (the switch used a fixed green/red).
+
 ### [v2.18.0](changelogs/2.18.0.md) - 2026-11-11
 
 - New interface style **RGX Forever** (warm brown panels, bronze frame line, parchment text, accent-coloured card titles); a saved `forever` choice now selects it.

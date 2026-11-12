@@ -1,6 +1,6 @@
 # RGX-Framework
 
-The `v2.18.0` release adds the RGX Forever interface style and makes the framework settings pages use the full panel width. See the [release notes](docs/changelogs/2.18.0.md).
+The `v2.18.1` release makes switches and tick boxes carry the addon's brand colour in every interface style. See the [release notes](docs/changelogs/2.18.1.md).
 
 **One dependency. Everything your addon suite needs.**
 
@@ -13,7 +13,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.18.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.18.0)
+**Latest published release:** [`v2.18.1`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.18.1)
 
 **1. Declare the dependency:**
 

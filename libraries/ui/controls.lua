@@ -741,6 +741,15 @@ end
 -- "RGX Material Round" checkbox: the Blizzard box textures are hidden and a rounded box drawn behind the
 -- button, with the tick tinted in the primary colour. The shape lives in the button's parent, one level below,
 -- so the tick (a texture of the button itself) stays on top.
+-- The tick of every tick box is the building mod's primary colour, in every style (resolved at build time).
+local function BrandTick(D, check)
+    local tick = check.GetCheckedTexture and check:GetCheckedTexture()
+    if type(tick) == "table" then
+        if tick.SetDesaturated then tick:SetDesaturated(true) end
+        if tick.SetVertexColor then tick:SetVertexColor(D:Unpack("primary")) end
+    end
+end
+
 local function RoundCheckbox(D, check, inset)
     for _, getter in ipairs({ "GetNormalTexture", "GetPushedTexture", "GetDisabledTexture" }) do
         local tex = check[getter] and check[getter](check)
@@ -770,6 +779,7 @@ function UI:CreateCheckbox(parent, text, opts)
     checkbox:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
     local D = RGX.GetDesign and RGX:GetDesign()
     if D and D.IsRoundedControls and D:IsRoundedControls() then RoundCheckbox(D, checkbox, 0) end
+    if D then BrandTick(D, checkbox) end
     local label = self:CreateLabel(frame, { text = text, size = "normal", color = "normal" })
     label:SetPoint("LEFT", checkbox, "RIGHT", 5, 0)
     frame.checkbox = checkbox
@@ -814,6 +824,7 @@ function UI:CreateToggle(parent, options)
     do
         local D = RGX.GetDesign and RGX:GetDesign()
         if D and D.IsRoundedControls and D:IsRoundedControls() then RoundCheckbox(D, check, 3) end
+        if D then BrandTick(D, check) end
     end
     local currentValue = storage[key]
     if type(currentValue) == "nil" then currentValue = default end
@@ -1597,8 +1608,14 @@ end
 function UI:CreateSwitch(parent, options)
     options = options or {}
     local D = RGX:GetDesign()
-    local pr, pg, pb = 0.02, 0.87, 0.38 -- green-ish; refined by theme below
-    if D then pr, pg, pb = D:Unpack("success") end
+    -- The ON track and the ON text are the building mod's primary colour (resolved now, inside its own theme
+    -- scope: a later toggle happens when the shared theme may belong to another mod).
+    local pr, pg, pb = 0.02, 0.87, 0.98
+    if D then pr, pg, pb = D:Unpack("primary") end
+    local onHex = string.format("|cff%02x%02x%02x", math.floor(pr * 255 + 0.5), math.floor(pg * 255 + 0.5), math.floor(pb * 255 + 0.5))
+    local sr, sg, sb = 0.6, 0.6, 0.6
+    if D then sr, sg, sb = D:Unpack("subtext") end
+    local offHex = string.format("|cff%02x%02x%02x", math.floor(sr * 255 + 0.5), math.floor(sg * 255 + 0.5), math.floor(sb * 255 + 0.5))
     local br, bg_, bb = 0.30, 0.30, 0.30
     if D then br, bg_, bb = D:Unpack("border") end
 
@@ -1676,11 +1693,11 @@ function UI:CreateSwitch(parent, options)
         if enabled then
             toggle:SetPoint("RIGHT", switchFrame, "RIGHT", -1, 0)
             switchBg:SetVertexColor(pr, pg, pb, 1)
-            status:SetText("|cff00ff00ON|r")
+            status:SetText(onHex .. "ON|r")
         else
             toggle:SetPoint("LEFT", switchFrame, "LEFT", 1, 0)
             switchBg:SetVertexColor(br, bg_, bb, 1)
-            status:SetText("|cffff0000OFF|r")
+            status:SetText(offHex .. "OFF|r")
         end
     end
 
