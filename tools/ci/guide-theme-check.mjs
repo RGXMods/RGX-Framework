@@ -43,14 +43,23 @@ try {
       _G.IsAddOnLoaded = (not useCAddOns) and isLoaded or nil
       assert(loadstring(guide, "guide.lua"))("RGX-Framework", RGX)
       events.PLAYER_LOGIN()
-      panelOpts.content(widget())
+      -- the settings page is tabbed: build every tab and report the cards and the tab names
+      local tabNames = {}
+      for _, tab in ipairs(panelOpts.tabs or {}) do
+        tabNames[#tabNames + 1] = tab.text
+        tab.content(widget())
+      end
+      titles.__tabs = tabNames
       return titles
     end
     local function has(titles, name) for _, t in ipairs(titles) do if t == name then return true end end return false end
 
     local none = build({}, true)
+    check(#none.__tabs == 2 and none.__tabs[1] == "About" and none.__tabs[2] == "Build with RGX", "no theme-following addon: the page has the About and Build with RGX tabs (" .. table.concat(none.__tabs, ",") .. ")")
     check(not has(none, "Theme"), "no theme-following addon loaded: no Theme card")
     check(has(none, "About RGX-Framework"), "the About card is still there without the Theme card")
+    local withBlu = build({ BLU = true }, true)
+    check(#withBlu.__tabs == 3 and withBlu.__tabs[3] == "Theme", "a theme-following addon adds a Theme tab (" .. table.concat(withBlu.__tabs, ",") .. ")")
     for _, name in ipairs({ "BLU", "BLU_Classic", "BLU_Forever", "SimpleQuestPlates", "SimpleQuestPlates_Classic" }) do
       check(has(build({ [name] = true }, true), "Theme"), name .. " loaded: the Theme card shows")
     end

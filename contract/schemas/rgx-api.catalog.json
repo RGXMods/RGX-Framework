@@ -843,6 +843,13 @@
           ]
         },
         {
+          "name": "CreateRoundedShape",
+          "params": [
+            "host",
+            "opts"
+          ]
+        },
+        {
           "name": "CreateSection",
           "params": [
             "parent",
@@ -879,6 +886,10 @@
         },
         {
           "name": "GetThemePreset",
+          "params": []
+        },
+        {
+          "name": "IsRoundedControls",
           "params": []
         },
         {

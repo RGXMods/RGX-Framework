@@ -1,6 +1,6 @@
 # RGX-Framework
 
-The `v2.17.7` release makes an options panel's tab content follow the interface style the panel was built in, with a new `style` option. See the [release notes](docs/changelogs/2.17.7.md).
+The `v2.17.8` release builds out the RGX Material Round style for the controls inside options panels and makes the framework settings page tabbed. See the [release notes](docs/changelogs/2.17.8.md).
 
 **One dependency. Everything your addon suite needs.**
 
@@ -13,7 +13,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.17.7`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.17.7)
+**Latest published release:** [`v2.17.8`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.17.8)
 
 **1. Declare the dependency:**
 

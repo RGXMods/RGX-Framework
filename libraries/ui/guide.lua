@@ -24,7 +24,8 @@ local function ThemeConsumerLoaded()
     return false
 end
 
-local function BuildGuide(content)
+-- One page of the settings panel: page = "about", "build" or "theme".
+local function BuildGuide(content, page)
     local UI = RGX:GetUI()
     local left, right = UI:CreateColumns(content, 2, { card = false, gap = 8 })
 
@@ -33,7 +34,7 @@ local function BuildGuide(content)
 
     -- FIRST (when a theme-following addon is loaded): the operator-facing theme controls.
     local Design = RGX:GetDesign()
-    local theme = ThemeConsumerLoaded() and UI:CreateCard(left, { title = "Theme" }) or nil
+    local theme = page == "theme" and ThemeConsumerLoaded() and UI:CreateCard(left, { title = "Theme" }) or nil
     if theme and Design and Design.THEME_PRESETS then
         local Drops = _G.RGXDropdowns
         if Drops and type(Drops.CreateNestedDropdown) == "function" then
@@ -112,60 +113,64 @@ local function BuildGuide(content)
     end
     if theme then theme:AutoHeight() end
 
-    local about = UI:CreateCard(left, { title = "About RGX-Framework", above = nil })
-    if theme then
-        about:ClearAllPoints()
-        about:SetPoint("TOPLEFT", theme, "BOTTOMLEFT", 0, -8)
-        about:SetPoint("TOPRIGHT", theme, "BOTTOMRIGHT", 0, -8)
+    if page == "about" then
+        local about = UI:CreateCard(left, { title = "About RGX-Framework", above = nil })
+        if theme then
+            about:ClearAllPoints()
+            about:SetPoint("TOPLEFT", theme, "BOTTOMLEFT", 0, -8)
+            about:SetPoint("TOPRIGHT", theme, "BOTTOMRIGHT", 0, -8)
+        end
+        AddLine(UI, about, "One shared foundation for the RGX Mods suite. Addons depend on it once and inherit events, timers, profiles, options, and safety boundaries instead of rebuilding them.")
+        AddLine(UI, about, "The design goal is to make common addon bugs unrepresentable at the consumer boundary rather than fixed repeatedly in every product.")
+        AddLine(UI, about, "Feature content stays in the addon; reusable plumbing belongs here.")
+        about:AutoHeight()
+
+        local runtime = UI:CreateCard(left, { title = "This install" })
+        runtime:ClearAllPoints()
+        runtime:SetPoint("TOPLEFT", about, "BOTTOMLEFT", 0, -8)
+        runtime:SetPoint("TOPRIGHT", about, "BOTTOMRIGHT", 0, -8)    local version = (RGX.GetMetadata and RGX:GetMetadata(addonName, "Version")) or RGX.version or "unknown"
+        local modules = RGX.GetLoadedModules and RGX:GetLoadedModules() or {}
+        AddLine(UI, runtime, "Framework version: " .. tostring(version))
+        AddLine(UI, runtime, "Loaded modules: " .. tostring(#modules) .. (modules[1] and (" (" .. table.concat(modules, ", ") .. ")") or ""))
+        AddLine(UI, runtime, "Login messages: " .. (RGX:IsLoginMessagesEnabled() and "on (/rgx login off to disable)" or "off"))
+        runtime:AutoHeight()
+
+        local credits = UI:CreateCard(left, { title = "Credits & resources" })
+        credits:ClearAllPoints()
+        credits:SetPoint("TOPLEFT", runtime, "BOTTOMLEFT", 0, -8)
+        credits:SetPoint("TOPRIGHT", runtime, "BOTTOMRIGHT", 0, -8)
+        AddLine(UI, credits, "RGX-Framework by RGX Mods. Modular addon infrastructure for WoW.")
+        AddLine(UI, credits, "Docs: github.com/RGXMods/RGX-Framework")
+        AddLine(UI, credits, "RGX-Hello provides a complete example and visual controls tour.")
+        credits:AutoHeight()
     end
-    AddLine(UI, about, "One shared foundation for the RGX Mods suite. Addons depend on it once and inherit events, timers, profiles, options, and safety boundaries instead of rebuilding them.")
-    AddLine(UI, about, "The design goal is to make common addon bugs unrepresentable at the consumer boundary rather than fixed repeatedly in every product.")
-    AddLine(UI, about, "Feature content stays in the addon; reusable plumbing belongs here.")
-    about:AutoHeight()
 
-    local runtime = UI:CreateCard(left, { title = "This install" })
-    runtime:ClearAllPoints()
-    runtime:SetPoint("TOPLEFT", about, "BOTTOMLEFT", 0, -8)
-    runtime:SetPoint("TOPRIGHT", about, "BOTTOMRIGHT", 0, -8)    local version = (RGX.GetMetadata and RGX:GetMetadata(addonName, "Version")) or RGX.version or "unknown"
-    local modules = RGX.GetLoadedModules and RGX:GetLoadedModules() or {}
-    AddLine(UI, runtime, "Framework version: " .. tostring(version))
-    AddLine(UI, runtime, "Loaded modules: " .. tostring(#modules) .. (modules[1] and (" (" .. table.concat(modules, ", ") .. ")") or ""))
-    AddLine(UI, runtime, "Login messages: " .. (RGX:IsLoginMessagesEnabled() and "on (/rgx login off to disable)" or "off"))
-    runtime:AutoHeight()
+    if page == "build" then
+        local build = UI:CreateCard(left, { title = "Build with RGX" })
+        AddLine(UI, build, 'TOC: add "RequiredDeps: RGX-Framework".')
+        AddLine(UI, build, 'Start: RGXAddon "MyAddon" { db = { enabled = true }, slash = "myaddon" }.')
+        AddLine(UI, build, "Controls: RGXUI toggles, sliders, colors, dropdowns, cards and pages; settings bind to the RGX database.")
+        build:AutoHeight()
 
-    local credits = UI:CreateCard(left, { title = "Credits & resources" })
-    credits:ClearAllPoints()
-    credits:SetPoint("TOPLEFT", runtime, "BOTTOMLEFT", 0, -8)
-    credits:SetPoint("TOPRIGHT", runtime, "BOTTOMRIGHT", 0, -8)
-    AddLine(UI, credits, "RGX-Framework by RGX Mods. Modular addon infrastructure for WoW.")
-    AddLine(UI, credits, "Docs: github.com/RGXMods/RGX-Framework")
-    AddLine(UI, credits, "RGX-Hello provides a complete example and visual controls tour.")
-    credits:AutoHeight()
+        local modulesCard = UI:CreateCard(left, { title = "Modules" })
+        modulesCard:ClearAllPoints()
+        modulesCard:SetPoint("TOPLEFT", build, "BOTTOMLEFT", 0, -8)
+        modulesCard:SetPoint("TOPRIGHT", build, "BOTTOMRIGHT", 0, -8)
+        AddLine(UI, modulesCard, "Database, events, timers, messages and combat-safe operations.")
+        AddLine(UI, modulesCard, "UI, design, fonts, dropdowns, textures, colors and minimap.")
+        AddLine(UI, modulesCard, "Quest, loot, pet battle, reputation, sound and other game integrations.")
+        modulesCard:AutoHeight()
 
-    local build = UI:CreateCard(right, { title = "Build with RGX" })
-    AddLine(UI, build, 'TOC: add "RequiredDeps: RGX-Framework".')
-    AddLine(UI, build, 'Start: RGXAddon "MyAddon" { db = { enabled = true }, slash = "myaddon" }.')
-    AddLine(UI, build, "Controls: RGXUI toggles, sliders, colors, dropdowns, cards and pages; settings bind to the RGX database.")
-    build:AutoHeight()
-
-    local modulesCard = UI:CreateCard(right, { title = "Modules" })
-    modulesCard:ClearAllPoints()
-    modulesCard:SetPoint("TOPLEFT", build, "BOTTOMLEFT", 0, -8)
-    modulesCard:SetPoint("TOPRIGHT", build, "BOTTOMRIGHT", 0, -8)
-    AddLine(UI, modulesCard, "Database, events, timers, messages and combat-safe operations.")
-    AddLine(UI, modulesCard, "UI, design, fonts, dropdowns, textures, colors and minimap.")
-    AddLine(UI, modulesCard, "Quest, loot, pet battle, reputation, sound and other game integrations.")
-    modulesCard:AutoHeight()
-
-    local debugCard = UI:CreateCard(right, { title = "Debug & help" })
-    debugCard:ClearAllPoints()
-    debugCard:SetPoint("TOPLEFT", modulesCard, "BOTTOMLEFT", 0, -8)
-    debugCard:SetPoint("TOPRIGHT", modulesCard, "BOTTOMRIGHT", 0, -8)
-    AddLine(UI, debugCard, "/rgx modules - inspect available modules")
-    AddLine(UI, debugCard, "/rgx debug - toggle framework diagnostics")
-    AddLine(UI, debugCard, "Database tests run via CI, not in-game")
-    AddLine(UI, debugCard, "/rgxvisual - RGX-Hello's visual suite (if installed)")
-    debugCard:AutoHeight()
+        local debugCard = UI:CreateCard(left, { title = "Debug & help" })
+        debugCard:ClearAllPoints()
+        debugCard:SetPoint("TOPLEFT", modulesCard, "BOTTOMLEFT", 0, -8)
+        debugCard:SetPoint("TOPRIGHT", modulesCard, "BOTTOMRIGHT", 0, -8)
+        AddLine(UI, debugCard, "/rgx modules - inspect available modules")
+        AddLine(UI, debugCard, "/rgx debug - toggle framework diagnostics")
+        AddLine(UI, debugCard, "Database tests run via CI, not in-game")
+        AddLine(UI, debugCard, "/rgxvisual - RGX-Hello's visual suite (if installed)")
+        debugCard:AutoHeight()
+    end
 end
 
 function RGX:OpenDefinitionEditor()
@@ -203,7 +208,17 @@ RGX:RegisterEvent("PLAYER_LOGIN", function()
         icon = "Interface\\AddOns\\RGX-Framework\\media\\logo.tga",
         author = "RGX Mods",
         website = "github.com/RGXMods/RGX-Framework",
-        content = BuildGuide,
+        tabs = (function()
+            local tabs = {
+                { text = "About", content = function(frame) BuildGuide(frame, "about") end },
+                { text = "Build with RGX", content = function(frame) BuildGuide(frame, "build") end },
+            }
+            -- The global theme controls matter only to addons that follow the framework theme.
+            if ThemeConsumerLoaded() then
+                tabs[#tabs + 1] = { text = "Theme", content = function(frame) BuildGuide(frame, "theme") end }
+            end
+            return tabs
+        end)(),
         registerInSettings = true,
     })
 end, "RGX_GUIDE_PANEL")

@@ -131,15 +131,26 @@ local function CreateTabButton(parent, text, tabIndex, row, col, panelRef, icon,
     btn.tabCol   = col
     -- Positioning is handled externally by RepositionTabs for dynamic centering.
 
-    local bg = btn:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints()
-    bg:SetColorTexture(sr, sg, sb, 0.90)
-    btn.bg = bg
+    local bg, border
+    if D.IsRoundedControls and D:IsRoundedControls() then
+        -- "RGX Material Round": rounded tab chips, lit with the panel's primary colour like the buttons.
+        local shape, paint = D:CreateRoundedShape(btn, { radius = 6, color = "surface", borderColor = "border" })
+        bg = { SetColorTexture = function(_, r, g, b, a) paint.fill(r, g, b, a or 1) end }
+        border = { SetBackdropBorderColor = function(_, r, g, b) paint.ring(r, g, b) end }
+        btn.shape = shape
+        bg:SetColorTexture(sr, sg, sb, 0.90)
+        border:SetBackdropBorderColor(D:Unpack("border"))
+    else
+        bg = btn:CreateTexture(nil, "BACKGROUND")
+        bg:SetAllPoints()
+        bg:SetColorTexture(sr, sg, sb, 0.90)
 
-    local border = CreateFrame("Frame", nil, btn, "BackdropTemplate")
-    border:SetAllPoints()
-    border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    border:SetBackdropBorderColor(D:Unpack("border"))
+        border = CreateFrame("Frame", nil, btn, "BackdropTemplate")
+        border:SetAllPoints()
+        border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+        border:SetBackdropBorderColor(D:Unpack("border"))
+    end
+    btn.bg = bg
     btn.border = border
 
     local btnText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")

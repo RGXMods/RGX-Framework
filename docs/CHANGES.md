@@ -2,6 +2,11 @@
 
 ## Current Release
 
+### [v2.17.8](changelogs/2.17.8.md) - 2026-11-11
+
+- RGX Material Round now rounds the controls inside options panels: switches, sliders, text boxes, checkboxes, reset chips and tab chips.
+- The framework settings page is tabbed: About, Build with RGX, and Theme when a theme-following addon is loaded.
+
 ### [v2.17.7](changelogs/2.17.7.md) - 2026-11-11
 
 - `UI:CreateOptionsPanel` takes `style` and remembers the interface style it was built in, so tab content built later keeps it (RGX Material Round panels no longer fall back to the default look).
