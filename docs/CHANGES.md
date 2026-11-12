@@ -2,6 +2,13 @@
 
 ## Current Release
 
+### [v2.18.0](changelogs/2.18.0.md) - 2026-11-11
+
+- New interface style **RGX Forever** (warm brown panels, bronze frame line, parchment text, accent-coloured card titles); a saved `forever` choice now selects it.
+- The framework settings pages use one full-width column.
+- Cards take a header module switch (`UI:CreateCard` `switch`) and tick boxes bind to saved values (`UI:CreateCheckbox` `storage`/`key`); RGX Forever draws framed cut-corner art.
+- The framework theme is optional: a switch on the Theme tab (`themeOverride`) turns the saved colour, style and corners off.
+
 ### [v2.17.8](changelogs/2.17.8.md) - 2026-11-11
 
 - RGX Material Round now rounds the controls inside options panels: switches, sliders, text boxes, checkboxes, reset chips and tab chips.
@@ -236,7 +243,7 @@ header and in `README.md`. Consumer addons inherit the
 
 ### [v2.7.8](https://github.com/RGXMods/RGX-Framework/blob/main/docs/changelogs/2.7.8.md) - 2026-09-25
 
-- RGXDesign restyle taking the BugTabs aesthetic: dark navy rounded
+- RGXDesign restyle: dark navy rounded
   nine-slice panels (12px corners via new `media/panel_rounded.tga`),
   cyan `#00e6ff` primary accent, gold secondary accent, Inter labels
   with locale-safe font fallback and soft text shadows.

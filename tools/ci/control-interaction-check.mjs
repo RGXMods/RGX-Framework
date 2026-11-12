@@ -378,13 +378,30 @@ try {
     ["RGX styles: framework, materialround and classic are listed in order with their names", `
       local labels = {}
       for _, id in ipairs(D.STYLE_ORDER) do labels[#labels + 1] = D.STYLES[id].label end
-      assert(table.concat(labels, '|') == 'RGX Framework|RGX Material Round|RGX Classic', 'style names: ' .. table.concat(labels, '|'))
-      assert(D.STYLES.retail == nil and D.STYLES.forever == nil, 'old retail/forever styles must not be listed')
-      assert(D:ResolveStyle('retail') == 'framework' and D:ResolveStyle('forever') == 'classic', 'legacy ids lost their aliases')
+      assert(table.concat(labels, '|') == 'RGX Framework|RGX Material Round|RGX Classic|RGX Forever', 'style names: ' .. table.concat(labels, '|'))
+      assert(D.STYLES.retail == nil, 'the retail alias must not be listed')
+      assert(D:ResolveStyle('retail') == 'framework' and D:ResolveStyle('forever') == 'forever', 'retail alias or forever id lost')
       assert(D:ResolveStyle('bogus') == nil)
-      assert(D:SetStyle('forever') and D:GetStyle() == 'forever' and D:GetStyleId() == 'classic' and D.cornerStyle == 'square', 'forever must behave as classic')
-      assert(D:GetStyleLabel() == 'RGX Classic')
+      assert(D:SetStyle('forever') and D:GetStyleId() == 'forever' and D.cornerStyle == 'square')
+      assert(D:GetStyleLabel() == 'RGX Forever')
       assert(D:SetStyle('framework') and D:GetStyleId() == 'framework')
+    `],
+    ["RGX Forever: square, bronze frame line, parchment text; titles follow the mod's accent", `
+      assert(D:SetStyle('forever') and D:GetStyleId() == 'forever' and D.cornerStyle == 'square')
+      assert(D:GetStyleLabel() == 'RGX Forever')
+      local ring, text = D:GetColor('ring'), D:GetColor('text')
+      assert(ring[1] > ring[3] * 2, 'ring must be a bronze line, not grey')
+      assert(text[1] > text[3], 'text must be warm parchment')
+      assert(D.styleOptions.titleFrom == 'accent' and D.styleOptions.controlStyle == 'square' and D.styleOptions.frameArt == 'forever')
+      local f = D:CreateFrame(UIParent, { width = 100, height = 50 })
+      assert(f._panelLine and f._panelFill and f._panelBorder, 'a Forever panel draws the framed art: ring, fill and inner line')
+      local g = D:CreateFrame(UIParent, { width = 100, height = 50, square = true })
+      assert(g._panelFill == nil, 'an explicit square request still gets the plain backdrop')
+      assert(D:SetStyle('framework'))
+      local h = D:CreateFrame(UIParent, { width = 100, height = 50 })
+      assert(h._panelLine == nil, 'other styles draw no inner line')
+      assert(D:SetStyle('forever'))
+      assert(D:SetStyle('framework') and D:GetColor('ring')[1] == 0.137, 'framework palette did not restore')
     `],
     ["RGX Material Round: rounded cards, header bands and buttons; ring and titles come from the mod's primary/accent", `
       local RED, CORAL = { 0.545, 0.082, 0.220 }, { 0.929, 0.420, 0.522 }

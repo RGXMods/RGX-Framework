@@ -28,6 +28,7 @@ try {
         return card
       end
       function UI:CreateLabel() return widget() end
+      function UI:CreateSwitch() return widget() end
       function UI:CreateButtonGroup() return { buttons = { widget(), widget() }, SetPoint = function() end } end
       function UI:CreateOptionsPanel(opts) panelOpts = opts return widget() end
       local Design = { THEME_PRESETS = { cyan = {} }, STYLES = {}, STYLE_ORDER = {}, GetThemePreset = function() return "cyan" end }
@@ -56,15 +57,15 @@ try {
 
     local none = build({}, true)
     check(#none.__tabs == 2 and none.__tabs[1] == "About" and none.__tabs[2] == "Build with RGX", "no theme-following addon: the page has the About and Build with RGX tabs (" .. table.concat(none.__tabs, ",") .. ")")
-    check(not has(none, "Theme"), "no theme-following addon loaded: no Theme card")
+    check(not has(none, "Change framework addon theme options"), "no theme-following addon loaded: no Theme card")
     check(has(none, "About RGX-Framework"), "the About card is still there without the Theme card")
     local withBlu = build({ BLU = true }, true)
     check(#withBlu.__tabs == 3 and withBlu.__tabs[3] == "Theme", "a theme-following addon adds a Theme tab (" .. table.concat(withBlu.__tabs, ",") .. ")")
     for _, name in ipairs({ "BLU", "BLU_Classic", "BLU_Forever", "SimpleQuestPlates", "SimpleQuestPlates_Classic" }) do
-      check(has(build({ [name] = true }, true), "Theme"), name .. " loaded: the Theme card shows")
+      check(has(build({ [name] = true }, true), "Change framework addon theme options"), name .. " loaded: the Theme card shows")
     end
-    check(has(build({ BLU = true }, false), "Theme"), "the older IsAddOnLoaded global is honoured")
-    check(not has(build({ RGXProfessions = true, ["RGX-Hello"] = true }, true), "Theme"), "other RGX addons do not bring the Theme card")
+    check(has(build({ BLU = true }, false), "Change framework addon theme options"), "the older IsAddOnLoaded global is honoured")
+    check(not has(build({ RGXProfessions = true, ["RGX-Hello"] = true }, true), "Change framework addon theme options"), "other RGX addons do not bring the Theme card")
     __failures = table.concat(failures, "\\n - ")
   `);
   if (lua.ctx.__failures) {

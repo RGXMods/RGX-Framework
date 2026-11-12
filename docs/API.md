@@ -799,7 +799,8 @@ Dragged offsets are written to both the consumer `storage[offsetKey]` and the fr
 | `UI:CreateSwitch(parent, opts)` | Canonical db-bound on/off switch; declarative `toggle` controls render this widget |
 | `UI:CreateToggle(parent, opts)` | Legacy imperative checkbox toggle (use `UI:CreateSwitch` for new on/off rows) |
 | `UI:CreateLabel(parent, opts)` | Text label (pass `width` to enable word wrap for long text; omit for single-line) |
-| `UI:CreateCheckbox(parent, text, opts)` | Legacy imperative checkbox row with label forwarding |
+| `UI:CreateCheckbox(parent, text, opts)` | The standard tick box row with label forwarding. `opts.storage` + `opts.key` (+ `opts.default`) bind it to a saved boolean and `opts.onChange(value)` runs on each click |
+| `UI:CreateCard(parent, { title, switch = { storage, key, default, onChange } })` | A titled card; `switch` puts an on/off switch in the header that turns the whole card's options on or off (off dims the card and blocks its rows, `card:SetModuleEnabled(on)`). Switches belong in card headers; options inside a card are tick boxes |
 | `Dropdowns:CreateNestedDropdown(parent, opts)` | Generic dropdown (dropdowns module; retail uses MenuUtil, Classic falls back to legacy frames) |
 | `Dropdowns:CreateContextMenu(parent, opts)` | Context menu (dropdowns module) |
 | `UI:CreateResetButton(parent, callback)` | Reset button |

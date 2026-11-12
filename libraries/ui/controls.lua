@@ -776,6 +776,23 @@ function UI:CreateCheckbox(parent, text, opts)
     frame.label = label
     AttachCheckboxLabel(frame, checkbox, label)
     AttachHoverCallbacks(checkbox, opts, "checkbox")
+    -- Optional binding: opts.storage + opts.key keep a saved boolean in step with the tick (opts.default when
+    -- unset), and opts.onChange(value) runs on every click. This is the standard tick box for options.
+    if type(opts) == "table" and type(opts.storage) == "table" and opts.key ~= nil then
+        local value = opts.storage[opts.key]
+        if value == nil then value = opts.default end
+        checkbox:SetChecked(value and true or false)
+        checkbox:SetScript("OnClick", function(self)
+            local checked = self:GetChecked() and true or false
+            opts.storage[opts.key] = checked
+            if type(opts.onChange) == "function" then
+                local ok, err = pcall(opts.onChange, checked)
+                if not ok and RGX and type(RGX.Error) == "function" then
+                    RGX:Error("[RGXUI] checkbox onChange failed: " .. tostring(err))
+                end
+            end
+        end)
+    end
     return frame
 end
 
@@ -868,7 +885,7 @@ function UI:CreateTextInput(parent, options)
         -- with the primary colour while the box has focus.
         for _, part in ipairs({ "Left", "Middle", "Right" }) do
             local tex = input[part]
-            if tex and tex.Hide then tex:Hide() end
+            if type(tex) == "table" and tex.Hide then tex:Hide() end
         end
         local shape, paint = D:CreateRoundedShape(input, { inset = { -4, 0, -4, 0 }, radius = 8, color = "surface", borderColor = "border" })
         if input.SetTextInsets then input:SetTextInsets(4, 4, 0, 0) end

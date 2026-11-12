@@ -1,6 +1,6 @@
 # RGX-Framework
 
-The `v2.17.8` release builds out the RGX Material Round style for the controls inside options panels and makes the framework settings page tabbed. See the [release notes](docs/changelogs/2.17.8.md).
+The `v2.18.0` release adds the RGX Forever interface style and makes the framework settings pages use the full panel width. See the [release notes](docs/changelogs/2.18.0.md).
 
 **One dependency. Everything your addon suite needs.**
 
@@ -13,7 +13,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.17.8`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.17.8)
+**Latest published release:** [`v2.18.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.18.0)
 
 **1. Declare the dependency:**
 

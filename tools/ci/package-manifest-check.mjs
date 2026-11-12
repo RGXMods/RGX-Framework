@@ -249,6 +249,8 @@ function validateRuntime(entries, expectedPaths) {
       || relativePath === "libraries/colors/hexmask.tga"
       || relativePath === "libraries/colors/hexring.tga"
       || relativePath === "libraries/design/panel_rounded.tga"
+      || relativePath === "libraries/design/panel_forever.tga"
+      || relativePath === "libraries/design/panel_forever_line.tga"
       || /^libraries\/fonts\/media\/(?:.+\.(?:otf|ttf)|README\.md|LICENSES\.md)$/.test(relativePath);
     if (!allowed) failures.push(`runtime archive: path is outside the player allowlist ${path}`);
     if (/^(?:core|modules|libraries)\/.+\.lua$/.test(relativePath) && !loadReferences.has(relativePath)) failures.push(`runtime archive: Lua file is not in the load graph ${path}`);

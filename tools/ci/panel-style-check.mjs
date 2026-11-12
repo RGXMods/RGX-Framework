@@ -36,6 +36,7 @@ try {
       if k == "GetStringWidth" then return function() return 80 end end
       if k == "GetStringHeight" then return function() return 12 end end
       if k == "CreateTexture" or k == "CreateFontString" or k == "CreateAnimationGroup" or k == "CreateLine" or k == "CreateMaskTexture" then return function(self) return widget() end end
+      if type(k) == "string" and k:match("^Get%u%l*Texture$") then return function(self) return widget() end end
       if k == "GetParent" then return function(self) return rawget(self, "parent") end end
       if k == "GetText" then return function(self) return rawget(self, "text") or "" end end
       if k == "SetText" then return function(self, v) rawset(self, "text", v) end end
@@ -110,6 +111,28 @@ try {
     -- Default: the style active at creation.
     local _, c = build({})
     check(c.content == "framework", "default: content is built in the current style (" .. tostring(c.content) .. ")")
+
+    -- Every listed style builds a full options panel with the standard controls, so every framework addon works in all of them.
+    for _, id in ipairs(D.STYLE_ORDER) do
+      local made = {}
+      local okAll, err = pcall(function()
+        local p = UI:CreateOptionsPanel({
+          addonName = "T", style = id, theme = { primary = { 0.2, 0.6, 0.9 }, accent = { 0.9, 0.7, 0.2 } },
+          tabs = { { text = "Page", content = function(frame)
+            local store = {}
+            made.sw = UI:CreateSwitch(frame, { label = "S", storage = store, key = "a", default = true })
+            made.sl = UI:CreateSlider(frame, { label = "L", storage = store, key = "b", min = 0, max = 10, default = 3 })
+            made.ti = UI:CreateTextInput(frame, { label = "T", storage = store, key = "c", default = "x" })
+            made.cb = UI.CreateCheckbox and UI:CreateCheckbox(frame, { label = "C", storage = store, key = "d", default = false })
+            made.style = D:GetStyleId()
+          end } },
+        })
+        p:SelectTab(1)
+      end)
+      check(okAll, id .. ": options panel and standard controls build (" .. tostring(err) .. ")")
+      check(made.style == id and made.sw and made.sl and made.ti, id .. ": controls were built in the style")
+    end
+    check(D:GetStyleId() == "framework", "global style untouched after the all-styles loop")
 
     -- An unknown style is ignored, not an error.
     local ok = pcall(build, { style = "no-such-style" })
