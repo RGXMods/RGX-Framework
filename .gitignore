@@ -1,0 +1,9 @@
+graphify-out/
+artifacts/
+.release/
+.reference/wow-ui-source/*
+!.reference/wow-ui-source/manifest.json
+.reference/wow-api-dump/*
+!.reference/wow-api-dump/manifest.json
+
+skills-lock.json
