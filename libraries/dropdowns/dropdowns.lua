@@ -1096,14 +1096,29 @@ function Dropdowns:ApplyRetailTrigger(holder, opts)
     else
         trigger:SetPoint("TOPLEFT", holder.label, "BOTTOMLEFT", 0, -5)
     end
-    trigger:SetBackdrop({
-        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        tile = true, tileSize = 16, edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    trigger:SetBackdropColor(0.10, 0.14, 0.19, 0.96)
-    trigger:SetBackdropBorderColor(D:Unpack("border"))
+    -- The trigger is drawn in the active interface style: the style's own surface, hover and ring colours (taken
+    -- when it is built, inside the mod's own theme scope), as a framed or rounded box when the style shapes its
+    -- controls, otherwise as the flat backdrop.
+    local surface, hoverFill, ringColor, primary = { D:Unpack("surface") }, { D:Unpack("hover") }, { D:Unpack("border") }, { D:Unpack("primary") }
+    local paintFill, paintRing
+    if D.IsRoundedControls and D:IsRoundedControls() and type(D.CreateRoundedShape) == "function" then
+        local shape, paint = D:CreateRoundedShape(trigger, { parent = holder, level = math.max(0, (trigger:GetFrameLevel() or 1) - 1),
+            radius = 6, color = "surface", borderColor = "border" })
+        trigger.shape = shape
+        paintFill = function(c) paint.fill(c[1], c[2], c[3], 1) end
+        paintRing = function(c) paint.ring(c[1], c[2], c[3]) end
+    else
+        trigger:SetBackdrop({
+            bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            tile = true, tileSize = 16, edgeSize = 1,
+            insets = { left = 1, right = 1, top = 1, bottom = 1 },
+        })
+        paintFill = function(c) trigger:SetBackdropColor(c[1], c[2], c[3], 0.96) end
+        paintRing = function(c) trigger:SetBackdropBorderColor(c[1], c[2], c[3]) end
+    end
+    paintFill(surface)
+    paintRing(ringColor)
     trigger:RegisterForClicks("LeftButtonUp")
     local justifyH = opts.justifyH
     if justifyH ~= "CENTER" and justifyH ~= "RIGHT" then justifyH = "LEFT" end
@@ -1132,14 +1147,8 @@ function Dropdowns:ApplyRetailTrigger(holder, opts)
             ToggleDropDownMenu(1, nil, native, self, 0, 0)
         end
     end)
-    trigger:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.11, 0.18, 0.24, 1)
-        self:SetBackdropBorderColor(D:Unpack("primary"))
-    end)
-    trigger:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.10, 0.14, 0.19, 0.96)
-        self:SetBackdropBorderColor(D:Unpack("border"))
-    end)
+    trigger:SetScript("OnEnter", function() paintFill(hoverFill); paintRing(primary) end)
+    trigger:SetScript("OnLeave", function() paintFill(surface); paintRing(ringColor) end)
     local function fitTrigger()
         local width = holder:GetWidth()
         if type(width) == "number" and width > 20 then

@@ -50,6 +50,22 @@ try {
       print("PASS " .. label)
     end
 
+    -- /rgx style: shows, sets and saves the interface style through the design module
+    local styleSet, ids = nil, { framework = true, forever = true }
+    RGX.db = {}
+    RGX.GetDesign = function() return { STYLE_ORDER = { "framework", "forever" }, GetStyleId = function() return styleSet or "framework" end,
+      SetStyle = function(_, id) if ids[id] then styleSet = id return true end return false end } end
+    SlashCmdList.RGXFRAMEWORK("style forever")
+    check("/rgx style forever applies and saves the style", styleSet == "forever" and RGX.db.style == "forever")
+    SlashCmdList.RGXFRAMEWORK("style nonsense")
+    check("/rgx style rejects an unknown id and keeps the saved one", RGX.db.style == "forever" and prints[#prints]:find("Unknown style", 1, true) ~= nil)
+    SlashCmdList.RGXFRAMEWORK("style override off")
+    check("/rgx style override off saves the switch", RGX.db.themeOverride == false)
+    SlashCmdList.RGXFRAMEWORK("style override on")
+    check("/rgx style override on saves the switch", RGX.db.themeOverride == true)
+    SlashCmdList.RGXFRAMEWORK("style")
+    check("/rgx style with no id reports the current style", prints[#prints]:find("forever", 1, true) ~= nil)
+
     check("canonical token maps all aliases", SlashCmdList.RGXFRAMEWORK ~= nil
       and SLASH_RGXFRAMEWORK1 == "/rgx"
       and SLASH_RGXFRAMEWORK2 == "/rgxframework"

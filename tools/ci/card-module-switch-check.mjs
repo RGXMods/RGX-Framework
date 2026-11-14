@@ -47,7 +47,7 @@ try {
       return nil
     end
     widget = function(parent) return setmetatable({ parent = parent }, mt) end
-    function CreateFrame(kind, name, parent) return widget(parent) end
+    function CreateFrame(kind, name, parent, template) local w = widget(parent) rawset(w, "template", template) return w end
     UIParent = widget(); GameTooltip = widget(); Settings = nil
     function InCombatLockdown() return false end
     function hooksecurefunc() end
@@ -108,6 +108,13 @@ try {
     check(box.checkbox ~= nil, "tick box builds")
     box.checkbox.scripts.OnClick(box.checkbox)
     check(t.a ~= nil and got ~= nil, "clicking a bound tick box writes storage and calls onChange")
+    -- the card body follows the style: rounded in Material Round (to match its rounded header band), square otherwise
+    local D = RGX:GetDesign()
+    local function bodyTemplate(style) local c; D:WithStyle(style, function() c = UI:CreateCard(host, { title = "T" }) end) return rawget(c, "template") end
+    check(bodyTemplate("materialround") ~= "BackdropTemplate", "a Material Round card body is a rounded panel, not a square backdrop")
+    check(bodyTemplate("framework") == "BackdropTemplate", "a framework-style card body stays square")
+    box:SetWidth(200)
+    check(rawget(box.label, "w") == 177, "a tick box label wraps to the row width less the box, so long text cannot run past the card (" .. tostring(rawget(box.label, "w")) .. ")")
     __failures = table.concat(failures, "\\n - ")
   `);
   if (lua.ctx.__failures) {

@@ -812,6 +812,14 @@
           ]
         },
         {
+          "name": "ApplyBlizzardFrame",
+          "params": [
+            "frame",
+            "role",
+            "opts"
+          ]
+        },
+        {
           "name": "ApplyPanel",
           "params": [
             "frame",
@@ -907,6 +915,15 @@
           ]
         },
         {
+          "name": "SetAtlasOr",
+          "params": [
+            "tex",
+            "atlas",
+            "file",
+            "useAtlasSize"
+          ]
+        },
+        {
           "name": "SetCornerStyle",
           "params": [
             "style"
@@ -942,6 +959,10 @@
           "params": [
             "key"
           ]
+        },
+        {
+          "name": "UsesClientArt",
+          "params": []
         },
         {
           "name": "WithStyle",

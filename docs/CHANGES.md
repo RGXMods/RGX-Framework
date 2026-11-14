@@ -2,6 +2,21 @@
 
 ## Current Release
 
+### [v2.18.2](changelogs/2.18.2.md) - 2026-11-14
+
+- The framework settings page shows the framework version from its TOC (it showed 1.0.0).
+- `/rgx style override on|off` is the "Apply the framework theme to addons" switch from chat.
+- `/rgx style [framework|materialround|classic|forever]` shows or chooses the interface style from chat, the same saved choice as the Theme tab.
+- **RGX Classic and RGX Forever use the game client's own art throughout**: sliders use the client's minimal slider bar and knob, and tabs the client's tab art. Classic draws the client's classic gold-edged dialog border on windows and the tooltip border on cards, so it no longer looks like Forever. `Design:UsesClientArt()` and `Design:SetAtlasOr()` are public.
+- **RGX Classic and RGX Forever use the game client's own frame art.** Windows use the client's `Dialog` frame, cards the client's inset-frame (Forever) or tooltip border (Classic) layout, and buttons and tick boxes are the client's own `UIPanelButtonTemplate` and `UICheckButtonTemplate`; frames are laid out with `NineSliceUtil` (`Design:ApplyBlizzardFrame`). A client that lacks a layout or atlas gets the style's own frame art instead (new `panel_classic` textures). Dropdown triggers now follow the active style in every style, where they used a fixed navy fill.
+- The Theme tab also shows when RGX Professions or RGX AQoL is loaded, because both now follow the framework interface style while "Apply the framework theme to addons" is on. Changing the style tells you to /reload for windows that are already open.
+- Cards follow the interface style: in Material Round the card body is a rounded panel to match its rounded header band (it was always a square backdrop, so a rounded header sat on a square card). Other styles keep the square body.
+- `UI:CreateStandardCard` no longer has an Addons-menu row: the entry is always on and is not an option.
+- Tick box labels wrap inside the row and the row grows to fit, so long option text no longer runs past the card edge.
+- `UI:CreateStandardCard` no longer offers a chat-prefix box: the prefix is the branded RGX prefix, not a setting.
+- The Theme card on the framework settings page flows its rows (switch, two dropdowns, corner buttons, note) instead of fixed pixel offsets, so the dropdowns no longer overlap.
+- `UI:CreateStandardCard` rows are now tick boxes, following the standard that switches belong in card headers.
+
 ### [v2.18.1](changelogs/2.18.1.md) - 2026-11-12
 
 - Switches and tick boxes carry the addon's primary colour in every interface style (the switch used a fixed green/red).

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Standard options gate: the real core/systems/utils.lua (RGX:CreateChat) and libraries/ui/options.lua
 // (UI:CreateStandardCard) run in a Lua 5.1 VM (wasmoon) against recording mocks. Asserts the shared storage
-// keys, defaults, minimap and Addons-menu wiring, and every chat rule: output off, custom prefix, default
+// keys, defaults, minimap wiring, and every chat rule: output off, custom prefix, default
 // icon - [Label] line, login switches, tag stripping and lazy storage.
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -82,7 +82,7 @@ try {
         created.cards[#created.cards + 1] = card
         return card
       end,
-      CreateSwitch = function(_, parent, o) local w = widget({ opts = o }) created.switches[#created.switches + 1] = w return w end,
+      CreateCheckbox = function(_, parent, text, o) o.label = text local w = widget({ opts = o }) created.switches[#created.switches + 1] = w return w end,
       CreateLabel = function(_, parent, o) local w = widget({ opts = o }) created.labels[#created.labels + 1] = w return w end,
       CreateTextInput = function(_, parent, o) local w = widget({ opts = o }) created.inputs[#created.inputs + 1] = w return w end,
     }
@@ -97,26 +97,21 @@ try {
     local changes = {}
     local card = _G.RGXUI:CreateStandardCard({}, { storage = store, minimap = button, defaultPrefix = "RGX AQoL",
         onChange = function(k, v) changes[#changes + 1] = k .. "=" .. tostring(v) end })
-    check(keys(created.switches) == "minimapIconEnabled,addonMenu,chatOutput,loginMessage", "switches use the shared keys in order: " .. keys(created.switches))
-    check(created.inputs[1].opts.key == "chatPrefix" and created.inputs[1].opts.placeholder == "RGX AQoL", "the prefix box is bound to chatPrefix with the default as placeholder")
+    check(keys(created.switches) == "minimapIconEnabled,chatOutput,loginMessage", "tick boxes use the shared keys in order: " .. keys(created.switches))
+    check(#created.inputs == 0, "the chat prefix is branded and baked in, so the card offers no prefix box")
     for _, s in ipairs(created.switches) do
-      check(s.opts.storage == store and s.opts.default == true, "switch " .. s.opts.key .. " is bound to the addon storage and defaults on")
+      check(s.opts.storage == store and s.opts.default == true, "tick box " .. s.opts.key .. " is bound to the addon storage and defaults on")
     end
     local allFill = true
     for _, w in ipairs(card.added) do if w.fill ~= true then allFill = false end end
     check(allFill, "every row fills the card width, so long labels do not run into the ON/OFF text")
-    check(#card.added == 6 and card.autoHeight == 1, "all rows join the card flow and the card sizes itself once (" .. #card.added .. " rows)")
+    check(#card.added == 4 and card.autoHeight == 1, "all rows join the card flow and the card sizes itself once (" .. #card.added .. " rows)")
     created.switches[1].opts.onChange(false)
-    check(visible == false, "the minimap switch hides the button")
+    check(visible == false, "the minimap tick hides the button")
     created.switches[2].opts.onChange(false)
-    check(menu == false, "the Addons-menu switch removes the entry")
-    local n2 = #printed; menuResult = false
-    created.switches[2].opts.onChange(true)
-    check(#printed == n2 + 1 and printed[#printed]:find("reload", 1, true), "a client that cannot change the menu tells the player to reload")
-    created.switches[3].opts.onChange(false)
-    check(table.concat(changes, ";") == "minimapIconEnabled=false;addonMenu=false;addonMenu=true;chatOutput=false", "onChange reports each change: " .. table.concat(changes, ";"))
+    check(table.concat(changes, ";") == "minimapIconEnabled=false;chatOutput=false", "onChange reports each change: " .. table.concat(changes, ";"))
 
-    -- the button may not exist yet (function form), and a pure-chat addon can omit the minimap rows
+    -- the button may not exist yet (function form), and a pure-chat addon can omit the minimap row
     created.switches, created.inputs = {}, {}
     local lateButton
     _G.RGXUI:CreateStandardCard({}, { storage = store, minimap = function() return lateButton end })
@@ -124,17 +119,17 @@ try {
     check(ok, "a minimap function that returns nil is tolerated")
     created.switches, created.inputs = {}, {}
     _G.RGXUI:CreateStandardCard({}, { storage = store, minimap = false })
-    check(keys(created.switches) == "chatOutput,loginMessage", "minimap = false omits the minimap rows: " .. keys(created.switches))
+    check(keys(created.switches) == "chatOutput,loginMessage", "minimap = false omits the minimap row: " .. keys(created.switches))
     check(not pcall(_G.RGXUI.CreateStandardCard, _G.RGXUI, {}, {}), "storage is required")
     created.switches = {}
     _G.RGXUI:CreateStandardCard({}, { storage = store, minimap = false, labels = { chat = "Chat on" } })
     check(created.switches[1].opts.label == "Chat on", "labels can be overridden for localisation")
     created.switches, created.inputs, created.labels = {}, {}, {}
     local slim = _G.RGXUI:CreateStandardCard({}, { storage = store, description = false, prefix = false })
-    check(#slim.added == 4 and #created.labels == 0 and #created.inputs == 0, "description = false and prefix = false leave only the four switches (" .. #slim.added .. " rows)")
+    check(#slim.added == 3 and #created.labels == 0 and #created.inputs == 0, "description = false and prefix = false leave only the three tick boxes (" .. #slim.added .. " rows)")
     created.switches = {}
-    _G.RGXUI:CreateStandardCard({}, { storage = store, description = false, prefix = false, addonMenu = false, loginMessage = false })
-    check(keys(created.switches) == "minimapIconEnabled,chatOutput", "addonMenu = false and loginMessage = false drop those switches: " .. keys(created.switches))
+    _G.RGXUI:CreateStandardCard({}, { storage = store, description = false, prefix = false, loginMessage = false })
+    check(keys(created.switches) == "minimapIconEnabled,chatOutput", "loginMessage = false drops that tick box: " .. keys(created.switches))
 
     __failures = table.concat(failures, "\\n - ")
   `);
@@ -143,7 +138,7 @@ try {
     console.error("standard-options-check FAILED:\n - " + failures);
     process.exit(1);
   }
-  console.log("STANDARD OPTIONS OK  RGX:CreateChat (9 rules) and UI:CreateStandardCard (shared keys, minimap and Addons menu wiring, localisation)");
+  console.log("STANDARD OPTIONS OK  RGX:CreateChat (9 rules) and UI:CreateStandardCard (shared keys, minimap wiring, localisation)");
 } finally {
   lua.global.close();
 }

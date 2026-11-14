@@ -61,18 +61,18 @@ try {
     check(has(none, "About RGX-Framework"), "the About card is still there without the Theme card")
     local withBlu = build({ BLU = true }, true)
     check(#withBlu.__tabs == 3 and withBlu.__tabs[3] == "Theme", "a theme-following addon adds a Theme tab (" .. table.concat(withBlu.__tabs, ",") .. ")")
-    for _, name in ipairs({ "BLU", "BLU_Classic", "BLU_Forever", "SimpleQuestPlates", "SimpleQuestPlates_Classic" }) do
+    for _, name in ipairs({ "BLU", "BLU_Classic", "BLU_Forever", "SimpleQuestPlates", "SimpleQuestPlates_Classic", "RGXProfessions", "RGXQoL" }) do
       check(has(build({ [name] = true }, true), "Change framework addon theme options"), name .. " loaded: the Theme card shows")
     end
     check(has(build({ BLU = true }, false), "Change framework addon theme options"), "the older IsAddOnLoaded global is honoured")
-    check(not has(build({ RGXProfessions = true, ["RGX-Hello"] = true }, true), "Change framework addon theme options"), "other RGX addons do not bring the Theme card")
+    check(not has(build({ ["RGX-Hello"] = true }, true), "Change framework addon theme options"), "an RGX addon that does not follow the framework theme (Hello) does not bring the Theme card")
     __failures = table.concat(failures, "\\n - ")
   `);
   if (lua.ctx.__failures) {
     console.error("guide-theme-check FAILED:\n - " + lua.ctx.__failures);
     process.exit(1);
   }
-  console.log("GUIDE THEME OK  the Theme card shows only when BLU or SQP is loaded");
+  console.log("GUIDE THEME OK  the Theme card shows when an addon that follows the framework theme is loaded");
 } finally {
   lua.global.close();
 }

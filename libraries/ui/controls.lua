@@ -219,7 +219,7 @@ local function RoundedPiece(D, parent, w, h, colorKey, radius)
 	local piece = CreateFrame("Frame", nil, parent)
 	if w then piece:SetWidth(w) end
 	piece:SetHeight(h)
-	D:ApplyPanel(piece, { color = colorKey, borderColor = colorKey, radius = radius })
+	D:ApplyPanel(piece, { color = colorKey, borderColor = colorKey, radius = radius, line = false })
 	function piece:SetColorTexture(r, g, b, a) self:SetPanelColor({ r, g, b }, { r, g, b }, a or 1) end
 	function piece:SetVertexColor(r, g, b, a) self:SetPanelColor({ r, g, b }, { r, g, b }, a or 1) end
 	return piece
@@ -321,6 +321,42 @@ function UI:CreateSlider(parent, options)
 		thumb:SetFrameLevel(level + 2)
 		thumb:EnableMouse(false)
 		thumb:SetVertexColor(D:Unpack("primary"))
+	elseif D.UsesClientArt and D:UsesClientArt() then
+		-- RGX Classic / RGX Forever: the client's own minimal slider art (bar with end caps and its knob). A thin
+		-- primary fill keeps the mod's brand on the bar. A client without the atlases gets the flat bar below.
+		track = trackFrame:CreateTexture(nil, "BORDER")
+		track:SetHeight(10)
+		track:SetPoint("LEFT", button, "LEFT", 4, 0)
+		track:SetPoint("RIGHT", button, "RIGHT", -4, 0)
+		track:SetPoint("CENTER", button, "CENTER", 0, 0)
+		local art = D:SetAtlasOr(track, "_Minimal_SliderBar_Middle")
+		if art then
+			if track.SetHorizTile then track:SetHorizTile(true) end
+			local left = trackFrame:CreateTexture(nil, "BORDER")
+			D:SetAtlasOr(left, "Minimal_SliderBar_Left", nil, true)
+			left:SetPoint("RIGHT", track, "LEFT", 0, 0)
+			local right = trackFrame:CreateTexture(nil, "BORDER")
+			D:SetAtlasOr(right, "Minimal_SliderBar_Right", nil, true)
+			right:SetPoint("LEFT", track, "RIGHT", 0, 0)
+		else
+			track:SetHeight(4)
+			track:SetColorTexture(D:Unpack("track"))
+		end
+		track._clientArt = art
+
+		fill = trackFrame:CreateTexture(nil, "ARTWORK")
+		fill:SetHeight(2)
+		fill:SetPoint("LEFT", track, "LEFT", 0, 0)
+		fill:SetColorTexture(D:Unpack("primary"))
+		fill:SetAlpha(0.85)
+		if not showProgress then fill:Hide() end
+
+		thumb = trackFrame:CreateTexture(nil, "OVERLAY")
+		if not D:SetAtlasOr(thumb, "Minimal_SliderBar_Button", nil, true) then
+			thumb:SetSize(8, 8)
+			thumb:SetTexture("Interface\\Buttons\\WHITE8x8")
+			thumb:SetVertexColor(D:Unpack("primary"))
+		end
 	else
 		track = trackFrame:CreateTexture(nil, "ARTWORK")
 		track:SetHeight(4)
@@ -770,13 +806,22 @@ end
 function UI:CreateCheckbox(parent, text, opts)
     local frame = CreateFrame("Frame", nil, parent)
     frame:SetSize(300, 20)
-    local checkbox = CreateFrame("CheckButton", nil, frame)
-    checkbox:SetSize(18, 18)
+    -- A style that uses the client's own frames builds its tick box from the client's UICheckButtonTemplate.
+    local style = RGX.GetDesign and RGX:GetDesign() and (RGX:GetDesign().styleOptions or {}).blizzard
+    local checkbox
+    if type(style) == "table" and style.checkbox == "native" then
+        local ok, made = pcall(CreateFrame, "CheckButton", nil, frame, "UICheckButtonTemplate")
+        if ok and type(made) == "table" then checkbox = made; checkbox._blizzardTemplate = true end
+    end
+    if not checkbox then
+        checkbox = CreateFrame("CheckButton", nil, frame)
+        checkbox:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
+        checkbox:SetPushedTexture("Interface\\Buttons\\UI-CheckBox-Down")
+        checkbox:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight")
+        checkbox:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
+    end
+    checkbox:SetSize(checkbox._blizzardTemplate and 24 or 18, checkbox._blizzardTemplate and 24 or 18)
     checkbox:SetPoint("LEFT", 0, 0)
-    checkbox:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
-    checkbox:SetPushedTexture("Interface\\Buttons\\UI-CheckBox-Down")
-    checkbox:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight")
-    checkbox:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
     local D = RGX.GetDesign and RGX:GetDesign()
     if D and D.IsRoundedControls and D:IsRoundedControls() then RoundCheckbox(D, checkbox, 0) end
     if D then BrandTick(D, checkbox) end
@@ -784,6 +829,27 @@ function UI:CreateCheckbox(parent, text, opts)
     label:SetPoint("LEFT", checkbox, "RIGHT", 5, 0)
     frame.checkbox = checkbox
     frame.label = label
+    -- The label wraps inside the row instead of running past the card edge: it takes the row's width less
+    -- the box, and the row grows to the wrapped height. Fit runs whenever the row is sized.
+    local function Fit()
+        local w = frame:GetWidth() or 0
+        if w < 60 or not label.SetWordWrap then return end
+        label:SetWidth(w - 23)
+        label:SetWordWrap(true)
+        if label.SetJustifyH then label:SetJustifyH("LEFT") end
+        local text = label.GetStringHeight and label:GetStringHeight() or 0
+        if type(text) ~= "number" or text <= 0 then return end
+        local h = math.max(20, math.ceil(text) + 6)
+        if math.abs((frame:GetHeight() or 0) - h) > 0.5 then frame:SetHeight(h) end
+    end
+    for _, method in ipairs({ "SetWidth", "SetSize" }) do
+        local base = frame[method]
+        if type(base) == "function" then
+            frame[method] = function(self, ...) base(self, ...); Fit() end
+        end
+    end
+    if frame.HookScript then frame:HookScript("OnSizeChanged", Fit) end
+    Fit()
     AttachCheckboxLabel(frame, checkbox, label)
     AttachHoverCallbacks(checkbox, opts, "checkbox")
     -- Optional binding: opts.storage + opts.key keep a saved boolean in step with the tick (opts.default when
@@ -1519,8 +1585,14 @@ function UI:CreateSection(parent, options)
     local D = RGX:GetDesign()
     assert(D and type(D.CreateSection) == "function", "RGX UI: section design unavailable")
     -- Share the consumer-proven section skin; RGXUI owns placement, RGXDesign textures.
-    local section = D:CreateSection(parent, title ~= "" and title or nil, options.icon,
-        { square = options.square ~= false })
+    -- The card body follows the interface style: a style whose header band is rounded (RGX Material Round,
+    -- RGX Forever) gets a rounded body to match; the others keep the square backdrop. options.square overrides.
+    local square = options.square
+    if square == nil then
+        local style = D.styleOptions or {}
+        square = style.headerStyle ~= "rounded"
+    end
+    local section = D:CreateSection(parent, title ~= "" and title or nil, options.icon, { square = square })
     section:SetSize(width, height)
     section.headerBand = section.header
     -- Measure direct widgets after the consumer finishes building the card.
