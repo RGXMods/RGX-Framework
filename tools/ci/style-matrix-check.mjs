@@ -142,6 +142,11 @@ try {
           local tex = build(id, function() local c = UI:CreateCard(host, { title = "T" }) return rawget(c, "_panelBorder") end)
           check(tex ~= nil and #tex == 9, id .. " card draws a nine-slice frame")
         end
+        -- client-art styles: the card title sits over the client's divider line, and the reset button is the client's icon
+        local hdr = build(id, function() return D:CreateSectionHeader(host, "T") end)
+        check((rawget(hdr, "divider") ~= nil) == (e.button == "blizzard"), id .. " card header " .. (e.button == "blizzard" and "is a title over the client divider" or "is a band"))
+        local reset = build(id, function() return UI:CreateResetButton(host, function() end) end)
+        check((rawget(reset, "clientArt") == true) == (e.button == "blizzard"), id .. " reset button " .. (e.button == "blizzard" and "is the client's reset icon" or "is a chip"))
         -- the dropdown trigger takes the style's skin, never a fixed navy backdrop
         local DD = _G.RGXDropdowns
         if DD and DD.ApplyRetailTrigger then
@@ -153,6 +158,7 @@ try {
           build(id, function() DD:ApplyRetailTrigger(holder, { buttonWidth = 100, label = "L" }) return true end)
           local trig = holder.retailTrigger
           check(trig ~= nil, id .. " dropdown trigger builds")
+          if trig then check((rawget(trig, "clientArt") == true) == (e.button == "blizzard"), id .. " dropdown trigger " .. (e.button == "blizzard" and "uses the client's input frame and arrow" or "draws its own box")) end
           if trig then check((trig.shape ~= nil) == e.shaped, id .. " dropdown trigger is " .. (e.shaped and "a shaped box" or "the flat backdrop") .. " (shape=" .. tostring(trig.shape ~= nil) .. ")") end
         end
       end

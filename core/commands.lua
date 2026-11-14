@@ -73,13 +73,13 @@ RGX:RegisterSlashCommand({ "rgx", "rgxframework", "rgxf" }, function(msg)
         if not (Design and Design.STYLE_ORDER) then
             RGX:Print("The design module is not loaded.")
         elseif arg:match("^override") then
-            -- /rgx style override on|off: the "Apply the framework theme to addons" switch.
+            -- /rgx style override on|off: the beta global theme override switch (off by default).
             local want = arg:match("^override%s+(%a+)$")
             if want == "on" or want == "off" then
                 if type(RGX.db) == "table" then RGX.db.themeOverride = (want == "on") end
-                RGX:Print("Apply the framework theme to addons: " .. want .. ". Reload your UI to apply it.")
+                RGX:Print("Global theme override (beta): " .. want .. ". Reload your UI to apply it.")
             else
-                RGX:Print("Apply the framework theme to addons: " .. ((type(RGX.db) == "table" and RGX.db.themeOverride == false) and "off" or "on")
+                RGX:Print("Global theme override (beta): " .. ((type(RGX.db) == "table" and RGX.db.themeOverride == true) and "on" or "off")
                     .. " (change with /rgx style override on|off)")
             end
         elseif arg == "" or arg == "list" then

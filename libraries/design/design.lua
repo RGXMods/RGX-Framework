@@ -847,7 +847,17 @@ Design.CreateActionButton = Design.CreateButton
 function Design:CreateSectionHeader(parent, text, icon)
     local opts = self.styleOptions or {}
     local header
-    if opts.headerStyle == "rounded" then
+    if self.UsesClientArt and self:UsesClientArt() then
+        -- RGX Classic / RGX Forever: the client's settings look, a title over the client's divider line.
+        header = CreateFrame("Frame", nil, parent)
+        header:SetHeight(32)
+        local divider = header:CreateTexture(nil, "ARTWORK")
+        divider:SetTexture("Interface\\Common\\UI-TooltipDivider-Transparent")
+        divider:SetPoint("BOTTOMLEFT", header, "BOTTOMLEFT", 0, 0)
+        divider:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", 0, 0)
+        divider:SetHeight(8)
+        header.divider = divider
+    elseif opts.headerStyle == "rounded" then
         -- "RGX Material Round": a rounded band (grey fill, the style's ring colour) like every other card.
         header = CreateFrame("Frame", nil, parent)
         header:SetHeight(32)

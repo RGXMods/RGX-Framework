@@ -1126,7 +1126,15 @@ function UI:CreateResetButton(parent, onClick)
     -- 24px wide: 2px transparent margin each side keeps the visual clear of adjacent controls
     btn:SetSize(24, 16)
 
-    if D.IsRoundedControls and D:IsRoundedControls() then
+    if D.UsesClientArt and D:UsesClientArt() then
+        -- RGX Classic / RGX Forever: the client's own reset icon, with its highlight.
+        btn:SetSize(18, 18)
+        btn:SetNormalTexture("Interface\\Buttons\\UI-RefreshButton")
+        btn:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+        btn.bg = { SetColorTexture = function() end }
+        btn.border = { SetBackdropBorderColor = function() end }
+        btn.clientArt = true
+    elseif D.IsRoundedControls and D:IsRoundedControls() then
         -- "RGX Material Round": a rounded chip with the same hover ring as the rounded buttons.
         local shape, paint = D:CreateRoundedShape(btn, { inset = { 2, 0, 2, 0 }, radius = 6, color = "surface", borderColor = "border" })
         btn.bg = { SetColorTexture = function(_, r, g, b) paint.fill(r, g, b, 1) end }
@@ -1151,7 +1159,7 @@ function UI:CreateResetButton(parent, onClick)
     lbl:SetAllPoints()
     lbl:SetJustifyH("CENTER")
     lbl:SetJustifyV("MIDDLE")
-    lbl:SetText("R")
+    lbl:SetText(btn.clientArt and "" or "R")
     lbl:SetTextColor(D:Unpack("subtext"))
     btn.lbl = lbl
 
@@ -1722,7 +1730,42 @@ function UI:CreateSwitch(parent, options)
     toggle:EnableMouse(false)
     container.toggle = toggle
 
-    if rounded then
+    local clientArt = D and D.UsesClientArt and D:UsesClientArt() and D.SetAtlasOr
+    if clientArt then
+        -- RGX Classic / RGX Forever: the client's own bar and knob art. The bar's middle shows the mod's primary
+        -- colour when ON (a fill inside the bar), the knob is the client's slider knob.
+        local mid = switchFrame:CreateTexture(nil, "BORDER")
+        if D:SetAtlasOr(mid, "_Minimal_SliderBar_Middle") then
+            mid:SetPoint("LEFT", switchFrame, "LEFT", 4, 0)
+            mid:SetPoint("RIGHT", switchFrame, "RIGHT", -4, 0)
+            mid:SetHeight(12)
+            local left = switchFrame:CreateTexture(nil, "BORDER")
+            D:SetAtlasOr(left, "Minimal_SliderBar_Left", nil, true)
+            left:SetPoint("RIGHT", mid, "LEFT", 0, 0)
+            local right = switchFrame:CreateTexture(nil, "BORDER")
+            D:SetAtlasOr(right, "Minimal_SliderBar_Right", nil, true)
+            right:SetPoint("LEFT", mid, "RIGHT", 0, 0)
+            local fillTex = switchFrame:CreateTexture(nil, "ARTWORK")
+            fillTex:SetPoint("TOPLEFT", mid, "TOPLEFT", 0, -3)
+            fillTex:SetPoint("BOTTOMRIGHT", mid, "BOTTOMRIGHT", 0, 3)
+            fillTex:SetTexture("Interface\\Buttons\\WHITE8x8")
+            switchBg = { SetVertexColor = function(_, r, g, b) fillTex:SetVertexColor(r, g, b, (r == br and g == bg_ and b == bb) and 0 or 0.85) end }
+            local knob = toggle:CreateTexture(nil, "OVERLAY")
+            if D:SetAtlasOr(knob, "Minimal_SliderBar_Button", nil, true) then
+                knob:SetPoint("CENTER", toggle, "CENTER", 0, 0)
+            else
+                knob:SetAllPoints(); knob:SetTexture("Interface\\Buttons\\WHITE8x8")
+            end
+            toggleBg = { SetVertexColor = function() end }
+            container.clientArt = true
+        else
+            mid:Hide()
+            clientArt = nil
+        end
+    end
+    if clientArt then
+        -- drawn above
+    elseif rounded then
         -- "RGX Material Round": a pill track and a round thumb instead of two squares.
         local trackShape, trackPaint = D:CreateRoundedShape(switchFrame, { radius = 10, color = "border", borderColor = "border" })
         switchBg = { SetVertexColor = function(_, r, g, b, a) trackPaint.fill(r, g, b, a or 1) end }

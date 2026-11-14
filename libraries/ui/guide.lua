@@ -43,8 +43,8 @@ local function BuildGuide(content, page)
         -- The framework theme is optional: with this off the saved colour, style and corners are not applied
         -- at login and addons keep their own look.
         local overrideSwitch = UI:CreateSwitch(theme.content, {
-            label = "Apply the framework theme to addons",
-            storage = RGX.db, key = "themeOverride", default = true,
+            label = "Beta: override every RGX addon's theme",
+            storage = RGX.db, key = "themeOverride", default = false,
             onChange = function(on)
                 if not on then
                     Design:SetStyle("framework")
@@ -117,7 +117,7 @@ local function BuildGuide(content, page)
             UpdateCornerButtons()
         end)
         local note = UI:CreateLabel(theme.content, {
-            text = "Style owns corners and palette; main color stays independent. Applies to the addons that follow the framework theme; reload to re-skin already-open windows.",
+            text = "Beta, global override: while it is on, the colour and interface style below replace the own look of every RGX addon that follows the framework theme. Off (the default), each addon keeps its own theme. Reload to re-skin windows that are already open.",
             size = "small", color = "muted", wrap = true,
         })
         theme.flow:Add(note, { fill = true })

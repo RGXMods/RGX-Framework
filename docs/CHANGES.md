@@ -2,6 +2,11 @@
 
 ## Current Release
 
+### [v2.18.3](changelogs/2.18.3.md) - 2026-11-14
+
+- The global theme override is a **beta and off by default**: every RGX addon keeps its own default theme unless the Theme tab switch (now "Beta: override every RGX addon's theme") or `/rgx style override on` turns it on.
+- RGX Classic and RGX Forever finish their client-art set: card titles sit over the client's divider line, the switch is the client's bar and knob (the mod's primary fills the bar when ON), the slider reset is the client's reset icon, and dropdown buttons use the client's input frame and arrow.
+
 ### [v2.18.2](changelogs/2.18.2.md) - 2026-11-14
 
 - The framework settings page shows the framework version from its TOC (it showed 1.0.0).

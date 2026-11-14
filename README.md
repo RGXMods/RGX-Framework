@@ -1,6 +1,6 @@
 # RGX-Framework
 
-The `v2.18.2` release builds out every interface style, including RGX Classic and RGX Forever drawn with the game client's own art. See the [release notes](docs/changelogs/2.18.2.md).
+The `v2.18.3` release finishes RGX Classic and RGX Forever: every control in those styles uses the game client's own art. See the [release notes](docs/changelogs/2.18.3.md).
 
 **One dependency. Everything your addon suite needs.**
 
@@ -13,7 +13,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.18.2`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.18.2)
+**Latest published release:** [`v2.18.3`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.18.3)
 
 **1. Declare the dependency:**
 
