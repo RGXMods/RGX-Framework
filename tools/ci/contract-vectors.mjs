@@ -64,7 +64,13 @@ export const engineCases = [
   ...["slider offset 5-1", "slider offset 0-1 0", "slider offset 0-1 -1"].map(control => ({
     name: `invalid slider semantics: ${control}`, opts: { options: { General: [control] } }, valid: false,
   })),
-  { name: "future trigger", opts: { on: { login: fn } }, valid: true, tier4: ["on"] },
+  { name: "shipped trigger", opts: { on: { login: fn, "quest.turnin": fn, PLAYER_LOGIN: fn } }, valid: true },
+  { name: "flat saved variables adopted", opts: { dbName: "AddonDB", db: { enabled: true }, legacyFlat: true }, valid: true },
+  { name: "legacyFlat must be boolean", opts: { db: {}, legacyFlat: "yes" }, valid: false },
+  { name: "control change callback", opts: { db: { a: true }, options: { General: [{ toggle: "a", onChange: fn }] } }, valid: true },
+  { name: "control change callback must be a function", opts: { db: { a: true }, options: { General: [{ toggle: "a", onChange: true }] } }, valid: false },
+  { name: "unknown trigger word", opts: { on: { "quest.finished": fn } }, valid: false },
+  { name: "trigger handler must be a function", opts: { on: { login: true } }, valid: false },
   { name: "null declaration", opts: null, valid: false },
 ];
 

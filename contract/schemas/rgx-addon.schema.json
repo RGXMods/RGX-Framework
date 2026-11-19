@@ -69,6 +69,11 @@
       "type": "string",
       "minLength": 1
     },
+    "legacyFlat": {
+      "x-rgx-ships": "today",
+      "description": "Set true when the addon already has a flat SavedVariables table (plain keys, no profiles). The existing keys are adopted into the Default profile on first load and the old keys stay recoverable; without it the proxy starts from the declared defaults. Passed to RGX:NewDatabase opts.legacyFlat.",
+      "type": "boolean"
+    },
     "global": {
       "x-rgx-ships": "today",
       "description": "Passed through to RGX:NewDatabase opts.global (cross-character storage).",
@@ -145,8 +150,8 @@
       "$ref": "#/$defs/luaFunction"
     },
     "on": {
-      "x-rgx-ships": "tier4",
-      "description": "Human trigger vocabulary -> handler. Trigger names are plain words mapped 1:1 to framework modules (contract rule 2); any UPPER_CASE key passes through as a raw WoW event (escape hatch). See the contract's trigger table.",
+      "x-rgx-ships": "today",
+      "description": "Human trigger vocabulary -> handler. Trigger names are plain words mapped 1:1 to framework modules (contract rule 2); any UPPER_CASE key passes through as a raw WoW event (escape hatch). Handlers run as handler(addon, ...) and one failing handler does not stop the others. See the contract's trigger table.",
       "type": "object",
       "propertyNames": {
         "anyOf": [
@@ -231,7 +236,8 @@
       "properties": {
         "toggle": { "type": "string", "description": "db key" },
         "label": { "type": "string" },
-        "default": { "type": "boolean" }
+        "default": { "type": "boolean" },
+        "onChange": { "$ref": "#/$defs/luaFunction", "description": "Runs as onChange(addon, value) after the control stores a new value; failures are reported, never thrown into the widget." }
       },
       "additionalProperties": false
     },
@@ -247,7 +253,8 @@
         "step": { "type": "number", "default": 1 },
         "suffix": { "type": "string", "description": "appended to the displayed value, e.g. \"%\"" },
         "progress": { "type": "boolean", "default": true },
-        "valueDisplay": { "enum": ["always", "hover", "none"], "default": "always", "description": "Persistent value label, hover-only value, or no visible value" }
+        "valueDisplay": { "enum": ["always", "hover", "none"], "default": "always", "description": "Persistent value label, hover-only value, or no visible value" },
+        "onChange": { "$ref": "#/$defs/luaFunction", "description": "Runs as onChange(addon, value) after the control stores a new value; failures are reported, never thrown into the widget." }
       },
       "additionalProperties": false
     },
@@ -267,7 +274,9 @@
             "properties": {
               "label": { "type": "string" },
               "value": { "type": "number", "minimum": 0, "maximum": 100 }
-            },
+      ,
+        "onChange": { "$ref": "#/$defs/luaFunction", "description": "Runs as onChange(addon, value) after the control stores a new value; failures are reported, never thrown into the widget." }
+      },
             "additionalProperties": false
           }
         }
@@ -282,7 +291,8 @@
         "textbox": { "type": "string", "description": "db key holding a string" },
         "label": { "type": "string" },
         "default": { "type": "string", "default": "" },
-        "placeholder": { "type": "string", "description": "Muted hint shown while the stored value is empty" }
+        "placeholder": { "type": "string", "description": "Muted hint shown while the stored value is empty" },
+        "onChange": { "$ref": "#/$defs/luaFunction", "description": "Runs as onChange(addon, value) after the control stores a new value; failures are reported, never thrown into the widget." }
       },
       "additionalProperties": false
     },
@@ -300,7 +310,9 @@
             "r": { "type": "number" },
             "g": { "type": "number" },
             "b": { "type": "number" }
-          },
+    ,
+        "onChange": { "$ref": "#/$defs/luaFunction", "description": "Runs as onChange(addon, value) after the control stores a new value; failures are reported, never thrown into the widget." }
+      },
           "additionalProperties": false
         }
       },
@@ -314,7 +326,8 @@
         "dropdown": { "type": "string", "description": "db key" },
         "label": { "type": "string" },
         "items": { "type": "array", "items": {} },
-        "width": { "type": "number" }
+        "width": { "type": "number" },
+        "onChange": { "$ref": "#/$defs/luaFunction", "description": "Runs as onChange(addon, value) after the control stores a new value; failures are reported, never thrown into the widget." }
       },
       "additionalProperties": false
     },

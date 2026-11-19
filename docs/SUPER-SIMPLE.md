@@ -42,12 +42,13 @@ manual SavedVariables handling. Declare `MyAddonDB` once in the TOC; `RGXAddon`
 creates and manages its profile-aware proxy. `RequiredDeps` guarantees the
 framework global exists before your Lua loads.
 
-Event setup goes in `onInit` while declarative `on` remains Tier 4:
+Events are trigger words (or any UPPER_CASE WoW event):
 
 ```lua
-    onInit = function(self)
-        self:RegisterEvent("PLAYER_LOGIN", function() self:Print("Ready!") end)
-    end,
+    on = {
+        login = function(self) self:Print("Ready!") end,
+        levelup = function(self) self:Print("Ding!") end,
+    },
 ```
 
 Repeating work uses named `every` timers:
@@ -58,10 +59,9 @@ Repeating work uses named `every` timers:
     },
 ```
 
-> **This surface is governed by the frozen [[Declarative API]] contract.** Named
-> timers ship today. One-line control strings (`"slider volume 0-100"`) ship
-> in v2.7.15-beta.2; stable authors can use the table forms above.
-> Human trigger words (`on = { levelup = fn }`) remain Tier 4.
+> **This surface is governed by the frozen [[Declarative API]] contract.** Trigger
+> words, named timers, one-line control strings (`"slider volume 0-100"`) and the
+> table forms above all ship today.
 > Everything is additive: what you write today keeps working forever.
 
 ## Just Want Fonts?

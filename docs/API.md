@@ -1,8 +1,6 @@
 # RGX-Framework API Reference
 
 
-Current release: `v2.8.0`. Existing public API semantics are preserved.
-
 Complete public API by module. See individual module docs for deeper detail:
 
 - [docs/FONTS.md](FONTS.md) — font system
@@ -565,7 +563,6 @@ Open it with `RGX:GetColorPicker():Show(color, callback, opts)` or a `UI:CreateC
 | `Textures:GetGroups()` | Distinct group strings |
 | `Textures:ListByGroup(group)` | Names in a group |
 | `Textures:GetDropdownItems()` | Grouped item list for CreateNestedDropdown |
-| `Textures:ImportLibSharedMedia(force)` | Pull LSM bars into registry |
 
 ### Apply
 
@@ -683,12 +680,19 @@ structural palette — independently of the primary/accent color presets. See
 
 | Method | Description |
 |---|---|
-| `Design:SetStyle(name)` | Apply a named style: `framework` ("RGX Framework", the default), `materialround` ("RGX Material Round") or `classic` ("RGX Classic"). The old ids `retail` and `forever` still work as aliases of `framework` and `classic`. Returns `false` for unknown names without touching current state; `primary`/`accent` tokens are never modified. Styles take effect on UI built after the call; open windows re-skin on reload. |
+| `Design:SetStyle(name)` | Apply a named style: `framework` ("RGX Framework", the default), `materialround` ("RGX Material Round") or `classic` ("WoW Classic"). The old ids `retail` and `forever` still work as aliases of `framework` and `classic`. Returns `false` for unknown names without touching current state; `primary`/`accent` tokens are never modified. Styles take effect on UI built after the call; open windows re-skin on reload. |
 | `Design:GetStyle()` | The style id that was set, or `nil` after a direct `SetCornerStyle`/`SetTheme` edit. |
 | `Design:GetStyleId()` | Canonical id (`framework` / `materialround` / `classic`) with aliases resolved. |
 | `Design:GetStyleLabel()` | Display name of the active style, such as `RGX Material Round`. |
 | `Design:ResolveStyle(name)` | Canonical id for a style id or legacy alias, or `nil` when unknown. |
 | `Design:WithStyle(name, fn)` | Run `fn` (typically a window builder) in a style, then restore the previous style, palette and corner treatment, even if `fn` errors. Unknown names raise an error. |
+| `Design:IsThemeOverride()` | True while the beta global theme override (`RGXFrameworkDB.themeOverride == true`) is on. |
+| `Design:ResolveAddonTheme(brand, brandStyle)` | The colours and style an addon should build with: its own `{ primary, accent }` and style, or the framework's main colour preset and chosen style while the override is on. Returns `theme, styleId`. |
+| `Design:WithAddonTheme(brand, brandStyle, fn)` | Run `fn` in the resolved addon theme and style (scoped, restored afterwards) and return its results. Addons build every window through this so the override reaches all their primary and accent colours. |
+| `Design:RegisterBrand(id, { primary, accent }, style)` | Register an addon's brand once and get a brand object. `brand:Build(fn)` builds UI in the resolved colours and style and remembers the brand on options panels and dropdowns built inside, so they redraw live when the theme changes (pass it to `UI:CreateOptionsPanel` as `addonBrand`; `brand` stays the header's brand text). `brand:Color(key)`, `brand:Hex(key)`, `brand:Colors()` and `brand:Style()` read the live values at paint time; `brand:OnChange(fn)` runs `fn` after every theme change (rebuild a hand-built window there). |
+| `Design:GetBrand(id)` / `Design:GetBuildBrand()` | The registered brand for an addon id / the brand whose `Build` is running. |
+| `Design:NotifyThemeChanged()` / `Design:OnThemeChanged(fn)` | Announce a change of the override, colour or style (the Theme tab and `/rgx style` call it); listeners without a brand subscribe with `OnThemeChanged`. Open RGX windows follow without a reload. |
+| `UI:SkinTab(button)` / `UI:PaintTab(button, state[, primary])` | Give an addon's own tab button the active style's tab look (the client's tab art in WoW Classic / WoW Forever, a rounded chip in RGX Material Round, the flat tab in RGX Framework) and colour it for `"active"`, `"hover"` or `"idle"`. |
 
 `Design.STYLE_ORDER` lists the canonical ids in display order.
 
@@ -809,8 +813,8 @@ Dragged offsets are written to both the consumer `storage[offsetKey]` and the fr
 
 ### Definition Editor (Source Development Slice)
 
-These additive methods exist on the feature source checkout, not the published
-`v2.7.9` archive. Check method availability before a consumer uses them. They
+These additive methods exist in the source checkout only, not in the addon
+package. Check method availability before a consumer uses them. They
 edit version-1 plain-text label data, not arbitrary Lua or a complete Studio project.
 
 | Method | Returns / behavior |
@@ -889,7 +893,7 @@ local btn = MM:Create({
 | `btn:SetItemAction(itemID/nil)` | On opt-in secure buttons, arm/disarm a left-click item action; returns false in combat, ordinary mode, or for invalid IDs |
 | `btn.frame` | Raw WoW Button frame |
 
-### Secure item actions (since v2.7.17)
+### Secure item actions
 
 `MM:Create({ secure = true, ... })` opts into `SecureActionButtonTemplate`.
 Creation returns nil in combat. The template's `OnClick` is preserved; consumer
@@ -953,6 +957,31 @@ Sound:Register(name, opts)
 
 Level-up sound system with variant playback, default-sound muting, and SavedVar integration. Used by the level-up sound-pack products and other production consumers.
 
+Player sound files (files the player copies in themselves):
+
+```lua
+Sound:ProbeFile(path)            -- true when the game can play the file (played muted, stopped at once)
+Sound:ResolveFile(input, opts)   -- path | nil, tried
+-- input: full Interface\AddOns path (or one pasted from disk), a path from an addon folder's name, a file name or a bare name;
+--   extension optional and a wrong or doubled one corrected; spaces, underscores and hyphens interchangeable; quotes ignored
+-- opts: { folders = { "Interface\\AddOns\\MyAddon_Sounds\\", ... }, deep = true, extensions = { "ogg", "mp3", "wav" } }
+-- deep: also look inside the first folder (its own name, from an unzip, and Sound.SUBFOLDERS such as sounds, media\sounds)
+-- tried: every path probed, in order, for the "where we looked" message
+```
+
+Standard sound layout for RGX addons (`Sound.LAYOUT`): inside the addon, `sounds\wow_default\` (the game's own sounds it ships), `sounds\game\` (other games' sounds, or further group folders) and `sounds\user\` (shipped empty for the player's own files; an update replaces it); beside the addon, an optional `<Addon>_Sounds\` folder that updates never touch.
+
+```lua
+Sound:AddonFolders("MyAddon", "MyAddon_Sounds") -- { root, wowDefault, game, user, shared }
+Sound:UserFolders("MyAddon", "MyAddon_Sounds")  -- { shared, user }: where a player's own files may be, durable first
+Sound:LayoutGroup(path)                         -- addonName, "wow_default" | "game" | "user" | "shared" | other group
+Sound:ResolveFile(name, { addon = "MyAddon", shared = "MyAddon_Sounds", deep = true })
+```
+
+RGXSharedMedia follows the layout: sounds found in an addon's `sounds\user\` or `<Addon>_Sounds\` folder are listed under the `<Addon> User Sounds` pack (`SM:PackNameForPath(path)`), and `SM:RegisterUserSounds(addonName, entries)` registers an addon's user sounds into that pack.
+
+The game sees only files that existed when it started (a `/reload` is not enough for new files) and cannot list a folder, so an addon that stores a name the player typed should keep it and resolve it again after the next launch. `Sound.USER_FOLDER` (`Interface\AddOns\RGX_Sounds\`) is the default folder when an addon names none.
+
 ---
 
 ## DataBroker (`RGXDataBroker`)
@@ -961,7 +990,7 @@ Level-up sound system with variant playback, default-sound muting, and SavedVar 
 local dataObj = DB:NewDataObject(name, attrs)
 ```
 
-LibDataBroker-compatible proxy data source with optional LDB bridge.
+Data objects for minimap and datatext displays.
 
 ---
 
@@ -1058,7 +1087,7 @@ Valid `HookNative` type names: `item`, `spell`, `unit`, `aura`, `pet`, `mount`, 
 
 ## SharedMedia (`RGXSharedMedia`)
 
-Multi-type media registry (`sound`, `statusbar`, `font`) with an external-addon scanner. No LibStub / LibSharedMedia dependency. Replaces per-addon local scanning (e.g. a consumer's local sharedmedia).
+Multi-type media registry (`sound`, `statusbar`, `font`) with a scan of installed addons for sound files. Replaces per-addon local scanning (e.g. a consumer's local sharedmedia).
 
 ```lua
 SM:Register(mediaType, name, path, opts)        -- register one entry
@@ -1069,7 +1098,7 @@ SM:RegisterFont(name, path, opts)                -- convenience for "font"
 SM:RegisterFontPack(packName, entries)          -- convenience for "font" batches
 SM:Fetch(mediaType, id) / SM:Find(mediaType, name) / SM:GetPath(mediaType, id)
 SM:List(mediaType, filter) / SM:ListPacks(mediaType)
-SM:Scan(includeGeneric)                         -- re-run scanners (DBM registrars, known-addon compat, generic addon-global scan)
+SM:Scan(includeGeneric)                         -- re-run the scan; includeGeneric = true crawls installed addons for sound files
 SM:QueueScan(delay, includeGeneric)             -- deduped delayed scan
 SM:ExcludeFolder(addonFolderName)               -- don't bridge sounds from this AddOn folder (see below)
 ```
@@ -1091,13 +1120,13 @@ end)
 
 ### Coverage and boundaries
 
-**Automatic external discovery is sound-only.** The scanner bridges sounds from DBM pack registrars, a small known-provider list (Prat-3.0, TradeSkillMaster), and an opt-in generic crawl over addon globals. Nothing automatically discovers external fonts or statusbars: `SM:RegisterFont` / `SM:RegisterStatusBarPack` are registration APIs, and LibSharedMedia statusbars come in only through `Textures:ImportLibSharedMedia()` when LSM is loaded. A LibSharedMedia sound pack with no DBM registrar and no reachable addon global is not automatically imported — a known-provider entry or an explicit `SM:RegisterSoundPack` call is the supported path.
+**Automatic external discovery is sound-only.** The scanner finds sound files in installed addons with an opt-in generic crawl over addon globals; it names no addon. Nothing automatically discovers external fonts or statusbars: `SM:RegisterFont` / `SM:RegisterStatusBarPack` are registration APIs, and LibSharedMedia statusbars come in only through `Textures:ImportLibSharedMedia()` when LSM is loaded. A LibSharedMedia sound pack with no DBM registrar and no reachable addon global is not automatically imported — a known-provider entry or an explicit `SM:RegisterSoundPack` call is the supported path.
 
-**Forever suppresses the generic crawl at login** (it causes a visible startup hitch on the beta client); DBM registrars and known providers still scan on load, and a full generic scan can be requested at any time with `SM:Scan(true)` or `SM:QueueScan(delay, true)`.
+**Forever suppresses the generic crawl at login** (it causes a visible startup hitch on the beta client); a full generic scan can be requested at any time with `SM:Scan(true)` or `SM:QueueScan(delay, true)`.
 
-**Scan-safety posture.** The generic crawl reads addon globals defensively: traversal, metadata reads, and registrar invocations are pcall-wrapped, with bounded depth, table, and entry caps (MAX_SCAN_DEPTH, MAX_TABLES_PER_SOURCE, MAX_SOUNDS_PER_SCAN), and loose or consumer-owned folders are skipped via `SM:ExcludeFolder`. The module calls no protected Blizzard APIs and never touches combat-protected state; a hostile or corrupted global produces no error in the scan path.
+**Scan-safety posture.** The generic crawl reads addon globals defensively: traversal and metadata reads are pcall-wrapped, with bounded depth, table, and entry caps (MAX_SCAN_DEPTH, MAX_TABLES_PER_SOURCE, MAX_SOUNDS_PER_SCAN), and loose or consumer-owned folders are skipped via `SM:ExcludeFolder`. The module calls no protected Blizzard APIs and never touches combat-protected state; a hostile or corrupted global produces no error in the scan path.
 
-**Adoption example.** BLU (BetterBlizzPlates) consumes this module as its entire external-sound pipeline: its `core/sounds/sharedmedia.lua` is a thin bridge that imports scan results into its own registry, forwards its public pack API to `SM:RegisterSoundPack`, and re-imports on every `RGX_SHAREDMEDIA_UPDATED`.
+**Adoption example.** BLU consumes this module as its entire external-sound pipeline: its `core/sounds/sharedmedia.lua` is a thin bridge that imports scan results into its own registry, forwards its public pack API to `SM:RegisterSoundPack`, and re-imports on every `RGX_SHAREDMEDIA_UPDATED`.
 
 ---
 
@@ -1146,6 +1175,9 @@ World-map pin and waypoint primitives. Pin methods manage frames on the world ma
 
 | Method | Description |
 |---|---|
+| `RGXWorldMap:SetWaypoint(mapID, x, y[, { track = false }])` | Put the game's own map pin on `mapID` at zone coordinates `x, y` (0-100) and track it. Returns true when set; false for an invalid map id or coordinates (finite, 0-100), a map the client cannot pin (a capability-query error counts as cannot), or a pin the client did not set. The addon tells the player |
+| `RGXWorldMap:ClearWaypoint()` / `RGXWorldMap:CanSetWaypoint(mapID)` | Remove the map pin / whether the client can pin that map |
+| `RGXWorldMap:Nearest(places)` | The place nearest the player (`{ mapID or zoneID, x, y }` entries, zone coordinates 0-100), by world distance on the player's continent; returns the place and its distance in yards |
 | `RGXWorldMap:AddWorldMapIcon(pinFrame, icon, mapID, x, y, name)` | Place a pin on the world map |
 | `RGXWorldMap:RemoveWorldMapIcon(name)` | Remove a world-map pin by name |
 | `RGXWorldMap:UpdateWorldMapIcon(name, x, y)` | Update a world-map pin position |
@@ -1164,4 +1196,4 @@ World-map pin and waypoint primitives. Pin methods manage frames on the world ma
 
 The worldmap module registers with `category = "game"`. Every coordinate call is capability-gated: a flavor that lacks an API (for example `C_Map.GetMapWorldSize` on classic-era/tbc/mists) returns documented nils, never errors. The `RGXWorldMap` global is a compatibility alias.
 
-As of **v2.1.0** every module above is loaded by the XML loader. There are no dormant modules.
+Every module above is loaded by the XML loader. There are no dormant modules.

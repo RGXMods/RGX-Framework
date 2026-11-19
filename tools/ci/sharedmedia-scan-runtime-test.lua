@@ -22,7 +22,7 @@
 -- Fixtures (see sharedmedia-scan-runtime-check.mjs):
 --   MyMediaAddon global table with 2 audio paths (one also registered
 --   directly below, one unique) — matches the audit repro from #78.
---   Prat-3.0 is a loaded known addon with its KNOWN_ADDON_SOUNDS pack.
+--   OtherAddon is a loaded addon with no sounds of its own.
 
 local pass, fail = 0, 0
 
@@ -140,14 +140,14 @@ end)
 -- ── scenario 2: bridge wipe/re-bridge keeps registry free of path dupes ─────
 
 scenario("Scan(true) re-bridges without duplicating any path (mixed direct+bridge registry)", function()
-  -- Seed a bridge entry by running the generic scan once (Prat-3.0 is a
-  -- loaded known addon, MyMediaAddon contributes via the addon-info list).
+  -- Seed a bridge entry by running the generic scan once (MyMediaAddon
+  -- contributes via the addon-info list).
   for i = 1, #spy do spy[i] = nil end
   SM:Scan(true)
   assert(#spy == 1, "RGX_SHAREDMEDIA_UPDATED should fire exactly once per Scan(true), fired " .. #spy)
 
   -- Registry now has a mix: a direct entry (custom:alert from scenario 1)
-  -- and bridge entries (known Prat pack and/or MyMediaAddon paths).
+  -- and bridge entries (MyMediaAddon paths).
   local soundReg = SM.registry.sound
   local hasDirect, hasBridge = false, false
   for _, entry in pairs(soundReg) do

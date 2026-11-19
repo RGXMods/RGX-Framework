@@ -820,6 +820,21 @@
           ]
         },
         {
+          "name": "ApplyBlizzardFrameNamed",
+          "params": [
+            "frame",
+            "name",
+            "set",
+            "opts"
+          ]
+        },
+        {
+          "name": "ApplyOverrideTheme",
+          "params": [
+            "db"
+          ]
+        },
+        {
           "name": "ApplyPanel",
           "params": [
             "frame",
@@ -875,9 +890,25 @@
           ]
         },
         {
+          "name": "GetBrand",
+          "params": [
+            "id"
+          ]
+        },
+        {
+          "name": "GetBuildBrand",
+          "params": []
+        },
+        {
           "name": "GetColor",
           "params": [
             "key"
+          ]
+        },
+        {
+          "name": "GetOverrideTheme",
+          "params": [
+            "db"
           ]
         },
         {
@@ -899,6 +930,41 @@
         {
           "name": "IsRoundedControls",
           "params": []
+        },
+        {
+          "name": "IsThemeOverride",
+          "params": []
+        },
+        {
+          "name": "LayeredPalette",
+          "params": [
+            "primary"
+          ]
+        },
+        {
+          "name": "NotifyThemeChanged",
+          "params": []
+        },
+        {
+          "name": "OnThemeChanged",
+          "params": [
+            "fn"
+          ]
+        },
+        {
+          "name": "RegisterBrand",
+          "params": [
+            "id",
+            "own",
+            "style"
+          ]
+        },
+        {
+          "name": "ResolveAddonTheme",
+          "params": [
+            "brand",
+            "brandStyle"
+          ]
         },
         {
           "name": "ResolveStyle",
@@ -955,6 +1021,12 @@
           ]
         },
         {
+          "name": "TitleColor",
+          "params": [
+            "from"
+          ]
+        },
+        {
           "name": "Unpack",
           "params": [
             "key"
@@ -963,6 +1035,14 @@
         {
           "name": "UsesClientArt",
           "params": []
+        },
+        {
+          "name": "WithAddonTheme",
+          "params": [
+            "brand",
+            "brandStyle",
+            "fn"
+          ]
         },
         {
           "name": "WithStyle",
@@ -2156,6 +2236,12 @@
           "params": []
         },
         {
+          "name": "PackNameForPath",
+          "params": [
+            "path"
+          ]
+        },
+        {
           "name": "QueueScan",
           "params": [
             "delay",
@@ -2217,6 +2303,13 @@
           ]
         },
         {
+          "name": "RegisterUserSounds",
+          "params": [
+            "addonName",
+            "entries"
+          ]
+        },
+        {
           "name": "Scan",
           "params": [
             "includeGeneric"
@@ -2242,6 +2335,13 @@
       "flavors": null,
       "methods": [
         {
+          "name": "AddonFolders",
+          "params": [
+            "addonName",
+            "sharedFolder"
+          ]
+        },
+        {
           "name": "Get",
           "params": [
             "addonName"
@@ -2252,9 +2352,21 @@
           "params": []
         },
         {
+          "name": "LayoutGroup",
+          "params": [
+            "path"
+          ]
+        },
+        {
           "name": "MuteList",
           "params": [
             "ids"
+          ]
+        },
+        {
+          "name": "ProbeFile",
+          "params": [
+            "path"
           ]
         },
         {
@@ -2265,9 +2377,23 @@
           ]
         },
         {
+          "name": "ResolveFile",
+          "params": [
+            "input",
+            "opts"
+          ]
+        },
+        {
           "name": "UnmuteList",
           "params": [
             "ids"
+          ]
+        },
+        {
+          "name": "UserFolders",
+          "params": [
+            "addonName",
+            "sharedFolder"
           ]
         }
       ],
@@ -2358,12 +2484,6 @@
           "name": "GetInfo",
           "params": [
             "name"
-          ]
-        },
-        {
-          "name": "ImportLibSharedMedia",
-          "params": [
-            "force"
           ]
         },
         {
@@ -2823,6 +2943,15 @@
           ]
         },
         {
+          "name": "PaintTab",
+          "params": [
+            "self",
+            "btn",
+            "state",
+            "primary"
+          ]
+        },
+        {
           "name": "SetResizeBounds",
           "params": [
             "frame",
@@ -2830,6 +2959,13 @@
             "minHeight",
             "maxWidth",
             "maxHeight"
+          ]
+        },
+        {
+          "name": "SkinTab",
+          "params": [
+            "self",
+            "btn"
           ]
         }
       ],
@@ -2872,6 +3008,16 @@
             "y",
             "name"
           ]
+        },
+        {
+          "name": "CanSetWaypoint",
+          "params": [
+            "mapID"
+          ]
+        },
+        {
+          "name": "ClearWaypoint",
+          "params": []
         },
         {
           "name": "GetCoordsAdapter",
@@ -2929,6 +3075,12 @@
           ]
         },
         {
+          "name": "Nearest",
+          "params": [
+            "places"
+          ]
+        },
+        {
           "name": "RemoveAllMinimapIcons",
           "params": []
         },
@@ -2946,6 +3098,15 @@
           "name": "RemoveWorldMapIcon",
           "params": [
             "name"
+          ]
+        },
+        {
+          "name": "SetWaypoint",
+          "params": [
+            "mapID",
+            "x",
+            "y",
+            "opts"
           ]
         },
         {

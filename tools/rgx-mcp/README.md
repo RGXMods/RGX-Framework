@@ -72,7 +72,7 @@ The framework source checkout includes `.mcp.json`; published artifacts do not. 
 
 ## Testing
 
-`test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK (stdio transport, no protocol reimplementation) against [RGX-Hello](https://github.com/RGXMods/RGX-Hello). It parses and validates the actual curried `RGXAddon` table, generates the matching supported surface with named timers, generates the deterministic TOC through the shared `tocCases` vectors, and audits the actual Lua tree. It verifies that `every` is shipped while `on` remains Tier 4, and uses paired fixtures to require RGXAuras consumer code to pass while raw aura plumbing fails. Validation reports `tier4KeysUsed` separately; schema-valid future keys are not evidence of shipped behavior. Generation is limited to supported shipped forms.
+`test/test-rgx-hello.mjs` drives the real server over the real MCP client SDK (stdio transport, no protocol reimplementation) against [RGX-Hello](https://github.com/RGXMods/RGX-Hello). It parses and validates the actual curried `RGXAddon` table, generates the matching supported surface with named timers, generates the deterministic TOC through the shared `tocCases` vectors, and audits the actual Lua tree. It verifies that `every` and `on` validate as shipped, and uses paired fixtures to require RGXAuras consumer code to pass while raw aura plumbing fails. Validation reports `tier4KeysUsed` separately; schema-valid future keys are not evidence of shipped behavior. Generation is limited to supported shipped forms.
 
 ```bash
 node test/test-rgx-hello.mjs /path/to/RGX-Hello

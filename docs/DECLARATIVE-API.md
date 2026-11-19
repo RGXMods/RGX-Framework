@@ -1,8 +1,6 @@
 # Declarative API
 
 
-Current release: `v2.8.0`. No declarative keys changed.
-
 The authoring surface and human-readable **Simplicity Contract** for RGX addons.
 Evolution is additive-only: what you write today keeps working forever. The
 machine-checkable shape lives in
@@ -10,18 +8,12 @@ machine-checkable shape lives in
 annotated `x-rgx-ships: "today"` (implemented) or `"tier4"` (frozen target).
 
 This page describes supported forms against `core/core.lua`
-(`RGX.Addon`, `_G.RGXAddon`). **Local-worktree exception:** the `options.columns` slice described
-below is implemented in this branch, but is not part of the published
-`2.7.15-beta.2` release and does not implement the full declarative card/page model.
-
-This branch also hardens the beta's one-line implementation: malformed strings
-are rejected before registration, signed slider ranges are preserved, method
-buttons bind to their addon, and fonts use the existing bound selector. These
-corrections are local source changes until integrated and released.
-
-The current untagged structural follow-on moves lazy tab/control construction
-to `libraries/ui/options.lua` while core retains grammar validation and lifecycle.
-It changes implementation ownership, not the consumer declaration vocabulary.
+(`RGX.Addon`, `_G.RGXAddon`). Core validates the grammar and owns the lifecycle;
+`libraries/ui/options.lua` builds tabs and controls lazily. Malformed one-line
+strings are rejected before registration, signed slider ranges are preserved,
+method buttons bind to their addon, and fonts use the bound selector.
+`options.columns` lays out column flows; `page` nodes author multi-page tabs
+and card grids.
 
 ---
 
@@ -56,13 +48,14 @@ framework bug — report it.
 |---|---|---|
 | `slash` | string \| string[] — registers `/cmd`; assumed handler opens the options panel | same table + `handler = function(addon, msg)` |
 | `minimap` | `true` (default icon) \| string (icon path) — assumed left-click opens the panel; dragged angle persists to `addon.db` | full opts table passed through to the minimap module (`tooltip`, `defaultAngle`, `onRightClick`, `onCtrlRight`, ...) |
-| `db` | table of profile defaults; creates `addon.db` on ADDON_LOADED. SavedVariables name assumes `<Name>DB` with non-identifier characters stripped (`"RGX-Hello"` → `RGXHelloDB`) — declare it in your TOC | `dbName` overrides the name; `global` (cross-character), `onSwitch` (profile-switch callback) |
+| `db` | table of profile defaults; creates `addon.db` on ADDON_LOADED. SavedVariables name assumes `<Name>DB` with non-identifier characters stripped (`"RGX-Hello"` → `RGXHelloDB`) — declare it in your TOC | `dbName` overrides the name; `global` (cross-character), `onSwitch` (profile-switch callback); `legacyFlat = true` adopts an existing flat SavedVariables table into the Default profile once, so an addon moving onto `db` keeps its players' settings (a table that already holds both flat keys and profiles has its flat keys applied to the active profile, once; the old keys stay recoverable) |
 | `compat` | `name = "Global.API.Path"` or `name = { "Preferred.Path", "FallbackPath" }` — the first callable path on the current client becomes `addon.compat.name(...)` | same names with `{ prefer = "...", fallback = "...", normalize = function(...) }`; `normalize` receives the raw return values |
 | `options` | `TabName = { controls... }`; requires `db`; builds a tabbed panel with db-bound controls (automatic save **and** restore) | per-control advanced keys below; local `columns = 1\|2\|3` distributes plain control lists into column flows; `page` nodes author multi-page tabs and 1–2 column card grids |
 | `title` | — | Panel title; assumes the addon name |
 | `welcome` | startup string printed with the framework icon and `[RGX]` prefix on load; obeys the global `/rgxf login on|off` preference | — |
 | `onInit` | function(addon), runs on ADDON_LOADED after `db`/`options` exist — the imperative escape hatch | — |
 | `every` | `name = { seconds, function(addon, timer) }`; starts after ADDON_LOADED and first fires after the interval | multiple deterministically named repeating timers; handlers may self-cancel with `addon:CancelTimer(timer)` |
+| `on` | `trigger = function(addon, ...)` with a trigger word from the table below; bound after ADDON_LOADED | any UPPER_CASE key subscribes to that raw WoW event |
 | `brand` | — | Hex color (no `#`) for the chat prefix; also themes the options panel (tab/header accents). Assumes `58be81` |
 | `table` | — | Use an existing table as the addon object |
 
@@ -100,6 +93,48 @@ carry `owner`, `name`, and `declarativeName` metadata. One handler error is
 reported with its stable label and does not stop unrelated timers; a failing
 repeating timer remains active. Timers do not imply combat safety, so protected
 UI work must still use RGX's safe helpers.
+
+## Triggers
+
+```lua
+RGXAddon "MyAddon" {
+    on = {
+        login = function(self) self:Print("ready") end,
+        ["quest.turnin"] = function(self, ...) end,
+        PLAYER_REGEN_DISABLED = function(self) end, -- raw event escape hatch
+    },
+}
+```
+
+Trigger words are plain words. Each one maps to exactly one framework module
+callback, so a handler gets the same arguments that module passes to its
+`On*` subscribers, after the addon object:
+
+| Words | Module |
+|---|---|
+| `login` | Runs once after login; immediately (next frame) when the addon loads after login |
+| `levelup` | levelup |
+| `achievement`, `achievement.criteria` | achievement |
+| `quest.accepted`, `quest.complete`, `quest.turnin`, `quest.progress` | quest |
+| `combat.start`, `combat.stop`, `combat.kill`, `combat.died`, `combat.crit`, `combat.lowhealth` | combat |
+| `aura.applied`, `aura.removed`, `aura.updated` | auras |
+| `loot.rare`, `loot.currency` | loot |
+| `collect.mount`, `collect.toy`, `collect.transmog`, `collect.heirloom` | collectibles |
+| `rep.gain`, `rep.rankup`, `rep.renown` | reputation |
+| `honor` | honor |
+| `pet.levelup`, `pet.capture`, `pet.battlestart`, `pet.battleend` | petbattles |
+| `delve.companion`, `delve.lifelost`, `delve.lifegained` | delves |
+| `housing.favor`, `housing.levelup`, `housing.rewards`, `housing.decor` | housing |
+| `prey.start`, `prey.ambush`, `prey.capped`, `prey.complete` | prey |
+| `tradingpost.purchase`, `tradingpost.currency` | tradingpost |
+| `media.updated` | Shared media registry changed |
+
+The whole declaration is validated before the addon registers anything: an
+unknown word or a non-function handler is a load error, never a silent no-op.
+A word whose module the current client does not load is skipped with a debug
+note, so one declaration stays valid on every client. One failing handler is
+reported to the game's error handler as `[MyAddon] on.<trigger>: <error>`
+and does not stop the others.
 
 ## Declarative compatibility shims
 
@@ -139,6 +174,17 @@ tables large multi-version addons otherwise hand-write.
 { color = "dbKey", label = "Label", default = { r = 1, g = 1, b = 1 } }
 { dropdown = "dbKey", label = "Label", items = { "a", "b" }, width = 260 }
 { button = "Button Text", action = function() ... end, width = 120, height = 22 }
+```
+
+Every value control (`toggle`, `slider`, `panel_alpha`, `textbox`, `color`, `dropdown`) also takes
+`onChange = function(addon, value) ... end`. It runs after the new value is stored in `addon.db`, so a
+handler reads the final state, and a failing handler is reported to the game's error handler instead of
+breaking the widget. Use it for effects that must happen the moment a setting flips (hiding a frame,
+showing a button) without watching the database.
+
+```lua
+{ toggle = "enabled", label = "Remove debuffs",
+  onChange = function(self, on) if on then self:HideAll() else self:RestoreAll() end end },
 ```
 
 Toggle controls render the canonical `UI:CreateSwitch` on/off element (the
@@ -357,7 +403,6 @@ itself ignores custom `X-` fields.
 
 ## Coming in Tier 4 (frozen contract)
 
-- `on = { levelup = fn, ["quest.turnin"] = fn, ... }` — human trigger words, never WoW event names
 - Inference: `slash` defaults to the lowercase addon name
 
 Everything above is additive; nothing on this page changes meaning.

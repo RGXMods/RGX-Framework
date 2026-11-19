@@ -85,6 +85,35 @@ await scenario("flat migration preserves values at construction and late adoptio
   assert(db:CreateProfile('Custom'));settings.offset=55
   assert(db:Adopt()==false and db:GetActiveProfile()=='Custom' and settings.offset==55)
 `);
+await scenario("flat migration applies real flat choices once when profiles already hold defaults", `
+  -- A table written by two owners: the addon kept the player's choices flat while a profile database filled the
+  -- Default profile with defaults. The flat choices are the real ones.
+  FlatMix = {
+    enabled = false, minimapIconEnabled = false, firstRun = false, showWelcome = true, minimapAngle = 220,
+    global = {}, char = {}, activeProfile = "Default",
+    profiles = { Default = { enabled = true, minimapIconEnabled = true, firstRun = true, showWelcome = true,
+                             minimapAngle = 220, currentProfile = "Default" } },
+  }
+  local defaults = { enabled = true, minimapIconEnabled = true, firstRun = true, showWelcome = true, minimapAngle = 220 }
+  local db = RGX:NewDatabase("FlatMix", defaults, { legacyFlat = true })
+  assert(db.enabled == false and db.minimapIconEnabled == false and db.firstRun == false, "flat choices lost to profile defaults")
+  assert(FlatMix.profiles.Default.enabled == false, "choice not written into the active profile")
+  assert(FlatMix.enabled == false and FlatMix.firstRun == false, "flat keys must stay recoverable")
+  db.enabled = true
+  local again = RGX:NewDatabase("FlatMix", defaults, { legacyFlat = true })
+  assert(again.enabled == true, "stale flat keys overrode a later edit")
+  assert(again.minimapIconEnabled == false, "other adopted choices were dropped")
+`);
+await scenario("flat migration of a plain flat table is also applied once", `
+  FlatOnce = { enabled = false, offset = 7 }
+  local defaults = { enabled = true, offset = 1 }
+  local db = RGX:NewDatabase("FlatOnce", defaults, { legacyFlat = true })
+  assert(db.enabled == false and db.offset == 7)
+  db.offset = 9
+  local again = RGX:NewDatabase("FlatOnce", defaults, { legacyFlat = true })
+  assert(again.offset == 9 and again.enabled == false, "reload re-applied the stale flat keys")
+  assert(FlatOnce.profiles.Default.offset == 9)
+`);
 await scenario("collector backdrops and layout remain separate from minimap textures", `
   local function widget(kind,parent)
     local w={kind=kind,parent=parent,scripts={},shown=true}

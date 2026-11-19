@@ -13,7 +13,8 @@ try {
   lua.doStringSync(`
     local failures = {}
     local function check(ok, msg) if not ok then failures[#failures + 1] = msg end end
-    local function build(loadedSet, useCAddOns)
+    local captured = {}
+    local function build(loadedSet, useCAddOns, design, db)
       local titles = {}
       local panelOpts
       local function widget() return setmetatable({}, { __index = function() return function() end end }) end
@@ -28,16 +29,17 @@ try {
         return card
       end
       function UI:CreateLabel() return widget() end
-      function UI:CreateSwitch() return widget() end
+      function UI:CreateSwitch(_, opts) captured.switch = opts return widget() end
       function UI:CreateButtonGroup() return { buttons = { widget(), widget() }, SetPoint = function() end } end
       function UI:CreateOptionsPanel(opts) panelOpts = opts return widget() end
-      local Design = { THEME_PRESETS = { cyan = {} }, STYLES = {}, STYLE_ORDER = {}, GetThemePreset = function() return "cyan" end }
+      local Design = design or { THEME_PRESETS = { cyan = {} }, STYLES = {}, STYLE_ORDER = {}, GetThemePreset = function() return "cyan" end }
+      _G.RGXDropdowns = { CreateNestedDropdown = function(_, _, opts) captured[opts.label] = opts return widget() end }
       local events = {}
       local RGX = {
         GetUI = function() return UI end, GetDesign = function() return Design end,
         RegisterEvent = function(_, e, fn) events[e] = fn end,
         IsLoginMessagesEnabled = function() return true end,
-        GetLoadedModules = function() return {} end, db = {},
+        GetLoadedModules = function() return {} end, db = db or {}, Print = function() end,
       }
       local isLoaded = function(name) return loadedSet[name] == true end
       _G.C_AddOns = useCAddOns and { IsAddOnLoaded = isLoaded } or nil
@@ -54,6 +56,32 @@ try {
       return titles
     end
     local function has(titles, name) for _, t in ipairs(titles) do if t == name then return true end end return false end
+
+    -- The Theme card's controls: saved always, applied live only while the beta override is on.
+    do
+      local applied = {}
+      local D = { THEME_PRESETS = { cyan = {}, gold = {} }, STYLES = { framework = { label = "F" }, forever = { label = "W" } },
+        STYLE_ORDER = { "framework", "forever" },
+        ResolveStyle = function(_, n) return ({ framework = "framework", forever = "forever" })[n] end,
+        SetStyle = function(_, n) applied.style = n return true end,
+        SetThemePreset = function(_, n) applied.preset = n return true end,
+        GetThemePreset = function() return nil end, GetStyleId = function() return "framework" end }
+      local db = { themeOverride = false, style = "forever", themePreset = "gold" }
+      build({ BLU = true }, true, D, db)
+      local colour, style = captured["Main color"], captured["Interface style"]
+      check(colour and colour.value == "gold", "the colour dropdown shows the saved colour (" .. tostring(colour and colour.value) .. ")")
+      check(style and style.value == "forever", "the style dropdown shows the saved style (" .. tostring(style and style.value) .. ")")
+      colour.onChange("cyan"); style.onChange("framework")
+      check(db.themePreset == "cyan" and db.style == "framework", "choices are saved with the override off")
+      check(applied.preset == nil and applied.style == nil, "nothing is applied live with the override off")
+      db.themeOverride = true
+      captured.switch.onChange(true)
+      check(applied.style == "framework" and applied.preset == "cyan", "turning the override on applies the saved choices")
+      colour.onChange("gold"); style.onChange("forever")
+      check(applied.preset == "gold" and applied.style == "forever", "with the override on, choices apply live")
+      captured.switch.onChange(false)
+      check(applied.style == "framework" and applied.preset == "cyan", "turning the override off restores the defaults")
+    end
 
     local none = build({}, true)
     check(#none.__tabs == 2 and none.__tabs[1] == "About" and none.__tabs[2] == "Build with RGX", "no theme-following addon: the page has the About and Build with RGX tabs (" .. table.concat(none.__tabs, ",") .. ")")

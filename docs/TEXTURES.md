@@ -1,6 +1,6 @@
 # Textures Module
 
-The Textures module (`RGXTextures`) manages statusbar texture registration, selection, and integration with LibSharedMedia.
+The Textures module (`RGXTextures`) manages statusbar texture registration and selection.
 
 ---
 
@@ -81,45 +81,12 @@ local control = Textures:CreateBarSettingControl(parent, {
 })
 ```
 
-### `Textures:ImportLibSharedMedia(force?)`
-
-Scan LibSharedMedia-3.0 (if loaded) for statusbar textures and register them. This is called automatically on the first call to `GetBar()`, `ListBars()`, or `CreateBarDropdown()` if LSM is present.
-
-You can call it manually to force a re-scan:
-
-```lua
-Textures:ImportLibSharedMedia()
-```
-
----
-
 ## Built-in Statusbars
 
 | Name | Path |
 |---|---|
 | `Blizzard` | `Interface\TargetingFrame\UI-StatusBar` |
 | `Blizzard Raid` | `Interface\RaidFrame\Raid-Bar-Hp-Fill` |
-
----
-
-## LibSharedMedia Integration
-
-When LibSharedMedia-3.0 is present in the addon environment, RGX-Framework automatically imports its statusbar textures on first access. The import:
-
-1. Checks if `LibSharedMedia-3.0` is available
-2. Iterates `LSM:HashTable("statusbar")`
-3. Registers each entry via `RegisterBar()`
-4. Sets category to `"LibSharedMedia"`
-5. Only runs once (guarded by `Textures._lsmImported` flag)
-
-To add LSM textures manually at a specific time:
-
-```lua
-RGX:OnReady(function()
-    local Textures = RGX:GetTextures()
-    Textures:ImportLibSharedMedia()
-end)
-```
 
 ---
 

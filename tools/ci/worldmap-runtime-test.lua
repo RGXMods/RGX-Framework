@@ -154,6 +154,77 @@ scenario("absent client capabilities yield nils, never errors", function()
   WM._coordsAdapter = nil
 end)
 
+scenario("Nearest picks the place closest to the player in world yards", function()
+  -- Player at world (500, 400); zone (x, y) maps to world (x*10, y*8) on continent 543.
+  local far = { name = "Far", zoneID = 37, x = 10, y = 10 }      -- world (100, 80)
+  local near = { name = "Near", mapID = 37, x = 55, y = 45 }     -- world (550, 360)
+  local best, dist = WM:Nearest({ far, near })
+  assert(best == near, "the nearer place should win, got " .. tostring(best and best.name))
+  assert(dist and math.abs(dist - math.sqrt(50 * 50 + 40 * 40)) < 1e-9, "distance in world yards, got " .. tostring(dist))
+  assert(WM:Nearest({}) == nil, "no places: nil")
+end)
+
+scenario("positions handed back as plain tables still convert", function()
+  local saved = C_Map.GetWorldPosFromMapPos
+  C_Map.GetWorldPosFromMapPos = function(mapID, pos)
+    local x, y = pos:GetXY()
+    return 543, { x = x * 1000, y = y * 800 }
+  end
+  WM._coordsAdapter = nil
+  local wx, wy = WM:GetWorldCoordinatesFromZone(50, 25, 37)
+  assert(wx == 500 and wy == 200, "plain { x, y } positions convert, got " .. tostring(wx) .. "," .. tostring(wy))
+  C_Map.GetWorldPosFromMapPos = saved
+  WM._coordsAdapter = nil
+end)
+
+scenario("SetWaypoint puts the game's own map pin and tracks it", function()
+  local set, tracked, cleared
+  C_Map.SetUserWaypoint = function(point) set = point end
+  C_Map.ClearUserWaypoint = function() cleared = true end
+  C_Map.CanSetUserWaypointOnMap = function(mapID) return mapID ~= 99 end
+  _G.C_SuperTrack = { SetSuperTrackedUserWaypoint = function(v) tracked = v end }
+  assert(WM:SetWaypoint(37, 52.6, 55.5) == true, "the pin is set")
+  local px = set and set.position and (set.position.GetXY and set.position:GetXY() or set.position.x)
+  assert(set and set.uiMapID == 37 and px and math.abs(px - 0.526) < 1e-9, "zone coordinates 0-100 become map fractions")
+  assert(tracked == true, "the pin is tracked")
+  assert(WM:SetWaypoint(99, 10, 10) == false, "a map the client cannot pin is refused")
+  assert(WM:SetWaypoint(37, nil, 10) == false, "missing coordinates are refused")
+  WM:ClearWaypoint()
+  assert(cleared == true, "ClearWaypoint removes the pin")
+  C_Map.SetUserWaypoint, C_Map.ClearUserWaypoint, C_Map.CanSetUserWaypointOnMap, _G.C_SuperTrack = nil, nil, nil, nil
+  assert(WM:SetWaypoint(37, 10, 10) == false, "a client without map pins: false, no error")
+end)
+
+scenario("waypoints fail closed: capability errors, unknown answers, bad maps and coordinates are refused (#124)", function()
+  local calls = 0
+  C_Map.SetUserWaypoint = function() calls = calls + 1 end
+  C_Map.CanSetUserWaypointOnMap = function() error("query failed") end
+  assert(WM:CanSetWaypoint(37) == false and WM:SetWaypoint(37, 50, 50) == false, "a capability-query error is not permission")
+  C_Map.CanSetUserWaypointOnMap = function() return nil end
+  assert(WM:SetWaypoint(37, 50, 50) == false, "an unknown (nil) capability answer is not permission")
+  C_Map.CanSetUserWaypointOnMap = function() return false end
+  assert(WM:SetWaypoint(37, 50, 50) == false, "a refused map stays refused")
+  C_Map.CanSetUserWaypointOnMap = function() return true end
+  for _, bad in ipairs({ { -100, 200 }, { 0 / 0, 50 }, { 50, 1 / 0 }, { 101, 50 }, { "50", 50 } }) do
+    assert(WM:SetWaypoint(37, bad[1], bad[2]) == false, "invalid coordinates are refused: " .. tostring(bad[1]) .. "," .. tostring(bad[2]))
+  end
+  for _, badMap in ipairs({ 0, -5, 1.5, "37", 0 / 0 }) do
+    assert(WM:SetWaypoint(badMap, 50, 50) == false, "an invalid map id is refused: " .. tostring(badMap))
+  end
+  assert(calls == 0, "the setter is never reached for refused waypoints (" .. calls .. ")")
+  assert(WM:SetWaypoint(37, 0, 100) == true and calls == 1, "the edges 0 and 100 are valid")
+  C_Map.CanSetUserWaypointOnMap = nil
+  assert(WM:SetWaypoint(37, 50, 50) == true and calls == 2, "a client without the capability query attempts the pin (the setter decides)")
+  C_Map.SetUserWaypoint = function() error("not allowed") end
+  assert(WM:SetWaypoint(37, 50, 50) == false, "a setter error reports false")
+  C_Map.SetUserWaypoint = function() return false end
+  assert(WM:SetWaypoint(37, 50, 50) == false, "the client reporting wasSet = false reports false")
+  local good = { name = "Good", mapID = 37, x = 55, y = 45 }
+  local best = WM:Nearest({ { name = "Bad", mapID = 37, x = 0 / 0, y = 10 }, good })
+  assert(best == good, "Nearest skips places with invalid coordinates")
+  C_Map.SetUserWaypoint, C_Map.CanSetUserWaypointOnMap = nil, nil
+end)
+
 scenario("no phantom API or external-library seam exists", function()
   assert(C_Map.GetPlayerInfoInWorldMap == nil,
     "phantom C_Map.GetPlayerInfoInWorldMap must never be called")

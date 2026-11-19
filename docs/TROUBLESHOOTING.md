@@ -74,7 +74,7 @@ Common issues and their fixes.
 
 **Symptom:** `RGX:GetSound()` (or any `Get*()`) returns nil.
 
-**Cause:** As of **v2.1.0** every in-tree module is loaded by `RGX-Framework.xml`, so a nil accessor means the framework itself has not finished loading — you called `Get*()` before `OnReady`, or your addon lacks `RequiredDeps: RGX-Framework` so it loaded first.
+**Cause:** Every in-tree module is loaded by `RGX-Framework.xml`, so a nil accessor means the framework itself has not finished loading — you called `Get*()` before `OnReady`, or your addon lacks `RequiredDeps: RGX-Framework` so it loaded first.
 
 **Fix:** Wrap module-dependent code in `RGX:OnReady(function() ... end)`, and confirm your TOC declares `## RequiredDeps: RGX-Framework`. Core-only APIs (events, timers, hooks, slash) are available immediately; module accessors need the framework fully loaded.
 
@@ -82,9 +82,9 @@ Common issues and their fixes.
 
 **Symptom:** Login warnings like `Error loading RGX-Framework/modules/achievement/achievement.lua` (and the same for levelup, quest, honor, delves, housing, tradingpost, prey).
 
-**Cause:** v1.9.0-era packages referenced module files that were not shipped. Those `<Script>` entries were removed during the 1.x cycle and the modules were completed and re-enabled in **v2.1.0**, where every referenced file ships in the zip.
+**Cause:** An old package referenced module files that were not shipped. Current packages ship every file the loader references.
 
-**Fix:** Update RGX-Framework to v2.1.0 or later. If the warning persists after updating, the install is stale — delete the `Interface/AddOns/RGX-Framework` folder and reinstall.
+**Fix:** Update RGX-Framework. If the warning persists after updating, the install is stale — delete the `Interface/AddOns/RGX-Framework` folder and reinstall.
 
 ### Module method collision
 
@@ -116,11 +116,11 @@ Common issues and their fixes.
 
 ### `[RGX:timer-slow] SharedMedia:QueueScan took NNNms`
 
-**Symptom:** A `timer-slow` diagnostic in chat or in an error grabber (BugSack/Bugtraq), often at login.
+**Symptom:** A `timer-slow` diagnostic in chat or in an error-display addon, often at login.
 
 **Cause:** This is a **diagnostic, not an error** — the framework reports timer callbacks that exceed their slow threshold. The media scan reads addon tables at login and legitimately takes 100–500ms; that is normal I/O, not a fault.
 
-**Fix:** Nothing to fix on current versions. The global threshold is 250ms (raised from 50ms in v2.0.0-alpha.1) and `SharedMedia:QueueScan` has a per-label override of 500ms via `timerBudget.slowByLabel`, so routine scans no longer report. If you see this for your own timer label, either make the callback cheaper or add a `slowByLabel` override for it.
+**Fix:** Nothing to fix on current versions. The global threshold is 250ms and `SharedMedia:QueueScan` has a per-label override of 500ms via `timerBudget.slowByLabel`, so routine scans no longer report. If you see this for your own timer label, either make the callback cheaper or add a `slowByLabel` override for it.
 
 ---
 

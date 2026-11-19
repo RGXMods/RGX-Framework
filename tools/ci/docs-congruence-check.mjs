@@ -141,7 +141,6 @@ for (const [path, source] of Object.entries(surfaceText)) {
 }
 
 const readme = surfaceText["README.md"];
-if (/\n\s*on\s*=\s*\{/.test(readme)) failures.push("README.md: primary example uses future declarative on form");
 if (!/\n\s*every\s*=\s*\{/.test(readme)) failures.push("README.md: primary example is missing shipped declarative every form");
 for (const path of ["README.md", "docs/HOME.md", "docs/curse_description.html", "docs/SUPER-SIMPLE.md"]) {
   if (!surfaceText[path].includes("SavedVariables: MyAddonDB")) failures.push(`${path}: persisted DB example is missing SavedVariables: MyAddonDB`);
@@ -172,7 +171,16 @@ if (publishedVersion !== version) {
 }
 
 const schema = JSON.parse(read("contract/schemas/rgx-addon.schema.json"));
-if (schema.properties?.on?.["x-rgx-ships"] !== "tier4") failures.push("schema: on must remain tier4 until runtime implementation lands");
+if (schema.properties?.on?.["x-rgx-ships"] !== "today") failures.push("schema: on must ship today with its runtime implementation");
+{
+  // The frozen trigger vocabulary and the runtime trigger table must name the same words.
+  const core = read("core/core.lua");
+  const table = core.slice(core.indexOf("local DECLARATIVE_TRIGGERS = {"), core.indexOf("\n}", core.indexOf("local DECLARATIVE_TRIGGERS = {")));
+  const runtime = new Set([...table.matchAll(/\["([a-z.]+)"\]\s*=/g)].map((m) => m[1]).concat(["login", "media.updated"]));
+  const frozen = new Set(schema.$defs?.triggerName?.enum ?? []);
+  for (const word of frozen) if (!runtime.has(word)) failures.push(`core/core.lua: trigger ${word} is in the schema but not bound at runtime`);
+  for (const word of runtime) if (!frozen.has(word)) failures.push(`schema: runtime trigger ${word} is missing from triggerName`);
+}
 if (schema.properties?.every?.["x-rgx-ships"] !== "today") failures.push("schema: every must ship today with its runtime implementation");
 if (schema.properties?.options?.properties?.columns?.["x-rgx-ships"] !== "today") failures.push("schema: options.columns must ship today with its runtime implementation");
 
@@ -238,7 +246,7 @@ const releaseWorkflow = read(".github/workflows/release.yml");
 for (const required of ["tools/release/publish-release.mjs", "npm run package-build", "--inspect", "--expected-count", "sha256sum", "release-metadata-check.mjs", "Verify published release assets"]) {
   if (!releaseWorkflow.includes(required)) failures.push(`release workflow: missing ${required}`);
 }
-if (releaseWorkflow.includes("BigWigsMods/packager")) failures.push("release workflow: BigWigsMods/packager is retired; use the in-house packager");
+if (/uses:\s*[\w.-]+\/packager@/i.test(releaseWorkflow)) failures.push("release workflow: third-party packagers are retired; use the in-house packager");
 if (releaseWorkflow.includes(".release/")) failures.push("release workflow: the .release staging directory is retired");
 
 // Do not add a consumer-name denylist here: encoding another addon's identity

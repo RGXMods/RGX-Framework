@@ -92,7 +92,7 @@ try {
       local resized=false
       local dialog=UI:CreateConfigDialog({}, {resizable=true,width=500,height=300,minWidth=320,minHeight=200,
         onResize=function(w,h,owner) resized=w==500 and h==300 and owner.resizeGrip~=nil end})
-      assert(dialog.SetPanelColor and dialog._panelFill,'dialog bypassed Design surface')
+      assert(dialog.SetPanelColor and (dialog._panelFill or dialog.SetBackdropColor),'dialog bypassed Design surface')
       assert(dialog.resizable and dialog.resizeBounds[1]==320 and dialog.resizeBounds[2]==200)
       dialog.resizeGrip.scripts.OnDragStart(); assert(dialog.sizing=='BOTTOMRIGHT')
       dialog.resizeGrip.scripts.OnDragStop(); assert(resized and dialog.sizing==nil)
@@ -363,36 +363,56 @@ try {
       end)
       assert(D:GetColor('primary')[1] == 0.1)
     `],
+    ["Addon theme: the addon's own pair and style, or the framework's while the beta override is on", `
+      local RED, GREY = { 0.5, 0.1, 0.2 }, { 0.7, 0.7, 0.7 }
+      local brand = { primary = RED, accent = GREY }
+      _G.RGXFrameworkDB = { themeOverride = false, themePreset = 'gold', style = 'forever' }
+      local t, st = D:ResolveAddonTheme(brand, 'materialround')
+      assert(t.primary == RED and t.accent == GREY and st == 'materialround', 'override off keeps the addon brand and style')
+      _G.RGXFrameworkDB.themeOverride = nil
+      t, st = D:ResolveAddonTheme(brand, 'materialround')
+      assert(t.primary == RED and st == 'materialround', 'an unset override is off')
+      _G.RGXFrameworkDB.themeOverride = true
+      t, st = D:ResolveAddonTheme(brand, 'materialround')
+      assert(t.primary == D.THEME_PRESETS.gold.primary and t.accent == D.THEME_PRESETS.gold.accent, 'override on uses the preset pair')
+      assert(st == 'forever', 'override on uses the chosen style')
+      local seen
+      D:WithAddonTheme(brand, 'materialround', function() seen = { D:GetColor('primary')[1], D:GetStyleId() } end)
+      assert(seen[1] == D.THEME_PRESETS.gold.primary[1] and seen[2] == 'forever', 'WithAddonTheme builds in the resolved theme and style')
+      _G.RGXFrameworkDB = nil
+      assert(D:SetStyle('framework'))
+    `],
     ["Design styles own corners and palette, not color tokens", `
       local pr, pg, pb = D:Unpack('primary')
       assert(D:SetStyle('classic') and D:GetStyle() == 'classic')
       assert(D.cornerStyle == 'square', 'classic must be square')
       assert(D:GetColor('border')[1] == 0.25, 'classic palette did not apply')
-      assert(D:SetStyle('retail') and D.cornerStyle == 'rounded')
+      assert(D:SetStyle('retail') and D.cornerStyle == 'square')
       assert(not D:SetStyle('bogus') and D:GetStyle() == 'retail', 'unknown style changed state')
       local qr, qg, qb = D:Unpack('primary')
       assert(qr == pr and qg == pg and qb == pb, 'style touched primary')
-      assert(D:SetStyle('framework') and D.cornerStyle == 'rounded')
+      assert(D:SetStyle('framework') and D.cornerStyle == 'square', 'RGX Framework is square')
       assert(D:GetColor('border')[1] == 0.137, 'framework palette did not restore')
     `],
-    ["RGX styles: framework, materialround and classic are listed in order with their names", `
+    ["Styles are listed in order: RGX Material Round, RGX Framework, WoW Classic, WoW Forever", `
       local labels = {}
       for _, id in ipairs(D.STYLE_ORDER) do labels[#labels + 1] = D.STYLES[id].label end
-      assert(table.concat(labels, '|') == 'RGX Framework|RGX Material Round|RGX Classic|RGX Forever', 'style names: ' .. table.concat(labels, '|'))
+      assert(table.concat(labels, '|') == 'RGX Material Round|RGX Framework|WoW Classic|WoW Forever', 'style names: ' .. table.concat(labels, '|'))
       assert(D.STYLES.retail == nil, 'the retail alias must not be listed')
       assert(D:ResolveStyle('retail') == 'framework' and D:ResolveStyle('forever') == 'forever', 'retail alias or forever id lost')
       assert(D:ResolveStyle('bogus') == nil)
       assert(D:SetStyle('forever') and D:GetStyleId() == 'forever' and D.cornerStyle == 'square')
-      assert(D:GetStyleLabel() == 'RGX Forever')
+      assert(D:GetStyleLabel() == 'WoW Forever')
       assert(D:SetStyle('framework') and D:GetStyleId() == 'framework')
     `],
-    ["RGX Forever: square, bronze frame line, parchment text; titles follow the mod's accent", `
+    ["WoW Forever: the game's metal frame, layered flat panels from the brand colour; titles in the palette's title tint", `
       assert(D:SetStyle('forever') and D:GetStyleId() == 'forever' and D.cornerStyle == 'square')
-      assert(D:GetStyleLabel() == 'RGX Forever')
+      assert(D:GetStyleLabel() == 'WoW Forever')
       local ring, text = D:GetColor('ring'), D:GetColor('text')
-      assert(ring[1] > ring[3] * 2, 'ring must be a bronze line, not grey')
-      assert(text[1] > text[3], 'text must be warm parchment')
-      assert(D.styleOptions.titleFrom == 'accent' and D.styleOptions.controlStyle == 'square' and D.styleOptions.frameArt == 'forever' and D.styleOptions.blizzard.card == 'InsetFrameTemplate', 'Forever names the client inset frame for cards and keeps native controls')
+      local layers = D:LayeredPalette(D.Theme.primary)
+      assert(math.abs(ring[1] - layers.border[1]) < 0.001 and math.abs(ring[2] - layers.border[2]) < 0.001 and math.abs(ring[3] - layers.border[3]) < 0.001, 'ring is the palette border layer')
+      assert(text[1] > 0.8 and text[2] > 0.8 and text[3] > 0.8, 'text must be pale')
+      assert(D.styleOptions.titleFrom == 'layered' and D.styleOptions.layered == true and D.styleOptions.controlStyle == 'square' and D.styleOptions.frameArt == 'forever' and D.styleOptions.blizzard.card[1] == 'border:tooltip', 'Forever titles use the palette title tint, cards the tinted tooltip border, controls native')
       local f = D:CreateFrame(UIParent, { width = 100, height = 50 })
       assert(f._panelLine and f._panelFill and f._panelBorder, 'a Forever panel draws the framed art: ring, fill and inner line')
       local g = D:CreateFrame(UIParent, { width = 100, height = 50, square = true })

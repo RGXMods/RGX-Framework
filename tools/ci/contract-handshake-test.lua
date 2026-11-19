@@ -102,6 +102,17 @@ _G.RGXFramework = realFramework
 local newOk, newErr = pcall(loadstring(generatedGuard, "@generated-guard.lua"))
 check(newOk == true, "guard passes on the current framework: " .. tostring(newErr))
 
+-- Library files that share the addon namespace write their own `version` onto the framework table while it
+-- loads; the contract check still answers with the framework's real version.
+local RGX = _G.RGXFramework
+local real = RGX.version
+RGX.version = "1.0.0"
+local clobberedOk, clobberedErr = pcall(RGX.RequireContract, RGX, "ClobberProbe", 1, real)
+check(clobberedOk == true, "a library's version written over RGX.version does not fail the contract check: " .. tostring(clobberedErr))
+local lowOk, lowErr = pcall(RGX.RequireContract, RGX, "ClobberProbe", 1, "99.0.0")
+check(lowOk == false and contains(lowErr, "installed RGX-Framework is " .. tostring(real)), "the error names the real framework version: " .. tostring(lowErr))
+RGX.version = real
+
 _G.__rgxHandshakeCheckCount = checks
 _G.__rgxHandshakeTestResult = string.format(
     "CONTRACT HANDSHAKE OK  format query, version compare, RequireContract (%d checks, Lua %s)",

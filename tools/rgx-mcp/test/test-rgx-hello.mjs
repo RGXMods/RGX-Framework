@@ -518,7 +518,7 @@ try {
     arguments: { opts: { on: { login: { $lua: "function" } } } },
   });
   const onReport = JSON.parse(onVal.content[0].text);
-  check("declarative on remains reported as tier4", onReport.tier4KeysUsed?.includes("on"), JSON.stringify(onReport));
+  check("declarative on validates as shipped", onReport.valid === true && (onReport.tier4KeysUsed ?? []).length === 0, JSON.stringify(onReport));
 
   const tier4String = await client.callTool({
     name: "rgx_validate_addon",

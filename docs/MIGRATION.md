@@ -1,6 +1,6 @@
-# Migrating to RGX-Framework
+# Moving an addon onto RGX-Framework
 
-Guide for addon authors moving from Ace3, LibSharedMedia, or standalone implementations to RGX-Framework.
+Guide for addon authors moving hand-built plumbing (event frames, timers, hooks, slash globals, media and saved variables) onto RGX-Framework.
 
 ---
 
@@ -32,64 +32,59 @@ The intended migration is incremental: keep the addon working, move one repeated
 
 ---
 
-## From Ace3
+## From standalone code
 
-### Addon Object / Lifecycle
+### Addon object and lifecycle
 
-| Ace3 | RGX |
+| Hand-built | RGX |
 |---|---|
-| `LibStub("AceAddon-3.0"):NewAddon(...)` | `local RGX = assert(_G.RGXFramework, "Addon: RGX not loaded")` |
-| `:OnInitialize()` | `RGX:OnReady(function() ... end)` |
-| `:OnEnable()` / `:OnDisable()` | `RGX:RegisterEvent("PLAYER_LOGIN", fn)` / manual cleanup |
-| Embedding mixins | `RGX:Mixin(target, source)` |
+| A global table and an `ADDON_LOADED` frame | `RGXAddon "Name" { ... }` or `local RGX = assert(_G.RGXFramework, "Addon: RGX not loaded")` |
+| Work after the framework is ready | `RGX:OnReady(function() ... end)` |
+| Work at login | `on = { login = fn }` or `RGX:RegisterEvent("PLAYER_LOGIN", fn, id)` |
+| Copying methods onto a table | `RGX:Mixin(target, source)` |
 
-RGX does not use `LibStub` or embedding. Your addon is a plain Lua table — no framework base class required.
+Your addon stays a plain Lua table; there is no base class and nothing is embedded.
 
 ### Events
 
-| Ace3 | RGX |
+| Hand-built | RGX |
 |---|---|
-| `self:RegisterEvent("EVENT", handler)` | `RGX:RegisterEvent("EVENT", handler, id)` |
-| `self:UnregisterEvent("EVENT")` | `RGX:UnregisterEvent("EVENT", id)` |
-| `self:RegisterMessage("MSG", handler)` | `RGX:RegisterMessage("MSG", handler, id)` |
+| `CreateFrame("Frame")` + `RegisterEvent` + `OnEvent` | `RGX:RegisterEvent("EVENT", handler, id)` |
+| `frame:UnregisterEvent("EVENT")` | `RGX:UnregisterEvent("EVENT", id)` |
+| Cross-file signalling through globals | `RGX:RegisterMessage("MSG", handler, id)` / `RGX:SendMessage("MSG", ...)` |
 
-RGX requires an `id` string for targeted unregistration. This is a deliberate choice — it makes cleanup explicit and avoids the "which addon leaked this handler?" problem.
+The `id` string makes cleanup explicit and names the owner of every handler.
 
 ### Timers
 
-| Ace3 | RGX |
+| Hand-built | RGX |
 |---|---|
-| `self:ScheduleTimer(fn, delay)` | `RGX:After(delay, fn)` |
-| `self:ScheduleRepeatingTimer(fn, interval)` | `RGX:Every(interval, fn)` |
-| `self:CancelTimer(timer)` | `RGX:CancelTimer(timer)` |
+| `C_Timer.After(delay, fn)` | `RGX:After(delay, fn)` |
+| `C_Timer.NewTicker(interval, fn)` | `RGX:Every(interval, fn)` or declarative `every` |
+| `ticker:Cancel()` | `RGX:CancelTimer(timer)` |
 
-RGX timers use a native `OnUpdate` driver — no `C_Timer` dependency. The `Every` callback receives the timer reference as its first argument for self-cancellation.
+RGX timers run on one framework driver with a frame budget. The `Every` callback receives the timer reference for self-cancellation.
 
 ### Hooks
 
-| Ace3 | RGX |
+| Hand-built | RGX |
 |---|---|
-| `self:Hook(target, "Method", handler)` | `RGX:Hook(target, "Method", handler)` |
-| `self:Unhook(target, "Method")` | Not supported — RGX uses `hooksecurefunc` (unhookable) |
+| `hooksecurefunc(target, "Method", fn)` | `RGX:Hook(target, "Method", fn)` |
 
-RGX hooks are post-only and permanent. Pre-hooks/unhooking are not interchangeable
-with this interface; retain the existing supported implementation until a
-framework-owned alternative satisfies the consumer requirement. Do not replace
-Blizzard functions as a migration shortcut.
+RGX hooks are post-only and permanent. Do not replace Blizzard functions as a migration shortcut.
 
-### Slash Commands
+### Slash commands
 
-| Ace3 | RGX |
+| Hand-built | RGX |
 |---|---|
-| `self:RegisterChatCommand("cmd", handler)` | `RGX:RegisterSlashCommand("cmd", handler, id)` |
+| `SLASH_X1 = "/cmd"` + `SlashCmdList.X = fn` | `RGX:RegisterSlashCommand("cmd", handler, id)` or declarative `slash` |
 
-### Saved Variables
+### Saved variables
 
-| Ace3 | RGX |
+| Hand-built | RGX |
 |---|---|
-| `LibStub("AceDB-3.0"):New("MyAddonDB", defaults)` | `RGX:DB("MyAddonDB", defaults)` (basic) |
-| Profiles and defaults | `RGX:NewDatabase(name, defaults, opts)`; profile switching and global data |
-| Namespaces and char/realm scopes | No blanket AceDB-equivalence claim; map actual consumer storage explicitly |
+| Reading the SavedVariables global and filling defaults by hand | `RGX:DB("MyAddonDB", defaults)` (basic) |
+| Profiles and per-character data | `RGX:NewDatabase(name, defaults, opts)`; profile switching and global data |
 
 Profiles, migrations and `SerializeProfile`/`DeserializeProfile` are implemented
 in `core/systems/database.lua`. Preserve explicit `false`, nested defaults,
@@ -97,36 +92,14 @@ global data and reload persistence when migrating. See [API](API.md) and
 [Testing](TESTING.md); do not treat a visually correct options panel as proof
 that its SavedVariables owner is correct.
 
----
+### Media
 
-## From LibSharedMedia
-
-### Font Registration
-
-| LSM | RGX |
+| Hand-built | RGX |
 |---|---|
-| `LSM:Register("font", name, path)` | `Fonts:Register(name, path, info)` |
-| `LSM:Fetch("font", name)` | `Fonts:GetPath(name)` |
-| `LSM:List("font")` | `Fonts:ListAvailable()` |
+| Font path strings | `Fonts:Register(name, path, info)` / `Fonts:GetPath(name)` / `Fonts:ListAvailable()` |
+| Status bar texture paths | `Textures:RegisterBar(name, path, opts)` / `Textures:GetBar(name)` / `Textures:ListBars()` |
 
-RGX fonts carry richer metadata (family, category, license) and are grouped automatically in dropdowns by category then family.
-
-### Texture Registration
-
-| LSM | RGX |
-|---|---|
-| `LSM:Register("statusbar", name, path)` | `Textures:RegisterBar(name, path, opts)` |
-| `LSM:Fetch("statusbar", name)` | `Textures:GetBar(name)` |
-| `LSM:List("statusbar")` | `Textures:ListBars()` |
-
-### Import LSM into RGX
-
-```lua
-local Textures = RGX:GetTextures()
-Textures:ImportLibSharedMedia()
-```
-
-This pulls all registered LSM statusbar textures into the RGX registry. Fonts and sounds from LSM can be registered manually or via `RegisterAddonFont` / `RegisterFontPack`.
+RGX fonts carry metadata (family, category, license) and are grouped in dropdowns by category then family.
 
 ---
 
@@ -235,12 +208,12 @@ These can be read by `Fonts:ResolveName(db.fontFamily)` which handles both name 
 
 ## From a Legacy Suite
 
-**Note:** The reference suite is fully migrated to RGX-Framework. The one remaining local piece is `core/sounds/sharedmedia.lua`, which will be replaced by `RGXSharedMedia` in the Tier 2 wire-up. This table maps each legacy system to its RGX equivalent.
+This table maps each legacy system of a large suite to its RGX equivalent.
 
 | Legacy system | RGX Equivalent | Status |
 |---|---|---|
 | `core/systems/database.lua` | `RGX:NewDatabase(name, defaults, opts)` — profile-aware proxy | Done |
-| `core/sounds/sharedmedia.lua` | `RGXSharedMedia` (enabled v2.0.0) + `Textures:ImportLibSharedMedia()` | Ready to wire |
+| `core/sounds/sharedmedia.lua` | `RGXSharedMedia` (a thin bridge into the suite's own registry) | Done |
 | `core/events.lua` | `RGX:RegisterEvent` / `RGX:RegisterMessage` | Done |
 | `core/runtime.lua` | `RGX:After` / `RGX:Every` / `RGX:Hook` | Done |
 
@@ -259,4 +232,4 @@ When migrating an addon to RGX-Framework:
 7. Replace manual font dropdowns with `Fonts:CreateFontDropdown` or `Fonts:AttachFontSelector`
 8. Replace hardcoded RGB values with `Colors:Get(name)` / `Colors:Wrap(text, name)`
 9. Wrap module-dependent init code in `RGX:OnReady(function() ... end)`
-10. Remove any embedded copies of Ace3/LibSharedMedia if no longer needed
+10. Remove any embedded third-party libraries the addon no longer needs

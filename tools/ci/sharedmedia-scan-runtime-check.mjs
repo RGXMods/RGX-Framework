@@ -27,9 +27,9 @@ try {
     local addons = {
       { name = "RGX-Framework" },
       { name = "MyMediaAddon" },
-      { name = "Prat-3.0" },
+      { name = "OtherAddon" },
     }
-    local loaded = { ["RGX-Framework"] = true, ["MyMediaAddon"] = true, ["Prat-3.0"] = true }
+    local loaded = { ["RGX-Framework"] = true, ["MyMediaAddon"] = true, ["OtherAddon"] = true }
 
     -- Fixture global matching the #78 audit repro: a media addon global with
     -- 2 audio paths. One of them (alert.ogg) is also registered directly by

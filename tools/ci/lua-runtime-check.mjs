@@ -16,6 +16,8 @@ const files = {
   columnsTest: join(HERE, "declarative-columns-runtime-test.lua"),
   compatTest: join(HERE, "declarative-compat-runtime-test.lua"),
   layoutTest: join(HERE, "declarative-layout-runtime-test.lua"),
+  onTest: join(HERE, "declarative-on-runtime-test.lua"),
+  dbTest: join(HERE, "declarative-db-runtime-test.lua"),
   minimap: join(ROOT, "libraries", "minimap", "minimap.lua"),
   minimapTest: join(HERE, "secure-minimap-runtime-test.lua"),
 };
@@ -28,6 +30,8 @@ try {
   lua.ctx.__rgxTestSource = readFileSync(files.test, "utf8");
   lua.ctx.__rgxColumnsTestSource = readFileSync(files.columnsTest, "utf8");
   lua.ctx.__rgxCompatTestSource = readFileSync(files.compatTest, "utf8");
+  lua.ctx.__rgxOnTestSource = readFileSync(files.onTest, "utf8");
+  lua.ctx.__rgxDbTestSource = readFileSync(files.dbTest, "utf8");
   lua.ctx.__rgxLayoutTestSource = readFileSync(files.layoutTest, "utf8");
   lua.ctx.__rgxMinimapSource = readFileSync(files.minimap, "utf8");
   lua.ctx.__rgxMinimapTestSource = readFileSync(files.minimapTest, "utf8");
@@ -77,6 +81,8 @@ try {
     loadSource(__rgxTestSource, "tools/ci/declarative-every-runtime-test.lua")()
     loadSource(__rgxColumnsTestSource, "tools/ci/declarative-columns-runtime-test.lua")()
     loadSource(__rgxCompatTestSource, "tools/ci/declarative-compat-runtime-test.lua")()
+    loadSource(__rgxOnTestSource, "tools/ci/declarative-on-runtime-test.lua")()
+    loadSource(__rgxDbTestSource, "tools/ci/declarative-db-runtime-test.lua")()
     loadSource(__rgxLayoutTestSource, "tools/ci/declarative-layout-runtime-test.lua")()
     loadSource(__rgxMinimapTestSource, "tools/ci/secure-minimap-runtime-test.lua")()
   `);
@@ -84,6 +90,8 @@ try {
   console.log(lua.ctx.__rgxRuntimeTestResult);
   console.log(lua.ctx.__rgxRuntimeColumnsTestResult);
   console.log(lua.ctx.__rgxRuntimeCompatTestResult);
+  console.log(lua.ctx.__rgxRuntimeOnTestResult);
+  console.log(lua.ctx.__rgxRuntimeDbTestResult);
   console.log(lua.ctx.__rgxRuntimeLayoutTestResult);
 } finally {
   lua.global.close();

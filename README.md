@@ -1,6 +1,6 @@
 # RGX-Framework
 
-The `v2.18.3` release finishes RGX Classic and RGX Forever: every control in those styles uses the game client's own art. See the [release notes](docs/changelogs/2.18.3.md).
+The `v2.19.0` release makes the theme live: RGX addons register their brand with the framework, and open windows, options pages and dropdown menus follow the beta global theme override, colour and style without a reload. See the [release notes](docs/changelogs/2.19.0.md).
 
 **One dependency. Everything your addon suite needs.**
 
@@ -13,7 +13,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.18.3`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.18.3)
+**Latest published release:** [`v2.19.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.19.0)
 
 **1. Declare the dependency:**
 
@@ -58,11 +58,9 @@ output, and lifecycle work routed through scoped framework methods. The `addon`
 object carries `RegisterEvent`, `RegisterUnitEvent`, `RegisterMessage`, `After`,
 `Every`, `Print`, `Warn`, and `Error`, so consumers do not need raw WoW plumbing.
 
-> Human `on` triggers remain frozen future contract forms. One-line controls
-> ship in v2.7.15-beta.2; named `every` timers are implemented. Local
-> `options.columns` work adds column flows, not the full declarative card/page model.
-> Use scoped methods for events and other behavior that is not yet
-> declarative.
+> Declarative `on` triggers, one-line controls, named `every` timers and
+> `options.columns` all ship today; see the [Declarative API](docs/DECLARATIVE-API.md).
+> Use scoped methods for behavior that is not declarative.
 
 **3. À la carte — individual systems when you need them:**
 
@@ -121,13 +119,13 @@ Core-only APIs (events, timers, hooks, slash commands) are available immediately
 | **Combat Queue** | `QueueForCombat`, `SafeShow`, `SafeHide`, `SafeSetPoint`, and more |
 | **Fonts** | 40 bundled + 4 WoW defaults (44 total), 10 blocked in unavailableFonts, grouped dropdowns, style objects |
 | **Colors** | Named palette, class/quality/power colors, color math, wrapping, picker integration |
-| **Textures** | Statusbar registry, LibSharedMedia import, dropdown controls |
+| **Textures** | Statusbar registry and dropdown controls |
 | **Dropdowns** | Nested UIDropDownMenu with auto-width, inline buttons, dual-schema items |
 | **UI Controls** | Slider, toggle, label, dropdown, color picker, section, preview, reset button |
 | **Options Panels** | Tabbed settings windows registered with WoW Settings |
 | **Minimap** | Circular-drag buttons with persistent angle, tooltip, show/hide |
 | **Design** | Static brand palette (`primary`, `accent`, `border`, etc.) + visual building blocks |
-| **DataBroker** | LibDataBroker-compatible proxy data sources |
+| **DataBroker** | Data sources for minimap and datatext displays |
 | **Sound** | Level-up sound system with variant playback and SavedVar integration |
 
 ---
@@ -162,7 +160,7 @@ Core-only APIs (events, timers, hooks, slash commands) are available immediately
 | TradingPost | `RGXTradingPost` | `GetTradingPost()` | Active |
 | Prey | `RGXPrey` | `GetPrey()` | Active |
 
-As of **v2.1.0**, every in-tree module is loaded by the XML loader. There are no dormant modules.
+Every in-tree module is loaded by the XML loader. There are no dormant modules.
 
 ---
 
@@ -195,7 +193,7 @@ source docs and tells agents to obtain reference data themselves.
 ### Getting Started
 
 - **[Super Simple Integration](docs/SUPER-SIMPLE.md)** — the absolute minimum code to use RGX
-- **[Migration Guide](docs/MIGRATION.md)** — moving from Ace3, LibSharedMedia, or standalone implementations
+- **[Migration Guide](docs/MIGRATION.md)** — moving an addon onto RGX-Framework
 
 ### Core Systems
 
@@ -231,8 +229,7 @@ table plus guarded per-locale blocks. The frozen per-consumer
 
 ### Design & Philosophy
 
-- **[Foundation Decisions](docs/FOUNDATION.md)** — what RGX keeps vs drops from Ace3, and why
-- **[Ace3 Analysis](docs/ACE3-ANALYSIS.md)** — current capability map and RGX's runtime/contract/design/tooling architecture
+- **[Foundation Decisions](docs/FOUNDATION.md)** — which capabilities RGX owns, and why
 - **[Roadmap](docs/ROADMAP.md)** — profile/database system, SharedMedia drop-in, pack system, localization, longer-term plans
 - **[Studio Roadmap](docs/STUDIO-ROADMAP.md)** — separate Tauri visual authoring product, contract and preview boundaries, phased delivery
 - **[Distribution](docs/DISTRIBUTION.md)** — runtime package boundary, checksums, and installation
@@ -261,7 +258,7 @@ RGX-Framework temporarily maintains an [MCP](https://modelcontextprotocol.io) se
 The source-development [definition round trip](docs/UI-CONTROLS.md#definition-round-trip-source-development-slice)
 adds a small external editor (`node tools/editor/serve.mjs`, loopback only) and
 in-game `/rgxf editor` adapter over the same versioned data contract. This slice
-is not in the published `v2.7.14` package and is not a complete Studio application
+is source-only (not in the addon package) and is not a complete Studio application
 or Blizzard Edit Mode integration. Browser/WoW visual checks remain required.
 
 Read-only by design — it never edits repos, commits, or touches the game.
@@ -278,8 +275,6 @@ RGX-Framework publishes only the framework addon package. See
 ---
 
 ## Compatibility
-
-- **Latest published release:** [`v2.9.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.9.0)
 
 - **Clients:** Retail `120105`, WoW Forever (beta) `16001`, Classic Era `11509`, TBC `20506`, Wrath/Titan `38002`, Cataclysm `40402`, Mists `50504`
 - **Distribution:** one runtime-only addon package; see [Distribution](docs/DISTRIBUTION.md)

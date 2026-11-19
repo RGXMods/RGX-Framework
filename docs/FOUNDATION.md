@@ -5,10 +5,8 @@ This document answers a simple question:
 Which capabilities does RGX own, which are already implemented, and how do we
 keep the runtime and authoring experience coherent as the framework grows?
 
-**Source review: 2026-10-06.** The candidate TOC is `2.7.15-beta.4`; the roadmap records
-`2.7.14` stable. Requirements below describe ownership, not an unimplemented
-shopping list. See [Ace3 Analysis](ACE3-ANALYSIS.md) for the current capability
-map and [Architecture](ARCHITECTURE.md) for load order and modularity findings.
+Requirements below describe ownership, not an unimplemented shopping list.
+See [Architecture](ARCHITECTURE.md) for load order and modularity findings.
 
 ## Core Rule
 
@@ -20,7 +18,7 @@ RGX should be elite-simple for addon authors:
 - no unnecessary library chains
 - no historical baggage unless it solves a real current problem
 
-That means we only keep a foundation piece if it is required by real addon behavior, not because Ace3 happened to package it.
+That means we only keep a foundation piece if it is required by real addon behavior.
 
 ## North Star
 
@@ -80,12 +78,11 @@ RGX needs native registries for:
 Why this matters:
 
 - addon suites need one canonical source of shared media
-- this is the part of LibSharedMedia that is genuinely useful
+- every addon in a suite should see the same fonts, sounds and textures
 
 Design note:
 
-- RGX can keep compatibility with suite-style shared media behavior
-- RGX does not need to literally become Ace/LSM internally to achieve that
+- the registries are RGX-owned; addons register into them and read from them
 
 ### 3. Event and message dispatch
 
@@ -101,8 +98,7 @@ Why this matters:
 
 Design note:
 
-- this is why AceEvent and CallbackHandler exist
-- RGX can solve the same problem natively
+- one framework dispatcher owns events, messages and callbacks
 
 Related note:
 
@@ -123,7 +119,7 @@ Why this matters:
 
 Design note:
 
-- RGX profiles do not imply AceDB-compatible namespaces or scope semantics
+- RGX profiles define their own scopes; map each consumer's storage explicitly
 - simple defaults and clear storage rules matter more than feature count
 
 ### 5. Reusable option controls
@@ -155,120 +151,13 @@ Why this matters:
 
 - addon authors should not rebuild glue code every time they use RGX data
 
-## What Is Not Automatically Required
+## What RGX Does Not Do
 
-These are not mandatory just because Ace3 ships them.
-
-### LibStub
-
-`LibStub` is not required for RGX itself.
-
-Why Ace used it:
-
-- Ace libraries were designed to be embedded independently into many addons
-- that created runtime version conflicts
-- `LibStub` solved library discovery and version negotiation
-
-Why RGX does not need it:
-
-- RGX is one dependency addon
-- RGX owns its own module registry
-- RGX does not need multiple copies of independently embedded internal libraries fighting over version precedence
-
-Decision:
-
-- do not make `LibStub` a core RGX dependency
-- prefer production-proven native module/runtime services inside RGX over separately embedded version stubs
-
-### CallbackHandler
-
-`CallbackHandler-1.0` is not required as an external dependency if RGX already provides strong native event/message/callback dispatch.
-
-Why Ace used it:
-
-- reusable observer pattern
-- event registration API generation
-- secure dispatch and callback bookkeeping
-
-Why RGX does not need the external library:
-
-- the pattern is useful
-- the dependency is optional if RGX already implements the pattern internally
-
-Decision:
-
-- keep the capability
-- do not require the external Ace implementation
-
-### AceSerializer
-
-RGX already implements profile serialization/import-export in the database.
-A generic serializer or transport system is a separate capability, justified by:
-
-- import/export
-- addon-to-addon structured comms
-- copy/paste data payloads
-- future RGX-Mod data packaging
-
-Decision:
-
-- retain profile serialization and validate its persistence/round-trip behavior
-- do not describe it as future work or infer general comm support from it
-
-### AceComm
-
-Addon comm helpers are only required if RGX needs:
-
-- addon-to-addon messaging
-- chunked transmission
-- synced data sharing
-
-Decision:
-
-- not a first-wave requirement
-- becomes required when real cross-addon communication arrives
-
-### AceGUI / AceConfig scale
-
-A fully generic mega-GUI layer is not automatically required on day one.
-
-What is required instead:
-
-- a small set of elite-simple, polished RGX controls
-- shared layout primitives
-- predictable settings wiring
-
-Decision:
-
-- build the small shared controls first
-- grow only from real addon needs
-
-## Why Addon Authors Use Ace3
-
-Ace3 became popular because it bundled a lot of common pain points in one place:
-
-- addon object/lifecycle helpers
-- event handling
-- timers
-- hooks
-- database/profile handling
-- slash commands
-- options UI
-- comm and serialization
-
-That made it practical and familiar.
-
-The key lesson is not "copy Ace3 exactly."
-
-The real lesson is:
-
-- frameworks win when they remove boring repeated work
-
-RGX should keep that outcome while simplifying the implementation and API.
-
-For the fuller breakdown of why Ace3 gets adopted and RGX's architectural distinction:
-
-- see [ACE3-ANALYSIS.md](ACE3-ANALYSIS.md)
+- no library discovery or version negotiation: one addon, one `_G.RGXFramework` instance
+- no embedding into consumers
+- no network communication layer until a maintained addon needs one; profile
+  serialization already exists
+- no generated settings UI from a config table beyond the declarative `options` grammar
 
 ## RGX Direction
 
@@ -315,33 +204,25 @@ must agree with XML loading and initialization.
 - Contract owns canonical authoring semantics; MCP/editor tooling adapts them.
 - Consumers own feature policy, content and presentation choices.
 
-Core owns declaration-time options validation and addon lifecycle. The current
-untagged follow-on delegates lazy control/layout rendering to a private seam in
-the existing UI options module. MCP validation delegates to the shared engine;
-the tagged beta.3 snapshot contains that correction, while rendering relocation
-remains separate local integration work.
+Core owns declaration-time options validation and addon lifecycle; lazy
+control/layout rendering lives in the UI options module. MCP validation
+delegates to the shared engine.
 Neither requires another SDK/runtime or duplicate contract.
 See the ordered modularity work in [Architecture](ARCHITECTURE.md).
 
 ## Final Decision
 
-If RGX's native event and message systems are good enough, then:
-
-- RGX does not need `LibStub`
-- RGX does not need external `CallbackHandler-1.0`
-- RGX does not need Ace3 as a dependency
-
-But RGX still needs the actual capabilities those libraries were solving:
+RGX owns the capabilities addon suites actually need:
 
 - module organization
 - dispatch
 - persistence
 - controls
 - media registries
-- profile serialization already in use; optional network comm when a real need exists
+- profile serialization; network communication when a real need exists
 
 That is the standard to hold:
 
 - keep the capability
-- simplify the architecture
-- remove the dependency unless it is truly buying us something
+- keep the architecture simple
+- add nothing an addon is not using

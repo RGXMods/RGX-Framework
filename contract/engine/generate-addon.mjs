@@ -76,6 +76,7 @@ const CONTRACT_FORMAT_VERSION = 1;
 const FEATURE_INTRODUCED = {
   contract: "2.9.0",
   pages: "2.9.0",
+  on: "2.19.0",
 };
 
 const FRAMEWORK_VERSION_PATTERN = /^\d+\.\d+(\.\d+)?$/;
@@ -116,6 +117,7 @@ function maxVersion(candidates) {
 function computeFrameworkMinVersion(spec) {
   const used = ["contract"];
   if (spec.pages?.length) used.push("pages");
+  if (spec.on?.length) used.push("on");
   const floors = used.map((feature) => FEATURE_INTRODUCED[feature]);
   if (spec.frameworkMinVersion !== undefined) {
     if (typeof spec.frameworkMinVersion !== "string"
@@ -250,6 +252,21 @@ function generateAddonLua(spec) {
       out.push(`        ${luaKey(timerName)} = { ${secs}, function(self, timer)`);
       out.push(`            -- Run ${luaComment(timerName)} every ${secs} second${secs === 1 ? "" : "s"}.`);
       out.push(`        end },`);
+    }
+    out.push(`    },`);
+  }
+  // Declarative triggers: trigger words from the contract vocabulary (the validator checks them against the
+  // schema) or UPPER_CASE raw events, each emitted as a stub handler.
+  const triggers = [...new Set(spec.on ?? [])].sort(compareUtf8);
+  if (triggers.length) {
+    out.push(`    on      = {`);
+    for (const trigger of triggers) {
+      if (typeof trigger !== "string" || !(/^[a-z]+(\.[a-z]+)?$/.test(trigger) || /^[A-Z][A-Z0-9_]+$/.test(trigger))) {
+        throw new Error(`invalid trigger: ${JSON.stringify(trigger)}`);
+      }
+      out.push(`        [${luaQuote(trigger)}] = function(self, ...)`);
+      out.push(`            -- Runs on ${luaComment(trigger)}.`);
+      out.push(`        end,`);
     }
     out.push(`    },`);
   }

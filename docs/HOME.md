@@ -1,12 +1,10 @@
 # RGX-Framework
 
-Current source version: `v2.9.0`.
-
 **A modern WoW addon framework — one dependency, everything included.**
 
 RGX-Framework is a single `RequiredDeps` entry that provides a declarative addon front door, events, timers, hooks, combat queueing, slash commands, saved-variable profiles, fonts, colors, a color picker, textures, dropdowns, UI controls, a theming system, tooltips, aura scanning, minimap buttons, sound playback, DataBroker support, and more. No embedding. No version conflicts. No library chains.
 
-Current release `v2.18.3` supports Retail `120105`, Classic Era `11509`, TBC
+Current release `v2.19.0` supports Retail `120105`, Classic Era `11509`, TBC
 `20506`, Wrath/Titan `38002`, Cataclysm `40402`, and Mists `50504` from one
 runtime-only addon package.
 
@@ -55,16 +53,14 @@ That gives you saved settings with profiles, a tabbed options panel with control
 
 ## Why RGX?
 
-| Problem | Ace3 / Legacy | RGX |
+| Problem | Without RGX | RGX |
 |---|---|---|
 | Dependency model | Select/compose libraries; often embedded | One shared `RequiredDeps` entry |
-| Version conflicts | LibStub arbitration at runtime | Single shared instance |
-| Addon setup | AceAddon + AceDB + AceConfig assembly | `RGXAddon "Name" { }` |
-| Options UI | AceConfig definitions and AceGUI widgets | Supported declarative forms plus shared UI/design primitives |
+| Version conflicts | Library version arbitration at runtime | Single shared instance |
+| Addon setup | Assembling separate addon, database and config libraries | `RGXAddon "Name" { }` |
+| Options UI | Separate config-definition and widget libraries | Supported declarative forms plus shared UI/design primitives |
 | Safety infrastructure | Library guarantees plus consumer integration | Centralized dispatch, lockdown guards and documented restricted-value adapters; client evidence still required |
 | Authoring contract | Primarily Lua runtime library interfaces | Canonical schema/shared engine, validation/generation/audit adapters and conformance fixtures |
-
-The full audited comparison lives in [`docs/ACE3-ANALYSIS.md`](https://github.com/RGXMods/RGX-Framework/blob/main/docs/ACE3-ANALYSIS.md).
 
 ---
 
@@ -90,7 +86,7 @@ The full audited comparison lives in [`docs/ACE3-ANALYSIS.md`](https://github.co
 | Combat | `RGXCombat` | `RGX:GetCombat()` | Active |
 | Reputation | `RGXReputation` | `RGX:GetReputation()` | Active |
 
-All modules load from `RGX-Framework.xml`; the dormant tier was re-enabled in v2.0.0–v2.1.0.
+All modules load from `RGX-Framework.xml`; there are no dormant modules.
 
 ---
 
@@ -114,7 +110,7 @@ All modules load from `RGX-Framework.xml`; the dormant tier was re-enabled in v2
 
 ### Guides
 
-- [[Migration]] — from Ace3, LibSharedMedia, manual patterns
+- [[Migration]] — moving an addon onto RGX-Framework
 - [[Troubleshooting]] — common issues, debug mode
 - [[Distribution]] — release assets, flavor metadata, package boundary, installation
 - [[Studio Roadmap]] — future product boundary and production gate
