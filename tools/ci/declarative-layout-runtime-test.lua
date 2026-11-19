@@ -42,7 +42,7 @@ end
 
 local function newFlow(host)
     local flow = { host = host, added = {} }
-    function flow:Add(child) self.added[#self.added + 1] = child end
+    function flow:Add(child, opts) self.added[#self.added + 1] = child; self.addOpts = self.addOpts or {}; self.addOpts[#self.added] = opts end
     function flow:Apply() return #self.added * 10 end
     builtFlows[#builtFlows + 1] = flow
     return flow
@@ -310,6 +310,49 @@ do
         "the no-panel message must explain the situation: " .. tostring(captured))
     check(captured == nil or not contains(captured, "v?"),
         "the literal 'v?' placeholder must be gone")
+end
+
+-- ── Review fixes: declared defaults reach the controls, page cards fill their column, tabs keep a stable order.
+do
+    local savedNewDatabase = RGX.NewDatabase
+    RGX.NewDatabase = function(_, _, defaults) return { _defaults = defaults, tint = { r = 0.2, g = 0.2, b = 0.2 } } end
+    builtPagers, builtCards, builtFlows, capturedPanels = {}, {}, {}, {}
+    local made = {}
+    local savedSlider, savedColor = stubUI.CreateSlider, stubUI.CreateColorPicker
+    stubUI.CreateSlider = function(self, parent, opts) made[opts.key] = opts; return widget(parent, "slider", opts) end
+    stubUI.CreateColorPicker = function(self, parent, opts) made[opts.key] = opts; return widget(parent, "color", opts) end
+    RGXAddon("ReviewDefaults", {
+        db = { volume = 70, tint = { r = 1, g = 0, b = 0 } },
+        options = {
+            Sounds = { { page = "P", cards = { { card = "C", controls = {
+                { slider = "volume", min = 50, max = 100 },
+                { slider = "scale", min = 50, max = 100, default = 80 },
+                { color = "tint" },
+            } } } } },
+            General = { { toggle = "enabled" } },
+            Advanced = { { toggle = "debug" } },
+        },
+    })
+    RGX:FireEvent("ADDON_LOADED", "ReviewDefaults")
+    local panel = capturedPanels[#capturedPanels]
+    local names = {}
+    for i, tab in ipairs(panel and panel.tabs or {}) do names[i] = tab.text end
+    check(table.concat(names, ",") == "General,Advanced,Sounds", "tabs come in a stable order, General first (got " .. table.concat(names, ",") .. ")")
+    -- Build the Sounds page and check the card was added to the page column as a filling item.
+    local soundsTab
+    for _, tab in ipairs(panel.tabs) do if tab.text == "Sounds" then soundsTab = tab end end
+    builtFlows, builtCards = {}, {}
+    soundsTab.content({ width = 640 })
+    local cardAdd
+    for _, flow in ipairs(builtFlows) do
+        for i, child in ipairs(flow.added) do if child == builtCards[1] then cardAdd = flow.addOpts and flow.addOpts[i] end end
+    end
+    check(made.volume and made.volume.default == 70, "a slider without its own default uses the db default (got " .. tostring(made.volume and made.volume.default) .. ")")
+    check(made.scale and made.scale.default == 80, "a slider's declared default reaches the slider (got " .. tostring(made.scale and made.scale.default) .. ")")
+    check(made.tint and made.tint.default and made.tint.default.r == 1 and made.tint.default.g == 0, "a colour resets to the declared db default, not the saved colour")
+    check(cardAdd and cardAdd.fill == true, "a page card fills its grid column instead of keeping the 300px section width")
+    stubUI.CreateSlider, stubUI.CreateColorPicker = savedSlider, savedColor
+    RGX.NewDatabase = savedNewDatabase
 end
 
 _G.__rgxRuntimeLayoutTestResult = string.format(

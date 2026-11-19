@@ -345,7 +345,8 @@ The implementation renders these nodes over the existing imperative primitives:
 ## The addon object
 
 Returned by `RGXAddon`. Everything is scoped to the addon (auto-generated
-handler ids) and routed through framework-managed, failure-isolated paths:
+handler ids, one per callback: two handlers for one event both run, and the same callback registered again
+replaces itself) and routed through framework-managed, failure-isolated paths:
 
 | Method | Notes |
 |---|---|

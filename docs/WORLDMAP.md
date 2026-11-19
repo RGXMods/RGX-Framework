@@ -62,6 +62,37 @@ worldMap:AddMinimapIcon(nil, "Interface\\Minimap\\POI-Neutral", 0, 0.5, 0.5, "my
   radius. Coordinates outside `0-1` are treated as raw pixel offsets from
   minimap center.
 
+## User waypoints
+
+```lua
+local wasSet = worldMap:SetWaypoint(mapID, 52.6, 55.5)
+-- Preserve the current tracking selection:
+local wasSetWithoutTracking = worldMap:SetWaypoint(mapID, 52.6, 55.5, { track = false })
+```
+
+- `mapID` must be an accessible, finite positive integer. Zone coordinates
+  `x` and `y` must be accessible finite numbers in the inclusive range `0-100`.
+  Values are not coerced or clamped. Invalid inputs return `false` before
+  client queries, vector creation or pin changes.
+- `CanSetWaypoint(mapID)` requires the setter, vector constructor and
+  map-permission query. Only an accessible, explicit `true` result from the
+  permission query permits setting a pin. A missing query, denied/unknown result
+  or query/access-check error returns `false`; function presence alone does
+  not establish permission.
+- `SetWaypoint` returns `true` only when the native setter returns an
+  accessible, explicit `true`. Setter rejection, unknown results or errors
+  return `false` and never start tracking. The caller decides what to tell
+  the player.
+- After a successful set, tracking is best-effort when available. Pass
+  `{ track = false }` to leave tracking alone. Failure to track does not
+  change the successful pin result.
+- `ClearWaypoint()` asks the client to remove its user waypoint, returning
+  `false` if the clear API is absent or raises an error.
+
+These methods are capability-gated; they do not synthesize waypoints for clients
+without the native APIs. Headless tests do not certify rendered pins or taint
+safety.
+
 ## Coordinate adapter
 
 All coordinate conversions go through `RGXWorldMap:GetCoordsAdapter()`. The

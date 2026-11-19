@@ -29,4 +29,20 @@ assert.equal(command().status,0);
 assert(archive.equals(readFileSync(join(out,'TestAddon-v1.0.0-beta.1.zip'))),'package is not deterministic');
 file('TestAddon.toc','## Version: 1.0.0-beta.1\n../outside.lua\n');
 const unsafe=command();assert.notEqual(unsafe.status,0);assert.match(unsafe.stderr,/unsafe runtime path/);
-console.log('CONSUMER PACKER OK recursive XML, conditional entries, assets/license, tooling exclusion, deterministic ZIP, escape rejection');
+// A root Bindings.xml is loaded by the client from the addon folder without a TOC entry (live ab5cb850a3f6:
+// Interface/AddOns/Blizzard_PingUI/Bindings.xml ships while Blizzard_PingUI.toc never lists it), so it is packaged,
+// together with what it includes; other unlisted files are not.
+{
+  const keyed=join(tmp,'keyed'),keyedOut=join(tmp,'keyed-out');
+  const put=(path,contents)=>{const full=join(keyed,path);mkdirSync(dirname(full),{recursive:true});writeFileSync(full,contents);};
+  put('KeyAddon.toc','## Interface: 16001\n## Version: 2.0.0\nKeyAddon.lua\n');
+  put('KeyAddon.lua','local x = 1');
+  put('Bindings.xml','<Bindings><Binding name="KEYADDON_TOGGLE">KeyAddon_Toggle()</Binding></Bindings>');
+  put('old/unused.lua','error("not loaded")');
+  const r=spawnSync(process.execPath,[join(root,'tools/release/build-addon-package.mjs'),keyed,'KeyAddon.toc',keyedOut],{encoding:'utf8'});
+  assert.equal(r.status,0,r.stderr);
+  const keyedEntries=unzipSync(readFileSync(join(keyedOut,'KeyAddon-v2.0.0.zip')));
+  assert(keyedEntries['KeyAddon/Bindings.xml'],'the root Bindings.xml is packaged');
+  assert(!keyedEntries['KeyAddon/old/unused.lua'],'files the client never loads stay out');
+}
+console.log('CONSUMER PACKER OK recursive XML, conditional entries, assets/license, tooling exclusion, deterministic ZIP, escape rejection, root Bindings.xml');

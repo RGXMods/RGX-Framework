@@ -179,7 +179,7 @@ end)
 
 scenario("SetWaypoint puts the game's own map pin and tracks it", function()
   local set, tracked, cleared
-  C_Map.SetUserWaypoint = function(point) set = point end
+  C_Map.SetUserWaypoint = function(point) set = point return true end
   C_Map.ClearUserWaypoint = function() cleared = true end
   C_Map.CanSetUserWaypointOnMap = function(mapID) return mapID ~= 99 end
   _G.C_SuperTrack = { SetSuperTrackedUserWaypoint = function(v) tracked = v end }
@@ -197,7 +197,7 @@ end)
 
 scenario("waypoints fail closed: capability errors, unknown answers, bad maps and coordinates are refused (#124)", function()
   local calls = 0
-  C_Map.SetUserWaypoint = function() calls = calls + 1 end
+  C_Map.SetUserWaypoint = function() calls = calls + 1; return true end
   C_Map.CanSetUserWaypointOnMap = function() error("query failed") end
   assert(WM:CanSetWaypoint(37) == false and WM:SetWaypoint(37, 50, 50) == false, "a capability-query error is not permission")
   C_Map.CanSetUserWaypointOnMap = function() return nil end
@@ -214,7 +214,8 @@ scenario("waypoints fail closed: capability errors, unknown answers, bad maps an
   assert(calls == 0, "the setter is never reached for refused waypoints (" .. calls .. ")")
   assert(WM:SetWaypoint(37, 0, 100) == true and calls == 1, "the edges 0 and 100 are valid")
   C_Map.CanSetUserWaypointOnMap = nil
-  assert(WM:SetWaypoint(37, 50, 50) == true and calls == 2, "a client without the capability query attempts the pin (the setter decides)")
+  assert(WM:SetWaypoint(37, 50, 50) == false and calls == 1, "a client without the capability query is refused (every client with map pins has it: live 297d7aa, forever 3d8abb1)")
+  C_Map.CanSetUserWaypointOnMap = function() return true end
   C_Map.SetUserWaypoint = function() error("not allowed") end
   assert(WM:SetWaypoint(37, 50, 50) == false, "a setter error reports false")
   C_Map.SetUserWaypoint = function() return false end
@@ -223,6 +224,152 @@ scenario("waypoints fail closed: capability errors, unknown answers, bad maps an
   local best = WM:Nearest({ { name = "Bad", mapID = 37, x = 0 / 0, y = 10 }, good })
   assert(best == good, "Nearest skips places with invalid coordinates")
   C_Map.SetUserWaypoint, C_Map.CanSetUserWaypointOnMap = nil, nil
+end)
+
+-- Each boundary scenario restores its seams even if an assertion fails.
+local function withWaypointClient(fn)
+  local savedMap, savedVector = C_Map, CreateVector2D
+  local savedPoint, savedTrack, savedAPI = UiMapPoint, C_SuperTrack, RGX.API
+  local calls = { query = 0, vector = 0, set = 0, track = 0 }
+  RGX.API = { CanAccessValue = function(value) return value ~= nil end }
+  C_Map = {
+    CanSetUserWaypointOnMap = function()
+      calls.query = calls.query + 1
+      return true
+    end,
+    SetUserWaypoint = function(point)
+      calls.set = calls.set + 1
+      calls.point = point
+      return true
+    end,
+  }
+  CreateVector2D = function(x, y)
+    calls.vector = calls.vector + 1
+    return savedVector(x, y)
+  end
+  UiMapPoint = nil
+  C_SuperTrack = {
+    SetSuperTrackedUserWaypoint = function(value)
+      calls.track = calls.track + 1
+      calls.tracked = value
+    end,
+  }
+  local ok, err = pcall(fn, calls)
+  C_Map, CreateVector2D = savedMap, savedVector
+  UiMapPoint, C_SuperTrack, RGX.API = savedPoint, savedTrack, savedAPI
+  assert(ok, err)
+end
+
+scenario("waypoints reject malformed map IDs before querying or constructing", function()
+  withWaypointClient(function(calls)
+    local invalid = { false, 0, -1, 1.5, "37", {}, 0/0, math.huge, -math.huge }
+    assert(WM:CanSetWaypoint(nil) == false and WM:SetWaypoint(nil, 50, 50) == false)
+    for _, mapID in ipairs(invalid) do
+      assert(WM:CanSetWaypoint(mapID) == false, "invalid map ID must be refused")
+      assert(WM:SetWaypoint(mapID, 50, 50) == false, "invalid map ID must not set a pin")
+    end
+    assert(calls.query == 0 and calls.vector == 0 and calls.set == 0 and calls.track == 0,
+      "invalid map IDs must not reach client APIs")
+  end)
+end)
+
+scenario("waypoints reject non-finite and out-of-range coordinates before client calls", function()
+  withWaypointClient(function(calls)
+    local invalid = { false, "50", {}, -0.01, 100.01, 0/0, math.huge, -math.huge }
+    assert(WM:SetWaypoint(37, nil, 50) == false and WM:SetWaypoint(37, 50, nil) == false)
+    for _, value in ipairs(invalid) do
+      assert(WM:SetWaypoint(37, value, 50) == false, "invalid x must be refused")
+      assert(WM:SetWaypoint(37, 50, value) == false, "invalid y must be refused")
+    end
+    assert(calls.query == 0 and calls.vector == 0 and calls.set == 0 and calls.track == 0,
+      "invalid coordinates must not reach client APIs")
+  end)
+end)
+
+scenario("waypoints require an explicit successful permission query", function()
+  withWaypointClient(function(calls)
+    local queries = {
+      function() return false end,
+      function() return nil end,
+      function() return 1 end,
+      function() error("permission unavailable") end,
+    }
+    for _, query in ipairs(queries) do
+      C_Map.CanSetUserWaypointOnMap = query
+      assert(WM:CanSetWaypoint(37) == false, "unknown or denied permission is not support")
+      assert(WM:SetWaypoint(37, 50, 50) == false, "unknown or denied permission must not set a pin")
+    end
+    C_Map.CanSetUserWaypointOnMap = nil
+    assert(WM:CanSetWaypoint(37) == false and WM:SetWaypoint(37, 50, 50) == false,
+      "a missing permission API cannot establish support")
+    assert(calls.vector == 0 and calls.set == 0 and calls.track == 0,
+      "denied permission must not construct, set or track")
+  end)
+end)
+
+scenario("waypoints reject inaccessible values and failing access predicates", function()
+  withWaypointClient(function(calls)
+    RGX.API.CanAccessValue = function() return false end
+    assert(WM:CanSetWaypoint(37) == false and WM:SetWaypoint(37, 50, 50) == false)
+    RGX.API.CanAccessValue = function() error("access unavailable") end
+    assert(WM:CanSetWaypoint(37) == false and WM:SetWaypoint(37, 50, 50) == false)
+    RGX.API.CanAccessValue = function(value) return value ~= true end
+    assert(WM:CanSetWaypoint(37) == false and WM:SetWaypoint(37, 50, 50) == false,
+      "an inaccessible permission result must not be used")
+    assert(calls.vector == 0 and calls.set == 0 and calls.track == 0,
+      "inaccessible values must not reach pin construction or mutation")
+  end)
+end)
+
+scenario("waypoints accept zone edges and track false leaves tracking alone", function()
+  withWaypointClient(function(calls)
+    assert(WM:SetWaypoint(37, 0, 100, { track = false }) == true)
+    local x, y = calls.point.position:GetXY()
+    assert(x == 0 and y == 1 and calls.point.uiMapID == 37, "inclusive edges must convert exactly")
+    assert(calls.set == 1 and calls.track == 0, "track false must not call super tracking")
+    assert(WM:SetWaypoint(37, 100, 0) == true)
+    x, y = calls.point.position:GetXY()
+    assert(x == 1 and y == 0 and calls.track == 1 and calls.tracked == true)
+  end)
+end)
+
+scenario("waypoints honor the native setter result and never track a rejected pin", function()
+  withWaypointClient(function(calls)
+    for _, setter in ipairs({
+      function() return false end,
+      function() return nil end,
+      function() error("setter unavailable") end,
+    }) do
+      C_Map.SetUserWaypoint = setter
+      assert(WM:SetWaypoint(37, 50, 50) == false, "only a successful setter result establishes a pin")
+    end
+    assert(calls.track == 0, "rejected pins must never be super tracked")
+  end)
+end)
+
+scenario("waypoints use the optional native point constructor when present", function()
+  withWaypointClient(function(calls)
+    local made = { uiMapID = 37, position = CreateVector2D(0.25, 0.75) }
+    UiMapPoint = { CreateFromCoordinates = function(mapID, x, y)
+      assert(mapID == 37 and x == 0.25 and y == 0.75)
+      return made
+    end }
+    assert(WM:SetWaypoint(37, 25, 75) == true and calls.point == made)
+  end)
+end)
+
+scenario("waypoints refuse absent or malformed client constructors and setters", function()
+  withWaypointClient(function(calls)
+    CreateVector2D = true
+    assert(WM:CanSetWaypoint(37) == false and WM:SetWaypoint(37, 50, 50) == false)
+    CreateVector2D = nil
+    assert(WM:CanSetWaypoint(37) == false and WM:SetWaypoint(37, 50, 50) == false)
+    C_Map.SetUserWaypoint = nil
+    assert(WM:CanSetWaypoint(37) == false and WM:SetWaypoint(37, 50, 50) == false)
+    C_Map = nil
+    assert(WM:CanSetWaypoint(37) == false and WM:SetWaypoint(37, 50, 50) == false)
+    assert(calls.set == 0 and calls.track == 0)
+  end)
 end)
 
 scenario("no phantom API or external-library seam exists", function()

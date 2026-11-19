@@ -171,7 +171,7 @@ the label; an empty prefix, or one equal to `name`, uses `label` (default `name`
 
 | Method | Description |
 |---|---|
-| `RGX:RegisterEvent(event, callback, id, owner)` | Register a C event handler; returns handler ID or false |
+| `RGX:RegisterEvent(event, callback, id, owner)` | Register a C event handler; returns handler ID or false. Without an id, a method-name callback uses the method name (another owner's same-named method gets its own owner-qualified id) |
 | `RGX:UnregisterEvent(event, id)` | Remove a specific handler |
 | `RGX:UnregisterAllEvents(id)` | Remove all handlers for an ID |
 | `RGX:FireEvent(event, ...)` | Manually dispatch into the event registry |
@@ -239,7 +239,7 @@ remain isolated from unrelated timers.
 | `RGX:Unhook(target, method)` | Not supported (hooksecurefunc limitation) |
 | `RGX:UnhookAll()` | Not supported |
 
-Callback signature: `function(original, self, ...) return original(self, ...) end`
+Callback signature: `function(self, ...) end`. It runs after the original with the same arguments; its return value is ignored. Any number of addons may hook the same method; the same callback twice returns `false` the second time.
 
 ---
 
@@ -605,6 +605,9 @@ See [docs/DROPDOWNS.md](DROPDOWNS.md) for complete documentation.
 | `RGX:SetTheme(config)` | Forwarded to `RGXDesign:SetTheme` when Design is loaded |
 | `RGX:SetHighlightColor(color, accent)` | Forwarded to `RGXDesign:SetHighlightColor` |
 
+These change the framework's shared colour for every addon. Addons do not call them (the addon CI fails a build that
+calls `SetHighlightColor`): an addon registers its brand and builds through `brand:Build`, see `Design:RegisterBrand`.
+
 ---
 
 ## Design (`RGXDesign`)
@@ -620,7 +623,8 @@ See [docs/DROPDOWNS.md](DROPDOWNS.md) for complete documentation.
 
 Access tokens via `Design:GetColor("primary")` / `Design:GetColor("accent")` or
 `Design:Unpack(key)`. `SetTheme`, `SetHighlightColor`, and the aliases
-`SetMainColor` / `SetColors` / `UseTheme` override the tokens; the framework
+`SetMainColor` / `SetColors` / `UseTheme` override the shared tokens (framework use; addons build through their
+brand instead, and the addon CI fails a build that calls `SetHighlightColor`); the framework
 settings preset selector stores its choice in `RGXFrameworkDB.themePreset`.
 
 #### `GetColor` resolution order
@@ -680,9 +684,9 @@ structural palette — independently of the primary/accent color presets. See
 
 | Method | Description |
 |---|---|
-| `Design:SetStyle(name)` | Apply a named style: `framework` ("RGX Framework", the default), `materialround` ("RGX Material Round") or `classic` ("WoW Classic"). The old ids `retail` and `forever` still work as aliases of `framework` and `classic`. Returns `false` for unknown names without touching current state; `primary`/`accent` tokens are never modified. Styles take effect on UI built after the call; open windows re-skin on reload. |
+| `Design:SetStyle(name)` | Apply a named style: `framework` ("RGX Framework", the default), `materialround` ("RGX Material Round"), `classic` ("WoW Classic") or `forever` ("WoW Forever", the layered look). The old id `retail` still works as an alias of `framework`. Returns `false` for unknown names without touching current state; `primary`/`accent` tokens are never modified. UI built through a brand (`brand:Build`, options panels with `addonBrand`) redraws as soon as the theme changes; other open windows re-skin on reload. |
 | `Design:GetStyle()` | The style id that was set, or `nil` after a direct `SetCornerStyle`/`SetTheme` edit. |
-| `Design:GetStyleId()` | Canonical id (`framework` / `materialround` / `classic`) with aliases resolved. |
+| `Design:GetStyleId()` | Canonical id (`framework` / `materialround` / `classic` / `forever`) with aliases resolved. |
 | `Design:GetStyleLabel()` | Display name of the active style, such as `RGX Material Round`. |
 | `Design:ResolveStyle(name)` | Canonical id for a style id or legacy alias, or `nil` when unknown. |
 | `Design:WithStyle(name, fn)` | Run `fn` (typically a window builder) in a style, then restore the previous style, palette and corner treatment, even if `fn` errors. Unknown names raise an error. |
@@ -701,8 +705,8 @@ Design:SetStyle("classic")  -- square corners, warm palette; primary/accent unto
 Design:GetStyle()            -- "classic"
 ```
 
-The active style persists in `RGXFrameworkDB.style`, restored on login before
-modules build. Any style combines with any color preset: styles own corners +
+The chosen style persists in `RGXFrameworkDB.style`; it is applied on login, before
+modules build, only while the beta theme override is on. Any style combines with any color preset: styles own corners +
 structural tokens (`surface`/`border`/`text`), themes own brand colors
 (`primary`/`accent`). Retail/classic/forever palettes are starting points for
 in-game tuning; `framework` is the shipped default.
@@ -798,7 +802,7 @@ Dragged offsets are written to both the consumer `storage[offsetKey]` and the fr
 | `UI:CreateColorPicker(parent, opts)` | Inline color swatch + picker; returns a control with `:Refresh()` to re-project storage |
 | `UI:CreateSlider(parent, opts)` | Numeric slider (`suffix` appends to the displayed value, e.g. `"%"`) |
 | `UI:CreatePanelAlpha(parent, opts)` | 0-100 panel-transparency slider with optional `{ label, value }` snap presets |
-| `UI:CreateTextInput(parent, opts)` | Single-line text input bound to storage (`placeholder`, `Enter`/`Escape` commit, Reset to default) |
+| `UI:CreateTextInput(parent, opts)` | Single-line text input bound to storage (`placeholder`, `Enter` commits, `Escape` cancels the edit, Reset to default) |
 | `UI:CreateStandardCard(parent, opts)` | The shared "General" settings card every RGX addon offers: minimap button, Addons menu, chat output, login message and chat prefix under the same storage keys; see [UI-CONTROLS](UI-CONTROLS.md#standard-options-card) |
 | `UI:CreateSwitch(parent, opts)` | Canonical db-bound on/off switch; declarative `toggle` controls render this widget |
 | `UI:CreateToggle(parent, opts)` | Legacy imperative checkbox toggle (use `UI:CreateSwitch` for new on/off rows) |
@@ -841,6 +845,9 @@ panel:Open()
 panel:SelectTab(1)
 panel:SelectTabByName("Appearance")
 ```
+
+`panel.openTimings` (`category`, `open`, `show`, `total`, in ms) and `panel.tabBuildTimings[index]` record where an
+open spends its time; with `/rgxf debug` on, an open or a tab build over 250ms is reported to chat.
 
 | Method | Description |
 |---|---|
@@ -1175,7 +1182,7 @@ World-map pin and waypoint primitives. Pin methods manage frames on the world ma
 
 | Method | Description |
 |---|---|
-| `RGXWorldMap:SetWaypoint(mapID, x, y[, { track = false }])` | Put the game's own map pin on `mapID` at zone coordinates `x, y` (0-100) and track it. Returns true when set; false for an invalid map id or coordinates (finite, 0-100), a map the client cannot pin (a capability-query error counts as cannot), or a pin the client did not set. The addon tells the player |
+| `RGXWorldMap:SetWaypoint(mapID, x, y[, { track = false }])` | Put the game's own map pin on `mapID` at zone coordinates `x, y` (0-100) and track it. Returns true only when the client confirms it was set; see [validation and failure behavior](WORLDMAP.md#user-waypoints) |
 | `RGXWorldMap:ClearWaypoint()` / `RGXWorldMap:CanSetWaypoint(mapID)` | Remove the map pin / whether the client can pin that map |
 | `RGXWorldMap:Nearest(places)` | The place nearest the player (`{ mapID or zoneID, x, y }` entries, zone coordinates 0-100), by world distance on the player's continent; returns the place and its distance in yards |
 | `RGXWorldMap:AddWorldMapIcon(pinFrame, icon, mapID, x, y, name)` | Place a pin on the world map |

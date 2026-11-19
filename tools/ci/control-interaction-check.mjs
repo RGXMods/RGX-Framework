@@ -273,7 +273,7 @@ try {
       assert(storage.keyword == 'Warcraft' and committed[1] == 'Warcraft', 'Enter must commit')
       assert(control.input.textColor[1] ~= D:GetColor('subtext')[1], 'committed text must not stay muted')
       control.input:SetText('')
-      control.input.scripts.OnEscapePressed(control.input)
+      control.input.scripts.OnEnterPressed(control.input)
       assert(storage.keyword == '' and committed[2] == '', 'empty commit must fall back to default')
       assert(control.input:GetText() == 'Type here', 'placeholder must return after empty commit')
       control.input:SetText('Uncommitted')
@@ -530,6 +530,55 @@ try {
       UI:Confirm({ message = 'Boom', onConfirm = function() error('expected') end })
       d.confirmButton:Click()
       assert(RGXFramework.errors == before + 1 and not d:IsShown(), 'failing confirm was not isolated')
+    `],
+    ["a slider fires onChange only when its value changes, never at build or on refresh", `
+      local calls = 0
+      local storage = { amount = 4 }
+      local slider = UI:CreateSlider({}, { key='amount', storage=storage, min=0, max=10, default=5, onChange=function() calls = calls + 1 end })
+      assert(calls == 0, 'onChange fired at build (' .. calls .. ')')
+      slider:SetValue(4)
+      assert(calls == 0, 'onChange fired for an unchanged value')
+      slider:SetValue(6)
+      assert(calls == 1 and storage.amount == 6, 'onChange did not fire once for a change')
+      slider:SetValue(6)
+      assert(calls == 1, 'onChange fired again for the same value')
+    `],
+    ["SetValue(nil) resets a slider and a text input to their default instead of storing the control", `
+      local storage = { amount = 7, word = 'abc' }
+      local slider = UI:CreateSlider({}, { key='amount', storage=storage, min=0, max=10, default=5 })
+      slider:SetValue(nil)
+      assert(storage.amount == 5, 'slider SetValue(nil) stored ' .. tostring(storage.amount))
+      slider.SetValue(nil)
+      assert(storage.amount == 5, 'slider dot-call SetValue(nil) stored ' .. tostring(storage.amount))
+      local input = UI:CreateTextInput({}, { key='word', storage=storage, default='dflt' })
+      input:SetValue(nil)
+      assert(storage.word == 'dflt', 'text SetValue(nil) stored ' .. tostring(storage.word))
+      input:SetValue('x')
+      assert(storage.word == 'x', 'colon SetValue still stores the value')
+      input.SetValue('y')
+      assert(storage.word == 'y', 'dot SetValue still stores the value')
+    `],
+    ["Escape in a text input discards the edit; Enter saves it", `
+      local changed = 0
+      local storage = { word = 'keep' }
+      local input = UI:CreateTextInput({}, { key='word', storage=storage, default='', onChange=function() changed = changed + 1 end })
+      local box = input.input
+      box:SetFocus(); box:SetText('typed'); box.scripts.OnEscapePressed(box)
+      assert(storage.word == 'keep' and changed == 0, 'Escape saved ' .. tostring(storage.word))
+      assert(box:GetText() == 'keep', 'Escape did not restore the saved text, shows ' .. tostring(box:GetText()))
+      box:SetFocus(); box:SetText('typed'); box.scripts.OnEnterPressed(box)
+      assert(storage.word == 'typed' and changed == 1, 'Enter did not save')
+    `],
+    ["the volume slider has a width, and only reports real changes", `
+      local calls = 0
+      local storage = {}
+      local vol = UI:CreateVolumeSlider({}, { key='volume', storage=storage, width=90, onChange=function() calls = calls + 1 end })
+      assert(vol.width == 90, 'volume slider width not applied: ' .. tostring(vol.width))
+      assert(calls == 0, 'volume onChange fired at build')
+      vol.Refresh()
+      assert(calls == 0, 'volume onChange fired on refresh')
+      local dflt = UI:CreateVolumeSlider({}, { key='v2', storage={} })
+      assert(dflt.width == 64, 'default volume width not applied: ' .. tostring(dflt.width))
     `],
   ];
   for (const [name, script] of scenarios) {

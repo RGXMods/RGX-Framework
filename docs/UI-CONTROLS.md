@@ -211,7 +211,7 @@ local toggle = UI:CreateToggle(parent, {
 ### `UI:CreateTextInput(parent, opts)` → `Frame`
 
 Create a single-line text input bound to a storage table — it saves and
-restores its value. `Enter` and `Escape` both commit and blur; Reset writes
+restores its value. `Enter` commits and blurs; `Escape` cancels the edit and shows the saved text again; Reset writes
 the default back. When `opts.placeholder` is set and the stored value is
 empty, the placeholder renders in the muted color and is never persisted. An
 empty commit (or Reset) resolves to `opts.default`.
@@ -602,6 +602,13 @@ Create a full options panel with tab system, scroll container, and header.
 
 Tabs are supplied at creation through `opts.tabs`; each `content(container)`
 builder runs once, the first time its tab is shown:
+
+For a custom compositor, `container:SetContentHeight(height)` declares its
+content extent in pixels through the existing layout owner. It returns `true`
+for finite non-negative numbers, or `false` without changing the extent for
+invalid input. The extent survives framework tab reflows and refreshes; managed
+rows can still require more height. Pass `0` to clear the custom minimum. Do not
+write private scroll-canvas metadata from consumers.
 
 ```lua
 local panel = UI:CreateOptionsPanel({

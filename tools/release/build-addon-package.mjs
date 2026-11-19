@@ -29,6 +29,9 @@ for(const line of toc.split(/\r?\n/)) {
   const file=line.trim().replace(/^\[AllowLoadGameType[^\]]*\]\s*/,'').replace(/\s*\[AllowLoadGameType[^\]]*\]\s*$/,'').trim();
   if(file && !file.startsWith('#'))add(file);
 }
+// The client loads a root Bindings.xml from the addon folder without a TOC entry (Blizzard's own addons ship one
+// their TOC never lists), so it is part of the runtime graph.
+if(existsSync(join(root,'Bindings.xml')))add('Bindings.xml');
 function assets(dir='') {
  for(const entry of readdirSync(join(root,dir),{withFileTypes:true})) {
   if(excluded.has(entry.name) || entry.name.startsWith('.'))continue;

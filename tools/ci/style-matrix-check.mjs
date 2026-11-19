@@ -291,6 +291,34 @@ try {
       _G.RGXFrameworkDB.themeOverride = false
       D:NotifyThemeChanged()
       check(plainPanel.style == "framework", "styleless brand: back to the default style when the override turns off (" .. tostring(plainPanel.style) .. ")")
+      -- Opening records where the time went (#49/#61): category lookup, the open itself, showing, and the tab build.
+      do
+        local clock = 0
+        debugprofilestop = function() clock = clock + 5; return clock end
+        local slowBuild = function() clock = clock + 300 end
+        local tp = UI:CreateOptionsPanel({ addonName = "MatrixTiming", tabs = { { text = "A", content = slowBuild } } })
+        tp:Open()
+        local t = tp.openTimings
+        check(type(t) == "table" and type(t.category) == "number" and type(t.open) == "number" and type(t.total) == "number",
+          "an open records category, open and total times")
+        tp:SelectTab(1)
+        check(type(tp.tabBuildTimings) == "table" and (tp.tabBuildTimings[1] or 0) >= 300, "a tab build records its time (" .. tostring(tp.tabBuildTimings and tp.tabBuildTimings[1]) .. ")")
+        debugprofilestop = nil
+      end
+      -- A theme change in the same style re-uses the tab buttons instead of making (and leaking) a new set.
+      do
+        local before = plainPanel.tabs[1]
+        D:NotifyThemeChanged()
+        check(plainPanel.tabs[1] == before, "a same-style theme change re-uses the tab button")
+        check(before:IsShown(), "the re-used tab button is shown again")
+        _G.RGXFrameworkDB.themeOverride = true
+        D:NotifyThemeChanged()
+        local forever = plainPanel.tabs[1]
+        check(forever ~= before, "a style change makes the new style's tab button")
+        _G.RGXFrameworkDB.themeOverride = false
+        D:NotifyThemeChanged()
+        check(plainPanel.tabs[1] == before, "switching back re-uses the first style's tab button")
+      end
       -- The restyle really swaps the chrome: the old style's pieces are hidden and the new style's are drawn.
       do
         local mark = #CREATED
@@ -393,6 +421,38 @@ try {
         and placed[1][2] ~= placed[3][2]
       local dbg = {} for i, p in ipairs(placed) do dbg[#dbg + 1] = p[1] .. ":" .. tostring(p[2]):sub(-6) end
       check(okGroups, "each section heading sits in the same column as its own controls (" .. table.concat(dbg, " ") .. ")")
+    end
+    do
+      local page
+      local panel = UI:CreateOptionsPanel({ tabs = {
+        { text = "Grid", content = function(content)
+          page = content
+          if type(rawget(content, "SetContentHeight")) == "function" then content:SetContentHeight(640) end
+        end },
+        { text = "Other", content = function() end },
+      } })
+      panel:SelectTab(1)
+      local supported = page and type(rawget(page, "SetContentHeight")) == "function"
+      check(supported, "custom tab builders declare content height through a public helper")
+      if supported then
+        local canvas = rawget(page, "_rgxCanvas")
+        check(rawget(canvas, "h") == 640, "initial framework reflow preserves a custom grid's extent")
+        panel:SelectTab(2)
+        page.Refresh = function() end
+        panel:SelectTab(1)
+        check(rawget(canvas, "h") == 640, "tab refresh preserves custom content height")
+        for _, bad in ipairs({ -1, math.huge, 0 / 0, "700" }) do
+          check(page:SetContentHeight(bad) == false and rawget(canvas, "h") == 640,
+            "invalid content height cannot corrupt the current extent")
+        end
+        check(page:SetContentHeight(0) == true and rawget(canvas, "h") == 1,
+          "zero clears a custom extent")
+        local row = page:Text("Managed row")
+        row:SetHeight(700)
+        page:SetContentHeight(300)
+        check((rawget(canvas, "h") or 0) >= 700,
+          "managed content larger than the declared extent is never clipped")
+      end
     end
     check(#errors == 0, "no framework errors while building (" .. tostring(errors[1]) .. ")")
     __failures = table.concat(failures, "\\n - ")

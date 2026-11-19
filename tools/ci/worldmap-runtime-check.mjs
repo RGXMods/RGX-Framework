@@ -26,6 +26,7 @@ try {
     local events = {}
     local RGX = {
       modules = {},
+      API = { CanAccessValue = function(value) return value ~= nil end },
       isForever = false,
       After = function(_, fn) fn() end,
       RegisterModule = function(_, name, module, meta) RGX.modules[name] = module end,

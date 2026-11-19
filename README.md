@@ -1,6 +1,6 @@
 # RGX-Framework
 
-The `v2.19.0` release makes the theme live: RGX addons register their brand with the framework, and open windows, options pages and dropdown menus follow the beta global theme override, colour and style without a reload. See the [release notes](docs/changelogs/2.19.0.md).
+The `v2.19.1` release fixes what a whole-project review found in the runtime, the options UI and the docs: method-name event handlers, declarative option defaults, slider callbacks, timers and more. See the [release notes](docs/changelogs/2.19.1.md).
 
 **One dependency. Everything your addon suite needs.**
 
@@ -13,7 +13,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.19.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.19.0)
+**Latest published release:** [`v2.19.1`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.19.1)
 
 **1. Declare the dependency:**
 

@@ -476,6 +476,47 @@ fresh:RegisterMessage("RGX_FRESH_TEST", function() freshSeen = true end)
 fresh:SendMessage("RGX_FRESH_TEST")
 check(freshSeen == true, "an isolated reload must round-trip messages end to end")
 
+-- ── A handler registered by method name runs, with its owner as self.
+do
+    local owner = { runs = 0, unitRuns = 0 }
+    function owner:OnThing(event, value) self.runs = self.runs + 1; self.lastEvent = event; self.lastValue = value end
+    function owner:OnUnitThing(event, unit) self.unitRuns = self.unitRuns + 1; self.lastUnit = unit end
+    RGX:RegisterEvent("RGX_METHOD_NAME", "OnThing", "test-method-name", owner)
+    RGX:FireEvent("RGX_METHOD_NAME", 42)
+    check(owner.runs == 1 and owner.lastEvent == "RGX_METHOD_NAME" and owner.lastValue == 42,
+        "a method-name event handler must run with its owner, ran " .. owner.runs)
+    RGX:RegisterUnitEvent("RGX_METHOD_UNIT", "player", "OnUnitThing", "test-method-unit", owner)
+    RGX:FireEvent("RGX_METHOD_UNIT", "player")
+    check(owner.unitRuns == 1 and owner.lastUnit == "player", "a method-name unit-event handler must run, ran " .. owner.unitRuns)
+end
+
+-- ── ADDON_LOADED is a lifecycle event registered when the framework loads, so a framework loaded during combat (a
+--    reload in combat) still receives the addons' load events.
+do
+    _G.__inCombat = true
+    local combatLoaded = {}
+    local chunk = assert(loadstring(__eventsSource, "@core/systems/events.lua"))
+    chunk("RGX-Framework", combatLoaded)
+    combatLoaded:RegisterEvent("ADDON_LOADED", function() end, "test-combat-reload")
+    check(combatLoaded.eventFrame:IsEventRegistered("ADDON_LOADED") == true,
+        "ADDON_LOADED must be registered natively even when the framework loads in combat")
+    _G.__inCombat = false
+end
+
+-- ── Two owners registering the same method name for one event both run.
+do
+    local a, b = { n = 0 }, { n = 0 }
+    function a:OnShared() self.n = self.n + 1 end
+    function b:OnShared() self.n = self.n + 1 end
+    RGX:RegisterEvent("RGX_SHARED_METHOD", "OnShared", nil, a)
+    RGX:RegisterEvent("RGX_SHARED_METHOD", "OnShared", nil, b)
+    RGX:FireEvent("RGX_SHARED_METHOD")
+    check(a.n == 1 and b.n == 1, "two owners' same-named methods must both run (" .. a.n .. ", " .. b.n .. ")")
+    RGX:RegisterEvent("RGX_SHARED_METHOD", "OnShared", nil, a)
+    RGX:FireEvent("RGX_SHARED_METHOD")
+    check(a.n == 2 and b.n == 2, "re-registering the same owner and method replaces itself, not the other owner")
+end
+
 _G.__rgxEventsCheckCount = checks
 _G.__rgxEventsTestResult = string.format(
     "LUA RUNTIME OK  event lifecycle (%d checks, Lua %s)",

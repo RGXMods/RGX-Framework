@@ -370,13 +370,17 @@ check(RGX:Hook(nil, "Ping", function() end) == false, "Hook must refuse a non-ta
 check(RGX:Hook(hookTarget, "", function() end) == false, "Hook must refuse an empty method")
 check(RGX:Hook(hookTarget, "Ping", nil) == false, "Hook must refuse a non-function callback")
 check(RGX:Hook(hookTarget, "Nope", function() end) == false, "Hook must refuse a missing method")
-check(RGX:Hook(hookTarget, "Ping", function(self, x) hookOrder[#hookOrder + 1] = "hook" end) == true,
+local pingHook = function(self, x) hookOrder[#hookOrder + 1] = "hook" end
+check(RGX:Hook(hookTarget, "Ping", pingHook) == true,
     "Hook must accept a valid target")
-check(RGX:Hook(hookTarget, "Ping", function() end) == false,
-    "Hook must refuse hooking the same method twice")
+check(RGX:Hook(hookTarget, "Ping", pingHook) == false,
+    "Hook must refuse hooking the same callback twice")
+local secondHook = function(self, x) hookOrder[#hookOrder + 1] = "second" end
+check(RGX:Hook(hookTarget, "Ping", secondHook) == true,
+    "Hook must accept a second addon's callback on the same method")
 hookTarget:Ping()
-check(hookOrder[1] == "orig" and hookOrder[2] == "hook",
-    "a hooked method must run original then callback, in order")
+check(hookOrder[1] == "orig" and hookOrder[2] == "hook" and hookOrder[3] == "second",
+    "a hooked method must run original then each callback, in order")
 
 -- ── RegisterSlashCommand normalization and token emission.
 local slashCalls = {}
