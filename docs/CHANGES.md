@@ -2,6 +2,11 @@
 
 ## Current Release
 
+### [v2.19.3](changelogs/2.19.3.md) - 2026-11-22
+
+- `/rgxf debug` toggles framework diagnostics, including options-open timings, and keeps font debugging aligned. Diagnostic thresholds are unchanged.
+- Source tooling no longer tracks an absolute workstation `node_modules` link. Dependencies install locally from the existing lockfile.
+
 ### [v2.19.2](changelogs/2.19.2.md) - 2026-11-22
 
 - The consumer packager preserves `sounds/user/README.txt`, so custom-sound folders exist after extraction. Other text files remain excluded.

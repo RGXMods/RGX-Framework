@@ -70,6 +70,19 @@ try {
     SlashCmdList.RGXFRAMEWORK("style")
     check("/rgx style with no id reports the saved style", prints[#prints]:find("forever", 1, true) ~= nil)
 
+    RGX.debugMode = false
+    SlashCmdList.RGXFRAMEWORK("debug")
+    check("/rgxf debug turns on the framework's debug output", RGX.debugMode == true and prints[#prints]:find("Debug", 1, true) ~= nil and prints[#prints]:find("ON", 1, true) ~= nil)
+    SlashCmdList.RGXFRAMEWORK("debug")
+    check("/rgxf debug again turns it off", RGX.debugMode == false and prints[#prints]:find("OFF", 1, true) ~= nil)
+
+    local fonts = { _forceDebug = false }
+    RGX.GetModule = function(_, name) if name == "fonts" then return fonts end end
+    SlashCmdList.RGXFRAMEWORK("debug")
+    check("font diagnostics follow framework debug ON", RGX.debugMode == true and fonts._forceDebug == true)
+    SlashCmdList.RGXFRAMEWORK("debug")
+    check("font diagnostics follow framework debug OFF", RGX.debugMode == false and fonts._forceDebug == false)
+
     check("canonical token maps all aliases", SlashCmdList.RGXFRAMEWORK ~= nil
       and SLASH_RGXFRAMEWORK1 == "/rgx"
       and SLASH_RGXFRAMEWORK2 == "/rgxframework"

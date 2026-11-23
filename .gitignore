@@ -1,5 +1,6 @@
 graphify-out/
 artifacts/
+node_modules/
 .release/
 .reference/wow-ui-source/*
 !.reference/wow-ui-source/manifest.json
