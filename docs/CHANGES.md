@@ -2,6 +2,12 @@
 
 ## Current Release
 
+### [v2.19.4](changelogs/2.19.4.md) - 2026-11-22
+
+- Timer-bar completion and cancellation callbacks are failure-isolated, so errors cannot skip cleanup or abort cancellation for unrelated bars.
+- Natural expiry never invokes the cancellation callback when no completion callback is set.
+- A lifecycle callback can restart its bar without cleanup of the old run hiding it.
+
 ### [v2.19.3](changelogs/2.19.3.md) - 2026-11-22
 
 - `/rgxf debug` toggles framework diagnostics, including options-open timings, and keeps font debugging aligned. Diagnostic thresholds are unchanged.

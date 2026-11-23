@@ -234,6 +234,100 @@ scenario("every bar gets a distinct updater label", function()
   second:Stop()
 end)
 
+scenario("completion without an onComplete callback never fires onCancel", function()
+  __rgxTimersReset()
+  Timers:CancelAll()
+  local bar, cancelled = Timers:New(), 0
+  bar:SetDuration(0.1)
+  bar:SetOnCancel(function() cancelled = cancelled + 1 end)
+  bar:Start()
+  __rgxTimersTick(2)
+  assert(cancelled == 0, "natural expiry is not cancellation even when no completion callback is set")
+  assert(not bar:IsRunning() and not bar:IsShown(), "expiry without a callback still cleans up")
+  assert(__rgxTimersActiveCount() == 0, "expiry releases its updater")
+end)
+
+scenario("throwing completion callbacks cannot skip bar cleanup or another completion", function()
+  __rgxTimersReset()
+  Timers:CancelAll()
+  local first, second = Timers:New(), Timers:New()
+  local completed, reported = 0, 0
+  local RGX = _G.RGXFramework
+  local originalError = RGX.Error
+  RGX.Error = function(_, message)
+    assert(message:find("expected completion failure", 1, true))
+    reported = reported + 1
+  end
+  first:SetOnComplete(function(bar)
+    assert(bar == first, "completion receives its own bar")
+    error("expected completion failure")
+  end)
+  second:SetOnComplete(function() completed = completed + 1 end)
+  first:SetDuration(0.1)
+  second:SetDuration(0.1)
+  first:Start()
+  second:Start()
+  __rgxTimersTick(2)
+  assert(not first:IsRunning() and not first:IsShown(), "a failing completion still stops and hides its bar")
+  assert(not second:IsRunning() and not second:IsShown(), "another bar still completes")
+  assert(completed == 1 and reported == 1, "completion and error reporting each run once")
+  assert(__rgxTimersActiveCount() == 0, "both completion updaters are released")
+  RGX.Error = originalError
+end)
+
+scenario("CancelAll survives cancellation and error-reporting failures", function()
+  __rgxTimersReset()
+  Timers:CancelAll()
+  local bars = { Timers:New(), Timers:New(), Timers:New() }
+  local cancelled, reported = 0, 0
+  local RGX = _G.RGXFramework
+  local originalError = RGX.Error
+  RGX.Error = function()
+    reported = reported + 1
+    error("expected reporter failure")
+  end
+  for _, bar in ipairs(bars) do
+    bar:SetDuration(30)
+    bar:SetOnCancel(function(owner)
+      assert(owner == bar, "cancellation receives its own bar")
+      cancelled = cancelled + 1
+      if bar == bars[1] then
+        error(setmetatable({}, { __tostring = function() error("expected error-formatting failure") end }))
+      end
+      error("expected cancellation failure")
+    end)
+    bar:Start()
+  end
+  assert(Timers:CancelAll() == 3, "all bars are counted despite callback failures")
+  for _, bar in ipairs(bars) do
+    assert(not bar:IsRunning() and not bar:IsShown(), "every cancelled bar is stopped and hidden")
+  end
+  assert(cancelled == 3 and reported == 3, "each failure is isolated and reported once")
+  assert(__rgxTimersActiveCount() == 0, "no cancellation updater remains")
+  Timers:CancelAll()
+  assert(cancelled == 3, "idle cleanup never repeats cancellation callbacks")
+  RGX.Error = originalError
+end)
+
+scenario("a completion callback can restart its bar without the old finish hiding it", function()
+  __rgxTimersReset()
+  Timers:CancelAll()
+  local bar, completed = Timers:New(), 0
+  bar:SetDuration(0.1)
+  bar:SetOnComplete(function(owner)
+    completed = completed + 1
+    owner:SetDuration(10)
+    owner:Start()
+  end)
+  bar:Start()
+  __rgxTimersTick(1)
+  assert(completed == 1 and bar:IsRunning(), "the completion callback starts a new run")
+  assert(bar:IsShown(), "cleanup of the old run must not hide the new run")
+  assert(__rgxTimersActiveCount() == 1, "only the restarted updater remains")
+  bar:Stop()
+  assert(__rgxTimersActiveCount() == 0, "the restarted run can still be stopped")
+end)
+
 local function render()
   return string.format(
     "RGXTimers harness: %d passed, %d failed\nRESULT %s",

@@ -88,6 +88,10 @@ Pooled consumers that sort or reconcile bars can rely on:
   `OnHide` script runs, so pooled consumers can unregister there.
 - `Stop()` on a running bar fires `onCancel`, never `onComplete`.
 - `Stop()` on an idle bar only hides it.
+- Completion and cancellation callbacks are failure-isolated. A callback error
+  is reported without skipping bar cleanup or aborting `CancelAll` for other bars.
+- A lifecycle callback may explicitly restart its bar; finishing the previous
+  run does not hide the new run.
 - One updater runs per running bar (`RGX:Every` at 0.1 s, labelled
   `RGXTimersBar<N>`); completion and `Stop` cancel it.
 - Remaining time is computed from `GetTime()` against `bar.exp`, so timer

@@ -1,6 +1,6 @@
 # RGX-Framework
 
-The `v2.19.3` release fixes `/rgxf debug` so it enables framework diagnostics as well as font reports, and keeps local dependency installations out of the source tree. See the [release notes](docs/changelogs/2.19.3.md).
+The `v2.19.4` release hardens timer-bar callbacks: failures cannot skip cleanup or interrupt other consumers, expiry is never mistaken for cancellation, and restarted bars stay visible. See the [release notes](docs/changelogs/2.19.4.md).
 
 **One dependency. Everything your addon suite needs.**
 
@@ -13,7 +13,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.19.3`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.19.3)
+**Latest published release:** [`v2.19.4`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.19.4)
 
 **1. Declare the dependency:**
 
