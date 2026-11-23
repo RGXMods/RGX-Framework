@@ -32,13 +32,15 @@ for(const line of toc.split(/\r?\n/)) {
 // The client loads a root Bindings.xml from the addon folder without a TOC entry (Blizzard's own addons ship one
 // their TOC never lists), so it is part of the runtime graph.
 if(existsSync(join(root,'Bindings.xml')))add('Bindings.xml');
+// Keep the custom-sounds folder on extraction without admitting other text files.
+const userSoundFolderMarker=join('sounds','user','README.txt');
 function assets(dir='') {
  for(const entry of readdirSync(join(root,dir),{withFileTypes:true})) {
   if(excluded.has(entry.name) || entry.name.startsWith('.'))continue;
   const file=join(dir,entry.name);
   assert(!entry.isSymbolicLink(),'runtime asset symlinks are not packaged');
   if(entry.isDirectory())assets(file);
-  else if(/\.(tga|blp|ttf|otf|ogg|mp3|wav)$/i.test(file))add(file);
+  else if(file===userSoundFolderMarker || /\.(tga|blp|ttf|otf|ogg|mp3|wav)$/i.test(file))add(file);
  }
 }
 assets();
@@ -65,4 +67,4 @@ mkdirSync(out,{recursive:true});
 const name=`${folder}-v${version}`;
 writeFileSync(join(out,name+'.zip'),archive);
 writeFileSync(join(out,name+'.manifest.json'),JSON.stringify({folder,version,runtimeFiles:manifest.length,files:manifest},null,2)+'\n');
-console.log(`CONSUMER PACKAGE OK ${name}.zip — ${manifest.length} allowlisted runtime/media/license files`);
+console.log(`CONSUMER PACKAGE OK ${name}.zip — ${manifest.length} allowlisted files`);

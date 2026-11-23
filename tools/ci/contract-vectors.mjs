@@ -71,6 +71,11 @@ export const engineCases = [
   { name: "control change callback must be a function", opts: { db: { a: true }, options: { General: [{ toggle: "a", onChange: true }] } }, valid: false },
   { name: "unknown trigger word", opts: { on: { "quest.finished": fn } }, valid: false },
   { name: "trigger handler must be a function", opts: { on: { login: true } }, valid: false },
+  { name: "advanced trigger form", opts: { on: { UNIT_AURA: { handler: fn, unit: "player", throttle: 0.5 }, levelup: { handler: fn, throttle: 2 } } }, valid: true },
+  { name: "advanced trigger form needs a handler", opts: { on: { UNIT_AURA: { unit: "player" } } }, valid: false },
+  { name: "advanced trigger form rejects unknown options", opts: { on: { UNIT_AURA: { handler: fn, speed: 1 } } }, valid: false },
+  { name: "advanced trigger throttle must be positive", opts: { on: { UNIT_AURA: { handler: fn, throttle: 0 } } }, valid: false },
+  { name: "advanced trigger unit list must not be empty", opts: { on: { UNIT_AURA: { handler: fn, unit: [] } } }, valid: false },
   { name: "null declaration", opts: null, valid: false },
 ];
 

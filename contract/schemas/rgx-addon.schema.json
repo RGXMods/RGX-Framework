@@ -159,7 +159,27 @@
           { "pattern": "^[A-Z][A-Z0-9_]+$" }
         ]
       },
-      "additionalProperties": { "$ref": "#/$defs/luaFunction" }
+      "additionalProperties": {
+        "oneOf": [
+          { "$ref": "#/$defs/luaFunction" },
+          {
+            "description": "Advanced form. unit narrows a raw event to one unit token or a list of them (UPPER_CASE events only); throttle runs the handler at most once per that many seconds (calls inside the window are dropped; not for login).",
+            "type": "object",
+            "properties": {
+              "handler": { "$ref": "#/$defs/luaFunction" },
+              "unit": {
+                "oneOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 }
+                ]
+              },
+              "throttle": { "type": "number", "exclusiveMinimum": 0 }
+            },
+            "required": ["handler"],
+            "additionalProperties": false
+          }
+        ]
+      }
     },
     "every": {
       "x-rgx-ships": "today",

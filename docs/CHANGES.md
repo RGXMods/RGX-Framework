@@ -2,6 +2,11 @@
 
 ## Current Release
 
+### [v2.19.2](changelogs/2.19.2.md) - 2026-11-22
+
+- The consumer packager preserves `sounds/user/README.txt`, so custom-sound folders exist after extraction. Other text files remain excluded.
+- Declarative `on` takes an advanced table form, `{ handler = fn, unit = "player" | { ... }, throttle = seconds }`: `unit` narrows a raw event to those units through the framework's unit events, `throttle` runs the handler at most once per window.
+
 ### [v2.19.1](changelogs/2.19.1.md) - 2026-11-19
 
 - Event, message and unit-event handlers registered by method name run again (the method was resolved into the error slot, so every one of them was dropped).

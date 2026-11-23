@@ -106,6 +106,26 @@ RGXAddon "MyAddon" {
 }
 ```
 
+A handler can also be a table, the advanced form, for the two things authors otherwise wrote by hand:
+
+```lua
+RGXAddon "MyAddon" {
+    on = {
+        UNIT_AURA = { handler = function(self, unit) end, unit = "player", throttle = 0.2 },
+        UNIT_HEALTH = { handler = function(self, unit) end, unit = { "player", "target" } },
+        ["combat.crit"] = { handler = function(self, ...) end, throttle = 1 },
+    },
+}
+```
+
+| Option | Meaning |
+|---|---|
+| `handler` | Required. The same function the bare form takes. |
+| `unit` | A unit token or a list of them. Only for UPPER_CASE raw events; the framework registers a unit event, so the handler runs only for those units. |
+| `throttle` | Seconds. The handler runs at most once per window; calls inside it are dropped. Not for `login`. |
+
+Unknown options, a missing handler, `unit` on a trigger word, and a throttle that is not above 0 are load errors.
+
 Trigger words are plain words. Each one maps to exactly one framework module
 callback, so a handler gets the same arguments that module passes to its
 `On*` subscribers, after the addon object:

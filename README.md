@@ -1,6 +1,6 @@
 # RGX-Framework
 
-The `v2.19.1` release fixes what a whole-project review found in the runtime, the options UI and the docs: method-name event handlers, declarative option defaults, slider callbacks, timers and more. See the [release notes](docs/changelogs/2.19.1.md).
+The `v2.19.2` release preserves the custom-sounds folder in consumer packages and adds unit filtering and throttling to declarative event handlers. See the [release notes](docs/changelogs/2.19.2.md).
 
 **One dependency. Everything your addon suite needs.**
 
@@ -13,7 +13,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.19.1`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.19.1)
+**Latest published release:** [`v2.19.2`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.19.2)
 
 **1. Declare the dependency:**
 
