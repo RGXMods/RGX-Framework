@@ -1,6 +1,6 @@
 # RGX-Framework
 
-The `v2.19.4` release hardens timer-bar callbacks: failures cannot skip cleanup or interrupt other consumers, expiry is never mistaken for cancellation, and restarted bars stay visible. See the [release notes](docs/changelogs/2.19.4.md).
+The `v2.19.5` release hardens DataBroker and Tooltip callback diagnostics: an error while formatting or reporting one consumer's failure cannot interrupt other consumers. See the [release notes](docs/changelogs/2.19.5.md).
 
 **One dependency. Everything your addon suite needs.**
 
@@ -13,7 +13,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.19.4`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.19.4)
+**Latest published release:** [`v2.19.5`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.19.5)
 
 **1. Declare the dependency:**
 

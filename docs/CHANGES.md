@@ -2,6 +2,11 @@
 
 ## Current Release
 
+### [v2.19.5](changelogs/2.19.5.md) - 2026-11-23
+
+- DataBroker and Tooltip now isolate errors in callback-error formatting and reporting, so another consumer's callback or tooltip line still runs.
+- Existing callback arguments, native hook registration and ordinary diagnostic output remain unchanged.
+
 ### [v2.19.4](changelogs/2.19.4.md) - 2026-11-22
 
 - Timer-bar completion and cancellation callbacks are failure-isolated, so errors cannot skip cleanup or abort cancellation for unrelated bars.

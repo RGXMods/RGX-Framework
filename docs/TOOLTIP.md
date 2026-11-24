@@ -45,6 +45,10 @@ end)
 
 One real Blizzard registration per type, ever — all RGX consumers for that type share a single pcall-guarded entry point. Registrations are session-persistent by design (Blizzard offers no unregister).
 
+Error formatting and diagnostic reporting are isolated too: they cannot interrupt
+later native hooks or composed lines, or escape a failing hover builder. This
+does not sanitize native tooltip payloads or establish combat/taint safety.
+
 ## API
 
 | Method | Returns | Notes |

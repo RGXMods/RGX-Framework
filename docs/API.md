@@ -999,6 +999,10 @@ local dataObj = DB:NewDataObject(name, attrs)
 
 Data objects for minimap and datatext displays.
 
+New-object and attribute-change notifications isolate consumer failures, including
+errors while formatting or reporting a callback error. Other callbacks continue
+with their original arguments.
+
 ---
 
 ## Combat (`RGXCombat`)
