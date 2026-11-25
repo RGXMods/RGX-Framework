@@ -56,6 +56,7 @@ Complete public API by module. See individual module docs for deeper detail:
 | `RGX:GetLevelUp()` | RGXLevelUp |
 | `RGX:GetCollectibles()` | RGXCollectibles |
 | `RGX:GetLoot()` | RGXLoot |
+| `RGX:GetInventory()` | Inventory (registry-only) |
 | `RGX:GetQuest()` | RGXQuest |
 | `RGX:GetHonor()` | RGXHonor |
 | `RGX:GetDelves()` | RGXDelves |
@@ -1162,6 +1163,53 @@ Trigger state store — the substrate for the trigger evaluation engine (rgx-mod
 `state.changed` describes the last write, not a sticky flag. Guaranteed progress fields (`progressType`, `duration`, `expirationTime`, `value`, `total`, `inverse`, `autoHide`) give conditions and displays one stable shape to read.
 
 ---
+
+## Inventory
+
+Live item counts, inventory-change subscriptions and recipe-independent material
+aggregation. Obtain the module with `RGX:GetInventory()`; no global alias is published.
+
+| Method | Behavior |
+|---|---|
+| `Inventory:GetItemCount(itemID, includeBank?, includeReagentBank?)` | A known nonnegative count, including zero; `nil, reason` when the item is invalid or the count cannot be verified |
+| `Inventory:GetRemainingMaterials(steps, opts?)` | Merge an ordered material plan and subtract the current on-hand count once per distinct item |
+| `Inventory:OnChanged(fn)` | Call `fn(event, ...)` after a bag update or successful item-metadata response; returns an unsubscribe function |
+
+```lua
+local Inventory = RGX:GetInventory()
+local materials = Inventory:GetRemainingMaterials({
+    { crafts = 3, reagents = { [765] = 2 } },
+    { crafts = 2, reagents = { [765] = 1, [2447] = 1 } },
+})
+-- materials[765].requiredCount == 8
+local stop = Inventory:OnChanged(function(event, ...)
+    -- Requery counts/materials and refresh the consumer's display.
+end)
+-- stop() detaches only this subscription.
+```
+
+Plans contain `{ crafts = nonnegativeInteger, reagents = { [itemID] =
+nonnegativeInteger } }` entries. Invalid, inaccessible or overflowing definitions
+fail before client queries. Inputs are not modified. Each result is keyed by
+item ID and contains `itemID`, `requiredCount`, nullable `name`/`icon`/`link`,
+`onHandCount`, and `stillNeeded = max(0, requiredCount - onHandCount)`.
+**Unknown counts leave both `onHandCount` and `stillNeeded` nil**, never a
+fabricated zero or a claim that every unit is missing. Metadata may arrive later.
+
+`opts.includeBank` and `opts.includeReagentBank` default to false. The modern
+adapter maps reagent-bank inclusion to the fourth native argument, keeping
+`includeUses = false`; existing two-argument compatibility calls are unchanged.
+The established legacy two-argument fallback remains available, but a requested
+reagent-bank count is unknown there rather than guessed. Exposed flags do not
+establish that a storage system exists or is available on a particular client.
+Account-bank inclusion is not requested by this surface.
+
+Notifications prefer `BAG_UPDATE_DELAYED`, falling back to `BAG_UPDATE` where
+needed, and also report successful `GET_ITEM_INFO_RECEIVED` responses. Failed
+metadata loads do not trigger a refresh/request loop. Registration and callback
+dispatch use the existing framework event/emitter owners; no polling or
+parallel event frame is created. Skill progression, rank boundaries, recipe
+selection and UI remain consumer responsibilities.
 
 ## Event Callback Modules
 

@@ -2,6 +2,12 @@
 
 ## Current Release
 
+### [v2.20.0](changelogs/2.20.0.md) - 2026-11-24
+
+- Registry-owned inventory counts, material aggregation and bag/item-data notifications are available through `RGX:GetInventory()` without adding a global alias.
+- Unknown counts remain unknown; modern storage flags and item-info tuple positions are normalized by the existing compatibility owner.
+- Shared event, timer and declarative callback diagnostics contain error formatting and error-handler acquisition failures.
+
 ### [v2.19.5](changelogs/2.19.5.md) - 2026-11-23
 
 - DataBroker and Tooltip now isolate errors in callback-error formatting and reporting, so another consumer's callback or tooltip line still runs.

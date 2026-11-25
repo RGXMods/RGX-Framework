@@ -1751,6 +1751,47 @@
       ]
     },
     {
+      "module": "inventory",
+      "getter": "RGX:GetInventory()",
+      "global": null,
+      "owner": "modules/inventory/inventory.lua",
+      "category": "game",
+      "stability": "stable",
+      "flavors": null,
+      "methods": [
+        {
+          "name": "GetItemCount",
+          "params": [
+            "itemID",
+            "includeBank",
+            "includeReagentBank"
+          ]
+        },
+        {
+          "name": "GetRemainingMaterials",
+          "params": [
+            "steps",
+            "opts"
+          ]
+        },
+        {
+          "name": "OnChanged",
+          "params": [
+            "fn"
+          ]
+        }
+      ],
+      "introduced": "2.20.0",
+      "authorable": true,
+      "preview": "fixture-driven",
+      "docs": "docs/API.md#inventory",
+      "safety": [
+        "read-only",
+        "local-state",
+        "event-integration"
+      ]
+    },
+    {
       "module": "levelup",
       "getter": "RGX:GetLevelUp()",
       "global": "RGXLevelUp",

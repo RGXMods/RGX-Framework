@@ -77,8 +77,8 @@ for (const entry of entries) {
 assert(registered.size > 0, "no RGX:RegisterModule calls found");
 
 // Global aliases the registry publishes: core.lua's moduleAliases map plus any
-// direct _G.RGX* write in the module's own registration file. Exactly one
-// distinct name must be derivable, otherwise the catalog cannot be generated.
+// direct _G.RGX* write in the module's own registration file. A registry-only
+// module uses the already-supported null global field; published aliases remain unique.
 const coreSrc = readFileSync(join(ROOT, "core/core.lua"), "utf8");
 const aliasBlock = coreSrc.match(/moduleAliases\s*=\s*\{([\s\S]*?)\n\}/);
 assert(aliasBlock, "core/core.lua: moduleAliases map not found");
@@ -89,8 +89,14 @@ for (const [name, info] of registered) {
   const src = sources.get(info.owner);
   const direct = new Set([...src.matchAll(/_G\.(RGX\w+)\s*=/g)].map((m) => m[1]));
   if (aliasMap.has(name)) direct.add(aliasMap.get(name));
-  assert.equal(direct.size, 1, `module '${name}': expected one public global, derivable candidates: ${[...direct].join(", ") || "none"}`);
-  info.global = [...direct][0];
+  if (direct.size === 0) {
+    // RegisterModule's global alias is optional. Do not invent one or expand
+    // the frozen global surface merely to satisfy catalog derivation.
+    info.global = null;
+  } else {
+    assert.equal(direct.size, 1, `module '${name}': expected one public global, derivable candidates: ${[...direct].join(", ") || "none"}`);
+    info.global = [...direct][0];
+  }
 }
 
 // RGX:GetX() shortcuts in core.lua map a module to its supported getter call.
