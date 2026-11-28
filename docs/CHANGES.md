@@ -2,6 +2,12 @@
 
 ## Current Release
 
+### [v2.21.0](changelogs/2.21.0.md) - 2026-11-27
+
+- Added the generated master capability registry: 106 capabilities, 48 traditional-library mappings, native-domain evidence, ownership reviews and a dependency-aware backlog, available through the contract bundle and `rgx://schemas/capability-registry`.
+- Added opt-in latest-per-key event bucketing to `RGX:RegisterEvent` and `RGX:RegisterUnitEvent`, with deterministic first-seen order, FIFO overflow batches, bounded key retention and safe cancellation/unregister behavior.
+- Preserved ordinary event dispatch and transition streams. Current-state consumers can opt in without a second dispatcher or any DSL change.
+
 ### [v2.20.0](changelogs/2.20.0.md) - 2026-11-24
 
 - Registry-owned inventory counts, material aggregation and bag/item-data notifications are available through `RGX:GetInventory()` without adding a global alias.

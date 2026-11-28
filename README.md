@@ -1,6 +1,6 @@
 # RGX-Framework
 
-The `v2.20.0` release adds shared inventory counts, material aggregation and change notifications through `RGX:GetInventory()`, and hardens shared callback diagnostics. See the [release notes](docs/changelogs/2.20.0.md).
+The `v2.21.0` release adds the master capability registry and opt-in FIFO event bucketing. See the [release notes](docs/changelogs/2.21.0.md).
 
 **One dependency. Everything your addon suite needs.**
 
@@ -13,7 +13,7 @@ system. It is not a player-facing addon; it loads silently and exposes an API.
 ---
 
 ## Quick Start
-**Latest published release:** [`v2.20.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.20.0)
+**Latest published release:** [`v2.21.0`](https://github.com/RGXMods/RGX-Framework/releases/tag/v2.21.0)
 
 **1. Declare the dependency:**
 

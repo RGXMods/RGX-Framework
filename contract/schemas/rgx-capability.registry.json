@@ -1,0 +1,3574 @@
+{
+  "registryVersion": 1,
+  "description": "Master RGX capability inventory (issue #133). Shipped module identity and public API references derive from contract/schemas/rgx-api.catalog.json; contract/capability-plan.json owns Core inventory, research candidates, ownership reviews and traditional-library successors. Implemented does not imply per-client or consumer validation; see each capability's testCoverage and acceptanceCriteria.",
+  "statuses": [
+    "Discovered",
+    "Researching",
+    "Designed",
+    "Planned",
+    "Partially implemented",
+    "Implemented",
+    "Validated",
+    "Blocked",
+    "Superseded",
+    "Rejected"
+  ],
+  "referenceSets": [
+    {
+      "id": "forever-ui",
+      "flavor": "forever",
+      "build": "1.60.1.71139",
+      "commit": "d9c22e32cb240afb82bb2ecefbb78ef935333f59",
+      "root": ".reference/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/"
+    },
+    {
+      "id": "retail-ui",
+      "flavor": "retail",
+      "build": "12.1.5.70961",
+      "commit": "ab5cb850a3f65e742959e379c4689353a2f4549f",
+      "root": ".reference/wow-ui-source/retail/Interface/AddOns/Blizzard_APIDocumentationGenerated/"
+    },
+    {
+      "id": "forever-dump",
+      "flavor": "forever",
+      "build": "1.60.1.70938",
+      "commit": "e230342a476eb4ef484ba7b34adc0da6ecc6acc1",
+      "root": ".reference/wow-api-dump/forever/Resources/"
+    },
+    {
+      "id": "retail-dump",
+      "flavor": "retail",
+      "build": "12.1.5.70448",
+      "commit": "f3b334b33bd19fa6a0250f7922ecfa83db7fe356",
+      "root": ".reference/wow-api-dump/retail/Resources/"
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "module.achievement",
+      "name": "Achievement state and completion signals",
+      "classification": "Module",
+      "owner": "modules/achievement/achievement.lua",
+      "purpose": "Achievement state and completion signals",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:achievement",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.auras",
+      "name": "Buff/debuff state with restricted-value boundaries",
+      "classification": "Module",
+      "owner": "modules/auras/auras.lua",
+      "purpose": "Buff/debuff state with restricted-value boundaries",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:auras",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.collectibles",
+      "name": "Mount, pet, toy, appearance and heirloom collection signals",
+      "classification": "Module",
+      "owner": "modules/collectibles/collectibles.lua",
+      "purpose": "Mount, pet, toy, appearance and heirloom collection signals",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": [
+          "retail"
+        ]
+      },
+      "dependencies": [],
+      "publicContract": "catalog:collectibles",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.colorpicker",
+      "name": "Reusable color-selection components",
+      "classification": "Library",
+      "owner": "libraries/colors/colorpicker.lua",
+      "purpose": "Reusable color-selection components",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:colorpicker",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.colors",
+      "name": "Color registry, manipulation and application",
+      "classification": "Library",
+      "owner": "libraries/colors/colors.lua",
+      "purpose": "Color registry, manipulation and application",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:colors",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.combat",
+      "name": "Combat state and combat-log information",
+      "classification": "Module",
+      "owner": "modules/combat/combat.lua",
+      "purpose": "Combat state and combat-log information",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:combat",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.databroker",
+      "name": "Observable shared data objects",
+      "classification": "Library",
+      "owner": "libraries/databroker/databroker.lua",
+      "purpose": "Observable shared data objects",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:databroker",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.delves",
+      "name": "Delve companion and activity state",
+      "classification": "Module",
+      "owner": "modules/delves/delves.lua",
+      "purpose": "Delve companion and activity state",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": [
+          "retail",
+          "forever"
+        ]
+      },
+      "dependencies": [],
+      "publicContract": "catalog:delves",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.design",
+      "name": "Themes, visual styling and native frame treatments",
+      "classification": "Library",
+      "owner": "libraries/design/design.lua",
+      "purpose": "Themes, visual styling and native frame treatments",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:design",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.display",
+      "name": "Positioned screen elements and drag edit mode",
+      "classification": "Library",
+      "owner": "libraries/display/display.lua",
+      "purpose": "Positioned screen elements and drag edit mode",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:display",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.dropdowns",
+      "name": "Nested menus and native menu compatibility",
+      "classification": "Library",
+      "owner": "libraries/dropdowns/dropdowns.lua",
+      "purpose": "Nested menus and native menu compatibility",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:dropdowns",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.fonts",
+      "name": "Typography registration, styling, selectors and previews",
+      "classification": "Library",
+      "owner": "libraries/fonts/init.lua",
+      "purpose": "Typography registration, styling, selectors and previews",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:fonts",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.honor",
+      "name": "Honor progression signals",
+      "classification": "Module",
+      "owner": "modules/honor/honor.lua",
+      "purpose": "Honor progression signals",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:honor",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.housing",
+      "name": "Player housing progression and decor signals",
+      "classification": "Module",
+      "owner": "modules/housing/housing.lua",
+      "purpose": "Player housing progression and decor signals",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": [
+          "retail"
+        ]
+      },
+      "dependencies": [],
+      "publicContract": "catalog:housing",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.inventory",
+      "name": "Live item counts, material aggregation and change notification",
+      "classification": "Module",
+      "owner": "modules/inventory/inventory.lua",
+      "purpose": "Live item counts, material aggregation and change notification",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:inventory",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.levelup",
+      "name": "Character level progression signals",
+      "classification": "Module",
+      "owner": "modules/levelup/levelup.lua",
+      "purpose": "Character level progression signals",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:levelup",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.locale",
+      "name": "Addon and framework localization registry",
+      "classification": "Library",
+      "owner": "libraries/locale/locale.lua",
+      "purpose": "Addon and framework localization registry",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:locale",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.loot",
+      "name": "Loot, rare-item and currency acquisition signals",
+      "classification": "Module",
+      "owner": "modules/loot/loot.lua",
+      "purpose": "Loot, rare-item and currency acquisition signals",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:loot",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.minimap",
+      "name": "Minimap buttons and compartment integration",
+      "classification": "Library",
+      "owner": "libraries/minimap/minimap.lua",
+      "purpose": "Minimap buttons and compartment integration",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:minimap",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.petbattles",
+      "name": "Pet battle state and progression signals",
+      "classification": "Module",
+      "owner": "modules/petbattles/petbattles.lua",
+      "purpose": "Pet battle state and progression signals",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:petbattles",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.prey",
+      "name": "Prey hunt state and progression signals",
+      "classification": "Module",
+      "owner": "modules/prey/prey.lua",
+      "purpose": "Prey hunt state and progression signals",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": [
+          "retail",
+          "forever"
+        ]
+      },
+      "dependencies": [],
+      "publicContract": "catalog:prey",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.quest",
+      "name": "Quest lifecycle and objective progress",
+      "classification": "Module",
+      "owner": "modules/quest/quest.lua",
+      "purpose": "Quest lifecycle and objective progress",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:quest",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.reputation",
+      "name": "Reputation, friendship and renown progression",
+      "classification": "Module",
+      "owner": "modules/reputation/reputation.lua",
+      "purpose": "Reputation, friendship and renown progression",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:reputation",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.sharedmedia",
+      "name": "Cross-addon media discovery and interoperability",
+      "classification": "Library",
+      "owner": "libraries/sharedmedia/sharedmedia.lua",
+      "purpose": "Cross-addon media discovery and interoperability",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:sharedmedia",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.sound",
+      "name": "General audio registration, variants and playback",
+      "classification": "Library",
+      "owner": "libraries/sound/sound.lua",
+      "purpose": "General audio registration, variants and playback",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:sound",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.textures",
+      "name": "Texture registration and application",
+      "classification": "Library",
+      "owner": "libraries/textures/textures.lua",
+      "purpose": "Texture registration and application",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:textures",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.timers",
+      "name": "Countdown and progress display components",
+      "classification": "Library",
+      "owner": "libraries/timers/timers.lua",
+      "purpose": "Countdown and progress display components",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:timers",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.tooltip",
+      "name": "Composed, interactive and augmented tooltip content",
+      "classification": "Library",
+      "owner": "libraries/tooltip/tooltip.lua",
+      "purpose": "Composed, interactive and augmented tooltip content",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:tooltip",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.tradingpost",
+      "name": "Trading Post activity and currency signals",
+      "classification": "Module",
+      "owner": "modules/tradingpost/tradingpost.lua",
+      "purpose": "Trading Post activity and currency signals",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": [
+          "retail",
+          "forever"
+        ]
+      },
+      "dependencies": [],
+      "publicContract": "catalog:tradingpost",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.triggers",
+      "name": "Clone-keyed trigger state, progress and change notification",
+      "classification": "Module",
+      "owner": "modules/triggers/triggers.lua",
+      "purpose": "Clone-keyed trigger state, progress and change notification",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:triggers",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.ui",
+      "name": "Widgets, layouts, settings and advanced controls",
+      "classification": "Library",
+      "owner": "libraries/ui/controls.lua",
+      "purpose": "Widgets, layouts, settings and advanced controls",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:ui",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "module.worldmap",
+      "name": "Maps, coordinates, pins and nearest-place lookup",
+      "classification": "Module",
+      "owner": "modules/worldmap/worldmap.lua",
+      "purpose": "Maps, coordinates, pins and nearest-place lookup",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "source": "rgx-api.catalog.json",
+        "flavors": null
+      },
+      "dependencies": [],
+      "publicContract": "catalog:worldmap",
+      "performance": "See the owning implementation; static catalog enumeration is not a performance claim.",
+      "testCoverage": [
+        "Static API/architecture gates and applicable owner runtime harnesses"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Confirm consumer coverage and required per-client behavior before marking Validated.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "core.registration",
+      "name": "Framework and module registration",
+      "classification": "Core",
+      "owner": "core/core.lua",
+      "purpose": "One framework object, named module registration, aliases, getters and availability-aware lookup.",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "declared-matrix",
+        "validation": "per-owner"
+      },
+      "dependencies": [],
+      "publicContract": "RGX:RegisterModule; RGX:GetModule; RGX:GetLoadedModules",
+      "performance": "Registry lookup is direct table access with alias fallback.",
+      "testCoverage": [
+        "module-graph-check",
+        "api-catalog-check",
+        "runtime lifecycle harnesses"
+      ],
+      "consumerCoverage": [
+        "All registered modules and RGX consumers"
+      ],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Preserve one registry and the frozen public global surface.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "core.lifecycle",
+      "name": "Lifecycle and initialization",
+      "classification": "Core",
+      "owner": "core/initialization.lua",
+      "purpose": "Readiness, post-load initialization, TryInit, database adoption and convenience wrappers.",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "declared-matrix",
+        "validation": "per-owner"
+      },
+      "dependencies": [],
+      "publicContract": "RGX:IsReady; RGX:OnReady; RGX:OnLogin; RGX:OnLoad",
+      "performance": "Initialization runs once per framework load; no recurring lifecycle driver.",
+      "testCoverage": [
+        "login-runtime-check",
+        "actual module initialization scenarios"
+      ],
+      "consumerCoverage": [
+        "RGXAddon consumers"
+      ],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Keep file loading, registration, initialization and client availability as distinct states.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "core.compatibility",
+      "name": "Client compatibility and capability gates",
+      "classification": "Core",
+      "owner": "core/compat.lua + core/compat_api.lua",
+      "purpose": "Centralized client detection, normalized API adapters, module support and restricted-value boundaries.",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "declared-matrix",
+        "validation": "per-owner"
+      },
+      "dependencies": [],
+      "publicContract": "RGX.Capabilities; RGX:ModuleSupported; RGX:IsModuleAvailable; RGX.API",
+      "performance": "Capability probes are computed once at load where possible.",
+      "testCoverage": [
+        "compat-loader-check",
+        "flavor-check",
+        "api-ownership-check"
+      ],
+      "consumerCoverage": [
+        "Capability-gated modules and consumers"
+      ],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Verify each API by flavor/build/source and fail closed on unknown or restricted values.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "core.addon-factory",
+      "name": "Declarative addon factory",
+      "classification": "Core",
+      "owner": "core/core.lua",
+      "purpose": "Compile RGXAddon declarations into scoped addon objects without a second runtime or DSL.",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "declared-matrix",
+        "validation": "per-owner"
+      },
+      "dependencies": [],
+      "publicContract": "RGXAddon; RGX.Addon",
+      "performance": "Declarations are validated before resource registration; lazy UI rendering stays in UI.",
+      "testCoverage": [
+        "schema-check",
+        "contract-bundle-check",
+        "RGX-Hello E2E",
+        "lua-runtime-check"
+      ],
+      "consumerCoverage": [
+        "RGX-Hello",
+        "RGXProfessions",
+        "RGX consumers"
+      ],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Keep runtime, schema, documentation, generators and validators congruent.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "core.database",
+      "name": "Persistence and profiles",
+      "classification": "Core",
+      "owner": "core/systems/database.lua",
+      "purpose": "SavedVariables, defaults, migrations, profile-aware proxies, import/export and adoption.",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "declared-matrix",
+        "validation": "per-owner"
+      },
+      "dependencies": [],
+      "publicContract": "RGX:NewDatabase; RGX:DB; profile proxy methods",
+      "performance": "Proxy access and migrations follow existing budgeted lifecycle; no new polling.",
+      "testCoverage": [
+        "database-runtime-check",
+        "profile-persistence-check",
+        "profiles-ui-check"
+      ],
+      "consumerCoverage": [
+        "BLU",
+        "RGXProfessions",
+        "RGX-Hello"
+      ],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Preserve false versus nil, nested defaults, profiles, migrations and SavedVariables lifecycle.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "core.events",
+      "name": "Events, messages and emitters",
+      "classification": "Core",
+      "owner": "core/systems/events.lua",
+      "purpose": "Native events, unit events, internal messages and module-local failure-isolated emitters.",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "declared-matrix",
+        "validation": "per-owner"
+      },
+      "dependencies": [],
+      "publicContract": "RGX:RegisterEvent; RGX:RegisterMessage; RGX:CreateEmitter",
+      "performance": "One dispatcher and deferred native registration; no consumer event frames.",
+      "testCoverage": [
+        "events-runtime-check",
+        "inventory event scenarios",
+        "library-callback-check"
+      ],
+      "consumerCoverage": [
+        "All event-driven modules",
+        "RGXProfessions"
+      ],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Preserve failure isolation and deferred native registration; evaluate aggregation before adding it.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "core.scheduling",
+      "name": "Scheduling and asynchronous runtime work",
+      "classification": "Core",
+      "owner": "core/systems/runtime.lua",
+      "purpose": "One-shot/repeating timers, budgeted scheduling, hooks, combat queue and safe operations.",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "declared-matrix",
+        "validation": "per-owner"
+      },
+      "dependencies": [],
+      "publicContract": "RGX:After; RGX:Every; RGX:CancelTimer; RGX:Hook; RGX:QueueForCombat",
+      "performance": "Hidden OnUpdate driver sleeps with no active timers; existing per-frame/time budgets apply.",
+      "testCoverage": [
+        "timers-runtime-check",
+        "lua-runtime-check",
+        "library-callback-check"
+      ],
+      "consumerCoverage": [
+        "Declarative every timers",
+        "SharedMedia scanning",
+        "Consumers using safe UI operations"
+      ],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Benchmark structural scheduler changes and preserve timer labels and failure isolation.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "core.slash",
+      "name": "Slash commands",
+      "classification": "Core",
+      "owner": "core/systems/runtime.lua + core/commands.lua",
+      "purpose": "Centralized consumer slash registration and the framework /rgxf command surface.",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "declared-matrix",
+        "validation": "per-owner"
+      },
+      "dependencies": [],
+      "publicContract": "RGX:RegisterSlashCommand; /rgxf",
+      "performance": "Registration is one-time with normalized aliases.",
+      "testCoverage": [
+        "framework-commands-check",
+        "audit-encoding-check"
+      ],
+      "consumerCoverage": [
+        "RGXProfessions",
+        "RGX-Hello"
+      ],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Keep slash registration centralized and avoid SLASH_ globals in consumers.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "core.utils",
+      "name": "Shared utilities and chat output",
+      "classification": "Core",
+      "owner": "core/systems/utils.lua",
+      "purpose": "String/table/math helpers, throttling, prefixes, consumer chat and login preferences.",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "declared-matrix",
+        "validation": "per-owner"
+      },
+      "dependencies": [],
+      "publicContract": "RGX utility methods; RGX:CreateChat; RGX:LoginMessage",
+      "performance": "Small synchronous helpers; no background work implied.",
+      "testCoverage": [
+        "lua-runtime-check",
+        "library-callback-check",
+        "SharedChat consumer tests"
+      ],
+      "consumerCoverage": [
+        "RGXProfessions",
+        "RGX-Hello"
+      ],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Do not turn small utilities into competing public subsystems.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "core.config",
+      "name": "Framework defaults",
+      "classification": "Core",
+      "owner": "core/systems/config.lua",
+      "purpose": "Framework debug, version and default font configuration.",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "declared-matrix",
+        "validation": "per-owner"
+      },
+      "dependencies": [],
+      "publicContract": "RGX.defaults",
+      "performance": "Static default table.",
+      "testCoverage": [
+        "Static source reconciliation only; no runtime consumer is claimed by this record"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Verify actual default consumers before recording adoption or extending configuration.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "core.contract",
+      "name": "Contract and authoring compatibility",
+      "classification": "Core",
+      "owner": "core/core.lua + contract/engine + contract/schemas",
+      "purpose": "Contract format handshake, declarative schema/engine and authoring compatibility.",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "declared-matrix",
+        "validation": "per-owner"
+      },
+      "dependencies": [],
+      "publicContract": "RGX:SupportsContract; RGX:RequireContract; RGX:CompareVersions",
+      "performance": "Version checks run at load; shared engine remains development tooling.",
+      "testCoverage": [
+        "contract-handshake-check",
+        "contract-bundle-check",
+        "RGX-Hello E2E"
+      ],
+      "consumerCoverage": [
+        "RGX-Hello",
+        "RGXProfessions",
+        "Generated addons"
+      ],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "One canonical contract with no MCP-only semantics or version-number duplication.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "core.diagnostics",
+      "name": "Diagnostics and error isolation",
+      "classification": "Core",
+      "owner": "core/core.lua + core/systems/events.lua + core/systems/runtime.lua + core/systems/utils.lua",
+      "purpose": "Structured warnings, callback error containment and stable diagnostic labels.",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "declared-matrix",
+        "validation": "per-owner"
+      },
+      "dependencies": [],
+      "publicContract": "RGX:Print; RGX:Warn; RGX:Error; RGX:Debug",
+      "performance": "Error paths are exceptional and isolated from unrelated consumers.",
+      "testCoverage": [
+        "library-callback-check",
+        "inventory diagnostic scenarios",
+        "timer failure scenarios"
+      ],
+      "consumerCoverage": [
+        "All callback consumers"
+      ],
+      "licenseStatus": "RGX original",
+      "acceptanceCriteria": "Hostile formatting and error-handler acquisition cannot break shared dispatch.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "tooling.capability-registry",
+      "name": "Master capability registry and conformance gate",
+      "classification": "Tooling",
+      "owner": "tools/ci/capability-registry-check.mjs",
+      "purpose": "Persistent capability ownership, gap status, evidence, replacement mapping and implementation sequencing.",
+      "status": "Implemented",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "not-applicable",
+        "reason": "development-only tooling"
+      },
+      "dependencies": [],
+      "publicContract": "node tools/ci/capability-registry-check.mjs",
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [
+        "arch-check",
+        "capability registry drift validation"
+      ],
+      "consumerCoverage": [
+        "Maintainers",
+        "MCP and future authoring consumers"
+      ],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Generated registry matches runtime catalog plus authored research and remains CI-congruent.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "core.event-bucketing",
+      "name": "Event aggregation and dirty-state batching",
+      "classification": "Core",
+      "owner": "core/systems/events.lua",
+      "purpose": "Coalesce high-frequency events without losing payloads or changing consumer semantics.",
+      "status": "Implemented",
+      "priorArt": [
+        "AceBucket",
+        "AddonLearner demand-driven event research"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "declared-matrix",
+        "validation": "headless harness; real-client timing pending"
+      },
+      "dependencies": [
+        "core.events"
+      ],
+      "publicContract": "RGX:RegisterEvent / RegisterUnitEvent optional { bucket, key } options",
+      "performance": "10,000-event harness: one callback per burst, bounded pending keys and measured elapsed/heap deltas.",
+      "testCoverage": [
+        "event-bucketing-check: latest/keyed/nil/failure/unregister/cap semantics plus 10,000-event baseline comparison"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Keep opt-in current-state semantics only; transition streams remain unbucketed and real-client timing is verified separately.",
+      "trackingIssue": 134
+    },
+    {
+      "id": "library.triggers-reclassification",
+      "name": "RGXTriggers library ownership correction",
+      "classification": "Library",
+      "owner": "libraries/triggers/triggers.lua",
+      "purpose": "Align the generic clone-state store with library semantics while preserving its public contract.",
+      "status": "Blocked",
+      "priorArt": [],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.triggers"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [
+        "RGXTriggers global and getter consumers"
+      ],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Preserve module ID, global, getter, methods and state semantics across XML, catalog, tests and docs; audit consumers before moving.",
+      "trackingIssue": 135
+    },
+    {
+      "id": "library.conditions",
+      "name": "Conditional trigger evaluation",
+      "classification": "Library",
+      "owner": "libraries/triggers or libraries/conditions",
+      "purpose": "Evaluate conditional rules over generic trigger state without duplicating domain events.",
+      "status": "Discovered",
+      "priorArt": [
+        "WeakAuras",
+        "Scorpio"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.triggers"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Resolve one owner and authoring model before implementing an evaluation engine.",
+      "trackingIssue": 117
+    },
+    {
+      "id": "library.animations",
+      "name": "Animation composition and glows",
+      "classification": "Library",
+      "owner": "libraries/animations",
+      "purpose": "Transitions, fades, movement, pulses and button glows.",
+      "status": "Discovered",
+      "priorArt": [
+        "BazCore",
+        "LibCustomGlow",
+        "LibButtonGlow"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.design"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Use native animation/widget evidence and a current consumer before adding a public owner.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "library.comm",
+      "name": "Addon communication",
+      "classification": "Library",
+      "owner": "libraries/comm",
+      "purpose": "Queued, throttled addon messages with prioritization and channel discipline.",
+      "status": "Discovered",
+      "priorArt": [
+        "AceComm",
+        "ChatThrottleLib",
+        "LibAceCommQueue"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "core.events",
+        "library.serialization"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish a real consumer need and a safe channel/throttle contract first.",
+      "trackingIssue": 137
+    },
+    {
+      "id": "library.sync",
+      "name": "Differential synchronization",
+      "classification": "Library",
+      "owner": "libraries/sync",
+      "purpose": "Delta synchronization, recovery and resynchronization.",
+      "status": "Discovered",
+      "priorArt": [
+        "LibDeltaSync",
+        "LibGuildSync"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "library.comm",
+        "library.serialization"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Define data ownership, conflict rules and recovery semantics before transport work.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "library.serialization",
+      "name": "Structured serialization",
+      "classification": "Library",
+      "owner": "core/systems/database.lua",
+      "purpose": "General structured table encoding/decoding for import/export; any future extraction is a migration candidate, not a second owner.",
+      "status": "Partially implemented",
+      "priorArt": [
+        "AceSerializer",
+        "LibSerialize"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "declared-matrix",
+        "validation": "runtime harness; per-client confirmation pending"
+      },
+      "dependencies": [
+        "core.database"
+      ],
+      "publicContract": "RGX:SerializeTable; RGX:DeserializeTable",
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [
+        "database-runtime-test.lua:161-188",
+        "profile-persistence-check.mjs:200-206,467-488"
+      ],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Preserve general table round trips and evaluate any future extraction as a migration rather than a parallel serializer.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "library.compression",
+      "name": "Transfer compression",
+      "classification": "Library",
+      "owner": "libraries/serialization or libraries/compression",
+      "purpose": "Compact transferable data with chunking and reassembly.",
+      "status": "Discovered",
+      "priorArt": [
+        "LibDeflate"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "library.serialization"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Choose one data owner and evaluate native/simple algorithms, size and CPU cost before implementation.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "library.search",
+      "name": "Search and filtering",
+      "classification": "Library",
+      "owner": "libraries/search",
+      "purpose": "Query construction, indexing and filtering for items and other registries.",
+      "status": "Discovered",
+      "priorArt": [
+        "CustomSearch-1.0",
+        "LibItemSearch"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Define a reusable query contract and a concrete inventory or settings consumer.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "library.notifications",
+      "name": "Notifications and routing",
+      "classification": "Library",
+      "owner": "libraries/notifications",
+      "purpose": "Alerts, toasts and notification routing without per-consumer display plumbing.",
+      "status": "Discovered",
+      "priorArt": [
+        "LibToast",
+        "LibSink"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.ui"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Separate notification policy, routing and rendering before choosing a public contract.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "library.unitframes",
+      "name": "Reusable unit-frame components",
+      "classification": "Library",
+      "owner": "libraries/ui",
+      "purpose": "Composable unit-frame building blocks rather than a parallel oUF runtime.",
+      "status": "Discovered",
+      "priorArt": [
+        "oUF",
+        "ArenaLive Core",
+        "SuperVillain UI"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.ui",
+        "domain.units"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Resolve Units ownership, frame security and a maintained consumer before component implementation.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "library.ui-virtualization",
+      "name": "Virtualized lists, tables and trees",
+      "classification": "Library",
+      "owner": "libraries/ui",
+      "purpose": "Virtualized scrolling, sortable tables and tree views with bounded frame use.",
+      "status": "Discovered",
+      "priorArt": [
+        "Details Framework",
+        "AbstractFramework",
+        "TbdWidgets"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.ui"
+      ],
+      "publicContract": null,
+      "performance": "Benchmark frame reuse, allocation and scroll updates on large datasets.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Extend existing scroll/layout primitives and prove bounded allocations on long lists.",
+      "trackingIssue": 136
+    },
+    {
+      "id": "library.transactional-config",
+      "name": "Transactional configuration",
+      "classification": "Library",
+      "owner": "libraries/ui + core/systems/database.lua",
+      "purpose": "Apply, revert and reset workflows with searchable settings and confirmation paths.",
+      "status": "Discovered",
+      "priorArt": [
+        "NoobTaco-Config",
+        "LanternUX"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "core.database",
+        "module.ui"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Preserve profile semantics and visual restoration; do not build a second database.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "library.rich-content",
+      "name": "Markdown and SimpleHTML content",
+      "classification": "Library",
+      "owner": "libraries/ui",
+      "purpose": "Reusable markdown and SimpleHTML rendering for guides and dialogs.",
+      "status": "Discovered",
+      "priorArt": [
+        "LibSimpleHTMLMarkdown"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.ui"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Use native SimpleHTML where sufficient and define escaping/sanitization before a custom renderer.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "library.native-edit-mode",
+      "name": "Native Edit Mode integration",
+      "classification": "Library",
+      "owner": "libraries/display",
+      "purpose": "Screen snapping, alignment, docking and native Edit Mode integration.",
+      "status": "Researching",
+      "priorArt": [
+        "BazCore",
+        "SexyEditMode"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.display"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Distinguish the shipped custom drag editor from native Edit Mode before extending the contract.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "library.keybinds",
+      "name": "Keybinding registration and controls",
+      "classification": "Library",
+      "owner": "core + libraries/ui",
+      "purpose": "Keybinding registration and user-facing keybinding controls.",
+      "status": "Discovered",
+      "priorArt": [
+        "BazCore",
+        "C_KeyBindings",
+        "C_ClickBindings"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "core.compatibility",
+        "module.ui"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Separate Core registration from UI controls and verify protected mutation rules.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "core.pooling",
+      "name": "Object and frame pooling",
+      "classification": "Core",
+      "owner": "core + libraries/ui",
+      "purpose": "Reuse objects and frames to reduce allocation on high-churn interfaces.",
+      "status": "Discovered",
+      "priorArt": [
+        "AIOS"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "core.utils",
+        "module.ui"
+      ],
+      "publicContract": null,
+      "performance": "Requires allocation benchmarks and lifecycle/reset correctness before adoption.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Introduce pooling only for a measured hot path with complete reset semantics.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "data.packs",
+      "name": "Optional data-pack architecture",
+      "classification": "Data",
+      "owner": "data packs with build-time provenance",
+      "purpose": "Optional, load-on-demand datasets for spells, items, NPCs, quests, zones, travel, encounters, professions, collectibles, icons, sounds and atlases.",
+      "status": "Discovered",
+      "priorArt": [
+        "LibTaxiData",
+        "LibQuestDB",
+        "PeaversTravelData",
+        "PeaversIconSearchData"
+      ],
+      "apiEvidence": [],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "core.compatibility"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Require provenance, licensing, build compatibility and refresh process; do not enlarge the mandatory runtime without demonstrated need.",
+      "trackingIssue": 133
+    },
+    {
+      "id": "domain.units",
+      "name": "Units",
+      "classification": "Module",
+      "owner": "research: Units identity and state owner",
+      "purpose": "Unit identity, health, power and state without duplicating Cast, Auras, Range, Group or Nameplates.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:UnitDocumentation.lua:1-7",
+        "forever-ui:UnitHealPredictionCalculatorAPIDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.auras",
+        "module.combat"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "No dedicated Units adapter; Auras, Combat and compat own narrow unit operations.",
+      "nativeSurface": "Unit* globals; C_UnitAuras; unit script objects",
+      "researchFlags": [
+        "P",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.spells",
+      "name": "Spells",
+      "classification": "Module",
+      "owner": "research: Spells metadata and cooldown owner",
+      "purpose": "Spell metadata, charges and cooldowns with clear boundaries from Auras, Cast, Range and ActionBars.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:SpellDocumentation.lua:1-8",
+        "forever-ui:SpellBookDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.auras"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Core spell-info/cooldown helpers and Auras cooldown/readiness only.",
+      "nativeSurface": "C_Spell; C_SpellBook; legacy spell globals",
+      "researchFlags": [
+        "P",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.range",
+      "name": "Range",
+      "classification": "Module",
+      "owner": "research: Range estimation owner",
+      "purpose": "Distance and range estimation with tri-state results; never substitute map yards for spell range.",
+      "status": "Researching",
+      "priorArt": [
+        "LibRangeCheck",
+        "LibSpellRange"
+      ],
+      "apiEvidence": [
+        "forever-ui:SpellDocumentation.lua:62-70,948-962",
+        "forever-ui:UnitDocumentation.lua:1700-1714",
+        "forever-ui:SwingTimerDocumentation.lua:1-15"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.worldmap"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "No range owner; WorldMap geometric distance is not spell/unit range.",
+      "nativeSurface": "C_Spell.IsSpellInRange; UnitInRange; C_ActionBar; C_SwingTimer",
+      "researchFlags": [
+        "P",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.talents",
+      "name": "Talents",
+      "classification": "Module",
+      "owner": "research: Talents and specializations owner",
+      "purpose": "Talents, specializations and loadouts across expansion-specific models.",
+      "status": "Researching",
+      "priorArt": [
+        "LibSpecialization"
+      ],
+      "apiEvidence": [
+        "forever-ui:ClassTalentsDocumentation.lua:1-8",
+        "forever-ui:SharedTraitsDocumentation.lua:1-8",
+        "forever-ui:SpecializationInfoDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "None.",
+      "nativeSurface": "C_ClassTalents; C_Traits; C_SpecializationInfo; legacy specialization/glyph APIs",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.group",
+      "name": "Group",
+      "classification": "Module",
+      "owner": "research: Party and raid state owner",
+      "purpose": "Party/raid roster, roles, leadership and markers without absorbing LFG or Guild.",
+      "status": "Researching",
+      "priorArt": [
+        "LibGroupInSpecT",
+        "LibOpenRaid"
+      ],
+      "apiEvidence": [
+        "forever-ui:PartyInfoDocumentation.lua:1-8",
+        "forever-ui:PingManagerDocumentation.lua:1-8",
+        "forever-ui:PingManagerSecureDocumentation.lua:1-13"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Core party/raid membership, leave/uninvite and raid-target helpers only.",
+      "nativeSurface": "C_PartyInfo; party/raid globals; C_Ping; C_PingSecure",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.guild",
+      "name": "Guild",
+      "classification": "Module",
+      "owner": "research: Guild and club state owner",
+      "purpose": "Guild/club roster and permissions with explicit async and bank boundaries.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:GuildInfoDocumentation.lua:1-8",
+        "forever-ui:GuildBankDocumentation.lua:1-8",
+        "forever-ui:ClubDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "domain.group"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "None.",
+      "nativeSurface": "C_GuildInfo; C_GuildBank; C_Club; C_ClubFinder; legacy guild globals",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.encounters",
+      "name": "Encounters",
+      "classification": "Module",
+      "owner": "research: Encounter and boss information owner",
+      "purpose": "Encounter metadata, live state and warnings without duplicating Combat or Instances.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:EncounterInfoDocumentation.lua:1-12,38-45",
+        "forever-ui:EncounterJournalDocumentation.lua:1-35",
+        "forever-ui:EncounterTimelineDocumentation.lua:1-24"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.combat"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Combat owns ENCOUNTER_END and victory callbacks only.",
+      "nativeSurface": "C_EncounterJournal; C_EncounterInfo; C_EncounterEvents; C_EncounterTimeline; C_EncounterWarnings",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.actionbars",
+      "name": "ActionBars",
+      "classification": "Module",
+      "owner": "research: Action button and bar state owner",
+      "purpose": "Action slot identity, state and range with strict separation from protected slot mutation.",
+      "status": "Researching",
+      "priorArt": [
+        "LibActionButton"
+      ],
+      "apiEvidence": [
+        "forever-ui:ActionBarFrameDocumentation.lua:1-20"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "domain.spells"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "None; Auras cooldown state is not an action-bar adapter.",
+      "nativeSurface": "C_ActionBar; action buttons; secure action infrastructure",
+      "researchFlags": [
+        "P",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.nameplates",
+      "name": "Nameplates",
+      "classification": "Module",
+      "owner": "research: Nameplate lifecycle owner",
+      "purpose": "Nameplate lifecycle and normalized data while avoiding frame taint and forbidden-nameplate assumptions.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:NamePlateDocumentation.lua:1-24",
+        "forever-ui:NamePlateManagerDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "domain.units"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Core GetNamePlateForUnit/GetNamePlates wrappers only.",
+      "nativeSurface": "C_NamePlate; C_NamePlateManager; NamePlateFrame; nameplate lifecycle events",
+      "researchFlags": [
+        "P",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.cast",
+      "name": "Cast",
+      "classification": "Module",
+      "owner": "research: Casting and channeling state owner",
+      "purpose": "Cast/channel state, cast IDs and interruptibility with secret-value-aware snapshots.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:UnitDocumentation.lua:828-893",
+        "retail-ui:UnitDocumentation.lua:817-882"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "domain.units",
+        "domain.spells"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "None; Auras CastReadiness is not cast/channel state.",
+      "nativeSurface": "UnitCastingInfo; UnitChannelInfo; duration objects; UNIT_SPELLCAST_*; secrecy predicates",
+      "researchFlags": [
+        "P",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.healing",
+      "name": "Healing",
+      "classification": "Module",
+      "owner": "research: Permitted healing information owner",
+      "purpose": "Incoming healing, absorbs and prediction separately from combat-log heal events.",
+      "status": "Researching",
+      "priorArt": [
+        "LibHealComm"
+      ],
+      "apiEvidence": [
+        "forever-ui:UnitDocumentation.lua:72-78,1269-1315",
+        "forever-ui:UnitHealPredictionCalculatorAPIDocumentation.lua:1-45"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.combat"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Combat OnPlayerHealed/critical-heal callbacks on CLEU-capable flavors only.",
+      "nativeSurface": "UnitGetIncomingHeals; absorbs; UnitHealPredictionCalculator; healing combat events and meter APIs",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.dispels",
+      "name": "Dispels",
+      "classification": "Module",
+      "owner": "research: Dispel classification owner",
+      "purpose": "Dispel classification separate from aura metadata and protected casting decisions.",
+      "status": "Researching",
+      "priorArt": [
+        "LibDispel"
+      ],
+      "apiEvidence": [
+        "forever-ui:UnitAuraDocumentation.lua:190-223,264-283",
+        "forever-dump:GlobalAPI.lua:4784-4788"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.auras"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Auras exposes accessible aura snapshots and legacy dispelName only.",
+      "nativeSurface": "C_UnitAuras; legacy aura dispelName; secure spell actions",
+      "researchFlags": [
+        "P",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.currency",
+      "name": "Currency",
+      "classification": "Module",
+      "owner": "research: Currency balances and changes owner",
+      "purpose": "Currency balances and changes with distinct money, perks-currency and transfer semantics.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:CurrencyInfoDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.loot",
+        "module.tradingpost"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Loot currency-gain events and Trading Post perks-currency tracking only.",
+      "nativeSurface": "C_CurrencyInfo; money; perks currency; tokens; account transfers",
+      "researchFlags": [
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.professions",
+      "name": "Professions",
+      "classification": "Module",
+      "owner": "research: Recipe and crafting domain owner",
+      "purpose": "Recipes, reagents, ranks and crafting state without moving consumer recipe policy into Inventory.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:TradeSkillUIDocumentation.lua:1-8",
+        "forever-ui:CraftingOrderUIDocumentation.lua:1-8",
+        "forever-ui:ProfessionSpecUIDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.inventory"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Inventory supplies item counts and consumer-provided material arithmetic only.",
+      "nativeSurface": "C_TradeSkillUI; C_CraftingOrders; C_ProfSpecs; C_ResearchInfo",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.equipment",
+      "name": "Equipment",
+      "classification": "Module",
+      "owner": "research: Equipment and upgrade owner",
+      "purpose": "Equipped state, equipment sets and upgrades separately from inventory counts and item enhancement.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:EquipmentManagerDocumentation.lua:1-8",
+        "forever-ui:PaperDollInfoDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.inventory"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Inventory item counts/metadata only.",
+      "nativeSurface": "C_EquipmentSet; C_PaperDollInfo; C_Item; item-location APIs",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.auction",
+      "name": "Auction",
+      "classification": "Module",
+      "owner": "research: Auction House state owner",
+      "purpose": "Auction House search and selling state with throttling, permissions and server-side async behavior.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:AuctionHouseDocumentation.lua:1-8",
+        "forever-ui:BlackMarketInfoDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "None.",
+      "nativeSurface": "C_AuctionHouse; C_BlackMarketInfo; C_WowTokenUI",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.travel",
+      "name": "Travel",
+      "classification": "Module",
+      "owner": "research: Transportation state owner",
+      "purpose": "Taxi, navigation and summon state without conflating WorldMap geometry or protected travel actions.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:TaxiMapDocumentation.lua:1-8",
+        "forever-ui:InGameNavigationDocumentation.lua:1-8",
+        "forever-ui:SummonInfoDocumentation.lua:1-15"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.worldmap"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Core TakeTaxiNode helper plus WorldMap waypoints/nearest-place calculations only.",
+      "nativeSurface": "C_TaxiMap; C_Navigation; C_SummonInfo; C_IncomingSummon; taxi/transport globals",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.chat",
+      "name": "Chat",
+      "classification": "Module",
+      "owner": "research: Chat messages and classification owner",
+      "purpose": "Chat channels and classification separately from social presence, addon messages and protected sends.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:ChatInfoDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "None; Honor's honor-gain chat listener is not a chat owner.",
+      "nativeSurface": "C_ChatInfo; chat-frame FrameXML; communities; Battle.net and voice APIs",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.mail",
+      "name": "Mail",
+      "classification": "Module",
+      "owner": "research: Mailbox state owner",
+      "purpose": "Inbox/send state, attachment and money invariants with explicit mutation locks.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:MailInfoDocumentation.lua:1-12"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "None; bag acquisition does not provide mailbox state.",
+      "nativeSurface": "C_Mail; inbox/send/mail-item globals",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.characters",
+      "name": "Characters",
+      "classification": "Module",
+      "owner": "research: Active and account-wide character state owner",
+      "purpose": "Active-character and account-wide state with a clear boundary from login/Glue character selection.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:PlayerInfoDocumentation.lua:1-8",
+        "forever-ui:BarberShopDocumentation.lua:1-8",
+        "forever-dump:GlobalAPI.lua:766-789"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "core.database",
+        "module.levelup"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Database character keys and LevelUp callbacks only.",
+      "nativeSurface": "C_PlayerInfo; C_BarberShop; C_ClassTrial; C_CharacterServices; active-player identity",
+      "researchFlags": [
+        "P",
+        "A",
+        "S",
+        "C"
+      ]
+    },
+    {
+      "id": "domain.tracking",
+      "name": "Tracking",
+      "classification": "Module",
+      "owner": "research: Tracking types and state owner",
+      "purpose": "Separate minimap filters, content trackables and super-tracking instead of merging by name.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:ContentTrackingDocumentation.lua:1-27",
+        "forever-ui:MinimapDocumentation.lua:1-12,61-103",
+        "forever-ui:SuperTrackManagerDocumentation.lua:32-179"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.worldmap",
+        "module.quest"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "WorldMap enables super-tracking only for its own user waypoint.",
+      "nativeSurface": "C_ContentTracking; C_Minimap; C_SuperTrack; quest tracking",
+      "researchFlags": [
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.guides",
+      "name": "Guides",
+      "classification": "Module",
+      "owner": "research: Gameplay guide and journal owner",
+      "purpose": "Guide progression, journals and tutorials with a separate contract from quest state and settings/about pages.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:AdventureJournalDocumentation.lua:1-15",
+        "forever-ui:TutorialDocumentation.lua:1-35",
+        "forever-dump:GlobalAPI.lua:224-231"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.quest"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "None; libraries/ui/guide.lua is a settings/about page, not a gameplay-guide adapter.",
+      "nativeSurface": "C_AdventureJournal; C_EncounterJournal; C_Tutorial",
+      "researchFlags": [
+        "A",
+        "S",
+        "C"
+      ]
+    },
+    {
+      "id": "domain.instances",
+      "name": "Instances",
+      "classification": "Module",
+      "owner": "research: Instance, lockout and difficulty owner",
+      "purpose": "Dungeons, raids, lockouts, difficulty, M+ and scenario state separately from encounter events.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:InstanceDocumentation.lua:1-10",
+        "forever-ui:InstanceEncounterDocumentation.lua:1-8",
+        "forever-ui:RaidLocksDocumentation.lua:1-8",
+        "forever-ui:InstanceLeaverInfoDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "domain.encounters"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "No instance owner; Combat metadata and WorldMap's instance argument do not own lockouts or difficulty.",
+      "nativeSurface": "Instance globals; C_InstanceEncounter; C_RaidLocks; C_InstanceLeaver; C_ChallengeMode; C_MythicPlus",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.calendar",
+      "name": "Calendar",
+      "classification": "Module",
+      "owner": "research: Calendar and scheduled event owner",
+      "purpose": "Calendar events and schedules with permissions and a clear split from Traveler's Log activities.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:CalendarDocumentation.lua:1-14",
+        "forever-ui:EventSchedulerUIDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "None.",
+      "nativeSurface": "C_Calendar; C_EventScheduler",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.containers-bank",
+      "name": "Bags, containers and bank",
+      "classification": "Module",
+      "owner": "research: Container and bank state owner",
+      "purpose": "Container mutation, sorting, bank tabs and transfers separately from item counts.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:ContainerDocumentation.lua:1-8",
+        "forever-ui:BankDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.inventory"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Inventory counts include bank flags; Loot detects new bag items; no mutation owner.",
+      "nativeSurface": "C_Container; C_Bank; item-location APIs",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.merchant-trade",
+      "name": "Merchants and player trade",
+      "classification": "Module",
+      "owner": "research: Merchant and trade flow owner",
+      "purpose": "Buy/sell/repair and player trade confirmation state with item and money locks.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:MerchantFrameDocumentation.lua:1-8",
+        "forever-ui:TradeInfoDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.inventory"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "None.",
+      "nativeSurface": "C_MerchantFrame; C_TradeInfo",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.lfg",
+      "name": "LFG and queueing",
+      "classification": "Module",
+      "owner": "research: Queue and group-finder owner",
+      "purpose": "Queue/search/application lifecycle distinct from party roster and instance state.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:LFGInfoDocumentation.lua:1-8",
+        "forever-ui:LFGListInfoDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "domain.group",
+        "domain.instances"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Core group helpers do not cover queue/search state.",
+      "nativeSurface": "C_LFGInfo; C_LFGList; queue-specific globals/structures",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.social",
+      "name": "Friends, Battle.net, communities and voice",
+      "classification": "Module",
+      "owner": "research: Social presence and moderation owner",
+      "purpose": "Friends, clubs, voice, mentorship and reporting with social permissions separated from chat transport.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:FriendListDocumentation.lua:1-8",
+        "forever-ui:BattleNetDocumentation.lua:1-8",
+        "forever-ui:VoiceChatDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "domain.chat",
+        "domain.guild"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "None.",
+      "nativeSurface": "C_FriendList; C_BattleNet; C_Club; C_VoiceChat; C_RecentAllies; C_PlayerMentorship; C_ReportSystem",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.pvp",
+      "name": "Broader PvP",
+      "classification": "Module",
+      "owner": "research: PvP match and rating owner",
+      "purpose": "Rated stats, match state, war mode and battlegrounds beyond honor gain.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:PvpInfoDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.honor"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Honor tracks honor level/gain; Combat has match-victory handling only.",
+      "nativeSurface": "C_PvP; battlefield/arena/rating/war-mode APIs",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.weekly-rewards",
+      "name": "Weekly rewards and Great Vault",
+      "classification": "Module",
+      "owner": "research: Weekly reward state owner",
+      "purpose": "Great Vault generation/claim state and weekly reset availability.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:WeeklyRewardsDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "domain.instances"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "None.",
+      "nativeSurface": "C_WeeklyRewards",
+      "researchFlags": [
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.transmog",
+      "name": "Transmogrification and appearance",
+      "classification": "Module",
+      "owner": "research: Appearance collection and outfit owner",
+      "purpose": "Appearance collection, outfit management and applying transmog as separate capabilities.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:TransmogDocumentation.lua:1-8",
+        "forever-ui:TransmogItemsDocumentation.lua:1-12"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.collectibles",
+        "domain.equipment"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Collectibles has only a new-source unlock callback and is Retail-gated.",
+      "nativeSurface": "C_Transmog; C_TransmogCollection; C_TransmogSets; C_TransmogOutfitInfo",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.item-enhancement",
+      "name": "Item sockets, upgrades and conversion",
+      "classification": "Module",
+      "owner": "research: Item enhancement owner",
+      "purpose": "Sockets, upgrades, conversion and scrapping with item-location identity and protected mutations.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:ItemSocketInfoDocumentation.lua:1-8",
+        "forever-ui:ItemInteractionUIDocumentation.lua:1-8",
+        "forever-ui:ItemUpgradeDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "domain.equipment"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Inventory and Loot do not own enhancement state.",
+      "nativeSurface": "C_ItemSocketInfo; C_ItemInteraction; C_ItemUpgrade; C_ScrappingMachineUI",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.hunter-pets",
+      "name": "Hunter pets and stables",
+      "classification": "Module",
+      "owner": "research: Hunter pet and stable owner",
+      "purpose": "Hunter pets and stable state distinct from battle pets and collectible unlocks.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:PetInfoDocumentation.lua:1-8",
+        "forever-ui:StableInfoDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.petbattles",
+        "module.collectibles"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "PetBattles and Collectibles do not own hunter-pet/stable state.",
+      "nativeSurface": "C_PetInfo; C_StableInfo",
+      "researchFlags": [
+        "P",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.threat-control",
+      "name": "Threat, loss of control and death recap",
+      "classification": "Module",
+      "owner": "research: Threat and loss-of-control owner",
+      "purpose": "Threat, loss-of-control and death recap with secret-value-safe unit comparisons.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:ThreatDocumentation.lua:1-12",
+        "forever-ui:LossOfControlDocumentation.lua:1-8",
+        "forever-ui:DeathRecapDocumentation.lua:1-13"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.combat",
+        "domain.units"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Combat handles combat state and PLAYER_DEAD, not threat/LOC/recap.",
+      "nativeSurface": "Threat/Unit globals; C_LossOfControl; C_DeathInfo; C_DeathRecap",
+      "researchFlags": [
+        "P",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.combat-presentation",
+      "name": "Damage meters, combat text/audio and swing timers",
+      "classification": "Module",
+      "owner": "research: Combat presentation and swing owner",
+      "purpose": "Damage meters, combat text/audio and swing timers separately from Combat's narrow callbacks.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:DamageMeterDocumentation.lua:1-8",
+        "forever-ui:CombatAudioAlertDocumentation.lua:1-8",
+        "forever-ui:CombatTextDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.combat"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Combat's narrow CLEU callbacks are not a meter/audio/swing adapter.",
+      "nativeSurface": "C_DamageMeter; C_CombatText; C_CombatAudioAlert; C_SwingTimer",
+      "researchFlags": [
+        "P",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.cooldown-assisted",
+      "name": "Cooldown viewer and assisted combat",
+      "classification": "Module",
+      "owner": "research: Cooldown viewer and assisted-action owner",
+      "purpose": "Cooldown viewer, assisted combat and spell overlays without conflating Auras readiness or protected action use.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:CooldownViewerDocumentation.lua:1-8",
+        "forever-ui:AssistedCombatDocumentation.lua:1-8",
+        "forever-ui:SpellActivationOverlayDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.auras",
+        "domain.spells"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Auras has a specific fail-closed cooldown/readiness contract only.",
+      "nativeSurface": "C_CooldownViewer; C_AssistedCombat; C_SpellActivationOverlay",
+      "researchFlags": [
+        "P",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.scenarios-widgets",
+      "name": "Scenarios, world state and widgets",
+      "classification": "Module",
+      "owner": "research: Scenario and widget state owner",
+      "purpose": "Scenario stages, world state, POIs, widgets and vignettes without mixing feature-specific Delve/Prey logic.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:ScenarioInfoDocumentation.lua:1-8",
+        "forever-ui:AreaPoiInfoDocumentation.lua:1-8",
+        "forever-ui:VignetteInfoDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.delves",
+        "module.prey"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Delves and Prey consume only their specific widget/vignette/aura paths.",
+      "nativeSurface": "C_ScenarioInfo; C_WorldStateInfo; C_AreaPoiInfo; C_UIWidgetManager; C_VignetteInfo",
+      "researchFlags": [
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.legacy-expansions",
+      "name": "Garrison, covenant and soulbind systems",
+      "classification": "Module",
+      "owner": "research: Expansion-specific legacy owner",
+      "purpose": "Garrison/covenant/soulbind and artifact-era systems only if active consumers justify them.",
+      "status": "Discovered",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:GarrisonInfoDocumentation.lua:1-8",
+        "forever-ui:CovenantsDocumentation.lua:1-8",
+        "forever-ui:SoulbindsDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.reputation"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Reputation reads only active covenant ID for legacy renown handling.",
+      "nativeSurface": "C_Garrison; C_Covenants; C_Soulbinds; expansion-specific artifact/Azerite APIs",
+      "researchFlags": [
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.macros-bindings",
+      "name": "Macros and click bindings",
+      "classification": "Module",
+      "owner": "research: Macro and click-binding owner",
+      "purpose": "Macros and click bindings with protected mutation and action execution kept explicit.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:UIMacrosDocumentation.lua:1-12",
+        "forever-ui:KeyBindingsDocumentation.lua:1-8",
+        "forever-ui:ClickBindingsDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "library.keybinds",
+        "domain.actionbars"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "None.",
+      "nativeSurface": "C_Macro; C_KeyBindings; C_ClickBindings",
+      "researchFlags": [
+        "P",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.vehicles-totems",
+      "name": "Vehicles, totems and summons",
+      "classification": "Module",
+      "owner": "research: Vehicle, totem and summon owner",
+      "purpose": "Vehicle/totem/summon state with protected actions and incomplete reference surfaces reconciled.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:VehicleDocumentation.lua:1-15",
+        "forever-ui:TotemDocumentation.lua:1-12",
+        "forever-ui:IncomingSummonDocumentation.lua:1-13"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "domain.travel"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "None beyond generic unit use.",
+      "nativeSurface": "Vehicle/Unit globals; totem globals; C_SummonInfo; C_IncomingSummon; C_Vehicle",
+      "researchFlags": [
+        "P",
+        "S",
+        "C"
+      ]
+    },
+    {
+      "id": "domain.npc-interaction",
+      "name": "Gossip, trainers and player choices",
+      "classification": "Module",
+      "owner": "research: NPC interaction owner",
+      "purpose": "Gossip, trainer, player-choice and interaction lifecycle without merging quest or profession policy.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:GossipInfoDocumentation.lua:1-8",
+        "forever-ui:PlayerChoiceDocumentation.lua:1-8",
+        "forever-ui:TrainerDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.quest"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Core gossip-option helpers; Delves uses gossip friendship data for its companion.",
+      "nativeSurface": "C_GossipInfo; C_Trainer; C_PlayerChoice; C_PlayerInteractionManager",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.loot-systems",
+      "name": "Loot rolls, history and world objects",
+      "classification": "Module",
+      "owner": "research: Loot roll/history/journal owner",
+      "purpose": "Loot rolls, history, journals and world loot objects separately from bag acquisition.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:LootDocumentation.lua:1-8",
+        "forever-ui:LootHistoryDocumentation.lua:1-8",
+        "forever-ui:LootJournalDocumentation.lua:1-8",
+        "forever-ui:WorldLootObjectDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.loot"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "Loot detects newly arrived bag items and currency gains only.",
+      "nativeSurface": "C_Loot; C_LootHistory; C_LootJournal; C_WorldLootObject",
+      "researchFlags": [
+        "P",
+        "A",
+        "S"
+      ]
+    },
+    {
+      "id": "domain.travelers-log",
+      "name": "Traveler's Log and perks activities",
+      "classification": "Module",
+      "owner": "research: Perks activity owner",
+      "purpose": "Traveler's Log activity progress/rewards separately from Trading Post purchases and perks currency.",
+      "status": "Researching",
+      "priorArt": [],
+      "apiEvidence": [
+        "forever-ui:PerksActivitiesDocumentation.lua:1-8",
+        "forever-ui:PerksProgramDocumentation.lua:1-8"
+      ],
+      "clientSupport": {
+        "assessment": "pending"
+      },
+      "dependencies": [
+        "module.tradingpost"
+      ],
+      "publicContract": null,
+      "performance": "Not yet assessed; no performance claim is implied.",
+      "testCoverage": [],
+      "consumerCoverage": [],
+      "licenseStatus": "Research only; no source reuse approved",
+      "acceptanceCriteria": "Establish owner, evidence, consumer need and client-safe validation before implementation.",
+      "trackingIssue": 133,
+      "currentOwner": "TradingPost owns purchases and perks-currency changes only.",
+      "nativeSurface": "C_PerksActivities; C_PerksProgram",
+      "researchFlags": [
+        "A",
+        "S"
+      ]
+    }
+  ],
+  "ownershipReviews": [
+    {
+      "capabilityId": "module.triggers",
+      "currentOwner": "modules/triggers/triggers.lua (category game)",
+      "recommendedOwner": "libraries/triggers/triggers.lua (category library)",
+      "decision": "Semantically a library; migrate only after consumer audit",
+      "rationale": "Generic clone registry/diff/progress with no event subscriptions or flavor gate; preserve global/getter/API semantics.",
+      "status": "Designed"
+    },
+    {
+      "capabilityId": "module.inventory",
+      "currentOwner": "modules/inventory/inventory.lua owns counts and consumer-supplied material arithmetic",
+      "recommendedOwner": "Inventory owns items/material counts; Equipment owns equipped state; Professions owns recipe domain state",
+      "decision": "Do not merge item counts, equipment and recipes",
+      "rationale": "Prevent a single items god-module and keep consumer recipe selection outside Inventory.",
+      "status": "Designed"
+    },
+    {
+      "capabilityId": "module.combat",
+      "currentOwner": "modules/combat/combat.lua owns combat state and narrow callbacks",
+      "recommendedOwner": "Combat for combat state; Encounters for encounter metadata/timeline; Instances for lockouts/difficulty",
+      "decision": "Extend Combat only for intrinsic combat signals",
+      "rationale": "EncounterJournal, live encounter state and instance lockouts are distinct domains.",
+      "status": "Designed"
+    },
+    {
+      "capabilityId": "domain.units",
+      "currentOwner": "No general Units owner; Auras/Combat/compat hold narrow unit operations",
+      "recommendedOwner": "Research a Units identity/state owner; keep Cast and specialized state separate",
+      "decision": "Resolve unit identity, health/power secrecy and token comparability before APIs",
+      "rationale": "Avoid duplicating Cast, Auras, Range, Group and Nameplate state.",
+      "status": "Researching"
+    },
+    {
+      "capabilityId": "module.auras",
+      "currentOwner": "modules/auras/auras.lua owns aura state and specific readiness",
+      "recommendedOwner": "Auras for aura state; Spells for spell metadata/cooldowns; Dispels for classification only if justified",
+      "decision": "Do not turn Auras into a general Spells or ActionBars owner",
+      "rationale": "Current CastReadiness is a narrow contract, not full cast or spell state.",
+      "status": "Designed"
+    },
+    {
+      "capabilityId": "domain.group",
+      "currentOwner": "Core has narrow party/raid helpers; no LFG owner",
+      "recommendedOwner": "Group for party/raid; Guild for guild/club; LFG as a separate queue domain if needed",
+      "decision": "Separate roster, guild and queue state",
+      "rationale": "Permissions, async state and lifecycle differ across these domains.",
+      "status": "Researching"
+    },
+    {
+      "capabilityId": "module.worldmap",
+      "currentOwner": "modules/worldmap/worldmap.lua owns coordinates, pins and nearest-place lookup",
+      "recommendedOwner": "WorldMap for map geometry/pins; Travel for taxi/navigation/summons only with consumer need",
+      "decision": "Do not substitute geometric distance for spell range or taxi state",
+      "rationale": "Map navigation, spell range and protected travel actions are different capabilities.",
+      "status": "Designed"
+    },
+    {
+      "capabilityId": "module.quest",
+      "currentOwner": "modules/quest/quest.lua owns quest lifecycle/progress",
+      "recommendedOwner": "Quest for quest state; Guides for guide/journal/tutorial content only if required",
+      "decision": "Keep progression data separate from presentation guides",
+      "rationale": "AdventureJournal and Tutorial references are incomplete and do not justify a guide runtime by themselves.",
+      "status": "Researching"
+    },
+    {
+      "capabilityId": "module.sharedmedia",
+      "currentOwner": "SharedMedia generic paths; Fonts/Textures/Sound specialized registries; Colors/Design color ownership",
+      "recommendedOwner": "SharedMedia for generic discovery/interoperability; specialized libraries for metadata/behavior",
+      "decision": "Do not create an automatic unified mirror of specialized registries",
+      "rationale": "SharedMedia scans sound only; Fonts, Textures and Sound own their specialized handles/defaults/application.",
+      "status": "Designed"
+    },
+    {
+      "capabilityId": "library.compression",
+      "currentOwner": "No general transfer owner",
+      "recommendedOwner": "Evaluate one serialization/data owner; charts belong in UI and keybinding controls in UI with Core registration",
+      "decision": "Consolidate supporting capabilities instead of creating one directory per noun",
+      "rationale": "The candidate count is not a mandate for new public namespaces.",
+      "status": "Designed"
+    }
+  ],
+  "replacementMatrix": [
+    {
+      "traditional": "LibStub",
+      "destination": "Core registry",
+      "capabilityId": "core.registration",
+      "status": "Implemented",
+      "rationale": "One framework instance and registry; no LibStub version negotiation."
+    },
+    {
+      "traditional": "AceAddon",
+      "destination": "RGXAddon",
+      "capabilityId": "core.addon-factory",
+      "status": "Implemented",
+      "rationale": "Declarative addon factory and lifecycle, not API-compatible emulation."
+    },
+    {
+      "traditional": "AceEvent",
+      "destination": "Core events",
+      "capabilityId": "core.events",
+      "status": "Implemented",
+      "rationale": "Central event/message/emitter dispatch."
+    },
+    {
+      "traditional": "AceTimer",
+      "destination": "Core scheduling",
+      "capabilityId": "core.scheduling",
+      "status": "Implemented",
+      "rationale": "Budgeted After/Every/CancelTimer driver."
+    },
+    {
+      "traditional": "AceHook",
+      "destination": "Core hooks",
+      "capabilityId": "core.scheduling",
+      "status": "Implemented",
+      "rationale": "Central secure post-hook owner."
+    },
+    {
+      "traditional": "AceConsole",
+      "destination": "Core slash",
+      "capabilityId": "core.slash",
+      "status": "Implemented",
+      "rationale": "Central slash registration."
+    },
+    {
+      "traditional": "AceDB",
+      "destination": "Core database",
+      "capabilityId": "core.database",
+      "status": "Implemented",
+      "rationale": "Profiles, migrations and SavedVariables adoption."
+    },
+    {
+      "traditional": "AceDBOptions",
+      "destination": "RGXUI",
+      "capabilityId": "module.ui",
+      "status": "Implemented",
+      "rationale": "Options and profile-aware controls, not an AceConfig compatibility layer."
+    },
+    {
+      "traditional": "AceConfig",
+      "destination": "RGXAddon / RGXUI",
+      "capabilityId": "core.addon-factory",
+      "status": "Implemented",
+      "rationale": "Declarative options with existing UI composition."
+    },
+    {
+      "traditional": "AceGUI",
+      "destination": "RGXUI",
+      "capabilityId": "module.ui",
+      "status": "Partially implemented",
+      "rationale": "Reusable widgets exist; complete AceGUI widget coverage is not claimed."
+    },
+    {
+      "traditional": "AceLocale",
+      "destination": "RGXLocale",
+      "capabilityId": "module.locale",
+      "status": "Implemented",
+      "rationale": "Framework-owned locale registry and overrides."
+    },
+    {
+      "traditional": "CallbackHandler",
+      "destination": "Core callback dispatch",
+      "capabilityId": "core.events",
+      "status": "Implemented",
+      "rationale": "Failure-isolated messages and emitters."
+    },
+    {
+      "traditional": "LibSharedMedia",
+      "destination": "RGXSharedMedia",
+      "capabilityId": "module.sharedmedia",
+      "status": "Implemented",
+      "rationale": "Generic pack/path registration and interoperability; specialized behavior remains separate."
+    },
+    {
+      "traditional": "LibDataBroker",
+      "destination": "RGXDataBroker",
+      "capabilityId": "module.databroker",
+      "status": "Implemented",
+      "rationale": "Observable data objects and notifications."
+    },
+    {
+      "traditional": "LibDBIcon",
+      "destination": "RGXMinimap",
+      "capabilityId": "module.minimap",
+      "status": "Implemented",
+      "rationale": "Minimap and compartment buttons."
+    },
+    {
+      "traditional": "LibUIDropDownMenu",
+      "destination": "RGXDropdowns",
+      "capabilityId": "module.dropdowns",
+      "status": "Implemented",
+      "rationale": "Nested/native menu composition."
+    },
+    {
+      "traditional": "LibCandyBar",
+      "destination": "RGXTimers",
+      "capabilityId": "module.timers",
+      "status": "Implemented",
+      "rationale": "Countdown/progress components."
+    },
+    {
+      "traditional": "HereBeDragons",
+      "destination": "RGXWorldMap",
+      "capabilityId": "module.worldmap",
+      "status": "Partially implemented",
+      "rationale": "Map coordinates/pins exist; comprehensive HereBeDragons compatibility is not claimed."
+    },
+    {
+      "traditional": "AceSerializer",
+      "destination": "Serialization infrastructure",
+      "capabilityId": "library.serialization",
+      "status": "Partially implemented",
+      "rationale": "General table serialization exists in Core; broader transport compatibility is not claimed."
+    },
+    {
+      "traditional": "AceBucket",
+      "destination": "Core event aggregation",
+      "capabilityId": "core.event-bucketing",
+      "status": "Implemented",
+      "rationale": "Scoped opt-in latest-per-key bucketing with regression and burst evidence; not a universal AceBucket replacement."
+    },
+    {
+      "traditional": "AceComm",
+      "destination": "RGXComm",
+      "capabilityId": "library.comm",
+      "status": "Discovered",
+      "rationale": "Requires a real consumer and channel contract."
+    },
+    {
+      "traditional": "ChatThrottleLib",
+      "destination": "RGXComm",
+      "capabilityId": "library.comm",
+      "status": "Discovered",
+      "rationale": "Throttling belongs to the communication owner."
+    },
+    {
+      "traditional": "LibAceCommQueue",
+      "destination": "RGXComm",
+      "capabilityId": "library.comm",
+      "status": "Discovered",
+      "rationale": "Queue discipline belongs to the communication owner."
+    },
+    {
+      "traditional": "LibDeltaSync",
+      "destination": "Synchronization infrastructure",
+      "capabilityId": "library.sync",
+      "status": "Discovered",
+      "rationale": "Differential sync and recovery are not implemented."
+    },
+    {
+      "traditional": "LibSerialize",
+      "destination": "Serialization infrastructure",
+      "capabilityId": "library.serialization",
+      "status": "Partially implemented",
+      "rationale": "Core table serialization exists; a general LibSerialize-compatible surface is not claimed."
+    },
+    {
+      "traditional": "LibDeflate",
+      "destination": "Compression infrastructure",
+      "capabilityId": "library.compression",
+      "status": "Discovered",
+      "rationale": "No compression owner is implemented."
+    },
+    {
+      "traditional": "LibCustomGlow",
+      "destination": "Animation infrastructure",
+      "capabilityId": "library.animations",
+      "status": "Discovered",
+      "rationale": "Animation composition remains research."
+    },
+    {
+      "traditional": "LibButtonGlow",
+      "destination": "Animation infrastructure",
+      "capabilityId": "library.animations",
+      "status": "Discovered",
+      "rationale": "Button glow belongs to the same animation research owner."
+    },
+    {
+      "traditional": "LibEditMode",
+      "destination": "RGXDisplay",
+      "capabilityId": "library.native-edit-mode",
+      "status": "Researching",
+      "rationale": "The shipped custom drag editor is not native Edit Mode integration."
+    },
+    {
+      "traditional": "LibQTip",
+      "destination": "RGXTooltip",
+      "capabilityId": "module.tooltip",
+      "status": "Partially implemented",
+      "rationale": "Composed tooltips exist; LibQTip compatibility is not claimed."
+    },
+    {
+      "traditional": "LibToast",
+      "destination": "Notification infrastructure",
+      "capabilityId": "library.notifications",
+      "status": "Discovered",
+      "rationale": "Notification routing remains research."
+    },
+    {
+      "traditional": "LibSink",
+      "destination": "Notification routing",
+      "capabilityId": "library.notifications",
+      "status": "Discovered",
+      "rationale": "Sink routing belongs to the same notification owner."
+    },
+    {
+      "traditional": "Masque",
+      "destination": "RGXDesign",
+      "capabilityId": "module.design",
+      "status": "Partially implemented",
+      "rationale": "Theme/skin mechanisms exist; full Masque replacement is not claimed."
+    },
+    {
+      "traditional": "LibGetFrame",
+      "destination": "Frame utilities",
+      "capabilityId": "module.display",
+      "status": "Partially implemented",
+      "rationale": "Display owns positioned elements; general frame discovery is not a separate public library."
+    },
+    {
+      "traditional": "LibItemSearch",
+      "destination": "Search / Inventory",
+      "capabilityId": "library.search",
+      "status": "Discovered",
+      "rationale": "Search contract and consumer are not established."
+    },
+    {
+      "traditional": "CustomSearch",
+      "destination": "Search infrastructure",
+      "capabilityId": "library.search",
+      "status": "Discovered",
+      "rationale": "Query construction belongs to the same search owner."
+    },
+    {
+      "traditional": "LibRangeCheck",
+      "destination": "RGXRange",
+      "capabilityId": "domain.range",
+      "status": "Researching",
+      "rationale": "Range semantics and secrecy require research; map distance is not a substitute."
+    },
+    {
+      "traditional": "LibSpellRange",
+      "destination": "RGXRange",
+      "capabilityId": "domain.range",
+      "status": "Researching",
+      "rationale": "Spell/action range needs one domain owner."
+    },
+    {
+      "traditional": "LibPlayerSpells",
+      "destination": "RGXSpells / Data",
+      "capabilityId": "domain.spells",
+      "status": "Researching",
+      "rationale": "Spell metadata scope and native API differences are unresolved."
+    },
+    {
+      "traditional": "LibSpecialization",
+      "destination": "RGXTalents",
+      "capabilityId": "domain.talents",
+      "status": "Researching",
+      "rationale": "Talent/loadout models vary by client."
+    },
+    {
+      "traditional": "LibGroupInSpecT",
+      "destination": "RGXGroup",
+      "capabilityId": "domain.group",
+      "status": "Researching",
+      "rationale": "Group inspection and roster state need a bounded owner."
+    },
+    {
+      "traditional": "LibOpenRaid",
+      "destination": "Group / Communication",
+      "capabilityId": "domain.group",
+      "status": "Researching",
+      "rationale": "Do not create parallel group and communication contracts without a consumer."
+    },
+    {
+      "traditional": "LibHealComm",
+      "destination": "Permitted healing information",
+      "capabilityId": "domain.healing",
+      "status": "Researching",
+      "rationale": "Healing prediction and restricted values require native evidence."
+    },
+    {
+      "traditional": "LibDispel",
+      "destination": "Dispel functionality",
+      "capabilityId": "domain.dispels",
+      "status": "Researching",
+      "rationale": "Aura classification and protected dispel actions are separate concerns."
+    },
+    {
+      "traditional": "LibActionButton",
+      "destination": "RGXActionBars",
+      "capabilityId": "domain.actionbars",
+      "status": "Researching",
+      "rationale": "Secure action-button behavior is not implied by spell queries."
+    },
+    {
+      "traditional": "LibTaxiData",
+      "destination": "Travel data",
+      "capabilityId": "data.packs",
+      "status": "Discovered",
+      "rationale": "Travel data belongs in a provenance-controlled data pack."
+    },
+    {
+      "traditional": "LibQuestDB",
+      "destination": "Quest data",
+      "capabilityId": "data.packs",
+      "status": "Discovered",
+      "rationale": "Static quest data requires provenance and refresh rules."
+    },
+    {
+      "traditional": "oUF",
+      "destination": "Units and unit-frame components",
+      "capabilityId": "library.unitframes",
+      "status": "Discovered",
+      "rationale": "Reusable components are a candidate, not an oUF-compatible runtime."
+    }
+  ],
+  "implementationSequence": [
+    {
+      "order": 1,
+      "capabilityId": "tooling.capability-registry",
+      "rationale": "Establish source-of-truth ownership and evidence before runtime expansion; delivered by this Phase 0 change."
+    },
+    {
+      "order": 2,
+      "capabilityId": "core.event-bucketing",
+      "rationale": "Delivered scoped opt-in latest-per-key bucketing with ordering, payload, failure, cancellation and 10,000-event burst evidence."
+    },
+    {
+      "order": 3,
+      "capabilityId": "library.triggers-reclassification",
+      "rationale": "Semantically justified but blocked on consumer audit and synchronized public-contract migration."
+    },
+    {
+      "order": 4,
+      "capabilityId": "library.ui-virtualization",
+      "rationale": "Interface expansion follows Core/resource ownership and requires a real long-list consumer and allocation benchmark."
+    },
+    {
+      "order": 5,
+      "capabilityId": "library.serialization",
+      "rationale": "Harden and scope the existing Core table serializer before any transport design; do not create a parallel owner."
+    },
+    {
+      "order": 6,
+      "capabilityId": "library.comm",
+      "rationale": "Communication follows serialization and a maintained consumer rather than speculative transport APIs."
+    }
+  ],
+  "firstImplementation": {
+    "capabilityId": "tooling.capability-registry",
+    "owner": "tools/ci/capability-registry-check.mjs",
+    "status": "Implemented in the Phase 0 MR",
+    "evidence": "arch-check and generated-registry drift validation"
+  }
+}

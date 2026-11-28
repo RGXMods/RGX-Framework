@@ -1,0 +1,589 @@
+{
+  "planVersion": 1,
+  "description": "Authored Core, research, ownership and sequencing inputs for the master capability registry. Shipped module identity remains runtime-derived in rgx-api.catalog.json; domain-research.json owns native-domain gap evidence.",
+  "referenceSets": [
+    {
+      "id": "forever-ui",
+      "flavor": "forever",
+      "build": "1.60.1.71139",
+      "commit": "d9c22e32cb240afb82bb2ecefbb78ef935333f59",
+      "root": ".reference/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/"
+    },
+    {
+      "id": "retail-ui",
+      "flavor": "retail",
+      "build": "12.1.5.70961",
+      "commit": "ab5cb850a3f65e742959e379c4689353a2f4549f",
+      "root": ".reference/wow-ui-source/retail/Interface/AddOns/Blizzard_APIDocumentationGenerated/"
+    },
+    {
+      "id": "forever-dump",
+      "flavor": "forever",
+      "build": "1.60.1.70938",
+      "commit": "e230342a476eb4ef484ba7b34adc0da6ecc6acc1",
+      "root": ".reference/wow-api-dump/forever/Resources/"
+    },
+    {
+      "id": "retail-dump",
+      "flavor": "retail",
+      "build": "12.1.5.70448",
+      "commit": "f3b334b33bd19fa6a0250f7922ecfa83db7fe356",
+      "root": ".reference/wow-api-dump/retail/Resources/"
+    }
+  ],
+  "coreSystems": [
+    {
+      "id": "core.registration",
+      "name": "Framework and module registration",
+      "classification": "Core",
+      "owner": "core/core.lua",
+      "purpose": "One framework object, named module registration, aliases, getters and availability-aware lookup.",
+      "status": "Implemented",
+      "publicContract": "RGX:RegisterModule; RGX:GetModule; RGX:GetLoadedModules",
+      "performance": "Registry lookup is direct table access with alias fallback.",
+      "testCoverage": ["module-graph-check", "api-catalog-check", "runtime lifecycle harnesses"],
+      "consumerCoverage": ["All registered modules and RGX consumers"],
+      "acceptanceCriteria": "Preserve one registry and the frozen public global surface."
+    },
+    {
+      "id": "core.lifecycle",
+      "name": "Lifecycle and initialization",
+      "classification": "Core",
+      "owner": "core/initialization.lua",
+      "purpose": "Readiness, post-load initialization, TryInit, database adoption and convenience wrappers.",
+      "status": "Implemented",
+      "publicContract": "RGX:IsReady; RGX:OnReady; RGX:OnLogin; RGX:OnLoad",
+      "performance": "Initialization runs once per framework load; no recurring lifecycle driver.",
+      "testCoverage": ["login-runtime-check", "actual module initialization scenarios"],
+      "consumerCoverage": ["RGXAddon consumers"],
+      "acceptanceCriteria": "Keep file loading, registration, initialization and client availability as distinct states."
+    },
+    {
+      "id": "core.compatibility",
+      "name": "Client compatibility and capability gates",
+      "classification": "Core",
+      "owner": "core/compat.lua + core/compat_api.lua",
+      "purpose": "Centralized client detection, normalized API adapters, module support and restricted-value boundaries.",
+      "status": "Implemented",
+      "publicContract": "RGX.Capabilities; RGX:ModuleSupported; RGX:IsModuleAvailable; RGX.API",
+      "performance": "Capability probes are computed once at load where possible.",
+      "testCoverage": ["compat-loader-check", "flavor-check", "api-ownership-check"],
+      "consumerCoverage": ["Capability-gated modules and consumers"],
+      "acceptanceCriteria": "Verify each API by flavor/build/source and fail closed on unknown or restricted values."
+    },
+    {
+      "id": "core.addon-factory",
+      "name": "Declarative addon factory",
+      "classification": "Core",
+      "owner": "core/core.lua",
+      "purpose": "Compile RGXAddon declarations into scoped addon objects without a second runtime or DSL.",
+      "status": "Implemented",
+      "publicContract": "RGXAddon; RGX.Addon",
+      "performance": "Declarations are validated before resource registration; lazy UI rendering stays in UI.",
+      "testCoverage": ["schema-check", "contract-bundle-check", "RGX-Hello E2E", "lua-runtime-check"],
+      "consumerCoverage": ["RGX-Hello", "RGXProfessions", "RGX consumers"],
+      "acceptanceCriteria": "Keep runtime, schema, documentation, generators and validators congruent."
+    },
+    {
+      "id": "core.database",
+      "name": "Persistence and profiles",
+      "classification": "Core",
+      "owner": "core/systems/database.lua",
+      "purpose": "SavedVariables, defaults, migrations, profile-aware proxies, import/export and adoption.",
+      "status": "Implemented",
+      "publicContract": "RGX:NewDatabase; RGX:DB; profile proxy methods",
+      "performance": "Proxy access and migrations follow existing budgeted lifecycle; no new polling.",
+      "testCoverage": ["database-runtime-check", "profile-persistence-check", "profiles-ui-check"],
+      "consumerCoverage": ["BLU", "RGXProfessions", "RGX-Hello"],
+      "acceptanceCriteria": "Preserve false versus nil, nested defaults, profiles, migrations and SavedVariables lifecycle."
+    },
+    {
+      "id": "core.events",
+      "name": "Events, messages and emitters",
+      "classification": "Core",
+      "owner": "core/systems/events.lua",
+      "purpose": "Native events, unit events, internal messages and module-local failure-isolated emitters.",
+      "status": "Implemented",
+      "publicContract": "RGX:RegisterEvent; RGX:RegisterMessage; RGX:CreateEmitter",
+      "performance": "One dispatcher and deferred native registration; no consumer event frames.",
+      "testCoverage": ["events-runtime-check", "inventory event scenarios", "library-callback-check"],
+      "consumerCoverage": ["All event-driven modules", "RGXProfessions"],
+      "acceptanceCriteria": "Preserve failure isolation and deferred native registration; evaluate aggregation before adding it."
+    },
+    {
+      "id": "core.scheduling",
+      "name": "Scheduling and asynchronous runtime work",
+      "classification": "Core",
+      "owner": "core/systems/runtime.lua",
+      "purpose": "One-shot/repeating timers, budgeted scheduling, hooks, combat queue and safe operations.",
+      "status": "Implemented",
+      "publicContract": "RGX:After; RGX:Every; RGX:CancelTimer; RGX:Hook; RGX:QueueForCombat",
+      "performance": "Hidden OnUpdate driver sleeps with no active timers; existing per-frame/time budgets apply.",
+      "testCoverage": ["timers-runtime-check", "lua-runtime-check", "library-callback-check"],
+      "consumerCoverage": ["Declarative every timers", "SharedMedia scanning", "Consumers using safe UI operations"],
+      "acceptanceCriteria": "Benchmark structural scheduler changes and preserve timer labels and failure isolation."
+    },
+    {
+      "id": "core.slash",
+      "name": "Slash commands",
+      "classification": "Core",
+      "owner": "core/systems/runtime.lua + core/commands.lua",
+      "purpose": "Centralized consumer slash registration and the framework /rgxf command surface.",
+      "status": "Implemented",
+      "publicContract": "RGX:RegisterSlashCommand; /rgxf",
+      "performance": "Registration is one-time with normalized aliases.",
+      "testCoverage": ["framework-commands-check", "audit-encoding-check"],
+      "consumerCoverage": ["RGXProfessions", "RGX-Hello"],
+      "acceptanceCriteria": "Keep slash registration centralized and avoid SLASH_ globals in consumers."
+    },
+    {
+      "id": "core.utils",
+      "name": "Shared utilities and chat output",
+      "classification": "Core",
+      "owner": "core/systems/utils.lua",
+      "purpose": "String/table/math helpers, throttling, prefixes, consumer chat and login preferences.",
+      "status": "Implemented",
+      "publicContract": "RGX utility methods; RGX:CreateChat; RGX:LoginMessage",
+      "performance": "Small synchronous helpers; no background work implied.",
+      "testCoverage": ["lua-runtime-check", "library-callback-check", "SharedChat consumer tests"],
+      "consumerCoverage": ["RGXProfessions", "RGX-Hello"],
+      "acceptanceCriteria": "Do not turn small utilities into competing public subsystems."
+    },
+    {
+      "id": "core.config",
+      "name": "Framework defaults",
+      "classification": "Core",
+      "owner": "core/systems/config.lua",
+      "purpose": "Framework debug, version and default font configuration.",
+      "status": "Implemented",
+      "publicContract": "RGX.defaults",
+      "performance": "Static default table.",
+      "testCoverage": ["Static source reconciliation only; no runtime consumer is claimed by this record"],
+      "consumerCoverage": [],
+      "acceptanceCriteria": "Verify actual default consumers before recording adoption or extending configuration."
+    },
+    {
+      "id": "core.contract",
+      "name": "Contract and authoring compatibility",
+      "classification": "Core",
+      "owner": "core/core.lua + contract/engine + contract/schemas",
+      "purpose": "Contract format handshake, declarative schema/engine and authoring compatibility.",
+      "status": "Implemented",
+      "publicContract": "RGX:SupportsContract; RGX:RequireContract; RGX:CompareVersions",
+      "performance": "Version checks run at load; shared engine remains development tooling.",
+      "testCoverage": ["contract-handshake-check", "contract-bundle-check", "RGX-Hello E2E"],
+      "consumerCoverage": ["RGX-Hello", "RGXProfessions", "Generated addons"],
+      "acceptanceCriteria": "One canonical contract with no MCP-only semantics or version-number duplication."
+    },
+    {
+      "id": "core.diagnostics",
+      "name": "Diagnostics and error isolation",
+      "classification": "Core",
+      "owner": "core/core.lua + core/systems/events.lua + core/systems/runtime.lua + core/systems/utils.lua",
+      "purpose": "Structured warnings, callback error containment and stable diagnostic labels.",
+      "status": "Implemented",
+      "publicContract": "RGX:Print; RGX:Warn; RGX:Error; RGX:Debug",
+      "performance": "Error paths are exceptional and isolated from unrelated consumers.",
+      "testCoverage": ["library-callback-check", "inventory diagnostic scenarios", "timer failure scenarios"],
+      "consumerCoverage": ["All callback consumers"],
+      "acceptanceCriteria": "Hostile formatting and error-handler acquisition cannot break shared dispatch."
+    }
+  ],
+  "candidates": [
+    {
+      "id": "tooling.capability-registry",
+      "name": "Master capability registry and conformance gate",
+      "classification": "Tooling",
+      "owner": "tools/ci/capability-registry-check.mjs",
+      "purpose": "Persistent capability ownership, gap status, evidence, replacement mapping and implementation sequencing.",
+      "status": "Implemented",
+      "clientSupport": { "assessment": "not-applicable", "reason": "development-only tooling" },
+      "publicContract": "node tools/ci/capability-registry-check.mjs",
+      "testCoverage": ["arch-check", "capability registry drift validation"],
+      "consumerCoverage": ["Maintainers", "MCP and future authoring consumers"],
+      "acceptanceCriteria": "Generated registry matches runtime catalog plus authored research and remains CI-congruent."
+    },
+    {
+      "id": "core.event-bucketing",
+      "name": "Event aggregation and dirty-state batching",
+      "classification": "Core",
+      "owner": "core/systems/events.lua",
+      "purpose": "Coalesce high-frequency events without losing payloads or changing consumer semantics.",
+      "status": "Implemented",
+      "priorArt": ["AceBucket", "AddonLearner demand-driven event research"],
+      "clientSupport": { "assessment": "declared-matrix", "validation": "headless harness; real-client timing pending" },
+      "publicContract": "RGX:RegisterEvent / RegisterUnitEvent optional { bucket, key } options",
+      "dependencies": ["core.events"],
+      "trackingIssue": 134,
+      "performance": "10,000-event harness: one callback per burst, bounded pending keys and measured elapsed/heap deltas.",
+      "testCoverage": ["event-bucketing-check: latest/keyed/nil/failure/unregister/cap semantics plus 10,000-event baseline comparison"],
+      "acceptanceCriteria": "Keep opt-in current-state semantics only; transition streams remain unbucketed and real-client timing is verified separately."
+    },
+    {
+      "id": "library.triggers-reclassification",
+      "name": "RGXTriggers library ownership correction",
+      "classification": "Library",
+      "owner": "libraries/triggers/triggers.lua",
+      "purpose": "Align the generic clone-state store with library semantics while preserving its public contract.",
+      "status": "Blocked",
+      "dependencies": ["module.triggers"],
+      "trackingIssue": 135,
+      "consumerCoverage": ["RGXTriggers global and getter consumers"],
+      "acceptanceCriteria": "Preserve module ID, global, getter, methods and state semantics across XML, catalog, tests and docs; audit consumers before moving."
+    },
+    {
+      "id": "library.conditions",
+      "name": "Conditional trigger evaluation",
+      "classification": "Library",
+      "owner": "libraries/triggers or libraries/conditions",
+      "purpose": "Evaluate conditional rules over generic trigger state without duplicating domain events.",
+      "status": "Discovered",
+      "priorArt": ["WeakAuras", "Scorpio"],
+      "dependencies": ["module.triggers"],
+      "trackingIssue": 117,
+      "acceptanceCriteria": "Resolve one owner and authoring model before implementing an evaluation engine."
+    },
+    {
+      "id": "library.animations",
+      "name": "Animation composition and glows",
+      "classification": "Library",
+      "owner": "libraries/animations",
+      "purpose": "Transitions, fades, movement, pulses and button glows.",
+      "status": "Discovered",
+      "priorArt": ["BazCore", "LibCustomGlow", "LibButtonGlow"],
+      "dependencies": ["module.design"],
+      "acceptanceCriteria": "Use native animation/widget evidence and a current consumer before adding a public owner."
+    },
+    {
+      "id": "library.comm",
+      "name": "Addon communication",
+      "classification": "Library",
+      "owner": "libraries/comm",
+      "purpose": "Queued, throttled addon messages with prioritization and channel discipline.",
+      "status": "Discovered",
+      "priorArt": ["AceComm", "ChatThrottleLib", "LibAceCommQueue"],
+      "dependencies": ["core.events", "library.serialization"],
+      "trackingIssue": 137,
+      "acceptanceCriteria": "Establish a real consumer need and a safe channel/throttle contract first."
+    },
+    {
+      "id": "library.sync",
+      "name": "Differential synchronization",
+      "classification": "Library",
+      "owner": "libraries/sync",
+      "purpose": "Delta synchronization, recovery and resynchronization.",
+      "status": "Discovered",
+      "priorArt": ["LibDeltaSync", "LibGuildSync"],
+      "dependencies": ["library.comm", "library.serialization"],
+      "acceptanceCriteria": "Define data ownership, conflict rules and recovery semantics before transport work."
+    },
+    {
+      "id": "library.serialization",
+      "name": "Structured serialization",
+      "classification": "Library",
+      "owner": "core/systems/database.lua",
+      "purpose": "General structured table encoding/decoding for import/export; any future extraction is a migration candidate, not a second owner.",
+      "status": "Partially implemented",
+      "priorArt": ["AceSerializer", "LibSerialize"],
+      "clientSupport": { "assessment": "declared-matrix", "validation": "runtime harness; per-client confirmation pending" },
+      "publicContract": "RGX:SerializeTable; RGX:DeserializeTable",
+      "dependencies": ["core.database"],
+      "testCoverage": ["database-runtime-test.lua:161-188", "profile-persistence-check.mjs:200-206,467-488"],
+      "acceptanceCriteria": "Preserve general table round trips and evaluate any future extraction as a migration rather than a parallel serializer."
+    },
+    {
+      "id": "library.compression",
+      "name": "Transfer compression",
+      "classification": "Library",
+      "owner": "libraries/serialization or libraries/compression",
+      "purpose": "Compact transferable data with chunking and reassembly.",
+      "status": "Discovered",
+      "priorArt": ["LibDeflate"],
+      "dependencies": ["library.serialization"],
+      "acceptanceCriteria": "Choose one data owner and evaluate native/simple algorithms, size and CPU cost before implementation."
+    },
+    {
+      "id": "library.search",
+      "name": "Search and filtering",
+      "classification": "Library",
+      "owner": "libraries/search",
+      "purpose": "Query construction, indexing and filtering for items and other registries.",
+      "status": "Discovered",
+      "priorArt": ["CustomSearch-1.0", "LibItemSearch"],
+      "dependencies": [],
+      "acceptanceCriteria": "Define a reusable query contract and a concrete inventory or settings consumer."
+    },
+    {
+      "id": "library.notifications",
+      "name": "Notifications and routing",
+      "classification": "Library",
+      "owner": "libraries/notifications",
+      "purpose": "Alerts, toasts and notification routing without per-consumer display plumbing.",
+      "status": "Discovered",
+      "priorArt": ["LibToast", "LibSink"],
+      "dependencies": ["module.ui"],
+      "acceptanceCriteria": "Separate notification policy, routing and rendering before choosing a public contract."
+    },
+    {
+      "id": "library.unitframes",
+      "name": "Reusable unit-frame components",
+      "classification": "Library",
+      "owner": "libraries/ui",
+      "purpose": "Composable unit-frame building blocks rather than a parallel oUF runtime.",
+      "status": "Discovered",
+      "priorArt": ["oUF", "ArenaLive Core", "SuperVillain UI"],
+      "dependencies": ["module.ui", "domain.units"],
+      "acceptanceCriteria": "Resolve Units ownership, frame security and a maintained consumer before component implementation."
+    },
+    {
+      "id": "library.ui-virtualization",
+      "name": "Virtualized lists, tables and trees",
+      "classification": "Library",
+      "owner": "libraries/ui",
+      "purpose": "Virtualized scrolling, sortable tables and tree views with bounded frame use.",
+      "status": "Discovered",
+      "priorArt": ["Details Framework", "AbstractFramework", "TbdWidgets"],
+      "dependencies": ["module.ui"],
+      "trackingIssue": 136,
+      "performance": "Benchmark frame reuse, allocation and scroll updates on large datasets.",
+      "acceptanceCriteria": "Extend existing scroll/layout primitives and prove bounded allocations on long lists."
+    },
+    {
+      "id": "library.transactional-config",
+      "name": "Transactional configuration",
+      "classification": "Library",
+      "owner": "libraries/ui + core/systems/database.lua",
+      "purpose": "Apply, revert and reset workflows with searchable settings and confirmation paths.",
+      "status": "Discovered",
+      "priorArt": ["NoobTaco-Config", "LanternUX"],
+      "dependencies": ["core.database", "module.ui"],
+      "acceptanceCriteria": "Preserve profile semantics and visual restoration; do not build a second database."
+    },
+    {
+      "id": "library.rich-content",
+      "name": "Markdown and SimpleHTML content",
+      "classification": "Library",
+      "owner": "libraries/ui",
+      "purpose": "Reusable markdown and SimpleHTML rendering for guides and dialogs.",
+      "status": "Discovered",
+      "priorArt": ["LibSimpleHTMLMarkdown"],
+      "dependencies": ["module.ui"],
+      "acceptanceCriteria": "Use native SimpleHTML where sufficient and define escaping/sanitization before a custom renderer."
+    },
+    {
+      "id": "library.native-edit-mode",
+      "name": "Native Edit Mode integration",
+      "classification": "Library",
+      "owner": "libraries/display",
+      "purpose": "Screen snapping, alignment, docking and native Edit Mode integration.",
+      "status": "Researching",
+      "priorArt": ["BazCore", "SexyEditMode"],
+      "dependencies": ["module.display"],
+      "acceptanceCriteria": "Distinguish the shipped custom drag editor from native Edit Mode before extending the contract."
+    },
+    {
+      "id": "library.keybinds",
+      "name": "Keybinding registration and controls",
+      "classification": "Library",
+      "owner": "core + libraries/ui",
+      "purpose": "Keybinding registration and user-facing keybinding controls.",
+      "status": "Discovered",
+      "priorArt": ["BazCore", "C_KeyBindings", "C_ClickBindings"],
+      "dependencies": ["core.compatibility", "module.ui"],
+      "acceptanceCriteria": "Separate Core registration from UI controls and verify protected mutation rules."
+    },
+    {
+      "id": "core.pooling",
+      "name": "Object and frame pooling",
+      "classification": "Core",
+      "owner": "core + libraries/ui",
+      "purpose": "Reuse objects and frames to reduce allocation on high-churn interfaces.",
+      "status": "Discovered",
+      "priorArt": ["AIOS"],
+      "dependencies": ["core.utils", "module.ui"],
+      "performance": "Requires allocation benchmarks and lifecycle/reset correctness before adoption.",
+      "acceptanceCriteria": "Introduce pooling only for a measured hot path with complete reset semantics."
+    },
+    {
+      "id": "data.packs",
+      "name": "Optional data-pack architecture",
+      "classification": "Data",
+      "owner": "data packs with build-time provenance",
+      "purpose": "Optional, load-on-demand datasets for spells, items, NPCs, quests, zones, travel, encounters, professions, collectibles, icons, sounds and atlases.",
+      "status": "Discovered",
+      "priorArt": ["LibTaxiData", "LibQuestDB", "PeaversTravelData", "PeaversIconSearchData"],
+      "dependencies": ["core.compatibility"],
+      "acceptanceCriteria": "Require provenance, licensing, build compatibility and refresh process; do not enlarge the mandatory runtime without demonstrated need."
+    }
+  ],
+  "ownershipReviews": [
+    {
+      "capabilityId": "module.triggers",
+      "currentOwner": "modules/triggers/triggers.lua (category game)",
+      "recommendedOwner": "libraries/triggers/triggers.lua (category library)",
+      "decision": "Semantically a library; migrate only after consumer audit",
+      "rationale": "Generic clone registry/diff/progress with no event subscriptions or flavor gate; preserve global/getter/API semantics.",
+      "status": "Designed"
+    },
+    {
+      "capabilityId": "module.inventory",
+      "currentOwner": "modules/inventory/inventory.lua owns counts and consumer-supplied material arithmetic",
+      "recommendedOwner": "Inventory owns items/material counts; Equipment owns equipped state; Professions owns recipe domain state",
+      "decision": "Do not merge item counts, equipment and recipes",
+      "rationale": "Prevent a single items god-module and keep consumer recipe selection outside Inventory.",
+      "status": "Designed"
+    },
+    {
+      "capabilityId": "module.combat",
+      "currentOwner": "modules/combat/combat.lua owns combat state and narrow callbacks",
+      "recommendedOwner": "Combat for combat state; Encounters for encounter metadata/timeline; Instances for lockouts/difficulty",
+      "decision": "Extend Combat only for intrinsic combat signals",
+      "rationale": "EncounterJournal, live encounter state and instance lockouts are distinct domains.",
+      "status": "Designed"
+    },
+    {
+      "capabilityId": "domain.units",
+      "currentOwner": "No general Units owner; Auras/Combat/compat hold narrow unit operations",
+      "recommendedOwner": "Research a Units identity/state owner; keep Cast and specialized state separate",
+      "decision": "Resolve unit identity, health/power secrecy and token comparability before APIs",
+      "rationale": "Avoid duplicating Cast, Auras, Range, Group and Nameplate state.",
+      "status": "Researching"
+    },
+    {
+      "capabilityId": "module.auras",
+      "currentOwner": "modules/auras/auras.lua owns aura state and specific readiness",
+      "recommendedOwner": "Auras for aura state; Spells for spell metadata/cooldowns; Dispels for classification only if justified",
+      "decision": "Do not turn Auras into a general Spells or ActionBars owner",
+      "rationale": "Current CastReadiness is a narrow contract, not full cast or spell state.",
+      "status": "Designed"
+    },
+    {
+      "capabilityId": "domain.group",
+      "currentOwner": "Core has narrow party/raid helpers; no LFG owner",
+      "recommendedOwner": "Group for party/raid; Guild for guild/club; LFG as a separate queue domain if needed",
+      "decision": "Separate roster, guild and queue state",
+      "rationale": "Permissions, async state and lifecycle differ across these domains.",
+      "status": "Researching"
+    },
+    {
+      "capabilityId": "module.worldmap",
+      "currentOwner": "modules/worldmap/worldmap.lua owns coordinates, pins and nearest-place lookup",
+      "recommendedOwner": "WorldMap for map geometry/pins; Travel for taxi/navigation/summons only with consumer need",
+      "decision": "Do not substitute geometric distance for spell range or taxi state",
+      "rationale": "Map navigation, spell range and protected travel actions are different capabilities.",
+      "status": "Designed"
+    },
+    {
+      "capabilityId": "module.quest",
+      "currentOwner": "modules/quest/quest.lua owns quest lifecycle/progress",
+      "recommendedOwner": "Quest for quest state; Guides for guide/journal/tutorial content only if required",
+      "decision": "Keep progression data separate from presentation guides",
+      "rationale": "AdventureJournal and Tutorial references are incomplete and do not justify a guide runtime by themselves.",
+      "status": "Researching"
+    },
+    {
+      "capabilityId": "module.sharedmedia",
+      "currentOwner": "SharedMedia generic paths; Fonts/Textures/Sound specialized registries; Colors/Design color ownership",
+      "recommendedOwner": "SharedMedia for generic discovery/interoperability; specialized libraries for metadata/behavior",
+      "decision": "Do not create an automatic unified mirror of specialized registries",
+      "rationale": "SharedMedia scans sound only; Fonts, Textures and Sound own their specialized handles/defaults/application.",
+      "status": "Designed"
+    },
+    {
+      "capabilityId": "library.compression",
+      "currentOwner": "No general transfer owner",
+      "recommendedOwner": "Evaluate one serialization/data owner; charts belong in UI and keybinding controls in UI with Core registration",
+      "decision": "Consolidate supporting capabilities instead of creating one directory per noun",
+      "rationale": "The candidate count is not a mandate for new public namespaces.",
+      "status": "Designed"
+    }
+  ],
+  "replacementMatrix": [
+    { "traditional": "LibStub", "destination": "Core registry", "capabilityId": "core.registration", "status": "Implemented", "rationale": "One framework instance and registry; no LibStub version negotiation." },
+    { "traditional": "AceAddon", "destination": "RGXAddon", "capabilityId": "core.addon-factory", "status": "Implemented", "rationale": "Declarative addon factory and lifecycle, not API-compatible emulation." },
+    { "traditional": "AceEvent", "destination": "Core events", "capabilityId": "core.events", "status": "Implemented", "rationale": "Central event/message/emitter dispatch." },
+    { "traditional": "AceTimer", "destination": "Core scheduling", "capabilityId": "core.scheduling", "status": "Implemented", "rationale": "Budgeted After/Every/CancelTimer driver." },
+    { "traditional": "AceHook", "destination": "Core hooks", "capabilityId": "core.scheduling", "status": "Implemented", "rationale": "Central secure post-hook owner." },
+    { "traditional": "AceConsole", "destination": "Core slash", "capabilityId": "core.slash", "status": "Implemented", "rationale": "Central slash registration." },
+    { "traditional": "AceDB", "destination": "Core database", "capabilityId": "core.database", "status": "Implemented", "rationale": "Profiles, migrations and SavedVariables adoption." },
+    { "traditional": "AceDBOptions", "destination": "RGXUI", "capabilityId": "module.ui", "status": "Implemented", "rationale": "Options and profile-aware controls, not an AceConfig compatibility layer." },
+    { "traditional": "AceConfig", "destination": "RGXAddon / RGXUI", "capabilityId": "core.addon-factory", "status": "Implemented", "rationale": "Declarative options with existing UI composition." },
+    { "traditional": "AceGUI", "destination": "RGXUI", "capabilityId": "module.ui", "status": "Partially implemented", "rationale": "Reusable widgets exist; complete AceGUI widget coverage is not claimed." },
+    { "traditional": "AceLocale", "destination": "RGXLocale", "capabilityId": "module.locale", "status": "Implemented", "rationale": "Framework-owned locale registry and overrides." },
+    { "traditional": "CallbackHandler", "destination": "Core callback dispatch", "capabilityId": "core.events", "status": "Implemented", "rationale": "Failure-isolated messages and emitters." },
+    { "traditional": "LibSharedMedia", "destination": "RGXSharedMedia", "capabilityId": "module.sharedmedia", "status": "Implemented", "rationale": "Generic pack/path registration and interoperability; specialized behavior remains separate." },
+    { "traditional": "LibDataBroker", "destination": "RGXDataBroker", "capabilityId": "module.databroker", "status": "Implemented", "rationale": "Observable data objects and notifications." },
+    { "traditional": "LibDBIcon", "destination": "RGXMinimap", "capabilityId": "module.minimap", "status": "Implemented", "rationale": "Minimap and compartment buttons." },
+    { "traditional": "LibUIDropDownMenu", "destination": "RGXDropdowns", "capabilityId": "module.dropdowns", "status": "Implemented", "rationale": "Nested/native menu composition." },
+    { "traditional": "LibCandyBar", "destination": "RGXTimers", "capabilityId": "module.timers", "status": "Implemented", "rationale": "Countdown/progress components." },
+    { "traditional": "HereBeDragons", "destination": "RGXWorldMap", "capabilityId": "module.worldmap", "status": "Partially implemented", "rationale": "Map coordinates/pins exist; comprehensive HereBeDragons compatibility is not claimed." },
+    { "traditional": "AceSerializer", "destination": "Serialization infrastructure", "capabilityId": "library.serialization", "status": "Partially implemented", "rationale": "General table serialization exists in Core; broader transport compatibility is not claimed." },
+    { "traditional": "AceBucket", "destination": "Core event aggregation", "capabilityId": "core.event-bucketing", "status": "Implemented", "rationale": "Scoped opt-in latest-per-key bucketing with regression and burst evidence; not a universal AceBucket replacement." },
+    { "traditional": "AceComm", "destination": "RGXComm", "capabilityId": "library.comm", "status": "Discovered", "rationale": "Requires a real consumer and channel contract." },
+    { "traditional": "ChatThrottleLib", "destination": "RGXComm", "capabilityId": "library.comm", "status": "Discovered", "rationale": "Throttling belongs to the communication owner." },
+    { "traditional": "LibAceCommQueue", "destination": "RGXComm", "capabilityId": "library.comm", "status": "Discovered", "rationale": "Queue discipline belongs to the communication owner." },
+    { "traditional": "LibDeltaSync", "destination": "Synchronization infrastructure", "capabilityId": "library.sync", "status": "Discovered", "rationale": "Differential sync and recovery are not implemented." },
+    { "traditional": "LibSerialize", "destination": "Serialization infrastructure", "capabilityId": "library.serialization", "status": "Partially implemented", "rationale": "Core table serialization exists; a general LibSerialize-compatible surface is not claimed." },
+    { "traditional": "LibDeflate", "destination": "Compression infrastructure", "capabilityId": "library.compression", "status": "Discovered", "rationale": "No compression owner is implemented." },
+    { "traditional": "LibCustomGlow", "destination": "Animation infrastructure", "capabilityId": "library.animations", "status": "Discovered", "rationale": "Animation composition remains research." },
+    { "traditional": "LibButtonGlow", "destination": "Animation infrastructure", "capabilityId": "library.animations", "status": "Discovered", "rationale": "Button glow belongs to the same animation research owner." },
+    { "traditional": "LibEditMode", "destination": "RGXDisplay", "capabilityId": "library.native-edit-mode", "status": "Researching", "rationale": "The shipped custom drag editor is not native Edit Mode integration." },
+    { "traditional": "LibQTip", "destination": "RGXTooltip", "capabilityId": "module.tooltip", "status": "Partially implemented", "rationale": "Composed tooltips exist; LibQTip compatibility is not claimed." },
+    { "traditional": "LibToast", "destination": "Notification infrastructure", "capabilityId": "library.notifications", "status": "Discovered", "rationale": "Notification routing remains research." },
+    { "traditional": "LibSink", "destination": "Notification routing", "capabilityId": "library.notifications", "status": "Discovered", "rationale": "Sink routing belongs to the same notification owner." },
+    { "traditional": "Masque", "destination": "RGXDesign", "capabilityId": "module.design", "status": "Partially implemented", "rationale": "Theme/skin mechanisms exist; full Masque replacement is not claimed." },
+    { "traditional": "LibGetFrame", "destination": "Frame utilities", "capabilityId": "module.display", "status": "Partially implemented", "rationale": "Display owns positioned elements; general frame discovery is not a separate public library." },
+    { "traditional": "LibItemSearch", "destination": "Search / Inventory", "capabilityId": "library.search", "status": "Discovered", "rationale": "Search contract and consumer are not established." },
+    { "traditional": "CustomSearch", "destination": "Search infrastructure", "capabilityId": "library.search", "status": "Discovered", "rationale": "Query construction belongs to the same search owner." },
+    { "traditional": "LibRangeCheck", "destination": "RGXRange", "capabilityId": "domain.range", "status": "Researching", "rationale": "Range semantics and secrecy require research; map distance is not a substitute." },
+    { "traditional": "LibSpellRange", "destination": "RGXRange", "capabilityId": "domain.range", "status": "Researching", "rationale": "Spell/action range needs one domain owner." },
+    { "traditional": "LibPlayerSpells", "destination": "RGXSpells / Data", "capabilityId": "domain.spells", "status": "Researching", "rationale": "Spell metadata scope and native API differences are unresolved." },
+    { "traditional": "LibSpecialization", "destination": "RGXTalents", "capabilityId": "domain.talents", "status": "Researching", "rationale": "Talent/loadout models vary by client." },
+    { "traditional": "LibGroupInSpecT", "destination": "RGXGroup", "capabilityId": "domain.group", "status": "Researching", "rationale": "Group inspection and roster state need a bounded owner." },
+    { "traditional": "LibOpenRaid", "destination": "Group / Communication", "capabilityId": "domain.group", "status": "Researching", "rationale": "Do not create parallel group and communication contracts without a consumer." },
+    { "traditional": "LibHealComm", "destination": "Permitted healing information", "capabilityId": "domain.healing", "status": "Researching", "rationale": "Healing prediction and restricted values require native evidence." },
+    { "traditional": "LibDispel", "destination": "Dispel functionality", "capabilityId": "domain.dispels", "status": "Researching", "rationale": "Aura classification and protected dispel actions are separate concerns." },
+    { "traditional": "LibActionButton", "destination": "RGXActionBars", "capabilityId": "domain.actionbars", "status": "Researching", "rationale": "Secure action-button behavior is not implied by spell queries." },
+    { "traditional": "LibTaxiData", "destination": "Travel data", "capabilityId": "data.packs", "status": "Discovered", "rationale": "Travel data belongs in a provenance-controlled data pack." },
+    { "traditional": "LibQuestDB", "destination": "Quest data", "capabilityId": "data.packs", "status": "Discovered", "rationale": "Static quest data requires provenance and refresh rules." },
+    { "traditional": "oUF", "destination": "Units and unit-frame components", "capabilityId": "library.unitframes", "status": "Discovered", "rationale": "Reusable components are a candidate, not an oUF-compatible runtime." }
+  ],
+  "implementationSequence": [
+    {
+      "order": 1,
+      "capabilityId": "tooling.capability-registry",
+      "rationale": "Establish source-of-truth ownership and evidence before runtime expansion; delivered by this Phase 0 change."
+    },
+    {
+      "order": 2,
+      "capabilityId": "core.event-bucketing",
+      "rationale": "Delivered scoped opt-in latest-per-key bucketing with ordering, payload, failure, cancellation and 10,000-event burst evidence."
+    },
+    {
+      "order": 3,
+      "capabilityId": "library.triggers-reclassification",
+      "rationale": "Semantically justified but blocked on consumer audit and synchronized public-contract migration."
+    },
+    {
+      "order": 4,
+      "capabilityId": "library.ui-virtualization",
+      "rationale": "Interface expansion follows Core/resource ownership and requires a real long-list consumer and allocation benchmark."
+    },
+    {
+      "order": 5,
+      "capabilityId": "library.serialization",
+      "rationale": "Harden and scope the existing Core table serializer before any transport design; do not create a parallel owner."
+    },
+    {
+      "order": 6,
+      "capabilityId": "library.comm",
+      "rationale": "Communication follows serialization and a maintained consumer rather than speculative transport APIs."
+    }
+  ],
+  "firstImplementation": {
+    "capabilityId": "tooling.capability-registry",
+    "owner": "tools/ci/capability-registry-check.mjs",
+    "status": "Implemented in the Phase 0 MR",
+    "evidence": "arch-check and generated-registry drift validation"
+  }
+}

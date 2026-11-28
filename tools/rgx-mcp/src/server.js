@@ -437,6 +437,17 @@ server.resource(
   })
 );
 
+server.resource(
+  "rgx-capability-registry",
+  "rgx://schemas/capability-registry",
+  { description: "Generated master capability inventory (issue #133); runtime catalog plus Core, domain research, ownership and replacement status", mimeType: "application/json" },
+  async () => ({
+    contents: [
+      { uri: "rgx://schemas/capability-registry", mimeType: "application/json", text: frameworkFile("contract/schemas/rgx-capability.registry.json") },
+    ],
+  })
+);
+
 server.tool(
   "rgx_search_wow_api",
   "Deterministic substring search of the synced WoW API dumps (.reference/wow-api-dump/): globals, widget tables, templates, mixins, events, enums. Evidence-bearing output includes flavor, client build, dump branch and commit. Deterministic; never live-game state; confirm conclusions in the wow-ui-source mirror before runtime use.",

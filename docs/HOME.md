@@ -4,7 +4,7 @@
 
 RGX-Framework is a single `RequiredDeps` entry that provides a declarative addon front door, events, timers, hooks, combat queueing, slash commands, saved-variable profiles, fonts, colors, a color picker, textures, dropdowns, UI controls, a theming system, tooltips, aura scanning, minimap buttons, sound playback, DataBroker support, and more. No embedding. No version conflicts. No library chains.
 
-Current release `v2.20.0` supports Retail `120105`, Classic Era `11509`, TBC
+Current release `v2.21.0` supports Retail `120105`, Classic Era `11509`, TBC
 `20506`, Wrath/Titan `38002`, Cataclysm `40402`, and Mists `50504` from one
 runtime-only addon package.
 
@@ -65,6 +65,8 @@ That gives you saved settings with profiles, a tabbed options panel with control
 ---
 
 ## Module Overview
+
+The complete machine-readable inventory is `contract/schemas/rgx-capability.registry.json` (issue #133): **32 registered modules — 15 library and 17 game — across 31 directories**, plus the Core, research and replacement records. The table below is a convenience subset, not the authoritative full inventory; implementation and per-client validation are separate states.
 
 | Module | Global | Getter | Status |
 |---|---|---|---|

@@ -30,6 +30,7 @@ and [scoped agent guidance](AGENTS.md).
 | `rgx_generate_addon` | Emit a contract-congruent addon Lua file using shipped keys (`RGXAddon "Name" { ... }`), including named `every` timers |
 | `rgx_generate_addon_toc` | Emit the deterministic consumer TOC: `RequiredDeps`, `SavedVariables` matching the dbName derivation, and title/name |
 | `rgx_get_contract` | Return the schema + shipped-surface reference for agent context |
+| `rgx_get_api_catalog` | Return the approved runtime module API catalog; optionally filter to one module |
 | `rgx_edit_definition` | Source-development label definition normalize/import/patch/export; delegates to the pure shared engine and returns data only |
 | `rgx_search_wow_api` | Search the synced WoW API dumps (main capability reference) with flavor/build/commit provenance; deterministic, offline after `sync-wow-api-dump.mjs` |
 
@@ -38,6 +39,8 @@ and [scoped agent guidance](AGENTS.md).
 - `rgx://schemas/addon` — the annotated JSON Schema
 - `rgx://docs/declarative-api` — the shipped declarative surface reference
 - `rgx://schemas/definition` — the source-development version-1 label schema
+- `rgx://schemas/api-catalog` — the approved runtime module API catalog
+- `rgx://schemas/capability-registry` — the generated master capability inventory (issue #133)
 - `rgx://frames/wow-api-dump` — synced dump provenance (main capability reference)
 
 The optional external editor (`node tools/editor/serve.mjs` from the framework

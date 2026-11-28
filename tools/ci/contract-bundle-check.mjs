@@ -2,8 +2,8 @@
 // Build + verify the RGX contract bundle (issue #6).
 //
 // The bundle is a versioned zip that pins the RGXX contract surface
-// (schema, declarative docs, declarative and module API catalogs,
-// conformance vectors) separately from the player archive.
+// (schema, declarative docs, declarative and module API catalogs, the master
+// capability registry, and conformance vectors) separately from the player archive.
 //
 // Metadata derivation never hand-repeats source truths:
 //   - frameworkVersion, wowInterface, sourceRepository come from RGX-Framework.toc
@@ -216,6 +216,19 @@ if (moduleCatalog && (!Array.isArray(moduleCatalog.entries) || moduleCatalog.ent
   failures.push("contract/schemas/rgx-api.catalog.json must contain a non-empty entries array");
 }
 
+// The generated master capability registry is embedded verbatim too. Its
+// derivation and runtime/domain congruence are owned by capability-registry-check.
+const capabilityRegistryRaw = read("contract/schemas/rgx-capability.registry.json");
+let capabilityRegistry = null;
+try {
+  capabilityRegistry = JSON.parse(capabilityRegistryRaw.toString("utf8"));
+} catch (error) {
+  failures.push(`contract/schemas/rgx-capability.registry.json is not valid JSON: ${error.message}`);
+}
+if (capabilityRegistry && (!Array.isArray(capabilityRegistry.capabilities) || capabilityRegistry.capabilities.length === 0)) {
+  failures.push("contract/schemas/rgx-capability.registry.json must contain a non-empty capabilities array");
+}
+
 const conformanceJson = Buffer.from(JSON.stringify({
   schema: "rgx-addon.schema.json",
   runner: "conformance/run-vectors.mjs",
@@ -227,6 +240,7 @@ const bundleFiles = {
   "docs/DECLARATIVE-API.md": declarativeDoc,
   "api/catalog.json": apiCatalogJson,
   "schemas/rgx-api.catalog.json": moduleCatalogRaw,
+  "schemas/rgx-capability.registry.json": capabilityRegistryRaw,
   "conformance/contract-vectors.json": conformanceJson,
   "conformance/run-vectors.mjs": Buffer.from(offlineRunner()),
 };

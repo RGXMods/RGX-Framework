@@ -57,6 +57,7 @@ Complete public API by module. See individual module docs for deeper detail:
 | `RGX:GetCollectibles()` | RGXCollectibles |
 | `RGX:GetLoot()` | RGXLoot |
 | `RGX:GetInventory()` | Inventory (registry-only) |
+| `RGX:GetTriggers()` | RGXTriggers |
 | `RGX:GetQuest()` | RGXQuest |
 | `RGX:GetHonor()` | RGXHonor |
 | `RGX:GetDelves()` | RGXDelves |
@@ -172,7 +173,7 @@ the label; an empty prefix, or one equal to `name`, uses `label` (default `name`
 
 | Method | Description |
 |---|---|
-| `RGX:RegisterEvent(event, callback, id, owner)` | Register a C event handler; returns handler ID or false. Without an id, a method-name callback uses the method name (another owner's same-named method gets its own owner-qualified id) |
+| `RGX:RegisterEvent(event, callback, id, owner, options?)` | Register a C event handler; returns handler ID or false. Without an id, a method-name callback uses the method name (another owner's same-named method gets its own owner-qualified id). Optional `options` enables opt-in event bucketing |
 | `RGX:UnregisterEvent(event, id)` | Remove a specific handler |
 | `RGX:UnregisterAllEvents(id)` | Remove all handlers for an ID |
 | `RGX:FireEvent(event, ...)` | Manually dispatch into the event registry |
@@ -181,11 +182,31 @@ the label; an empty prefix, or one equal to `name`, uses `label` (default `name`
 
 | Method | Description |
 |---|---|
-| `RGX:RegisterUnitEvent(event, unit, callback, id, owner)` | Per-unit event filtering; `unit` is a token or a table of tokens (`"player"`, `{"player","target"}`) |
+| `RGX:RegisterUnitEvent(event, unit, callback, id, owner, options?)` | Per-unit event filtering; `unit` is a token or a table of tokens (`"player"`, `{"player","target"}`). Optional `options` enables opt-in event bucketing |
 | `RGX:UnregisterUnitEvent(event, id)` | Remove a specific unit-event handler |
 | `RGX:UnregisterAllUnitEvents(id)` | Remove all unit-event handlers for an ID |
 
 Callback signature: `function(event, unit, ...)` — the unit token is always the second argument, matching WoW's native unit event signature.
+
+### Opt-in event bucketing
+
+Pass a final optional `options` table (fifth argument to `RegisterEvent`, sixth to `RegisterUnitEvent`):
+
+```lua
+RGX:RegisterUnitEvent("UNIT_HEALTH", "player", function(event, unit)
+    -- Query current health; intermediate transitions do not need replay.
+end, "health", nil, {
+    bucket = 0.2,
+    key = function(event, unit) return unit end,
+})
+```
+
+- `bucket = seconds` stores only the **latest payload per handler ID and key** and flushes through the existing `RGX:After` scheduler. Ordinary registrations and event ordering are unchanged.
+- `key = function(event, ...) ... end` selects the bucket family (for example a unit token). Without it, all payloads for that event share one bucket. A failing key function is reported and falls back to the event name.
+- At most 128 key families are retained per handler. Overflow flushes early instead of dropping a family. Unregistering invalidates pending flushes, including after re-registering the same ID.
+- Bucketed callbacks use the same method-owner and failure-isolation paths as immediate callbacks. Nil arguments and arity are preserved.
+
+Use this only for **current-state signals** where earlier transitions need not be replayed, such as `UNIT_HEALTH` or `UNIT_POWER` with a unit key. Do **not** bucket `UNIT_AURA` `updateInfo` deltas, distinct bag/item changes, `GET_ITEM_INFO_RECEIVED`, loot, quests, crafts, or other transition streams whose individual updates matter. Those events must remain unbucketed or receive separately proven semantics. No declarative `on` behavior changes with this API; consumer migration is opt-in only.
 
 ### Messages
 
@@ -1132,7 +1153,7 @@ end)
 
 ### Coverage and boundaries
 
-**Automatic external discovery is sound-only.** The scanner finds sound files in installed addons with an opt-in generic crawl over addon globals; it names no addon. Nothing automatically discovers external fonts or statusbars: `SM:RegisterFont` / `SM:RegisterStatusBarPack` are registration APIs, and LibSharedMedia statusbars come in only through `Textures:ImportLibSharedMedia()` when LSM is loaded. A LibSharedMedia sound pack with no DBM registrar and no reachable addon global is not automatically imported — a known-provider entry or an explicit `SM:RegisterSoundPack` call is the supported path.
+**Automatic external discovery is sound-only.** The scanner finds sound files in installed addons with an opt-in generic crawl over addon globals; it names no addon. Nothing automatically discovers external fonts or statusbars: `SM:RegisterFont` / `SM:RegisterStatusBarPack` are registration APIs, while Textures' own bar registry remains separate. A LibSharedMedia sound pack with no DBM registrar and no reachable addon global is not automatically imported — a known-provider entry or an explicit `SM:RegisterSoundPack` call is the supported path.
 
 **Forever suppresses the generic crawl at login** (it causes a visible startup hitch on the beta client); a full generic scan can be requested at any time with `SM:Scan(true)` or `SM:QueueScan(delay, true)`.
 

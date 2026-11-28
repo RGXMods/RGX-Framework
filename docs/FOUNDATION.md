@@ -186,7 +186,7 @@ Verify load/registration, flavor capabilities and observable behavior separately
 ### Need-driven future work
 
 - bucket events and cross-client communication when maintained consumers need them
-- reusable RGXMod trigger/condition/display primitives with current consumer value
+- broader trigger/condition/display evaluation on top of the shipped clone-keyed trigger state substrate, with current consumer value
 - full native skins after source/asset evidence and client geometry acceptance
 
 The [Roadmap](ROADMAP.md) orders these outcomes; GitLab owns acceptance state.

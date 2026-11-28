@@ -161,6 +161,14 @@ try {
   const unknownCatalog = await client.callTool({ name: "rgx_get_api_catalog", arguments: { module: "nope" } });
   check("catalog tool rejects unknown modules fail-closed",
     unknownCatalog.isError === true && unknownCatalog.content[0].text.includes("Known modules"));
+  console.log("== Master capability registry (issue #133) ==");
+  const capabilityFile = JSON.parse(readFileSync(join(HERE, "../../../contract/schemas/rgx-capability.registry.json"), "utf8"));
+  const capabilityResource = await client.readResource({ uri: "rgx://schemas/capability-registry" });
+  check("capability registry resource matches the generated registry",
+    JSON.stringify(JSON.parse(capabilityResource.contents[0].text)) === JSON.stringify(capabilityFile));
+  check("capability registry covers shipped modules and native research",
+    capabilityFile.capabilities.some((entry) => entry.id === "module.inventory")
+      && capabilityFile.capabilities.some((entry) => entry.id === "domain.professions"));
   console.log("== RGX-Hello source congruence ==");
   check("parsed the real RGX-Hello declaration", actualAddonName === "RGX-Hello");
   const minimumComparison = compareVersions(minimumFrameworkVersion, frameworkVersion);
